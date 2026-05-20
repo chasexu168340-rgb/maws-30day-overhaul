@@ -1,0 +1,39 @@
+# Local dependencies and generated caches
+node_modules/
+.cache/
+.tmp/
+tmp/
+dist/
+build/
+
+# Environment and editor files
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+*.log
+*.local
+Thumbs.db
+.DS_Store
+
+# QA output and local screenshots
+test-results/
+playwright-report/
+coverage/
+
+# Source/reference media that should not be published by default
+新建文件夹/
+*.mp4
+*.exe
+*.zip
+
+# Intermediate image-generation and chroma-key outputs
+assets/imagegen_pixel/characters/*_backup.png
+assets/imagegen_pixel/characters/*_chroma.png
+assets/imagegen_pixel/characters/*_alpha_full.png
+assets/imagegen_pixel/characters_clean/*_backup.png
+assets/imagegen_pixel/characters_clean/*_chroma.png
+assets/imagegen_pixel/characters_clean/*_alpha_full.png
+
+# Keep runtime assets, docs, source, vendor Phaser, and the entry HTML tracked.
