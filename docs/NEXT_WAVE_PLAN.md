@@ -8,10 +8,12 @@
 - Day 2 主线迁移到地铁站。
 - UI 锁点展示。
 - 技能页未学会来源提示，但目前仍是 UI 静态映射。
+- Playwright 真实浏览器 smoke。
+- 大类 Agent 路由。
+- Harness Delta 接力文件。
 
 ## 未完成
 
-- Playwright 真实浏览器 smoke。
 - `SKILL_UNLOCKS` 数据驱动。
 - 少技能开局战斗手感。
 - Day 1-Day 9 叙事体验打磨。
@@ -19,8 +21,8 @@
 
 ## 下一轮推荐顺序
 
-1. `AGENT_F_TECH_QA_TOOLS`：修复 Playwright smoke。
-2. `AGENT_B_GAMEPLAY_SYSTEMS`：实现 `SKILL_UNLOCKS`。
+1. `AGENT_A_HARNESS_DELTA`：清理旧 Batch 上下文污染，补 handoff/contract/validation/board。
+2. `AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS`：实现 `SKILL_UNLOCKS`。
 3. `AGENT_E_UI_PRESENTATION`：技能页读取 `SKILL_UNLOCKS`。
 4. `AGENT_C_COMBAT_FEEL`：少技能开局战斗乐趣。
 5. `AGENT_D_NARRATIVE_CONTENT`：Day 1-Day 9 垂直切片文案。
