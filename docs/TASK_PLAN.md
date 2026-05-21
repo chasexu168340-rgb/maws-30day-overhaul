@@ -36,8 +36,8 @@
 - [x] 新增 handoff / contract / validation / board。
 - [x] 补 `check` / `check:full` alias。
 - [x] 运行 build、smoke、diff check。
-- [ ] 提交并 push Harness Delta。
-- [ ] 创建 `feat/skill-unlocks-data` 并执行 `SKILL_UNLOCKS` 数据化。
+- [x] 提交并 push Harness Delta。
+- [x] 创建 `feat/skill-unlocks-data` 并完成 `SKILL_UNLOCKS` 第一版数据化。
 
 ## Validation
 
@@ -47,7 +47,7 @@
 
 ## Result
 
-- Harness Delta 已完成本地验证：新增当前 handoff、执行合同、验证入口、sprint board；旧 `CURRENT_*` / `CHANGELOG` 已归档并替换为历史 stub；`package.json` 已补 `check` / `check:full` alias。
+- Harness Delta 已完成本地验证并推送到 GitHub：新增当前 handoff、执行合同、验证入口、sprint board；旧 `CURRENT_*` / `CHANGELOG` 已归档并替换为历史 stub；`package.json` 已补 `check` / `check:full` alias。
 
 ## Risks
 
@@ -56,4 +56,4 @@
 
 ## Next Step
 
-Harness Delta push 后，从 `staging/reforge-unlocks-v1` 或合并后的 harness 分支继续开 `feat/skill-unlocks-data`，执行 `docs/codex_tasks/AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS.md`。
+审阅并合并 `feat/codex-harness-delta` 后，等待 `feat/skill-unlocks-data` 完成 fixup，再按顺序审阅/合并技能解锁分支。下一轮 UI 任务读取 `model.skillUnlocks`。
