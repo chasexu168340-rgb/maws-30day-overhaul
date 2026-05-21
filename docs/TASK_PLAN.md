@@ -24,7 +24,7 @@
 - [x] 解决 `docs/TASK_PLAN.md` 冲突，保留当前 UI 任务状态。
 - [x] 运行 `npm run check:full`。
 - [x] 运行 `git diff --check`。
-- [ ] 提交并 push 更新。
+- [x] 提交并 push 更新。
 
 ## Validation
 
@@ -35,7 +35,7 @@
 
 - 技能页实现保持不变：读取 `model.skillUnlocks[skillId]`，展示未学会、planned、initial 的来源和状态。
 - 已合入 `origin/main` 并解决 `docs/TASK_PLAN.md` 冲突。
-- 验证通过，待提交并推送。
+- 验证通过，已推送到 `origin/feat/ui-skill-unlocks-display`，等待审阅/合并。
 
 ## Risks
 
@@ -44,4 +44,4 @@
 
 ## Next Step
 
-验证通过并 push 后，回到 GitHub 确认 PR merge conflict 状态刷新。
+合并到 `staging/reforge-unlocks-v1` 后，下一轮开 `feat/metro-runtime-background`，只接地铁站 runtime 背景映射。
