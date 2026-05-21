@@ -180,6 +180,36 @@ const FINAL_OBJECTIVES = {
   }
 };
 
+const PARK_CHECK_OBJECTIVE_IDS = ['parkSurviveWindow1', 'parkGuardPressure', 'parkRetreatSpace', 'parkNoMoraleCollapse'];
+
+const PARK_CHECK_OBJECTIVES = {
+  parkSurviveWindow1: {
+    label: '撑过第一个窗口',
+    short: '第一窗',
+    desc: '至少完成一个交换窗口，没有被第一波拳距压垮。'
+  },
+  parkGuardPressure: {
+    label: '抱架降压一次',
+    short: '抱架',
+    desc: '用防守抱架接住一次拳距压力，把伤害或风险压下来。'
+  },
+  parkRetreatSpace: {
+    label: '后撤拉开距离',
+    short: '后撤',
+    desc: '成功后撤一次，把不舒服的距离重新拉开。'
+  },
+  parkNoMoraleCollapse: {
+    label: '士气没有崩盘',
+    short: '士气',
+    desc: '第一波之后心气还在，没有把验货打成情绪崩盘。'
+  }
+};
+
+const COMBAT_OBJECTIVES = {
+  ...FINAL_OBJECTIVES,
+  ...PARK_CHECK_OBJECTIVES
+};
+
 const REFORGED_SKILLS = new Set([
   'jab',
   'straight',
@@ -1272,6 +1302,7 @@ function startBattle(state, enemyId, main = false, meta = {}) {
   const def = ENEMIES[enemyId] || ENEMIES.E01;
   const dailySpBefore = state.player.sp;
   const battleSp = clamp(Math.max(state.player.sp, Math.round(state.player.spMax * 0.72)), 30, state.player.spMax);
+  const objectives = Array.isArray(meta.objectives) ? [...meta.objectives] : (main && state.day === 5 && enemyId === 'E01' ? [...PARK_CHECK_OBJECTIVE_IDS] : []);
   state.player.sp = battleSp;
   state.ui.modal = null;
   state.ui.selectedTravel = null;
@@ -1282,8 +1313,10 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     enemyId,
     main,
     script: meta.script || def.script || null,
-    objectives: Array.isArray(meta.objectives) ? [...meta.objectives] : [],
-    objectiveProgress: Object.fromEntries((Array.isArray(meta.objectives) ? meta.objectives : []).map((id) => [id, Boolean(state.maw?.objectives?.[id])])),
+    objectiveSet: main && state.day === 5 && enemyId === 'E01' ? 'park_check' : (objectives.length ? 'final' : null),
+    objectivePassCount: main && state.day === 5 && enemyId === 'E01' ? 2 : null,
+    objectives,
+    objectiveProgress: Object.fromEntries(objectives.map((id) => [id, Boolean(state.maw?.objectives?.[id])])),
     objectiveNotes: [],
     dailySpBefore,
     round: 1,
@@ -1454,8 +1487,26 @@ function updateCombatObjectives(state, previousCombat, combat, steps = []) {
   const playerActions = playerSteps.map(stepActionId);
   const enemyDamage = enemySteps.reduce((sum, step) => sum + stepDamage(step), 0);
   const highDanger = previousCombat?.enemyTell?.danger === '高' || enemySteps.some((step) => step.result?.response?.danger === '高');
+  const counteredByGuard = counterSkillsForPlan(previousCombat?.enemyTell).includes('guard');
   const protectedActions = ['guard', 'sprawl', 'dodge', 'retreat', 'dirtyescape'];
   const straightActions = ['straight', 'karate_reverse_punch', 'jab'];
+
+  if (combat.objectiveSet === 'park_check') {
+    if (Number(combat.windowCount || 0) >= 1 && state.player.hp > 0) {
+      mark('parkSurviveWindow1', '你撑过了公园验货的第一个窗口。');
+    }
+    if (playerActions.includes('guard') && (counteredByGuard || enemySteps.some((step) => step.result?.guarded))) {
+      mark('parkGuardPressure', '你用抱架把拳距压力压下来了一次。');
+    }
+    if (playerSteps.some((step) => stepActionId(step) === 'retreat' && step.result?.ok && step.result?.distance)) {
+      mark('parkRetreatSpace', '你后撤拉开了距离，没有在不舒服的位置硬拼。');
+    }
+    if (Number(combat.windowCount || 0) >= 1 && Number(state.player.morale || 0) >= 35 && state.player.hp > 0) {
+      mark('parkNoMoraleCollapse', '你没有被第一波交换打到士气崩盘。');
+    }
+    combat.objectiveNotes = combat.objectiveNotes.slice(0, 5);
+    return;
+  }
 
   if (Number(combat.windowCount || 0) >= 1 && state.player.hp > 0) {
     mark('surviveWindow1', '你撑过了终战第一波压迫。');
@@ -1486,7 +1537,7 @@ function finalObjectiveList(combat) {
   if (!isObjectiveBattle(combat)) return [];
   return combat.objectives.map((id) => ({
     id,
-    ...(FINAL_OBJECTIVES[id] || { label: id, short: id, desc: '' }),
+    ...(COMBAT_OBJECTIVES[id] || { label: id, short: id, desc: '' }),
     done: Boolean(combat.objectiveProgress?.[id])
   }));
 }
@@ -1593,6 +1644,48 @@ function finishObjectiveBattle(state, reason = 'normal') {
   state.ui.tab = 'map';
 }
 
+function finishParkCheckBattle(state, reason = 'normal') {
+  const combat = state.combat;
+  const objectives = finalObjectiveList(combat);
+  const completed = objectives.filter((item) => item.done).length;
+  const required = Number(combat.objectivePassCount || 2);
+  const win = reason === 'objective_pass' || reason === 'riskwin' || combat.enemy.hp <= 0 || completed >= required;
+  const before = snapshotState(state);
+  recordCombatOutcome(state, win, win ? 'park_check_pass' : 'park_check_review');
+  state.flags[`main_${state.day}`] = true;
+  state.daily.mainDone = true;
+  state.player.morale = clamp(state.player.morale + (win ? 4 : -2), 0, 100);
+  state.player.calm = clamp(state.player.calm + 3, 0, 100);
+  const targetSp = Math.round(state.player.spMax * 0.64);
+  state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
+  addLog(state, win
+    ? `公园验货通过：完成 ${completed}/${objectives.length} 个轻目标。`
+    : `公园验货未通过：完成 ${completed}/${objectives.length} 个轻目标，复盘后去拳馆学刺拳。`);
+  state.ui.modal = {
+    type: 'battleResult',
+    title: win ? '验货通过' : '验货未通过',
+    body: [
+      `目标完成：${completed}/${objectives.length}，通过要求：${required} 项。`,
+      win
+        ? '这不是 KO 证明，只是说明你在第一波拳距里能做出具体选择。'
+        : '失败也有复盘价值：别急着追重招，去拳馆学刺拳，先把拳距和回收补上。',
+      `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
+    ].join('\n'),
+    objectiveLines: objectives.map((item) => ({
+      label: item.label,
+      desc: item.desc,
+      done: item.done,
+      status: item.done ? '完成' : '未完成'
+    })),
+    lines: settlementLines(before, snapshotState(state)),
+    win,
+    reason: win ? 'park_check_pass' : 'park_check_review',
+    tier: win ? 'pass' : 'review'
+  };
+  state.combat = null;
+  state.ui.tab = 'map';
+}
+
 function recordCombatOutcome(state, win, reason = 'normal') {
   const combat = state.combat;
   const e = combat.enemy;
@@ -1615,6 +1708,10 @@ function finishBattle(state, reason = 'normal') {
   const combat = state.combat;
   if (combat?.main && combat.script === 'first_wind') {
     finishFirstWindBattle(state, reason);
+    return;
+  }
+  if (combat?.objectiveSet === 'park_check') {
+    finishParkCheckBattle(state, reason);
     return;
   }
   if (isObjectiveBattle(combat)) {
@@ -1853,6 +1950,8 @@ export class GameStore {
         if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, feedbackLine, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
         if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 1) {
           finishBattle(s, 'first_wind');
+        } else if (s.combat?.objectiveSet === 'park_check' && finalObjectiveList(s.combat).filter((item) => item.done).length >= Number(s.combat.objectivePassCount || 2)) {
+          finishBattle(s, 'objective_pass');
         } else if (result.finished && s.combat) {
           finishBattle(s, s.combat.finishReason || 'normal');
         }
