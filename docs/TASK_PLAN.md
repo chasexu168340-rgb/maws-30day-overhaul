@@ -4,50 +4,50 @@
 
 ## Current Task
 
-Agent 01：地点锁定与初始技能缩减基础设施。
+Wave 2 启动准备：合并 Agent 01，并将 Agent 03 改为地铁站实现型任务。
 
 ## Scope
 
-- 新增地点开放规则。
-- 新开局只保留 4 个初始技能。
-- 地图 render model 输出锁定原因和开放提示。
-- 地图直接出行拦截未开放地点。
-- 旧存档保留已有技能，不强删。
-- 不新增完整地铁站内容，不做 UI 精修。
+- 合并 `feat/reforge-core-unlocks` 到 staging。
+- 验证合并后的 build 与 diff check。
+- 推送 `staging/reforge-unlocks-v1`。
+- 将 Wave 2 worktree 重置到最新 staging。
+- 修改 Agent 03 prompt：从 proposal-only 改为只改 `data.js` 的地铁站实现任务。
+- 暂不启动 Wave 2 之前的全自动合并。
 
 ## Relevant Files
 
 - `docs/TASK_PLAN.md`
+- `docs/codex_tasks/AGENT_03_METRO_CONTENT.md`
+- `docs/agent_reports/AGENT_01_CORE_UNLOCKS.md`
 - `maws_src/content/data.js`
 - `maws_src/simulation/state.js`
-- `docs/agent_reports/AGENT_01_CORE_UNLOCKS.md`
-- `.codex/DONE.md`
 
 ## Plan
 
-- [x] 在 `data.js` 新增 `LOC_UNLOCKS` 和 `INITIAL_SKILLS`。
-- [x] 在 `state.js` 新增地点锁 helper。
-- [x] 修改 `createNewState()` 初始技能和装备槽。
-- [x] 在 `buildRenderModel()` / `cityMapModel()` 输出锁定字段。
-- [x] 在 `openTravel` / `travel` / `takeOpportunity` 中拦截未开放地点。
-- [x] 给 `startMainEvent` 保留 `allowLocked` 主线临时通行。
-- [x] 运行 build 和最小状态 smoke。
+- [x] 合并 `feat/reforge-core-unlocks`。
+- [x] 合并后运行 `npm run build`。
+- [x] 合并后运行 `git diff --check HEAD~1..HEAD`。
+- [x] 推送 `origin/staging/reforge-unlocks-v1`。
+- [x] 重置 Wave 2 worktree 到最新 staging，并逐个 build。
+- [x] 修改 Agent 03 prompt 为地铁站实现型任务。
 
 ## Validation
 
 - [x] `npm run build`：通过，检查 20 个 JavaScript / MJS 文件，并验证 93 个 manifest entries。
-- [x] Node 状态 smoke：通过。新档 4 技能、Day 1 仅 `home/store` 未锁定、锁定地点出行被拦截、主线 travel 保留 override、旧存档技能保留。
+- [x] `git diff --check HEAD~1..HEAD`：通过。
+- [x] Wave 2 六个 worktree 重置后各自 `npm run build`：全部通过。
 
 ## Result
 
-地点锁基础已接入。新开局现在只解锁 `mystic / guard / retreat / talkdown`，并只装备这 4 个技能。Day 1 地图 render model 中只有 `home/store` 未锁定；后续地点按 day 逐步开放。旧存档已有技能不会被迁移逻辑删除。
+Agent 01 已合并进 staging 并推送。Wave 2 worktree 已同步到合并后的地基。Agent 03 prompt 已改为实现 `metro_station` 地点，允许只修改 `maws_src/content/data.js`、`docs/TASK_PLAN.md` 和 Agent 03 报告。
 
 ## Risks
 
-- `metro_station` 规则已预留，但地点数据尚未接入；当前 Day 1 实际只有 `home/store` 可见未锁定。
-- UI 还没有专门展示锁定原因，Agent 02 需要基于 `locked / lockReason / unlockHint` 接入表现。
-- Day 2 / Day 8 旧主线地点和本轮锁定节奏不完全一致，当前用主线 `allowLocked` 避免软锁。
+- `metro_station` 还没进运行数据，需由 Agent 03 落地。
+- Agent 02 / 03 启动后要重点检查是否都基于最新 staging。
+- Agent 04 / 05 仍建议 proposal-only，避免再次抢 `data.js` / `state.js`。
 
 ## Next Step
 
-下一步由 Integrator 检查并合并 `feat/reforge-core-unlocks`，然后启动 Wave 2。若中断，新窗口先读取 `AGENTS.md`、`docs/FILE_MAP.md`、`docs/TASK_PLAN.md`、`docs/agent_reports/AGENT_01_CORE_UNLOCKS.md`。
+下一步启动 Wave 2：`powershell -ExecutionPolicy Bypass -File .\scripts\30_launch_wave2_parallel.ps1`。Wave 2 完成后先运行 `scripts\40_collect_reports.ps1` 收报告，不要立即全合并。

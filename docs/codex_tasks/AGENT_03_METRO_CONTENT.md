@@ -43,46 +43,49 @@
 
 外层脚本会用 `.codex/NEXT_PROMPT.md` 启动新的 Codex 进程。
 
-# Agent 03 - Metro Station Content Proposal
+# Agent 03 - Metro Station Implementation
 
 ## 任务类型
 
-内容提案任务。默认不要直接改核心源码，避免和 Agent 01 / 04 冲突。
+地铁站内容实现任务。只改 `data.js`，不碰 `state.js` / UI / 战斗，避免和 Agent 01 / 02 / 04 冲突。
 
 ## Allowed Files
 
-- `docs/content_proposals/metro_station.md`
+- `maws_src/content/data.js`
 - `docs/agent_reports/AGENT_03_METRO_CONTENT.md`
 - `docs/TASK_PLAN.md`
 
 ## 目标
 
-设计“地铁站”作为可进入早期地点的内容提案。
+实现 `metro_station` 地点，不只写 proposal。Agent 01 已经接入地点锁基础，`LOC_UNLOCKS.metro_station` 已预留为默认开放。
 
-## 输出要求
+## 具体要求
 
-写 `docs/content_proposals/metro_station.md`，包含：
-
-1. `LOCS.metro_station` 数据草案。
-2. `LOC_POS.metro_station` 坐标建议。
-3. `ACTIONS.metro_station` 三到五个行动：
-   - 观察通勤人流。
-   - 刷短视频打假。
-   - 站台步法小练。
-   - Day 2 误判胜利事件入口。
-4. 与 `maw.misread`、`heat`、`jud`、`street` 的收益关系。
-5. 主线 Day 2 如何迁移到地铁站。
-6. 文案风格：好笑，但不要太油。
-7. 资源需求：能先复用城市/街区背景，不强制新图。
+1. 新增 `LOCS.metro_station`。
+2. 新增 `LOC_POS.metro_station`。
+3. 新增 `ACTIONS.metro_station`，至少 4 个行动：
+   - `metro_observe`
+   - `metro_short_video`
+   - `metro_shadow_step`
+   - `metro_line_rumor`
+4. 行动收益只使用已有 gain 字段，避免改 `economy.js`。
+5. 需要文案自然、有城市感，不要翻译腔，不要油腻网感。
+6. 可以把 Day 2 主线 loc 从 `street` 迁移到 `metro_station`，但只限 `data.js` 内已有主线数据。
+7. 不新增图片、manifest 或资产结构。
 
 ## 禁止
 
-- 不要直接改 `data.js`。
-- 不要直接改 `state.js`。
-- 不要新增资产文件。
+- 不改 `state.js`。
+- 不改 `ui.js` / `ui.css`。
+- 不改 `combat.js`。
+- 不改 `economy.js`。
+- 不改存档 key/version。
+- 不新增资产文件。
 
 ## 验收
 
-- proposal 文件完整。
-- `npm run build` 可跳过，因为未改运行代码；但最终报告要写明。
+- `npm run build` 通过。
+- 新档 render model 里能看到 `metro_station` 且 Day 1 不锁定。
+- `ACTIONS.metro_station` 至少 4 个行动。
+- 写 `docs/agent_reports/AGENT_03_METRO_CONTENT.md`。
 - 写 `.codex/DONE.md`。
