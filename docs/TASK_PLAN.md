@@ -4,51 +4,57 @@
 
 ## Current Task
 
-整理本地 agent 工作区，并把可供 ChatGPT/GitHub 审核的开发记录同步到远端。
+Wave 3A：补真实浏览器 Playwright smoke，并推送 QA 分支给 GitHub/ChatGPT 审阅。
 
 ## Scope
 
-- 保留根目录 `maws-agent-*` 作为本地完整 worktree，不直接提交进 Git。
-- 新增 `docs/agent_workspaces/`，归档每个 agent 的分支、提交、报告和 checkpoint。
-- 强制纳入两个任务打包 zip，方便远端审核执行器和开发书原始资料。
-- 更新 `.gitignore`，避免后续误提交完整 worktree 副本、日志、生成图和测试输出。
-- 不改运行代码、战斗公式、经济曲线、存档 key/version 或资产结构。
+- 从 `staging/reforge-unlocks-v1` 新建 `feat/qa-playwright-smoke`。
+- 尝试运行 `AGENT_F_TECH_QA_TOOLS`。
+- 补 `@playwright/test` 和 Chromium 浏览器缓存。
+- 新增 `npm run test:smoke`。
+- 覆盖 390x844、900x700、1365x768 三档真实浏览器 smoke。
+- 验证地点锁 UI、地铁站 Day 1 可见可进入可行动、技能页和战斗页无横向溢出。
+- 不改玩法数据、技能解锁、战斗公式、经济曲线、存档 key/version 或资产结构。
 
 ## Relevant Files
 
-- `.gitignore`
+- `package.json`
+- `package-lock.json`
+- `maws_src/tests/phaser-smoke.spec.js`
 - `docs/TASK_PLAN.md`
-- `docs/agent_workspaces/`
-- `MAWS_Codex_Autorun_Orchestrator_v0.4.zip`
-- `MAWS_重铸优化_多Agent工作开发书_v0.3_打包.zip`
+- `docs/agent_reports/AGENT_F_TECH_QA_TOOLS.md`
+- `.codex/DONE.md`
 
 ## Plan
 
-- [x] 检查当前分支和未提交范围。
-- [x] 修复移入项目根目录后的 agent worktree 指针。
-- [x] 建立 `docs/agent_workspaces/` 审核归档。
-- [x] 让根目录完整 `maws-agent-*` 只保留本地，不进入 Git。
-- [x] 更新本任务 checkpoint。
+- [x] 同步 staging 并创建 QA 分支。
+- [x] 尝试运行 `codex exec < docs\codex_tasks\AGENT_F_TECH_QA_TOOLS.md`。
+- [x] 在外部 Agent 因本机 CLI 认证失败后，由当前 Codex 手动完成同一任务。
+- [x] 安装 Playwright 测试依赖和 Chromium。
+- [x] 改造 smoke spec。
+- [x] 运行 build 和 smoke。
+- [x] 执行最终 diff/status 检查。
 - [x] 提交并推送到 GitHub。
 
 ## Validation
 
-- [x] `git worktree list`：agent worktree 已指向项目根目录下的新位置。
-- [x] `git status --ignored`：根目录完整 `maws-agent-*` 已被忽略，`docs/agent_workspaces/` 可跟踪。
-- [x] `git diff --check`
+- [x] `npx playwright install chromium`
 - [x] `npm run build`
-- [x] `git push`
+- [x] `npm run test:smoke`
+- [x] `git diff --check`
+- [x] `git status --short`
+- [x] `git push -u origin feat/qa-playwright-smoke`
 
 ## Result
 
-上一轮游戏运行代码已经在 `staging/reforge-unlocks-v1` 合并并推送。本轮只整理审核资料：完整 agent 工作区留在本机，远端提交轻量、可读、可审核的 agent 记录归档和任务资料包。审核归档提交为 `e231d01`，已推送到 GitHub。
+`npm run test:smoke` 已能启动真实 Chromium，并通过 4 个用例：地点锁与地铁站流程 1 个，390x844、900x700、1365x768 响应式 smoke 各 1 个。测试覆盖地图锁点、地铁站 travel/action、技能页和战斗页横向溢出。QA 提交为 `f5e58c0`，已推送到 `origin/feat/qa-playwright-smoke`。
 
 ## Risks
 
-- 根目录完整 `maws-agent-*` 没有进入 GitHub；如需查看完整工作区，只能在本机看。
-- 两个 zip 是被 `.gitignore` 默认忽略的资料包，本轮会显式 `git add -f`，后续不要把其他大包默认加入。
-- 浏览器 smoke 仍需安装 Playwright 浏览器依赖后再跑。
+- 外部 `codex exec` 没有成功，原因是本机 Codex CLI API key 无效；本分支改动由当前 Codex 手动完成。
+- Playwright 浏览器缓存安装在本机用户目录，不进入 Git。
+- 这轮只建立 QA 门槛，不处理 `SKILL_UNLOCKS`、早期战斗手感或地铁站视觉闭环。
 
 ## Next Step
 
-本轮推送完成后，把 GitHub 分支 `staging/reforge-unlocks-v1` 发给 ChatGPT 审核。下一轮优先做真实浏览器 smoke，再处理 Agent 04/05/06 的 proposal 和 QA。
+推送后让 ChatGPT 审阅 `feat/qa-playwright-smoke`。通过后再开 `AGENT_B_GAMEPLAY_SYSTEMS` 做 `SKILL_UNLOCKS` 数据驱动。
