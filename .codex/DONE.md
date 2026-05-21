@@ -1,8 +1,14 @@
 # DONE
 
-Wave 2 UI and metro integration completed locally.
+Agent: AGENT_F_TECH_QA_TOOLS
 
-- Agent 02 UI locks branch merged.
-- Agent 03 metro station branch merged.
-- Build passed after each merge step.
-- Browser smoke for Agent 02 is still blocked by missing Playwright browser/test dependencies.
+Status: implemented by parent Codex after external `codex exec` failed on local CLI authentication.
+
+Completed:
+- Added Playwright test dependency.
+- Installed Chromium browser cache locally.
+- Added `npm run test:smoke`.
+- Added real-browser smoke coverage for location locks, metro station flow, skills page, and combat page across 390x844, 900x700, and 1365x768.
+
+Next:
+- Run final `git diff --check` and push this QA branch for review.
