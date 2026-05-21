@@ -29,7 +29,7 @@
 - [x] 建立 `docs/agent_workspaces/` 审核归档。
 - [x] 让根目录完整 `maws-agent-*` 只保留本地，不进入 Git。
 - [x] 更新本任务 checkpoint。
-- [ ] 提交并推送到 GitHub。
+- [x] 提交并推送到 GitHub。
 
 ## Validation
 
@@ -37,11 +37,11 @@
 - [x] `git status --ignored`：根目录完整 `maws-agent-*` 已被忽略，`docs/agent_workspaces/` 可跟踪。
 - [x] `git diff --check`
 - [x] `npm run build`
-- [ ] `git push`
+- [x] `git push`
 
 ## Result
 
-上一轮游戏运行代码已经在 `staging/reforge-unlocks-v1` 合并并推送。本轮只整理审核资料：完整 agent 工作区留在本机，远端提交轻量、可读、可审核的 agent 记录归档和任务资料包。
+上一轮游戏运行代码已经在 `staging/reforge-unlocks-v1` 合并并推送。本轮只整理审核资料：完整 agent 工作区留在本机，远端提交轻量、可读、可审核的 agent 记录归档和任务资料包。审核归档提交为 `e231d01`，已推送到 GitHub。
 
 ## Risks
 
