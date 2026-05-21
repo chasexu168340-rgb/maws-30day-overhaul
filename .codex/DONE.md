@@ -1,7 +1,8 @@
 # DONE
 
-Agent 01 core unlock foundation completed.
+Agent 02 UI locks and skill source display completed.
 
 - Build passed.
-- State smoke passed.
-- Report written to `docs/agent_reports/AGENT_01_CORE_UNLOCKS.md`.
+- Diff check passed.
+- Browser smoke was attempted but blocked by missing Playwright browser/test dependencies.
+- Report written to `docs/agent_reports/AGENT_02_UI_LOCKS.md`.
