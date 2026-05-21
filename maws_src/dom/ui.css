@@ -378,6 +378,12 @@
   opacity: 0.76;
 }
 
+.maws-city-marker.locked {
+  opacity: 0.82;
+  background: #d8d0bb;
+  color: #3a332a;
+}
+
 .maws-city-marker:hover,
 .maws-city-marker:focus,
 .maws-city-marker:focus-visible {
@@ -671,14 +677,29 @@
   padding: 8px 10px;
 }
 
+.maws-loc span {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  min-width: 0;
+  max-width: 58%;
+}
+
+.maws-loc em {
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .maws-loc b,
-.maws-loc small {
+.maws-loc small,
+.maws-loc span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .maws-loc small {
-  max-width: 56%;
   text-align: right;
   white-space: normal;
   line-height: 1.15;
@@ -692,6 +713,17 @@
 .maws-loc.main-here {
   outline: 2px solid var(--maws-gold, #ffd941);
   outline-offset: -4px;
+}
+
+.maws-loc.locked,
+.maws-loc.closed {
+  background: rgba(18, 18, 20, 0.08);
+  color: rgba(20, 16, 12, 0.78);
+}
+
+.maws-loc.locked b,
+.maws-loc.closed b {
+  filter: grayscale(1);
 }
 
 .maws-action {
@@ -955,6 +987,16 @@
 
 .maws-skill.disabled {
   opacity: 0.76;
+}
+
+.maws-skill.locked {
+  border-color: rgba(5, 5, 6, 0.34);
+  background: rgba(20, 20, 22, 0.06);
+}
+
+.maws-skill.locked .maws-skill-art {
+  filter: grayscale(1);
+  opacity: 0.18;
 }
 
 .maws-skill header,
