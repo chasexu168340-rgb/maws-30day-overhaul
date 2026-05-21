@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented on `feat/skill-unlocks-data` after Harness Delta.
+Implemented on `feat/skill-unlocks-data` after Harness Delta. Fixup completed to cover all current skills and stabilize the render model shape.
 
 ## Changes
 
@@ -15,6 +15,11 @@ Implemented on `feat/skill-unlocks-data` after Harness Delta.
   - `tkd_kick_line`: `tkd_roundhouse`, `tkd_back_kick`
 - Added `model.skillUnlocks` in `buildRenderModel()`.
 - Added first-time skill learn settlement lines for normal actions and training minigames.
+- Fixup added initial/planned coverage for the remaining skills:
+  - Initial: `mystic`, `guard`, `retreat`, `talkdown`
+  - Real action sources: `dodge`, `grip`, `takedown`
+  - Planned only: `advance`, `lowkick`, `frontkick`, `sidecontrol`, `dirtyescape`
+- `model.skillUnlocks` is now an object keyed by `skillId`.
 
 ## Boundaries
 
@@ -30,7 +35,10 @@ Implemented on `feat/skill-unlocks-data` after Harness Delta.
 - Custom Node smoke: passed. `bag` produced `学会：刺拳 / 来源：拳馆 · 沙包连击` and `学会：直拳 / 来源：拳馆 · 沙包连击`; render model exposed `skillUnlocks`.
 - `npm run test:smoke`: passed, 4 Chromium tests.
 - `git diff --check`: passed; only Git CRLF working-copy warnings.
+- Fixup Node smoke: passed. New game exposes `model.skillUnlocks.dodge`, `model.skillUnlocks.mystic.initial === true`, `model.skillUnlocks.advance.planned === true`, and first `bag` completion still emits the learn line for `jab`.
+- Fixup `npm run test:smoke`: passed after running `npm ci` in the new worktree to install local Playwright binaries.
+- Fixup `git diff --check`: passed; only Git CRLF working-copy warnings.
 
 ## Next
 
-`AGENT_E_UI_PRESENTATION` should replace static skill-source mapping with `model.skillUnlocks`.
+`AGENT_E_UI_PRESENTATION` should replace static skill-source mapping with `model.skillUnlocks[skillId]`.
