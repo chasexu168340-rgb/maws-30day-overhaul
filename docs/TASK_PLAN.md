@@ -37,6 +37,7 @@
 - [x] 运行 fixup build 和 Node smoke。
 - [x] 运行 fixup Playwright smoke 和 diff check。
 - [x] 提交并 push fixup。
+- [x] 合入最新 `origin/staging/reforge-unlocks-v1`，准备回合到 staging。
 
 ## Validation
 
@@ -52,6 +53,7 @@
 ## Result
 
 - 已实现数据驱动技能来源和结算提示；fixup 已补全当前技能覆盖，并把 `model.skillUnlocks` 固定为对象形态。
+- 分支已同步最新 staging，等待合并到 `staging/reforge-unlocks-v1`。
 
 ## Risks
 
@@ -62,4 +64,4 @@
 
 ## Next Step
 
-`feat/skill-unlocks-data` fixup 已推送。下一步交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks[skillId]`。
+合并 `feat/skill-unlocks-data` 到 staging。下一轮交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks[skillId]`。
