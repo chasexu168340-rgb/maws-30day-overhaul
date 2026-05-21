@@ -1,5 +1,5 @@
 const STAT_KEYS = Object.freeze(['str', 'end', 'spd', 'rea', 'tec', 'tou', 'bal', 'jud']);
-const STYLE_KEYS = Object.freeze(['boxing', 'mma', 'traditional', 'street']);
+const STYLE_KEYS = Object.freeze(['boxing', 'mma', 'traditional', 'street', 'sanda', 'karate', 'taekwondo']);
 const SKILL_STYLE = Object.freeze({
   jab: 'boxing',
   straight: 'boxing',
@@ -18,7 +18,13 @@ const SKILL_STYLE = Object.freeze({
   talkdown: 'street',
   palm: 'traditional',
   offbalance: 'traditional',
-  mystic: 'traditional'
+  mystic: 'traditional',
+  sanda_whip_kick: 'sanda',
+  sanda_catch_throw: 'sanda',
+  karate_reverse_punch: 'karate',
+  karate_front_kick: 'karate',
+  tkd_roundhouse: 'taekwondo',
+  tkd_back_kick: 'taekwondo'
 });
 
 const STAT_LABELS = Object.freeze({
@@ -36,7 +42,10 @@ const STYLE_LABELS = Object.freeze({
   boxing: '拳击实用',
   mma: 'MMA防摔',
   traditional: '传统拆解',
-  street: '街头判断'
+  street: '街头判断',
+  sanda: '散打转换',
+  karate: '空手道直线',
+  taekwondo: '跆拳道腿法'
 });
 
 const PLAYER_LINE_RULES = Object.freeze([

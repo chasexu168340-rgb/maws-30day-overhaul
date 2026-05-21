@@ -39,7 +39,13 @@ const SKILLS = Object.freeze({
   talkdown: { name: "言语降温", type: "dirty", dist: ["far", "mid", "close"], dmg: 0, post: 0, sp: 4, tp: 1, hit: 0.58, risk: 0.05, style: "street" },
   palm: { name: "掌根短击", type: "strike", dist: ["close"], dmg: 16, post: 20, sp: 13, tp: 2, hit: 0.66, risk: 0.18, style: "traditional" },
   offbalance: { name: "破平衡", type: "grapple", dist: ["close"], dmg: 5, post: 24, sp: 12, tp: 2, hit: 0.65, risk: 0.16, style: "traditional" },
-  mystic: { name: "混元一气掌", type: "mystic", dist: ["far", "mid"], dmg: 8, post: 6, sp: 24, tp: 3, hit: 0.36, risk: 0.34, style: "traditional" }
+  mystic: { name: "混元一气掌", type: "mystic", dist: ["far", "mid"], dmg: 8, post: 6, sp: 24, tp: 3, hit: 0.36, risk: 0.34, style: "traditional" },
+  sanda_whip_kick: { name: "散打鞭腿", type: "kick", dist: ["mid", "close"], dmg: 17, post: 16, sp: 13, tp: 2, hit: 0.67, risk: 0.17, style: "sanda" },
+  sanda_catch_throw: { name: "接腿快摔", type: "grapple", dist: ["close"], dmg: 10, post: 24, sp: 16, tp: 2, hit: 0.60, risk: 0.22, style: "sanda" },
+  karate_reverse_punch: { name: "空手道逆突", type: "strike", dist: ["mid"], dmg: 21, post: 18, sp: 14, tp: 2, hit: 0.66, risk: 0.20, style: "karate" },
+  karate_front_kick: { name: "空手道前蹴", type: "kick", dist: ["mid"], dmg: 14, post: 15, sp: 11, tp: 1, hit: 0.70, risk: 0.13, style: "karate" },
+  tkd_roundhouse: { name: "跆拳道横踢", type: "kick", dist: ["far", "mid"], dmg: 18, post: 15, sp: 13, tp: 2, hit: 0.65, risk: 0.18, style: "taekwondo" },
+  tkd_back_kick: { name: "跆拳道后踢", type: "kick", dist: ["mid"], dmg: 24, post: 20, sp: 18, tp: 2, hit: 0.58, risk: 0.28, style: "taekwondo" }
 });
 
 const ENEMY_TEMPLATES = Object.freeze({
@@ -52,7 +58,12 @@ const ENEMY_TEMPLATES = Object.freeze({
   E07: { id: "E07", name: "木棍小混混", hp: 90, sp: 82, posture: 70, morale: 80, calm: 58, preferredRange: "far", stats: { str: 45, end: 42, spd: 46, tec: 28, tou: 42, bal: 40, rea: 43, jud: 30 }, skills: ["advance", "dirtyescape", "talkdown", "straight"], ai: "weapon", weapon: true },
   E08: { id: "E08", name: "散打大学生", hp: 130, sp: 125, posture: 96, morale: 72, calm: 76, preferredRange: "mid", stats: { str: 58, end: 64, spd: 60, tec: 66, tou: 58, bal: 62, rea: 63, jud: 60 }, skills: ["jab", "straight", "lowkick", "frontkick", "sprawl", "dodge"], ai: "sanda" },
   E09: { id: "E09", name: "地下赛试探者", hp: 138, sp: 118, posture: 92, morale: 82, calm: 62, preferredRange: "close", stats: { str: 62, end: 60, spd: 57, tec: 58, tou: 62, bal: 58, rea: 56, jud: 50 }, skills: ["straight", "advance", "grip", "takedown", "dirtyescape", "lowkick"], ai: "dirtymix" },
-  E18: { id: "E18", name: "陈见锋", hp: 165, sp: 150, posture: 120, morale: 82, calm: 86, preferredRange: "mid", stats: { str: 68, end: 75, spd: 66, tec: 78, tou: 70, bal: 75, rea: 72, jud: 80 }, skills: ["jab", "straight", "frontkick", "sprawl", "advance", "grip", "takedown", "guard", "escape"], ai: "boss" }
+  E10: { id: "E10", name: "沉默拳击手", hp: 100, sp: 100, posture: 90, morale: 70, calm: 85, preferredRange: "mid", archetype: "first wind boxer", telegraph: "肩膀只动了一下，距离已经被拿走。", personality: "不配合你的招名，只按拳距和回收说话。", stats: { str: 50, end: 55, spd: 62, tec: 62, tou: 52, bal: 55, rea: 64, jud: 60 }, skills: ["jab", "straight", "guard", "retreat"], ai: "boxer", script: "first_wind" },
+  E11: { id: "E11", name: "短视频挑战者阿豹", hp: 96, sp: 92, posture: 75, morale: 90, calm: 42, preferredRange: "mid", archetype: "overconfident brawler", telegraph: "肩膀绷得很满，起手前嘴比脚快。", personality: "相信秘传和镜头，基础有一点，但心气大过架势。", stats: { str: 45, end: 47, spd: 48, tec: 43, tou: 43, bal: 43, rea: 45, jud: 34 }, skills: ["straight", "advance", "mystic", "retreat", "talkdown"], ai: "brawler" },
+  E18: { id: "E18", name: "陈见锋", hp: 165, sp: 150, posture: 120, morale: 82, calm: 86, preferredRange: "mid", stats: { str: 68, end: 75, spd: 66, tec: 78, tou: 70, bal: 75, rea: 72, jud: 80 }, skills: ["jab", "straight", "frontkick", "sprawl", "advance", "grip", "takedown", "guard", "escape"], ai: "boss" },
+  E19: { id: "E19", name: "散打馆快摔手", hp: 142, sp: 132, posture: 104, morale: 74, calm: 70, preferredRange: "mid", archetype: "kick-catch hybrid", telegraph: "肩线放松、前脚轻点，常用鞭腿逼反应再接腿快摔。", personality: "耐心压迫，喜欢用腿法把你赶到近身。", stats: { str: 61, end: 66, spd: 64, tec: 68, tou: 60, bal: 66, rea: 64, jud: 62 }, skills: ["jab", "sanda_whip_kick", "sanda_catch_throw", "sprawl", "advance", "guard"], ai: "sanda_school" },
+  E20: { id: "E20", name: "空手道道场主力", hp: 136, sp: 126, posture: 112, morale: 76, calm: 78, preferredRange: "mid", archetype: "linear counter striker", telegraph: "重心压低、髋部先锁住，逆突前会有短暂停顿。", personality: "克制、等你先动，抓重招回收打直线反击。", stats: { str: 60, end: 62, spd: 58, tec: 72, tou: 62, bal: 70, rea: 66, jud: 70 }, skills: ["karate_reverse_punch", "karate_front_kick", "guard", "dodge", "jab"], ai: "karate_school" },
+  E21: { id: "E21", name: "跆拳道竞技队员", hp: 128, sp: 136, posture: 96, morale: 78, calm: 68, preferredRange: "far", archetype: "long-range kicker", telegraph: "站姿侧开、前腿弹动，后踢前会突然背身换线。", personality: "爱拉远距离，用连续腿法打节奏，不愿被缠住。", stats: { str: 56, end: 64, spd: 72, tec: 68, tou: 54, bal: 64, rea: 70, jud: 60 }, skills: ["tkd_roundhouse", "tkd_back_kick", "karate_front_kick", "dodge", "retreat"], ai: "taekwondo_school" }
 });
 
 export const ENEMY_AI_RULES = Object.freeze({
@@ -85,12 +96,62 @@ export const ENEMY_AI_RULES = Object.freeze({
     responses: ["advance", "straight", "guard", "retreat"],
     weapon: true
   },
+  E10: {
+    name: "沉默拳击手",
+    profile: "boxer",
+    archetype: "一阵风剧情拳手",
+    preferredRange: "mid",
+    telegraph: "肩膀只动了一下，距离已经被拿走。",
+    personality: "不接招名，只接破绽。",
+    reads: ["真实拳距", "重招回收", "防守等待"],
+    responses: ["jab", "straight", "guard", "retreat"]
+  },
+  E11: {
+    name: "短视频挑战者阿豹",
+    profile: "brawler",
+    archetype: "自信过量型",
+    preferredRange: "mid",
+    telegraph: "他嘴上先赢，脚下还在找站位。",
+    personality: "热血上头，基础半桶水，容易被稳扎稳打拆开。",
+    reads: ["前压硬冲", "玄学起手", "防守等待"],
+    responses: ["straight", "advance", "mystic", "retreat", "talkdown"]
+  },
   E18: {
     name: "陈见锋",
     profile: "boss",
     preferredRange: "mid",
     reads: ["高级读板", "重复动作", "重招回收", "拳摔转换", "地面态势", "防守诱导"],
     responses: ["jab", "frontkick", "straight", "guard", "sprawl", "grip", "takedown", "escape"]
+  },
+  E19: {
+    name: "散打馆快摔手",
+    profile: "sanda_school",
+    archetype: "踢摔转换型",
+    preferredRange: "mid",
+    telegraph: "肩线放松、前脚轻点，先用鞭腿逼你抬手，再找接腿快摔。",
+    personality: "耐心压迫，愿意等你重心交出来。",
+    reads: ["中距离腿法交换", "前压入身", "重招回收", "防摔反应"],
+    responses: ["sanda_whip_kick", "sanda_catch_throw", "sprawl", "advance", "guard"]
+  },
+  E20: {
+    name: "空手道道场主力",
+    profile: "karate_school",
+    archetype: "直线反击型",
+    preferredRange: "mid",
+    telegraph: "重心压低、髋部先锁住，逆突前会有短暂停顿。",
+    personality: "克制等拍，不乱追，专抓你回收慢的直线。",
+    reads: ["重招回收", "防守等待", "中距离试探", "近身乱缠"],
+    responses: ["karate_reverse_punch", "karate_front_kick", "guard", "dodge", "jab"]
+  },
+  E21: {
+    name: "跆拳道竞技队员",
+    profile: "taekwondo_school",
+    archetype: "远距腿法型",
+    preferredRange: "far",
+    telegraph: "侧身站架、前腿弹动，背身换线时要防后踢。",
+    personality: "节奏快，爱拉远打腿，不喜欢被抱住。",
+    reads: ["远距离控场", "近身压力", "重复前压", "低架防守"],
+    responses: ["tkd_roundhouse", "tkd_back_kick", "karate_front_kick", "dodge", "retreat"]
   },
   default: {
     name: "通用对手",
@@ -192,8 +253,24 @@ export function chooseEnemyResponse(context, rng = Math.random) {
     return weaponResponse(enemy, rule, combatState, facts, rng);
   }
 
+  if (enemy.id === "E11") {
+    return brawlerResponse(enemy, rule, combatState, facts, rng);
+  }
+
   if (enemy.id === "E18" || enemy.ai === "boss") {
     return bossResponse(enemy, rule, combatState, facts, rng);
+  }
+
+  if (enemy.id === "E19" || enemy.ai === "sanda_school") {
+    return sandaResponse(enemy, rule, combatState, facts, rng);
+  }
+
+  if (enemy.id === "E20" || enemy.ai === "karate_school") {
+    return karateResponse(enemy, rule, combatState, facts, rng);
+  }
+
+  if (enemy.id === "E21" || enemy.ai === "taekwondo_school") {
+    return taekwondoResponse(enemy, rule, combatState, facts, rng);
   }
 
   return genericResponse(enemy, rule, combatState, facts, rng);
@@ -351,6 +428,55 @@ function bossResponse(enemy, rule, combatState, facts, rng) {
   return response(enemy, rule, "前踢拒门", "counter", "frontkick", "他不让你轻易进身。", "中", "观察/低扫", "boss_frontkick");
 }
 
+function sandaResponse(enemy, rule, combatState, facts, rng) {
+  if (facts.playerAntiGrapple) {
+    return response(enemy, rule, "鞭腿改线", "probe", "sanda_whip_kick", "你一沉髋，他不急着摔，先用鞭腿抽外侧。", "中", "侧步/抱架/低扫", "sanda_anti_sprawl");
+  }
+  if (combatState.distance === "close" || facts.playerPressing || facts.playerGrappling) {
+    return response(enemy, rule, "接腿快摔", "clinch", "sanda_catch_throw", "他手位往下找腿，想借你前压的重心直接快摔。", "高", "防摔/后撤/前踢", "sanda_catch_throw");
+  }
+  if (facts.heavy || facts.repeated) {
+    return response(enemy, rule, "鞭腿打回收", "counter", "sanda_whip_kick", "你动作回收变慢，他顺势抽向支撑腿。", "高", "刺拳探路/抱架/侧步", "sanda_recovery_kick");
+  }
+  if (combatState.distance === "far") {
+    return response(enemy, rule, "小步压进", "pressure", "advance", "他不空踢，先小步把距离压回中段。", "中", "前踢/后撤", "sanda_enter_range");
+  }
+  const useKick = rng() < 0.46;
+  return response(enemy, rule, useKick ? "鞭腿试探" : "抱架等腿", useKick ? "probe" : "guard", useKick ? "sanda_whip_kick" : "guard", rule.telegraph || "他前脚轻点，随时可能鞭腿或接腿。", "中", "抱架/侧步/别连续前压", "sanda_mid_read");
+}
+
+function karateResponse(enemy, rule, combatState, facts, rng) {
+  if (facts.heavy || facts.repeated) {
+    return response(enemy, rule, "逆突截回收", "counter", "karate_reverse_punch", "他等你重招回收，髋部一锁，直线逆突已经顶上来。", "高", "先试探/侧步/抱架", "karate_gyaku_counter");
+  }
+  if (combatState.distance === "close") {
+    return response(enemy, rule, "前蹴顶开", "disengage", "karate_front_kick", "你一贴近，他用前蹴把距离顶回中段。", "中", "侧步/抓把", "karate_front_kick_space");
+  }
+  if (facts.playerDefensive && rng() < 0.52) {
+    return response(enemy, rule, "直线破架", "probe", "karate_reverse_punch", "你架势收紧，他用直线逆突试你的中线。", "中", "侧步/低扫", "karate_centerline");
+  }
+  if (combatState.distance === "far") {
+    return response(enemy, rule, "压到一击距离", "pressure", "advance", "他没有乱追，只把脚步压到能出逆突的位置。", "中", "前踢/后撤", "karate_step_in");
+  }
+  return response(enemy, rule, "道场抱架", "guard", "guard", rule.telegraph || "他重心很稳，像在等你先露破绽。", "低", "假动作/低扫/换角度", "karate_guard_read");
+}
+
+function taekwondoResponse(enemy, rule, combatState, facts, rng) {
+  if (combatState.distance === "close" || facts.playerPressing || facts.playerGrappling) {
+    return response(enemy, rule, "换步拉开", "disengage", "dodge", "你刚要贴身，他立刻换步离线，不让你抓到腿。", "低", "低扫/继续前压/抓把", "tkd_angle_out");
+  }
+  if (facts.heavy || facts.repeated) {
+    return response(enemy, rule, "背身后踢", "counter", "tkd_back_kick", "你节奏变直，他突然背身换线，后踢冲你的中段。", "高", "侧步/抱架/别追太直", "tkd_back_kick_read");
+  }
+  if (combatState.distance === "far") {
+    return response(enemy, rule, "远距横踢", "probe", "tkd_roundhouse", "他侧身弹腿，用横踢保持远距压力。", "中", "抱架/前压/接腿", "tkd_range_kick");
+  }
+  if (rng() < 0.48) {
+    return response(enemy, rule, "前蹴顶距", "counter", "karate_front_kick", "他不想被缠住，用前蹴把你挡在腿法距离外。", "中", "侧步/低扫", "tkd_stop_kick");
+  }
+  return response(enemy, rule, "后撤重置", "disengage", "retreat", rule.telegraph || "他侧身弹动，想把交换重新拉回远距。", "低", "前压/低扫", "tkd_reset_range");
+}
+
 function groundResponse(enemy, rule, combatState) {
   if (combatState.ground === "player_top") {
     return response(enemy, rule, "地面脱身", "ground", "escape", "对手被压住，先找空间转身。", "中", "侧压/稳住上位", "bottom_escape");
@@ -369,6 +495,22 @@ function genericResponse(enemy, rule, combatState, facts, rng) {
     return response(enemy, rule, "压进", "pressure", "advance", "对手试着缩短距离。", "中", "前踢/后撤", "generic_advance");
   }
   return response(enemy, rule, "试探", "probe", "jab", "对手先用基础动作试探。", "低", "抱架/观察", "generic_probe");
+}
+
+function brawlerResponse(enemy, rule, combatState, facts, rng) {
+  if (combatState.distance === "far") {
+    return response(enemy, rule, "冲进镜头", "pressure", "advance", "阿豹先把话放满，再大步往中距离压。", "中", "前踢/后撤/刺拳", "abao_rush_in");
+  }
+  if (facts.heavy || facts.repeated) {
+    return response(enemy, rule, "直拳抢镜", "counter", "straight", "你动作一重，他立刻用直拳抢回合。", "中", "抱架/侧步", "abao_straight");
+  }
+  if (facts.playerDefensive && rng() < 0.45) {
+    return response(enemy, rule, "秘传起手", "probe", "mystic", "你一防，他就想把短视频里的招名亮出来。", "中", "刺拳/低扫/别陪他演", "abao_mystic");
+  }
+  if (rng() < 0.35) {
+    return response(enemy, rule, "嘴上降温", "disengage", "talkdown", "他一边找台阶，一边还想让镜头站自己这边。", "低", "继续压迫/稳住距离", "abao_talkdown");
+  }
+  return response(enemy, rule, "硬压一步", "pressure", "advance", rule.telegraph || "他肩膀绷得很满，想用气势补技术。", "中", "刺拳/抱架/后撤", "abao_pressure");
 }
 
 function resolveRest(combatState) {
@@ -690,10 +832,16 @@ function applyPlayerHitSpecials(combatState, id, log, fx, rng) {
     log.push("前踢把对手顶回远距，前压/抱摔被截住。");
   }
 
-  if (id === "lowkick") {
+  if (id === "karate_front_kick" && ["pressure", "clinch"].includes(combatState.currentEnemyResponse?.intent)) {
+    combatState.distance = "mid";
+    enemy.posture = clamp(enemy.posture - 6, 0, enemy.postureMax);
+    log.push("前蹴顶住对手前压，把交换重新推回中距离。");
+  }
+
+  if (id === "lowkick" || id === "sanda_whip_kick" || id === "tkd_roundhouse") {
     const drain = 5 + Math.floor(Math.max(0, stats.spd - 50) / 14);
     enemy.sp = clamp(enemy.sp - drain, 0, enemy.spMax);
-    log.push("低扫打断前腿，对手体力被拖慢。");
+    log.push(id === "lowkick" ? "低扫打断前腿，对手体力被拖慢。" : "腿法打中节奏点，对手体力被拖慢。");
   }
 
   if (id === "grip") {
@@ -701,18 +849,23 @@ function applyPlayerHitSpecials(combatState, id, log, fx, rng) {
     log.push("抓把成功：下一次抱摔/近身命中提高。");
   }
 
-  if (id === "takedown") {
-    const chance = clamp(0.46 + (stats.str - 50) * 0.003 + (stats.bal - 50) * 0.004 + styleBonus(combatState, "mma", 0.0015) + (combatState.playerBuff.nextHit || 0), 0.18, 0.82);
+  if (id === "sanda_catch_throw") {
+    combatState.playerBuff.nextHit = (combatState.playerBuff.nextHit || 0) + 0.06 + styleBonus(combatState, "sanda", 0.001);
+  }
+
+  if (id === "takedown" || id === "sanda_catch_throw") {
+    const styleKey = id === "sanda_catch_throw" ? "sanda" : "mma";
+    const chance = clamp(0.46 + (stats.str - 50) * 0.003 + (stats.bal - 50) * 0.004 + styleBonus(combatState, styleKey, 0.0015) + (combatState.playerBuff.nextHit || 0), 0.18, 0.82);
     if (rng() < chance) {
       combatState.distance = "ground";
       combatState.ground = "player_top";
       enemy.posture = clamp(enemy.posture - 16, 0, enemy.postureMax);
       fx.push(makeFx(combatState, "break", "player", 0, "TAKEDOWN", id, { icon: "DOWN" }));
-      log.push("TAKEDOWN！你抱摔成功，进入地面上位。");
+      log.push(id === "sanda_catch_throw" ? "CATCH THROW！你接腿快摔成功，进入地面上位。" : "TAKEDOWN！你抱摔成功，进入地面上位。");
     } else {
       combatState.distance = "ground";
       combatState.ground = "ground_neutral";
-      log.push("抱摔没有完全成功，双方进入地面缠斗。");
+      log.push(id === "sanda_catch_throw" ? "快摔没有完全吃实，双方进入地面缠斗。" : "抱摔没有完全成功，双方进入地面缠斗。");
     }
   }
 
@@ -806,8 +959,8 @@ function playerHitChance(combatState, id) {
 
   const responsePlan = combatState.currentEnemyResponse;
   if (responsePlan?.intent === "guard" && skill.dmg > 0) hit -= 0.08;
-  if (responsePlan?.intent === "pressure" && ["jab", "frontkick", "lowkick"].includes(id)) hit += COMBAT_TUNING.counterBonus;
-  if (responsePlan?.intent === "clinch" && ["sprawl", "frontkick", "retreat"].includes(id)) hit += COMBAT_TUNING.counterBonus;
+  if (responsePlan?.intent === "pressure" && ["jab", "frontkick", "lowkick", "karate_front_kick", "tkd_roundhouse"].includes(id)) hit += COMBAT_TUNING.counterBonus;
+  if (responsePlan?.intent === "clinch" && ["sprawl", "frontkick", "retreat", "karate_front_kick", "sanda_catch_throw"].includes(id)) hit += COMBAT_TUNING.counterBonus;
   if (responsePlan) hit += scoreSingleCounter(id, responsePlan);
   if (combatState.lastPlayerActions?.slice(-2).every((action) => action === id)) hit -= repeatPenalty;
   if (combatState.target === "head") hit -= 0.08;
@@ -841,7 +994,8 @@ function calcPlayerBaseDamage(combatState, id) {
   if (skill.type === "strike") base *= 1 + effect(combatState, "strikeDmg") + styleBonus(combatState, "boxing", 0.001);
   if (skill.type === "kick" || skill.type === "footwork") base *= 1 + effect(combatState, "kickDmg") + Math.max(0, stats.spd - 50) * 0.001;
   if (skill.style === "traditional") base *= 1 + styleBonus(combatState, "traditional", 0.0009);
-  if (combatState.currentEnemyResponse?.intent === "pressure" && ["jab", "frontkick", "lowkick"].includes(id)) base *= 1.08;
+  if (["sanda", "karate", "taekwondo"].includes(skill.style)) base *= 1 + styleBonus(combatState, skill.style, 0.0009);
+  if (combatState.currentEnemyResponse?.intent === "pressure" && ["jab", "frontkick", "lowkick", "karate_front_kick", "tkd_roundhouse"].includes(id)) base *= 1.08;
   if (combatState.enemy.posture < combatState.enemy.postureMax * 0.45) base *= 1 + COMBAT_TUNING.postureBreakBonus;
   if (skill.dmg <= 0) base = 0;
   return Math.max(0, base);
@@ -872,13 +1026,13 @@ function calcEnemyDamage(combatState, skill, plan, rng) {
 function readContext(combatState, playerActionId, playerSkill) {
   const recent = [...(combatState.lastPlayerActions || []), playerActionId].filter(Boolean);
   const repeated = recent.length >= 3 && recent.slice(-3).every((action) => action === recent[recent.length - 1]);
-  const heavy = ["straight", "mystic", "takedown", "sidecontrol"].includes(playerActionId);
+  const heavy = ["straight", "mystic", "takedown", "sidecontrol", "karate_reverse_punch", "tkd_back_kick", "sanda_catch_throw"].includes(playerActionId);
   const playerDefensive = ["guard", "dodge", "sprawl"].includes(playerActionId);
   const playerKeptAway = ["retreat", "dirtyescape"].includes(playerActionId);
   const playerDeescalating = playerActionId === "talkdown";
-  const playerPressing = ["advance", "grip", "takedown", "palm", "offbalance"].includes(playerActionId);
+  const playerPressing = ["advance", "grip", "takedown", "palm", "offbalance", "sanda_catch_throw"].includes(playerActionId);
   const playerGrappling = playerSkill ? ["grapple", "ground"].includes(playerSkill.type) : false;
-  const playerAntiGrapple = ["sprawl", "frontkick", "retreat"].includes(playerActionId);
+  const playerAntiGrapple = ["sprawl", "frontkick", "retreat", "karate_front_kick", "sanda_catch_throw"].includes(playerActionId);
   return {
     repeated,
     heavy,
@@ -915,7 +1069,7 @@ function normalizeCombatState(input) {
     enemy,
     skillState,
     hasExplicitSkillState: Boolean(source.skillState || player.skillState),
-    styles: { boxing: 0, mma: 0, traditional: 0, street: 0, ...(source.styles || player.styles || {}) },
+    styles: { boxing: 0, mma: 0, traditional: 0, street: 0, sanda: 0, karate: 0, taekwondo: 0, ...(source.styles || player.styles || {}) },
     equipSkills: Array.isArray(source.equipSkills) ? [...source.equipSkills] : [],
     effects: { ...(source.effects || source.equipmentEffects || {}) },
     playerBuff: { def: 0, dodge: 0, anti: 0, nextHit: 0, counter: 0, ...(source.playerBuff || {}) },
@@ -1054,8 +1208,9 @@ function learnFromUse(combatState, id, skill) {
 
 function scoreSingleCounter(id, plan) {
   if (!plan) return 0;
-  if (plan.intent === "pressure" && ["guard", "dodge", "jab", "frontkick"].includes(id)) return 0.08;
-  if (plan.intent === "clinch" && ["sprawl", "frontkick", "retreat", "offbalance"].includes(id)) return 0.10;
+  if (plan.intent === "pressure" && ["guard", "dodge", "jab", "frontkick", "karate_front_kick", "tkd_roundhouse"].includes(id)) return 0.08;
+  if (plan.intent === "clinch" && ["sprawl", "frontkick", "retreat", "offbalance", "karate_front_kick", "sanda_catch_throw"].includes(id)) return 0.10;
+  if (plan.intent === "counter" && ["sanda_whip_kick", "karate_reverse_punch", "tkd_back_kick"].includes(id)) return -0.03;
   if (plan.intent === "weapon" && ["dirtyescape", "talkdown", "retreat"].includes(id)) return 0.12;
   if (plan.intent === "counter" && id === "jab") return 0.06;
   if (plan.intent === "ground" && id === "escape") return 0.10;
@@ -1117,8 +1272,43 @@ function response(enemy, rule, label, intent, skill, tell, danger, counter, reas
     tell,
     danger,
     counter,
-    reason
+    reason,
+    dangerScore: { '低': 1, '中': 2, '高': 3 }[danger] || 1,
+    counterSkills: counterSkillHints(intent, skill, counter),
+    failure: failureHint(intent, skill, danger)
   };
+}
+
+function counterSkillHints(intent, skill, counter) {
+  const text = `${intent || ''} ${skill || ''} ${counter || ''}`;
+  const hints = new Set();
+  if (/clinch|takedown|grip|抱摔|防摔|后撤|前踢|接腿/.test(text)) {
+    ['sprawl', 'frontkick', 'karate_front_kick', 'retreat', 'sanda_catch_throw'].forEach((id) => hints.add(id));
+  }
+  if (/pressure|advance|前压|逼近|压进/.test(text)) {
+    ['jab', 'guard', 'frontkick', 'karate_front_kick', 'tkd_roundhouse'].forEach((id) => hints.add(id));
+  }
+  if (/counter|反击|回收|重招/.test(text)) {
+    ['jab', 'dodge', 'guard', 'sanda_whip_kick'].forEach((id) => hints.add(id));
+  }
+  if (/weapon|撤离|降温|武器/.test(text)) {
+    ['dirtyescape', 'talkdown', 'retreat', 'guard'].forEach((id) => hints.add(id));
+  }
+  if (/ground|地面/.test(text)) {
+    ['escape', 'sidecontrol', 'sprawl'].forEach((id) => hints.add(id));
+  }
+  if (!hints.size) ['guard', 'jab', 'dodge'].forEach((id) => hints.add(id));
+  return [...hints].slice(0, 5);
+}
+
+function failureHint(intent, skill, danger) {
+  if (intent === 'clinch') return '应对慢了会被拖进近身或地面，下一拍体力和架势一起掉。';
+  if (intent === 'counter') return '重招或重复动作会被抓回收，伤害不一定最高，但节奏会被拿走。';
+  if (intent === 'weapon') return '硬拼会把街头风险变成新伤，撤离和降温才是正解之一。';
+  if (intent === 'pressure') return '不处理前压会被压到不舒服的距离，后续出招选择会变少。';
+  if (intent === 'ground') return '地面位置处理慢了，会连续丢体力和架势。';
+  if (danger === '高') return '这是高危险窗口，盲目进攻会把破绽交给对手。';
+  return '选错动作主要会丢距离、体力或架势。';
 }
 
 function makeFx(combatState, type, actor, damage, label, skillId, extra = {}) {

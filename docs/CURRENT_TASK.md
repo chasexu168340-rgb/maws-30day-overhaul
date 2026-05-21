@@ -461,3 +461,136 @@
 下一批建议：
 - 把程序化 replaceable sprite strips 替换为正式 imagegen/手绘逐帧资产，保持现有 `anim.*` key 和 frame metadata。
 - 继续补全其余训练小游戏、其余敌人和技能动画，不要扩大到经济曲线重平衡，除非单独开批次。
+
+## 2026-05-20 Batch 16
+
+目标：按用户要求，用 `game-design-core` 审计当前战斗循环，并用 `combat-design` 做一轮最小半即时战斗体验重构。范围限定在战斗选择反馈、自动窗口可读性和 DOM 呈现，不扩展到全量动画资产、敌人数值、经济或存档结构。
+
+本轮做：
+- 审计 Batch 15 的短窗口战斗循环，确认核心问题不是公式缺口，而是玩家在确认前缺少“对手接下来要干什么”的读板信息，导致选择卡牌更像盲按。
+- 在规划态加入敌方意图读板：预判动作、危险等级、文字 telegraph、建议反制和恢复/惩罚提示。
+- 自动窗口改为按队列长度、实际 steps 和敌方危险度估算 8-12 秒节奏，并写入 `lastWindow.duration`。
+- 自动窗口补充压力标签：试探交换、中压交换、高压交换，用于日志和 HUD 反馈。
+- DOM 战斗 UI 加入读板模块和当前窗口预计时长提示。
+
+本轮不做：
+- 不改战斗伤害公式、命中公式、敌人 HP/属性、经济曲线、装备数值、存档 key/version。
+- 不做完整 frame-data、hitbox/hurtbox、i-frame 或实时插卡系统。
+- 不新增或替换角色动画资产。
+
+主要验证：
+- `node --check` 覆盖 `maws_src` 全部 JS/MJS。
+- `node maws_src/tools/verify_assets.mjs`。
+- 1365x768 和 390x844 浏览器 smoke：读板显示、选卡更新读板、确认后自动窗口推进并回到 planning。
+- E01/E06/E07/E18 战斗回归：均能进入、执行窗口、写入时长/压力、回到 planning。
+
+完成状态：
+- Batch 16 已完成并通过验证。
+- 当前半即时战斗已经具备“读板 -> 选卡 -> 自动窗口 -> 复盘调整”的最小闭环。
+- 最新截图在 `E:\TH比赛照片\test-results\batch16_combat_read_1365x768.png`、`E:\TH比赛照片\test-results\batch16_combat_read_390x844.png`。
+
+## 2026-05-20 Batch 17
+
+目标：建立项目级 Skill Router，让 Codex 和协作 Agent 不需要用户记住所有 skill 名，也能按任务类型自动选择最合适的 2-4 个 skill。
+
+本轮使用 skill：
+- `technical-writer`：把路由规则写成短、可执行、能长期维护的项目文档。
+- `consistency-checker`：检查 `AGENTS.md`、`docs/SKILL_ROUTER.md` 和 checkpoint 之间规则一致。
+
+本轮做：
+- 在 `AGENTS.md` 新增“技能自动路由”开工流程。
+- 新增 `docs/SKILL_ROUTER.md`，按战斗、UI、资产、数值、文案、QA、GitHub、文档等任务类型建立路由表。
+- 明确本项目是 Phaser + DOM，不默认启用 Godot 系列 skill。
+- checkpoint 记录 Batch 17 的实际使用 skill 和验证结果。
+
+本轮不做：
+- 不改游戏代码、玩法、数值、资产 manifest、存档 key/version。
+- 不安装新依赖，不做全局 Codex 配置覆盖。
+- 不默认启用 Godot skill。
+
+主要验证：
+- 文档检查：确认 `AGENTS.md` 能指导 Agent 开工前读取并应用 `docs/SKILL_ROUTER.md`。
+- 路由检查：用 6 个模拟任务验证可选出正确 skill。
+- Git 检查：`git diff --check`。
+
+完成状态：
+- Batch 17 已完成并通过文档级验证。
+- 后续窗口应先读取 `AGENTS.md`、checkpoint 和 `docs/SKILL_ROUTER.md`，再自动声明本轮 skill。
+
+## 2026-05-21 Batch 19
+
+目标：把 30 天 demo 从线性主线扩成最小可选叙事闭环，并新增散打、空手道、跆拳道三条现实武术支线的第一可玩切片。
+
+本轮使用 skill：
+- `planning-with-files`：续接中断任务，文件化计划、发现、进度和下一窗口恢复路径。
+- `storytelling`：约束主线选择和 NPC 文案，让中文反馈自然、不油。
+- `combat-design`：为新增武术技能、敌人读板和战斗反馈保持可读性。
+- `game-studio:game-ui-frontend`：处理 story-choice modal、地点/流派扩展后的 UI 密度和移动端不溢出。
+- `game-studio:game-playtest`：跑真实浏览器 smoke 和截图检查。
+
+本轮做：
+- 新增三条支线的数据闭环：流派、地点、NPC、训练行动、技能、敌人、机会卡和主线日程。
+- 新增 day 1/day 18 主线选择弹窗，选择提交后再完成当天主线。
+- 补齐 `combat.js`、`economy.js` 对新技能/敌人/流派的运行时映射。
+- 地图按钮展示主线位置、开放时间和行动数量；人物页以网格显示扩展流派。
+- 更新 Batch 19 checkpoint、测试报告和 changelog。
+
+本轮不做：
+- 不改存档 key/version。
+- 不新增专属场馆美术资产。
+- 不重构 Phaser Scene。
+- 不做完整 30 天长线平衡。
+
+主要验证：
+- `node --check`：`data.js`、`state.js`、`ui.js`。
+- `npm run build`。
+- Node story-choice smoke。
+- `git diff --check`。
+- Chrome 浏览器 smoke：主线选择、新地点、训练解锁、技能装备、E19 战斗入口、移动端 modal 不溢出。
+
+完成状态：
+- Batch 19 已完成并通过验证。
+- 最新截图在 `E:\TH比赛照片\test-results\batch19-story-choice-desktop.png`、`batch19-sanda-combat-desktop.png`、`batch19-story-choice-mobile.png`。
+
+## 2026-05-21 Batch 20
+
+目标：继续 `docs/TASK_PLAN.md` 的 Batch 20，把 MAW 主线数据、状态迁移、战斗模板和事件因子补成最小可验证骨架。
+
+本轮使用 skill：
+- `planning-with-files`：恢复任务日志并更新 checkpoint。
+- `storytelling`：约束父亲、一阵风、阿豹和百家入茂节点文案。
+- `consistency-checker`：检查 `data.js` / `state.js` / `combat.js` / `events.js` 同步。
+
+本轮做了：
+- `data.js`：补父亲、阿豹、推手大爷；新增 E10/E11；补 Day 2/3/8/9/12/29，保留 Day 1 的 Batch 19 路线选择。
+- `state.js`：新增 `state.maw`、旧档迁移、`updateMawProgress()`、Day 8/9 主线脚本效果和 render model 暴露。
+- `combat.js`：同步 E10/E11 运行时模板，给阿豹补最小专用回应。
+- `events.js`：补 MAW factor 和 `when` 条件支持。
+- 更新 `docs/TASK_PLAN.md`、`docs/CURRENT_STATUS.md`、`docs/CURRENT_TEST_REPORT.md`、`docs/CHANGELOG.md`。
+
+本轮不做：
+- 不改 UI 布局、Phaser Scene、资产 manifest、经济曲线、战斗公式、存档 key/version。
+- 不做 Day 8 一窗口强制剧情失败专用结算。
+- 不做 Day 30 目标制终战完整结算。
+- 不做拳谱 UI 呈现。
+
+完成状态：
+- Batch 20 已完成并通过静态检查、`npm run build`、`git diff --check` 和专项 Node MAW smoke。
+
+## 2026-05-21 Batch 21-23
+
+目标：执行 Batch 21-23，把 Batch 20 的 MAW 骨架做成可见、可打、可结局的最小闭环。
+
+本轮做了：
+- 人物页新增茂家拳重铸面板，Day 9 前弱显示，Day 9 后显示 5 个模块、下一建议和拳谱条目。
+- 战斗读板新增反制技能、失败原因、队列建议和更明确的危险提示。
+- Day 30 最终战新增 6 个目标，并按完成数分为大胜、小胜、惜败、崩盘。
+
+本轮不做：
+- 不改存档 key/version。
+- 不改战斗伤害/命中公式、敌人属性、经济曲线或资产 manifest。
+- 不重构 Phaser Scene。
+- 不实现 Batch 20 风险项里的 Day 8 强制剧情失败。
+
+完成状态：
+- Batch 21-23 已完成并通过 build、Node smoke、浏览器 smoke 和 diff whitespace 检查。

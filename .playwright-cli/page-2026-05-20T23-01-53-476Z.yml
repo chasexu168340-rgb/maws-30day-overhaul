@@ -1,0 +1,166 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - banner [ref=e371]:
+      - generic [ref=e372]:
+        - strong [ref=e373]: 第1天 周一 07:00
+        - generic [ref=e374]: 幻想期 · 上午 · 出租屋
+      - generic [ref=e375]:
+        - generic [ref=e376]: 现金360
+        - generic [ref=e377]: 体力100/122
+        - generic [ref=e378]: 健康110/146
+        - generic [ref=e379]: 风险0
+    - navigation [ref=e380]:
+      - generic [ref=e381]:
+        - button "地图" [ref=e382] [cursor=pointer]: 地图
+        - button "人物" [ref=e384] [cursor=pointer]: 人物
+        - button "技能" [ref=e386] [cursor=pointer]: 技能
+        - button "物品" [ref=e388] [cursor=pointer]: 物品
+        - button "商城" [ref=e390] [cursor=pointer]: 商城
+        - button "关系" [ref=e392] [cursor=pointer]: 关系
+        - button "日志" [ref=e394] [cursor=pointer]: 日志
+        - button "自检" [ref=e396] [cursor=pointer]: 自检
+      - complementary [ref=e398]:
+        - button "睡觉" [ref=e399] [cursor=pointer]
+        - button "保存" [ref=e400] [cursor=pointer]
+    - main [ref=e401]:
+      - generic [ref=e403]:
+        - complementary [ref=e404]:
+          - generic [ref=e405]:
+            - generic [ref=e406]: 今日看板
+            - button "城市地图" [ref=e407] [cursor=pointer]
+          - generic [ref=e408]:
+            - article [ref=e409]:
+              - generic [ref=e410]: 第1天 周一 07:00日间
+              - strong [ref=e411]: 出租屋
+              - generic [ref=e412]:
+                - generic [ref=e413]: 00:00-00:00
+                - generic [ref=e414]: 身体可用
+            - article [ref=e415]:
+              - generic [ref=e416]: 今日主线出租屋
+              - strong [ref=e417]: 给父亲上香
+              - paragraph [ref=e418]: 你给父亲牌位上香，墙上那句“习武之人，绝不争强好胜”还在。你点点头，然后准备去争一口气。先选一个能落地的入口。
+              - button "处理主线" [ref=e419] [cursor=pointer]
+        - generic [ref=e420]:
+          - generic [ref=e422]:
+            - generic [ref=e423]: 日间 · 00:00-00:00
+            - heading "出租屋" [level=2] [ref=e424]
+            - paragraph [ref=e425]: 复盘、休息和网购的安全区。床很窄，但至少不会突然抱摔你。
+          - generic [ref=e426]:
+            - figure "陆小闲 今天的主角" [ref=e427]:
+              - generic [ref=e428]:
+                - generic [ref=e429]: 陆小闲
+                - generic [ref=e430]: 今天的主角
+            - figure "刘胖子 凑热闹的熟人" [ref=e431]:
+              - generic [ref=e432]:
+                - generic [ref=e433]: 刘胖子
+                - generic [ref=e434]: 凑热闹的熟人
+            - figure "父亲 给父亲上香" [ref=e435]:
+              - generic [ref=e436]: 父
+              - generic [ref=e437]:
+                - generic [ref=e438]: 父亲
+                - generic [ref=e439]: 给父亲上香
+        - complementary [ref=e440]:
+          - generic [ref=e441]:
+            - generic [ref=e442]: 推荐行动
+            - generic [ref=e443]: 3条
+          - generic [ref=e444]:
+            - article [ref=e445]:
+              - generic [ref=e446]: 公园有人约一局不嘴硬的公园
+              - generic [ref=e447]:
+                - generic [ref=e448]: 地点 公园
+                - generic [ref=e449]: 风险 战斗 低
+              - generic [ref=e450]: 触发：身体余量够
+              - button "前往公园" [ref=e451] [cursor=pointer]
+            - article [ref=e452]:
+              - generic [ref=e453]: 梁教练暂停你的玄学发挥拳馆
+              - generic [ref=e454]:
+                - generic [ref=e455]: 地点 拳馆
+                - generic [ref=e456]: 风险 社交低风险
+              - generic [ref=e457]: 触发：动作真实性不足
+              - button "前往拳馆" [ref=e458] [cursor=pointer]
+            - article [ref=e459]:
+              - generic [ref=e460]: 网购页面开始对你眨眼出租屋
+              - generic [ref=e461]:
+                - generic [ref=e462]: 地点 出租屋
+                - generic [ref=e463]: 风险 装备诱惑
+              - generic [ref=e464]: 触发：动作真实性不足 / 名声还低
+              - button "去看看" [ref=e465] [cursor=pointer]
+          - generic [ref=e466]:
+            - generic [ref=e467]: 当前地点行动
+            - generic [ref=e468]: 5项
+          - generic [ref=e469]:
+            - article [ref=e470]:
+              - generic [ref=e471]:
+                - strong [ref=e472]: 复 视频复盘
+                - paragraph [ref=e473]: 分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。
+              - generic [ref=e474]:
+                - generic [ref=e475]: 耗时 45分钟
+                - generic [ref=e476]: 体力 0
+                - generic [ref=e477]: 现金 0
+              - generic [ref=e478]:
+                - generic [ref=e479]: 判断 +1
+                - generic [ref=e480]: 冷静 +4
+                - generic [ref=e481]: 刺拳熟练 +4
+              - generic [ref=e482]: 风险 低
+              - button "行动" [ref=e483] [cursor=pointer]
+            - article [ref=e484]:
+              - generic [ref=e485]:
+                - strong [ref=e486]: 影 影子拳节拍
+                - paragraph [ref=e487]: 轻训练，练直拳回收和步法节奏。影子不会还手，但它也不会夸你。
+              - generic [ref=e488]:
+                - generic [ref=e489]: 耗时 50分钟
+                - generic [ref=e490]: 体力 -12
+                - generic [ref=e491]: 现金 0
+              - generic [ref=e492]:
+                - generic [ref=e493]: 拳击实用 +4
+                - generic [ref=e494]: 疲劳 +6
+                - generic [ref=e495]: 体能沉淀 +2
+                - generic [ref=e496]: 侧步闪避熟练 +6
+              - generic [ref=e497]: 风险 低
+              - button "行动" [ref=e498] [cursor=pointer]
+            - article [ref=e499]:
+              - generic [ref=e500]:
+                - strong [ref=e501]: 网 网上冲浪找资料
+                - paragraph [ref=e502]: 刷新机会卡，提升真实性或发现迷货。信息海很大，别把泡沫当秘籍。
+              - generic [ref=e503]:
+                - generic [ref=e504]: 耗时 35分钟
+                - generic [ref=e505]: 体力 -3
+                - generic [ref=e506]: 现金 0
+              - generic [ref=e507]:
+                - generic [ref=e508]: 真实性 +2
+                - generic [ref=e509]: 热度 +1
+              - generic [ref=e510]: 风险 低
+              - button "行动" [ref=e511] [cursor=pointer]
+            - article [ref=e512]:
+              - generic [ref=e513]:
+                - strong [ref=e514]: 睡 小睡恢复
+                - paragraph [ref=e515]: 恢复体力，降低疲劳。给身体一次不被打扰的停机维护。
+              - generic [ref=e516]:
+                - generic [ref=e517]: 耗时 60分钟
+                - generic [ref=e518]: 体力 0
+                - generic [ref=e519]: 现金 0
+              - generic [ref=e520]:
+                - generic [ref=e521]: 体力 +30
+                - generic [ref=e522]: 疲劳 -15
+              - generic [ref=e523]: 风险 低
+              - button "行动" [ref=e524] [cursor=pointer]
+            - article [ref=e525]:
+              - generic [ref=e526]:
+                - strong [ref=e527]: 眠 睡觉到明天
+                - paragraph [ref=e528]: 结束当天。太晚不睡，明天的身体会带着账本来找你。
+              - generic [ref=e529]:
+                - generic [ref=e530]: 耗时 即时
+                - generic [ref=e531]: 体力 0
+                - generic [ref=e532]: 现金 0
+              - generic [ref=e534]: 收益：状态推进
+              - generic [ref=e535]: 风险 低
+              - button "行动" [ref=e536] [cursor=pointer]
+    - generic [ref=e538]:
+      - generic [ref=e539]:
+        - generic [ref=e541]: 父
+        - generic [ref=e542]:
+          - generic [ref=e543]: 给父亲上香
+          - heading "父亲" [level=2] [ref=e544]
+        - generic [ref=e545]: 2/3
+      - paragraph [ref=e547]: 习武之人，绝不争强好胜。
+      - button "下一句" [ref=e549] [cursor=pointer]

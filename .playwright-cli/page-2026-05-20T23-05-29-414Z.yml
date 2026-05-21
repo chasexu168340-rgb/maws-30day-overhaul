@@ -1,0 +1,176 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic [ref=e847]:
+            - text: 陆小闲
+            - generic [ref=e848]: 110/146
+          - generic [ref=e850]:
+            - generic [ref=e851]: 体力
+            - generic [ref=e852]: 91/121
+          - generic [ref=e854]:
+            - generic [ref=e855]: 架势
+            - generic [ref=e856]: 80/89
+        - strong [ref=e858]: 第 1 回合 · 半年拳击新人 · 中
+        - generic:
+          - generic [ref=e859]:
+            - text: 半年拳击新人
+            - generic [ref=e860]: 92/92
+          - generic [ref=e862]:
+            - generic [ref=e863]: 体力
+            - generic [ref=e864]: 88/88
+          - generic [ref=e866]:
+            - generic [ref=e867]: 架势
+            - generic [ref=e868]: 72/72
+      - complementary [ref=e870]:
+        - generic [ref=e871]: 窗口反馈
+        - generic [ref=e872]: 先读意图，再放 1-2 张动作卡。
+      - group [ref=e873]:
+        - generic "详细战斗记录" [ref=e874] [cursor=pointer]
+      - generic [ref=e875]:
+        - generic [ref=e876]:
+          - generic [ref=e877]:
+            - generic [ref=e878]: 暂停调整
+            - generic [ref=e879]: 战斗钟 0秒 · 窗口 0
+            - generic [ref=e880]: 当前约 9秒 · 1招入列
+          - generic [ref=e881]:
+            - generic [ref=e882]:
+              - text: 敌人意图：基础直拳
+              - emphasis [ref=e883]: 中
+            - generic [ref=e884]: 你刚稳住架势，对手用直拳验你的抱架。
+            - generic [ref=e885]: 预判 直拳 · 对上读板 · 试探后会重新进入中性
+            - generic [ref=e886]:
+              - generic [ref=e887]: 推荐反制
+              - strong [ref=e888]: 防守抱架 / 刺拳 / 侧步闪避
+            - paragraph [ref=e889]: 选错动作主要会丢距离、体力或架势。
+            - list [ref=e890]:
+              - listitem [ref=e891]: 当前队列有 防守抱架，能对上这次读板。
+          - group "攻击目标" [ref=e892]:
+            - button "头" [ref=e893] [cursor=pointer]
+            - button "身" [ref=e894] [cursor=pointer]
+            - button "腿" [ref=e895] [cursor=pointer]
+          - generic [ref=e896]:
+            - generic [ref=e897]: 动作队列
+            - generic [ref=e898]:
+              - generic [ref=e899]:
+                - generic [ref=e900]: "1"
+                - text: 防守抱架
+              - generic [ref=e901]:
+                - generic [ref=e902]: "2"
+                - text: 待选
+            - generic [ref=e903]: 防守抱架
+            - button "清空" [ref=e904] [cursor=pointer]
+        - generic [ref=e905]:
+          - article [ref=e906]:
+            - generic: "01"
+            - generic [ref=e907]:
+              - strong [ref=e908]: 刺拳
+              - generic [ref=e909]: strike
+            - generic [ref=e910]:
+              - generic [ref=e911]:
+                - term [ref=e912]: 效果
+                - definition [ref=e913]: 9-11 / 架8
+              - generic [ref=e914]:
+                - term [ref=e915]: 命
+                - definition [ref=e916]: 75%
+              - generic [ref=e917]:
+                - term [ref=e918]: 体/AP
+                - definition [ref=e919]: 5/1
+            - button "加入" [ref=e921] [cursor=pointer]
+          - article [ref=e922]:
+            - generic: "02"
+            - generic [ref=e923]:
+              - strong [ref=e924]: 直拳
+              - generic [ref=e925]: strike
+            - generic [ref=e926]:
+              - generic [ref=e927]:
+                - term [ref=e928]: 效果
+                - definition [ref=e929]: 14-17 / 架11
+              - generic [ref=e930]:
+                - term [ref=e931]: 命
+                - definition [ref=e932]: 60%
+              - generic [ref=e933]:
+                - term [ref=e934]: 体/AP
+                - definition [ref=e935]: 9/2
+            - button "加入" [ref=e937] [cursor=pointer]
+          - article [ref=e938]:
+            - generic: "03"
+            - generic [ref=e939]:
+              - strong [ref=e940]: 防守抱架
+              - generic [ref=e941]: 已入队
+            - generic [ref=e942]:
+              - generic [ref=e943]:
+                - term [ref=e944]: 效果
+                - definition [ref=e945]: 0 / 架1
+              - generic [ref=e946]:
+                - term [ref=e947]: 命
+                - definition [ref=e948]: 92%
+              - generic [ref=e949]:
+                - term [ref=e950]: 体/AP
+                - definition [ref=e951]: 4/1
+            - tooltip "降低下一次受伤。不是怂，是把脸从公共资源改回个人财产。 架势 1 风险 2% 距离 中/近 熟练度 18%" [ref=e952]:
+              - paragraph [ref=e953]: 降低下一次受伤。不是怂，是把脸从公共资源改回个人财产。
+              - generic [ref=e954]:
+                - generic [ref=e955]:
+                  - term [ref=e956]: 架势
+                  - definition [ref=e957]: "1"
+                - generic [ref=e958]:
+                  - term [ref=e959]: 风险
+                  - definition [ref=e960]: 2%
+                - generic [ref=e961]:
+                  - term [ref=e962]: 距离
+                  - definition [ref=e963]: 中/近
+              - text: 熟练度 18%
+            - button "再加一次" [ref=e965] [cursor=pointer]
+          - article [ref=e966]:
+            - generic: "04"
+            - generic [ref=e967]:
+              - strong [ref=e968]: 侧步闪避
+              - generic [ref=e969]: footwork
+            - generic [ref=e970]:
+              - generic [ref=e971]:
+                - term [ref=e972]: 效果
+                - definition [ref=e973]: 0 / 架1
+              - generic [ref=e974]:
+                - term [ref=e975]: 命
+                - definition [ref=e976]: 92%
+              - generic [ref=e977]:
+                - term [ref=e978]: 体/AP
+                - definition [ref=e979]: 8/1
+            - button "加入" [ref=e981] [cursor=pointer]
+          - article [ref=e982]:
+            - generic: "05"
+            - generic [ref=e983]:
+              - strong [ref=e984]: 前压入身
+              - generic [ref=e985]: footwork
+            - generic [ref=e986]:
+              - generic [ref=e987]:
+                - term [ref=e988]: 效果
+                - definition [ref=e989]: 0 / 架1
+              - generic [ref=e990]:
+                - term [ref=e991]: 命
+                - definition [ref=e992]: 92%
+              - generic [ref=e993]:
+                - term [ref=e994]: 体/AP
+                - definition [ref=e995]: 5/1
+            - button "加入" [ref=e997] [cursor=pointer]
+          - article [ref=e998]:
+            - generic: "06"
+            - generic [ref=e999]:
+              - strong [ref=e1000]: 后撤拉开
+              - generic [ref=e1001]: footwork
+            - generic [ref=e1002]:
+              - generic [ref=e1003]:
+                - term [ref=e1004]: 效果
+                - definition [ref=e1005]: 0 / 架1
+              - generic [ref=e1006]:
+                - term [ref=e1007]: 命
+                - definition [ref=e1008]: 92%
+              - generic [ref=e1009]:
+                - term [ref=e1010]: 体/AP
+                - definition [ref=e1011]: 5/1
+            - button "加入" [ref=e1013] [cursor=pointer]
+        - generic [ref=e1014]:
+          - button "执行 1-2 招" [ref=e1015] [cursor=pointer]
+          - button "认输" [ref=e1016] [cursor=pointer]

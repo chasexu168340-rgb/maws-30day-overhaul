@@ -587,14 +587,20 @@ export class ShellScene extends PhaserScene {
   }
 
   floatCombatText(x, y, text, color, size, delay = 0) {
-    const t = this.add.text(x, y, text, {
-      fontFamily: 'sans-serif',
-      fontSize: `${size}px`,
-      fontStyle: 'bold',
-      color,
-      stroke: '#050506',
-      strokeThickness: 5
-    }).setOrigin(0.5).setDepth(130).setAlpha(0);
+    if (!this.add || !this.tweens || this.scene?.isActive?.() === false) return;
+    let t = null;
+    try {
+      t = this.add.text(x, y, text, {
+        fontFamily: 'sans-serif',
+        fontSize: `${size}px`,
+        fontStyle: 'bold',
+        color,
+        stroke: '#050506',
+        strokeThickness: 5
+      }).setOrigin(0.5).setDepth(130).setAlpha(0);
+    } catch {
+      return;
+    }
     this.track(t);
     this.tweens.add({
       targets: t,

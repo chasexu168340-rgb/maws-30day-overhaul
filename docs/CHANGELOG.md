@@ -149,3 +149,47 @@
 - 修复 Batch 15 QA 中发现的问题：任务板覆盖、modal/nav 层级、平板/手机战斗按钮出屏、战斗结束后的延迟动画回调。
 - 完成 JS/MJS 语法、CSS 结构、spritesheet manifest、三端 Chrome smoke、保存读档、主线/待办/装备/训练和 E01/E06/E07/E18 战斗回归验证。
 - 已知限制：本批 sprite strips 是程序化 replaceable base，不是最终 imagegen/手绘逐帧动画资产。
+
+### Batch 16
+- 使用 `game-design-core` 审计当前短窗口战斗循环：保留 Batch 15 的“规划 -> 自动窗口 -> 再规划”方向，补足选择前信息不足的问题。
+- 使用 `combat-design` 做最小半即时体验重构：规划态新增敌方读板，包含预判动作、危险等级、telegraph、建议反制和恢复/惩罚提示。
+- 自动窗口新增动态节奏估算，按玩家队列、实际交换 steps 和敌方危险度记录 8-12 秒 `lastWindow.duration`。
+- 自动窗口新增压力标签：`试探交换`、`中压交换`、`高压交换`，用于 HUD 和战斗日志反馈。
+- DOM 战斗 UI 新增读板模块和预计窗口时长提示，选卡后会随当前队列更新。
+- 保持战斗伤害/命中公式、敌人属性、经济、装备数值、存档 key/version 不变。
+- 完成 JS/MJS 语法、CSS 结构、manifest、桌面/手机 Chrome smoke 和 E01/E06/E07/E18 战斗回归验证。
+
+### Batch 17
+- 新增项目级 `docs/SKILL_ROUTER.md`，让 Codex/协作 Agent 按任务类型自动选择 2-4 个核心 skill。
+- `AGENTS.md` 新增“技能自动路由”开工流程：读取 router、声明使用 skill、记录到 checkpoint。
+- 路由表覆盖战斗、UI、资产、数值、文案、QA、GitHub、文档/checkpoint 8 类常见任务。
+- 明确本项目是 Phaser + DOM，不默认启用 Godot 系列 skill。
+- 本批只改文档和 checkpoint，不改游戏代码、玩法、数值、资产 manifest、存档 key/version。
+
+### Batch 19
+- 使用 `planning-with-files` 续接中断任务，并用 data/events、combat/economy、UI/state 三个子 Agent 分工推进。
+- 新增散打、空手道、跆拳道三条首个可玩切片：`sanda`、`karate`、`taekwondo` 流派，三个地点，三名 NPC，六个技能，三个敌人和训练行动。
+- 新增 day 1 和 day 18 的 story-choice 主线选择，选择提交后才写入 `main_${day}` 和 `daily.mainDone`。
+- 新增 `resolveStoryChoice` 状态分支和 `storyChoice` modal，支持选择收益、关系、flags 和进入战斗。
+- `buildRenderModel()` 新增 `styleList`、地点 `openText/actionCount/mainHere`，地图按钮和人物页能展示扩展流派/地点密度。
+- `combat.js` 补齐 6 个新技能、E19/E20/E21 模板、AI response、风格伤害加成和新招式特殊效果。
+- `economy.js` 补齐三种新流派、技能学习映射和结算标签。
+- 完成 `node --check`、`npm run build`、Node story-choice smoke、`git diff --check` 和 Chrome 浏览器 smoke。
+- 已知限制：本批不新增专属场馆美术，不做完整 30 天长线平衡。
+
+### Batch 20
+- 新增/补齐 MAW 主线骨架：`MAW_FORMS` 的落地根模块归入 `grappling`，主线节点覆盖 Day 1/2/3/5/8/9/12/18/20/21/22/24/29/30。
+- 新增父亲、阿豹、推手大爷 NPC；父亲标记为隐藏 NPC，不进入普通关系列表。
+- 新增 E10“一阵风”沉默拳击手和 E11“短视频挑战者阿豹”，并同步到 `combat.js` 运行时模板。
+- `state.js` 新增 `state.maw`、旧档迁移、`updateMawProgress()`、主线 MAW 脚本效果和 render model 暴露。
+- Day 8 触发 E10 时进入 `broken` 阶段并把 `misread` 清零/转入父亲记忆；Day 9 父亲日记进入 `reforge` 阶段。
+- `events.js` 新增 MAW 机会卡因子和 `when` 条件支持，后续可按 `maw.chapter`、误判、父亲记忆和茂拳完成度筛选事件。
+- 保持 UI 布局、Phaser Scene、资产 manifest、经济曲线、战斗公式、存档 key 和存档版本不变。
+- 完成 `node --check`、`npm run build`、`git diff --check`、专项 Node MAW smoke 和 390x844 浏览器 smoke。
+- 已知限制：Day 8 专用剧情失败结算、Day 30 目标制终战结算和拳谱 UI 呈现仍留给后续批次。
+## 2026-05-21 Batch 21-23
+
+- Added visible MAW reforge progress to the profile UI, including five module scores, next suggested actions, and form notes.
+- Enhanced combat read-board output with counter hints, failure explanations, queue-fit feedback, and compact mobile-safe rendering.
+- Added Day 30 objective battle tracking and tiered final results based on objective completion.
+- Kept save key/version, economy tuning, asset manifest, and Phaser scene structure unchanged.
