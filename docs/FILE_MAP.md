@@ -46,7 +46,10 @@ Read for missing images, spritesheet metadata, asset keys, loading failures, or 
 - Build check: `maws_src/tools/build_check.mjs`
 - Asset check: `maws_src/tools/verify_assets.mjs`
 - Playwright smoke sample: `maws_src/tests/phaser-smoke.spec.js`
-- Historical results: `docs/CURRENT_TEST_REPORT.md`
+- Current validation contract: `docs/VALIDATION.md`
+- Current task handoff: `docs/TASK_HANDOFF.md`
+- Current task plan: `docs/TASK_PLAN.md`
+- Historical results stub: `docs/CURRENT_TEST_REPORT.md`
 
 Read for validation tasks, browser smoke, build failures, or QA planning.
 
@@ -60,7 +63,17 @@ Read for validation tasks, browser smoke, build failures, or QA planning.
 - Items/equipment: read `data.js`, `state.js`, `ui.js`, and `ui.css`.
 - Skills: read `data.js`, `combat.js`, `state.js`, and `ui.js`.
 - Assets: read `manifest.js`, `verify_assets.mjs`, and only the specific asset folders needed.
-- QA only: read `TASK_PLAN.md`, `CURRENT_TEST_REPORT.md`, test files, and the minimum source needed to understand the failing check.
+- QA only: read `TASK_HANDOFF.md`, `TASK_PLAN.md`, `VALIDATION.md`, test files, and the minimum source needed to understand the failing check.
+- Worker handoff: read `TASK_HANDOFF.md`, `EXECUTION_CONTRACT.md`, `SPRINT_BOARD.md`, `FILE_MAP.md`, `VALIDATION.md`, then the task prompt and smallest relevant source set.
+
+## Current Task Routing
+
+- Current handoff: `docs/TASK_HANDOFF.md`
+- Execution contract: `docs/EXECUTION_CONTRACT.md`
+- Validation gates: `docs/VALIDATION.md`
+- Current board: `docs/SPRINT_BOARD.md`
+- Archived legacy batches: `docs/archive/legacy_batches/`
+- `docs/CURRENT_TASK.md`, `docs/CURRENT_STATUS.md`, `docs/CURRENT_TEST_REPORT.md`, and `docs/CHANGELOG.md` are historical stubs. Do not use them as current task sources.
 
 ## Default Avoid List
 

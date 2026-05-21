@@ -1,60 +1,53 @@
 # TASK_PLAN
 
-> 当前任务单。只保留本轮完整回归的目标、结果、风险和下一步。
+> 当前任务单。只保留本轮目标、结果、风险和下一步。
 
 ## Current Task
 
-Wave 3A：补真实浏览器 Playwright smoke，并推送 QA 分支给 GitHub/ChatGPT 审阅。
+执行 `AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS`：在 Harness Delta 后补 `SKILL_UNLOCKS` 数据驱动和行动结算解锁提示。
 
 ## Scope
 
-- 从 `staging/reforge-unlocks-v1` 新建 `feat/qa-playwright-smoke`。
-- 尝试运行 `AGENT_F_TECH_QA_TOOLS`。
-- 补 `@playwright/test` 和 Chromium 浏览器缓存。
-- 新增 `npm run test:smoke`。
-- 覆盖 390x844、900x700、1365x768 三档真实浏览器 smoke。
-- 验证地点锁 UI、地铁站 Day 1 可见可进入可行动、技能页和战斗页无横向溢出。
-- 不改玩法数据、技能解锁、战斗公式、经济曲线、存档 key/version 或资产结构。
+- 在 `data.js` 新增 `SKILL_UNLOCKS`。
+- 在 `state.js` 输出 `model.skillUnlocks`。
+- 行动结算后识别本次新学会技能，并追加 `学会：技能 / 来源：地点 · 行动`。
+- 更新 `docs/agent_reports/AGENT_B_GAMEPLAY_SYSTEMS.md` 和 `.codex/DONE.md`。
+- 不改 UI、combat、经济曲线、存档 key/version 或资源目录。
 
 ## Relevant Files
 
-- `package.json`
-- `package-lock.json`
-- `maws_src/tests/phaser-smoke.spec.js`
+- `maws_src/content/data.js`
+- `maws_src/simulation/state.js`
 - `docs/TASK_PLAN.md`
-- `docs/agent_reports/AGENT_F_TECH_QA_TOOLS.md`
+- `docs/agent_reports/AGENT_B_GAMEPLAY_SYSTEMS.md`
 - `.codex/DONE.md`
 
 ## Plan
 
-- [x] 同步 staging 并创建 QA 分支。
-- [x] 尝试运行 `codex exec < docs\codex_tasks\AGENT_F_TECH_QA_TOOLS.md`。
-- [x] 在外部 Agent 因本机 CLI 认证失败后，由当前 Codex 手动完成同一任务。
-- [x] 安装 Playwright 测试依赖和 Chromium。
-- [x] 改造 smoke spec。
-- [x] 运行 build 和 smoke。
-- [x] 执行最终 diff/status 检查。
-- [x] 提交并推送到 GitHub。
+- [x] 从 `feat/codex-harness-delta` 创建 `feat/skill-unlocks-data`。
+- [x] 新增 `SKILL_UNLOCKS` 数据。
+- [x] `state.js` import `SKILL_UNLOCKS` 并输出 `skillUnlocks` render model。
+- [x] 普通行动和训练小游戏结算追加本次新学会技能提示。
+- [x] 运行 build 和自定义解锁 smoke。
+- [x] 运行 Playwright smoke 和 diff check。
+- [x] 提交并 push `feat/skill-unlocks-data`。
 
 ## Validation
 
-- [x] `npx playwright install chromium`
-- [x] `npm run build`
-- [x] `npm run test:smoke`
-- [x] `git diff --check`
-- [x] `git status --short`
-- [x] `git push -u origin feat/qa-playwright-smoke`
+- [x] `npm run build`：通过。
+- [x] 自定义 Node smoke：通过，沙包连击解锁刺拳/直拳并输出 `skillUnlocks`。
+- [x] `npm run test:smoke`：通过，4 个 Chromium 用例。
+- [x] `git diff --check`：通过；仅有 Git CRLF 工作区提示。
 
 ## Result
 
-`npm run test:smoke` 已能启动真实 Chromium，并通过 4 个用例：地点锁与地铁站流程 1 个，390x844、900x700、1365x768 响应式 smoke 各 1 个。测试覆盖地图锁点、地铁站 travel/action、技能页和战斗页横向溢出。QA 提交为 `f5e58c0`，已推送到 `origin/feat/qa-playwright-smoke`。
+- 已实现数据驱动技能来源和结算提示，并完成 build、Node smoke、Playwright smoke、diff check。
 
 ## Risks
 
-- 外部 `codex exec` 没有成功，原因是本机 Codex CLI API key 无效；本分支改动由当前 Codex 手动完成。
-- Playwright 浏览器缓存安装在本机用户目录，不进入 Git。
-- 这轮只建立 QA 门槛，不处理 `SKILL_UNLOCKS`、早期战斗手感或地铁站视觉闭环。
+- `feat/skill-unlocks-data` 基于 `feat/codex-harness-delta` 创建；如果 harness 分支先合并到 staging，后续可直接重放/PR 本分支。
+- 自定义 Node smoke 第一次命令因 PowerShell 反引号转义失败，已改用字符串拼接后通过。
 
 ## Next Step
 
-推送后让 ChatGPT 审阅 `feat/qa-playwright-smoke`。通过后再开 `AGENT_B_GAMEPLAY_SYSTEMS` 做 `SKILL_UNLOCKS` 数据驱动。
+`feat/skill-unlocks-data` 已准备推送给 GitHub 审阅。下一步交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks`。
