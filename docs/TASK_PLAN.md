@@ -24,6 +24,14 @@
 
 ## Plan
 
+- [x] 确认 staging 与 `origin/staging/reforge-unlocks-v1` 一致。
+- [x] 创建 `feat/codex-harness-delta`。
+- [x] 归档旧 `CURRENT_*` / `CHANGELOG`。
+- [x] 新增 handoff / contract / validation / board。
+- [x] 补 `check` / `check:full` alias。
+- [x] 运行 build、smoke、diff check。
+- [x] 提交并 push Harness Delta。
+- [x] 创建 `feat/skill-unlocks-data` 并完成 `SKILL_UNLOCKS` 第一版数据化。
 - [x] 从 `feat/codex-harness-delta` 创建 `feat/skill-unlocks-data`。
 - [x] 新增 `SKILL_UNLOCKS` 数据。
 - [x] `state.js` import `SKILL_UNLOCKS` 并输出 `skillUnlocks` render model。
@@ -41,6 +49,7 @@
 
 ## Result
 
+- Harness Delta 已完成本地验证并推送到 GitHub：新增当前 handoff、执行合同、验证入口、sprint board；旧 `CURRENT_*` / `CHANGELOG` 已归档并替换为历史 stub；`package.json` 已补 `check` / `check:full` alias。
 - 已实现数据驱动技能来源和结算提示，并完成 build、Node smoke、Playwright smoke、diff check。
 
 ## Risks
@@ -50,4 +59,5 @@
 
 ## Next Step
 
+审阅并合并 `feat/codex-harness-delta` 后，等待 `feat/skill-unlocks-data` 完成 fixup，再按顺序审阅/合并技能解锁分支。下一轮 UI 任务读取 `model.skillUnlocks`。
 `feat/skill-unlocks-data` 已准备推送给 GitHub 审阅。下一步交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks`。
