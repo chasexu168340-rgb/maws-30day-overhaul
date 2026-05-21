@@ -1,8 +1,8 @@
 # DONE
 
-Agent 02 UI locks and skill source display completed.
+Wave 2 UI and metro integration completed locally.
 
-- Build passed.
-- Diff check passed.
-- Browser smoke was attempted but blocked by missing Playwright browser/test dependencies.
-- Report written to `docs/agent_reports/AGENT_02_UI_LOCKS.md`.
+- Agent 02 UI locks branch merged.
+- Agent 03 metro station branch merged.
+- Build passed after each merge step.
+- Browser smoke for Agent 02 is still blocked by missing Playwright browser/test dependencies.

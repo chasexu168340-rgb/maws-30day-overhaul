@@ -122,6 +122,7 @@ export const ORIGINS = {
 export const LOCS = {
   home: { name: '出租屋', icon: '屋', open: [0, 1440], desc: '复盘、休息和网购的安全区。床很窄，但至少不会突然抱摔你。' },
   store: { name: '便利店', icon: '店', open: [420, 1380], desc: '补给、打工和小满事件。冰柜很冷，人情账很热。' },
+  metro_station: { name: '地铁站', icon: '铁', open: [360, 1440], desc: '城市把人吞进去，再准点吐出来。这里有通勤、短视频、误会和下一站的线索。' },
   worksite: { name: '工地临工点', icon: '工', open: [480, 1140], desc: '短工累，但能把现金和体能沉淀一点点垫起来。砖不会骗人。' },
   park: { name: '公园', icon: '园', open: [360, 1260], desc: '低风险验货、围观和街头观察。大爷们嘴上养生，手上不一定。' },
   boxing: { name: '拳馆', icon: '拳', open: [540, 1320], desc: '拳击基础、陪练和教练反馈。这里的真话通常带着汗味。' },
@@ -155,7 +156,7 @@ export const LOC_UNLOCKS = {
 export const INITIAL_SKILLS = ['mystic', 'guard', 'retreat', 'talkdown'];
 
 export const LOC_POS = {
-  home: [1, 6], park: [2, 3], store: [2, 5], worksite: [4, 1], boxing: [4, 6],
+  home: [1, 6], park: [2, 3], store: [2, 5], metro_station: [3, 5], worksite: [4, 1], boxing: [4, 6],
   wuguan: [6, 4], mma: [5, 8], sanda_gym: [6, 6], karate_dojo: [7, 5], taekwondo_club: [7, 7],
   gym: [9, 6], physio: [8, 8], street: [9, 3]
 };
@@ -237,6 +238,12 @@ export const ACTIONS = {
     { id: 'carry', name: '搬货硬练', icon: '箱', time: 80, sp: 24, desc: '赚钱少一点，但力量、耐力和体能沉淀都会涨。纸箱沉默，收益诚实。', type: 'simple', gain: { money: 70, str: 1, end: 1, fitXp: 6, fatigue: 14 } },
     { id: 'chat_xiaoman', name: '和小满聊几句', icon: '聊', time: 25, sp: 0, desc: '分段对话。关系收益每日有限，别把聊天当连招搓。', type: 'dialog', npc: 'xiaoman' },
     { id: 'buy_local', name: '买便利店补给', icon: '购', time: 15, sp: 0, desc: '饭团、饮料、绷带。朴素三件套，专治“我还能撑”。', type: 'shop', cat: '补给' }
+  ],
+  metro_station: [
+    { id: 'metro_observe', name: '观察通勤人流', icon: '看', time: 35, sp: 0, desc: '看距离、看动线、看冲突怎么在拥挤里发酵。人群不讲武德，但很讲空间。', type: 'simple', gain: { jud: 1, street: 4, calm: 2 } },
+    { id: 'metro_short_video', name: '刷打假短视频', icon: '刷', time: 30, sp: 2, desc: '越刷越上头，越刷越想证明点什么。手机很亮，判断力会被照得有点虚。', type: 'simple', gain: { heat: 1, auth: -1, morale: 3 } },
+    { id: 'metro_shadow_step', name: '站台步法小练', icon: '步', time: 25, sp: 6, desc: '不占人、不丢人，练一步进退。脚下能收住，心里才不容易乱冲。', type: 'simple', gain: { skill: 'retreat', xp: 4, jud: 1, fatigue: 3 } },
+    { id: 'metro_line_rumor', name: '听下一站线索', icon: '线', time: 40, sp: 0, desc: '听保安、学生和外卖骑手闲聊，城市的训练地点会先以传闻出现。线索不保证靠谱，但比硬闯强。', type: 'simple', gain: { auth: 2, fame: 4, rel_fatty: 1 } }
   ],
   worksite: [
     { id: 'brick_labor', name: '搬砖杂工', icon: '砖', time: 150, sp: 30, desc: '重活，钱多但疲劳重，体能沉淀扎实。砖块不会鼓掌，但会记重量。', type: 'simple', gain: { money: 180, str: 1, end: 1, tou: 1, fitXp: 10, fatigue: 26, heat: 1 } },
@@ -653,7 +660,7 @@ export const MAIN_EVENTS = {
   },
   2: {
     title: '地铁见义勇为',
-    loc: 'street',
+    loc: 'metro_station',
     npc: 'fatty',
     desc: '你以为是茂家拳起效，其实对方主要是被你的吨位、嗓门和运气镇住了。误判很甜，后账也会很准。',
     kind: 'dialog',
