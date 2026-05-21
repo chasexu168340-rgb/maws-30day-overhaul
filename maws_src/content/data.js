@@ -135,6 +135,25 @@ export const LOCS = {
   street: { name: '旧城区', icon: '街', open: [900, 1430], desc: '线索、热度和高风险冲突。路灯不多，误会不少。' }
 };
 
+export const LOC_UNLOCKS = {
+  home: { default: true, hint: '起点。' },
+  store: { default: true, hint: 'Day 1 可以去，先把生活压力顶住。' },
+  metro_station: { default: true, hint: '预留给地铁站内容接入。' },
+  park: { day: 3, reason: '先在出租屋和便利店把城市摸清楚。', hint: 'Day 3 开放。' },
+  worksite: { day: 4, reason: '刘胖子还没把日结活转给你。', hint: 'Day 4 开放。' },
+  boxing: { day: 9, reason: '真正被一阵风打醒后，你才愿意听拳馆的真话。', hint: 'Day 9 开放。' },
+  physio: { day: 9, reason: '身体还没开始正式投诉。', hint: 'Day 9 开放。' },
+  gym: { day: 10, reason: '先确认身体到底差在哪里。', hint: 'Day 10 开放。' },
+  wuguan: { day: 13, reason: '传统拆解还没到时候。', hint: 'Day 13 开放。' },
+  mma: { day: 16, reason: '地面课不是第一天就能理解的东西。', hint: 'Day 16 开放。' },
+  street: { day: 18, reason: '旧城区的风险还没把你点名。', hint: 'Day 18 开放。' },
+  sanda_gym: { day: 20, reason: '拳腿摔组合需要一点基础。', hint: 'Day 20 开放。' },
+  karate_dojo: { day: 22, reason: '先把直线和回收练明白。', hint: 'Day 22 开放。' },
+  taekwondo_club: { day: 24, reason: '腿法漂亮之前，先学会落地。', hint: 'Day 24 开放。' }
+};
+
+export const INITIAL_SKILLS = ['mystic', 'guard', 'retreat', 'talkdown'];
+
 export const LOC_POS = {
   home: [1, 6], park: [2, 3], store: [2, 5], worksite: [4, 1], boxing: [4, 6],
   wuguan: [6, 4], mma: [5, 8], sanda_gym: [6, 6], karate_dojo: [7, 5], taekwondo_club: [7, 7],
