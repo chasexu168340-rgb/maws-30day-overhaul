@@ -1,58 +1,59 @@
 # TASK_PLAN
 
-> 当前任务单。只保留本轮完整回归的目标、结果、风险和下一步。
+> 当前任务单。只保留本轮目标、结果、风险和下一步。
 
 ## Current Task
 
-合并 `feat/qa-playwright-smoke` 到 `staging/reforge-unlocks-v1`，把真实浏览器 smoke 纳入主重铸分支。
+先执行 `AGENT_A_HARNESS_DELTA`，清理旧 Batch 上下文污染源，再执行 `AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS`。
 
 ## Scope
 
-- 从远端同步 `staging/reforge-unlocks-v1`。
-- `--no-ff` 合并 `origin/feat/qa-playwright-smoke`。
-- 验证 `npm run build`。
-- 验证 `npm run test:smoke`。
-- 验证 `git diff --check`。
-- 更新当前 checkpoint。
-- 不启动 `AGENT_B_GAMEPLAY_SYSTEMS`。
-- 不改 data.js / state.js / ui.js / combat.js。
+- 新增 `TASK_HANDOFF` / `EXECUTION_CONTRACT` / `VALIDATION` / `SPRINT_BOARD`。
+- 归档旧 `CURRENT_*` / `CHANGELOG`，原路径保留历史 stub。
+- 更新 `AGENTS.md`、`FILE_MAP.md`、`NEXT_WAVE_PLAN.md`、`package.json`。
+- 新增 Harness Delta 和 Skill Unlocks After Harness 任务 prompt。
+- 不改运行代码、UI、战斗公式、经济曲线、存档 key/version 或资源目录。
 
 ## Relevant Files
 
+- `AGENTS.md`
 - `package.json`
-- `package-lock.json`
-- `maws_src/tests/phaser-smoke.spec.js`
+- `docs/TASK_HANDOFF.md`
+- `docs/EXECUTION_CONTRACT.md`
+- `docs/VALIDATION.md`
+- `docs/SPRINT_BOARD.md`
+- `docs/FILE_MAP.md`
 - `docs/TASK_PLAN.md`
-- `docs/agent_reports/AGENT_F_TECH_QA_TOOLS.md`
-- `.codex/DONE.md`
+- `docs/NEXT_WAVE_PLAN.md`
+- `docs/codex_tasks/AGENT_A_HARNESS_DELTA.md`
+- `docs/codex_tasks/AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS.md`
 
 ## Plan
 
-- [x] 切回 staging 并 fast-forward 到远端最新。
-- [x] 合并 `origin/feat/qa-playwright-smoke`。
-- [x] 运行 build。
-- [x] 运行真实浏览器 smoke。
-- [x] 运行 diff check。
-- [x] 更新 checkpoint。
-- [x] 推送 staging 到 GitHub。
+- [x] 确认 staging 与 `origin/staging/reforge-unlocks-v1` 一致。
+- [x] 创建 `feat/codex-harness-delta`。
+- [x] 归档旧 `CURRENT_*` / `CHANGELOG`。
+- [x] 新增 handoff / contract / validation / board。
+- [x] 补 `check` / `check:full` alias。
+- [x] 运行 build、smoke、diff check。
+- [x] 提交并 push Harness Delta。
+- [x] 创建 `feat/skill-unlocks-data` 并完成 `SKILL_UNLOCKS` 第一版数据化。
 
 ## Validation
 
 - [x] `npm run build`：通过。
 - [x] `npm run test:smoke`：通过，4 个 Chromium 用例。
-- [x] `git diff --check HEAD~1..HEAD`：通过。
-- [x] `git push`
+- [x] `git diff --check`：通过；仅有 Git CRLF 工作区提示。
 
 ## Result
 
-QA 分支已合并到 staging。真实浏览器 smoke 现在覆盖地点锁、地铁站 travel/action、技能页、战斗页，以及 390x844 / 900x700 / 1365x768 三档横向溢出检查。合并提交为 `615c8c1`。
+- Harness Delta 已完成本地验证并推送到 GitHub：新增当前 handoff、执行合同、验证入口、sprint board；旧 `CURRENT_*` / `CHANGELOG` 已归档并替换为历史 stub；`package.json` 已补 `check` / `check:full` alias。
 
 ## Risks
 
-- Playwright 浏览器缓存仍是本机环境依赖，不进入 Git。
-- 这轮只建立 QA 门槛，没有做 `SKILL_UNLOCKS`、早期战斗手感或地铁站视觉闭环。
-- `AGENT_B_GAMEPLAY_SYSTEMS` 运行前需要明确边界：只做 `SKILL_UNLOCKS` 数据和解锁逻辑，不改 UI 布局、不改战斗公式、不写大段剧情。
+- `planning-with-files` 的 catchup 脚本因系统 Python 不可用失败；本轮已改用项目内 `docs/TASK_PLAN.md` 作为 checkpoint。
+- `git pull --ff-only` 出现连接重置；此前 `git fetch origin` 成功，且本地 HEAD 与 `origin/staging/reforge-unlocks-v1` 计数为 `0 0`。
 
 ## Next Step
 
-推送 staging 后，下一轮开 `feat/skill-unlocks-data`，先让系统组实现 `SKILL_UNLOCKS` 数据驱动；UI 读取 `SKILL_UNLOCKS` 留给后续 `AGENT_E_UI_PRESENTATION`。
+审阅并合并 `feat/codex-harness-delta` 后，等待 `feat/skill-unlocks-data` 完成 fixup，再按顺序审阅/合并技能解锁分支。下一轮 UI 任务读取 `model.skillUnlocks`。
