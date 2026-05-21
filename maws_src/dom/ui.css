@@ -665,13 +665,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  min-width: 0;
   text-align: left;
   padding: 8px 10px;
+}
+
+.maws-loc b,
+.maws-loc small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-loc small {
+  max-width: 56%;
+  text-align: right;
+  white-space: normal;
+  line-height: 1.15;
 }
 
 .maws-loc.active {
   background: #ff4d3d;
   color: #fff7dc;
+}
+
+.maws-loc.main-here {
+  outline: 2px solid var(--maws-gold, #ffd941);
+  outline-offset: -4px;
 }
 
 .maws-action {
@@ -684,6 +704,177 @@
 .maws-vitals {
   grid-template-columns: repeat(3, 1fr);
   margin-bottom: 14px;
+}
+
+.maws-style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 9px;
+  min-width: 0;
+  margin: 0 0 14px;
+}
+
+.maws-style-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 3px solid var(--maws-ink, #050506);
+  background:
+    linear-gradient(120deg, rgba(255, 217, 65, 0.16), transparent 48%),
+    rgba(9, 9, 12, 0.94);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.82);
+}
+
+.maws-style-card strong,
+.maws-style-card p {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-style-card strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.maws-style-card strong i {
+  font-style: normal;
+  color: var(--maws-gold, #ffd941);
+}
+
+.maws-style-card b {
+  color: var(--maws-gold, #ffd941);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.maws-style-card p {
+  grid-column: 1 / -1;
+  color: rgba(255, 243, 210, 0.74);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.maws-reforge-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 3px solid var(--maws-ink, #050506);
+  background:
+    linear-gradient(135deg, rgba(255, 217, 65, 0.12), transparent 44%),
+    rgba(5, 5, 6, 0.56);
+  box-shadow: inset 6px 0 0 rgba(255, 18, 56, 0.72);
+}
+
+.maws-reforge-panel.locked {
+  box-shadow: inset 6px 0 0 rgba(255, 217, 65, 0.58);
+}
+
+.maws-maw-metrics,
+.maws-reforge-grid,
+.maws-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 9px;
+  min-width: 0;
+}
+
+.maws-maw-metric,
+.maws-reforge-card,
+.maws-form-card {
+  min-width: 0;
+  padding: 10px;
+  border: 3px solid var(--maws-ink, #050506);
+  background: rgba(9, 9, 12, 0.94);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.82);
+  overflow-wrap: anywhere;
+}
+
+.maws-maw-metric strong,
+.maws-reforge-card header,
+.maws-form-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.maws-maw-metric b,
+.maws-reforge-card b,
+.maws-form-card span {
+  color: var(--maws-gold, #ffd941);
+}
+
+.maws-maw-metric p,
+.maws-reforge-card p,
+.maws-form-card p,
+.maws-reforge-card small,
+.maws-form-card small,
+.maws-diary-card p {
+  margin: 6px 0 0;
+  color: rgba(255, 243, 210, 0.76);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.maws-diary-card {
+  min-width: 0;
+  padding: 11px;
+  border: 3px solid var(--maws-ink, #050506);
+  background:
+    linear-gradient(100deg, rgba(255, 217, 65, 0.2), transparent 56%),
+    rgba(16, 16, 20, 0.96);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.82);
+}
+
+.maws-diary-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.maws-diary-card span,
+.maws-form-status,
+.maws-form-next {
+  color: var(--maws-gold, #ffd941);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.maws-diary-card button {
+  margin-top: 8px;
+}
+
+.maws-reforge-bar {
+  position: relative;
+  height: 9px;
+  margin-top: 8px;
+  border: 2px solid rgba(255, 243, 210, 0.42);
+  background: rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+}
+
+.maws-reforge-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--maws-red, #ff1238), var(--maws-gold, #ffd941));
+}
+
+.maws-reforge-card.status-solid {
+  border-color: var(--maws-gold, #ffd941);
+}
+
+.maws-form-card.status-locked {
+  opacity: 0.72;
 }
 
 .maws-meter {
@@ -881,6 +1072,101 @@
   color: #f7f0df;
 }
 
+.maws-modal.event-notebook section {
+  width: min(880px, 100%);
+  background:
+    linear-gradient(115deg, rgba(255, 210, 63, 0.12), transparent 42%),
+    #101014;
+}
+
+.maws-event-head {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  margin-bottom: 10px;
+}
+
+.maws-event-head small {
+  color: #ffd23f;
+  font-weight: 900;
+}
+
+.maws-event-head h2 {
+  margin: 0;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.maws-event-beats {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.maws-event-beats li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-left: 5px solid #ffd23f;
+  background: rgba(255, 243, 210, 0.08);
+  color: #fff7dc;
+}
+
+.maws-event-beats b {
+  color: #ffd23f;
+  font-size: 12px;
+}
+
+.maws-event-beats span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-event-summary {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  margin: 10px 0 12px;
+}
+
+.maws-event-summary small {
+  color: #ffd23f;
+  font-weight: 900;
+}
+
+.maws-choice-grid.event {
+  margin-top: 10px;
+}
+
+.maws-event-choice {
+  min-width: 0;
+  padding: 12px;
+  border: 3px solid #050506;
+  background: rgba(255, 243, 210, 0.94);
+  color: #050506;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.86);
+}
+
+.maws-event-choice strong,
+.maws-event-choice p {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-event-choice p {
+  margin: 6px 0 10px;
+  color: #40331f;
+}
+
+.maws-event-choice button {
+  width: 100%;
+}
+
 .maws-modal ol {
   display: grid;
   gap: 6px;
@@ -890,6 +1176,47 @@
 .maws-settle-list {
   padding-left: 0;
   list-style: none;
+}
+
+.maws-final-objectives {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.maws-final-objectives li {
+  padding: 7px 9px;
+  border-left: 5px solid var(--maws-gold, #ffd941);
+  background: rgba(255, 243, 210, 0.08);
+  color: var(--maws-paper, #fff3d2);
+  font-weight: 900;
+}
+
+.maws-final-objectives li.miss {
+  border-left-color: rgba(255, 243, 210, 0.42);
+  color: rgba(255, 243, 210, 0.72);
+}
+
+.maws-final-objectives b {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.maws-final-objectives em {
+  flex: 0 0 auto;
+  color: var(--maws-gold, #ffd941);
+  font-style: normal;
+}
+
+.maws-final-objectives span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .maws-settle-line {
@@ -2361,6 +2688,51 @@
   font-weight: 900;
 }
 
+.maws-training-meter {
+  height: 10px;
+  border: 2px solid var(--maws-ink, #050506);
+  background: #111116;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.78);
+  overflow: hidden;
+}
+
+.maws-training-meter i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--maws-red, #ff1238), var(--maws-gold, #ffd941));
+  transition: width 180ms ease;
+}
+
+.maws-training-feedback,
+.maws-training-cue {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--maws-ink, #050506);
+  background: rgba(255, 243, 210, 0.95);
+  color: var(--maws-ink, #050506);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.78);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.maws-training-feedback {
+  display: grid;
+  gap: 4px;
+  background: rgba(255, 217, 65, 0.94);
+}
+
+.maws-training-feedback b,
+.maws-training-feedback span {
+  min-width: 0;
+}
+
+.maws-training-feedback span {
+  color: #3b2b16;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .maws-rhythm-track,
 .maws-timing-track {
   position: relative;
@@ -2708,7 +3080,8 @@
   justify-self: start;
 }
 
-.maws-training-choice {
+.maws-training-choice,
+.maws-story-choice {
   display: grid;
   gap: 7px;
   min-width: 0;
@@ -2721,16 +3094,200 @@
 }
 
 .maws-training-choice strong,
-.maws-training-choice p {
+.maws-training-choice p,
+.maws-story-choice strong,
+.maws-story-choice p,
+.maws-story-choice small {
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
 }
 
-.maws-training-choice p {
+.maws-training-choice p,
+.maws-story-choice p {
   color: #40331f;
   font-size: 13px;
   line-height: 1.35;
+}
+
+.maws-story-choice small {
+  color: rgba(5, 5, 6, 0.72);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.maws-modal.diary section {
+  width: min(720px, 100%);
+}
+
+.maws-modal.dialogue section {
+  display: grid;
+  gap: 12px;
+  width: min(760px, 100%);
+  color: var(--maws-paper, #fff3d2);
+  background:
+    linear-gradient(135deg, rgba(255, 18, 56, 0.16), transparent 36%),
+    linear-gradient(180deg, rgba(255, 217, 65, 0.08), transparent 68%),
+    #101014;
+}
+
+.maws-dialogue-head {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.maws-dialogue-head > span {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border: 3px solid var(--maws-ink, #050506);
+  background: rgba(255, 243, 210, 0.12);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.86);
+}
+
+.maws-dialogue-portrait-img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.maws-dialogue-portrait-fallback {
+  color: var(--maws-gold, #ffd941);
+  font-size: 30px;
+  font-style: normal;
+  font-weight: 1000;
+}
+
+.maws-dialogue-head div {
+  min-width: 0;
+}
+
+.maws-dialogue-head small,
+.maws-dialogue-head em,
+.maws-dialogue-head b {
+  display: block;
+  min-width: 0;
+  color: rgba(255, 243, 210, 0.72);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.maws-dialogue-head h2 {
+  margin: 2px 0;
+  color: var(--maws-paper, #fff3d2);
+  text-shadow: 3px 3px 0 #000;
+  overflow-wrap: anywhere;
+}
+
+.maws-dialogue-head b {
+  align-self: start;
+  padding: 4px 7px;
+  border: 2px solid var(--maws-ink, #050506);
+  background: var(--maws-gold, #ffd941);
+  color: var(--maws-ink, #050506);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.78);
+}
+
+.maws-dialogue-line {
+  min-height: 118px;
+  padding: 16px;
+  border: 3px solid rgba(255, 243, 210, 0.7);
+  background: rgba(5, 5, 6, 0.72);
+  box-shadow: inset 6px 0 0 var(--maws-red, #ff1238);
+}
+
+.maws-dialogue-line p {
+  margin: 0;
+  color: var(--maws-paper, #fff3d2);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 900;
+  line-height: 1.45;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-dialogue-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.maws-dialogue-choice {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 11px;
+  border: 3px solid var(--maws-ink, #050506);
+  background: rgba(255, 243, 210, 0.96);
+  color: var(--maws-ink, #050506);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.86);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 8px 100%);
+}
+
+.maws-dialogue-choice strong,
+.maws-dialogue-choice p,
+.maws-dialogue-choice small {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-dialogue-choice p {
+  color: #40331f;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.maws-dialogue-choice small {
+  color: rgba(5, 5, 6, 0.72);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.maws-diary-pages {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  margin: 10px 0;
+}
+
+.maws-diary-entry {
+  min-width: 0;
+  padding: 11px;
+  border: 2px solid rgba(255, 243, 210, 0.46);
+  background: rgba(255, 243, 210, 0.08);
+  box-shadow: inset 5px 0 0 rgba(255, 217, 65, 0.72);
+}
+
+.maws-diary-entry strong {
+  color: var(--maws-gold, #ffd941);
+}
+
+.maws-diary-entry p,
+.maws-diary-closing {
+  margin: 5px 0 0;
+  color: var(--maws-paper, #fff3d2);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.maws-diary-closing {
+  padding: 9px 10px;
+  border-left: 5px solid var(--maws-red, #ff1238);
+  background: rgba(0, 0, 0, 0.18);
+  font-weight: 900;
 }
 
 .maws-combat-planner {
@@ -2764,11 +3321,275 @@
   color: rgba(255, 243, 210, 0.72);
 }
 
+.maws-combat-read {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 2px solid rgba(255, 243, 210, 0.66);
+  background:
+    linear-gradient(105deg, rgba(255, 18, 56, 0.16), transparent 58%),
+    rgba(5, 5, 6, 0.66);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: inset 4px 0 0 var(--maws-red, #ff1238);
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.maws-combat-read b {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.maws-combat-read em {
+  flex: 0 0 auto;
+  min-width: 24px;
+  padding: 1px 5px;
+  border: 2px solid var(--maws-ink, #050506);
+  background: var(--maws-gold, #ffd941);
+  color: var(--maws-ink, #050506);
+  font-style: normal;
+  text-align: center;
+}
+
+.maws-combat-read span,
+.maws-combat-read small {
+  display: block;
+  min-width: 0;
+}
+
+.maws-combat-read small {
+  color: rgba(255, 243, 210, 0.72);
+}
+
+.maws-combat-read p {
+  margin: 4px 0 0;
+  color: rgba(255, 243, 210, 0.84);
+}
+
+.maws-combat-read ol {
+  display: grid;
+  gap: 3px;
+  margin: 5px 0 0;
+  padding-left: 16px;
+  color: rgba(255, 243, 210, 0.76);
+}
+
+.maws-combat-read.danger-high {
+  box-shadow: inset 4px 0 0 #ff1238;
+}
+
+.maws-combat-read.danger-mid {
+  box-shadow: inset 4px 0 0 #ffd941;
+}
+
+.maws-combat-read.danger-low {
+  box-shadow: inset 4px 0 0 #4bd7ff;
+}
+
+.maws-counter-hints {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+  margin-top: 5px;
+  padding: 5px 6px;
+  border: 1px solid rgba(255, 217, 65, 0.55);
+  background: rgba(255, 217, 65, 0.1);
+}
+
+.maws-counter-hints span {
+  color: rgba(255, 243, 210, 0.72);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.maws-counter-hints strong {
+  min-width: 0;
+  color: var(--maws-gold, #ffd941);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maws-combat-feedback {
+  position: absolute;
+  top: clamp(108px, 17vh, 168px);
+  right: clamp(12px, 3vw, 34px);
+  z-index: 6;
+  width: min(360px, 36vw);
+  max-width: calc(100% - 24px);
+  padding: 8px 10px;
+  border: 3px solid var(--maws-ink, #050506);
+  background: rgba(5, 5, 6, 0.82);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.84);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
+
+.maws-combat-feedback b,
+.maws-combat-feedback span {
+  display: block;
+  min-width: 0;
+}
+
+.maws-combat-feedback b {
+  margin-bottom: 3px;
+  color: var(--maws-gold, #ffd941);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.maws-combat-feedback.tone-good {
+  box-shadow: inset 4px 0 0 #4bd7ff, 5px 5px 0 rgba(0, 0, 0, 0.84);
+}
+
+.maws-combat-feedback.tone-bad {
+  box-shadow: inset 4px 0 0 #ff1238, 5px 5px 0 rgba(0, 0, 0, 0.84);
+}
+
+.maws-combat-log-toggle {
+  position: absolute;
+  top: clamp(196px, 34vh, 300px);
+  right: clamp(12px, 3vw, 34px);
+  z-index: 7;
+  display: block;
+  max-width: min(360px, calc(100% - 24px));
+  pointer-events: auto;
+}
+
+.maws-combat-log-toggle summary {
+  width: max-content;
+  margin-left: auto;
+  padding: 6px 9px;
+  border: 2px solid var(--maws-ink, #050506);
+  background: var(--maws-paper, #fff3d2);
+  color: var(--maws-ink, #050506);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.84);
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.maws-combat-log-toggle ol {
+  display: grid;
+  gap: 6px;
+  max-height: 26vh;
+  margin: 8px 0 0;
+  padding: 8px;
+  overflow: auto;
+  list-style: none;
+  border: 2px solid var(--maws-ink, #050506);
+  background: rgba(5, 5, 6, 0.92);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.82);
+}
+
+.maws-combat-log-toggle li {
+  padding: 6px 8px;
+  border-left: 3px solid rgba(255, 18, 56, 0.8);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 243, 210, 0.88);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.maws-combat-queue b,
+.maws-combat-queue small {
+  display: block;
+  min-width: 0;
+}
+
+.maws-combat-queue b {
+  margin-bottom: 5px;
+  color: var(--maws-gold, #ffd941);
+}
+
+.maws-queue-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.maws-queue-slot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 26px;
+  padding: 4px 6px;
+  border: 2px dashed rgba(255, 243, 210, 0.42);
+  color: rgba(255, 243, 210, 0.7);
+  overflow: hidden;
+}
+
+.maws-queue-slot i {
+  flex: 0 0 auto;
+  font-style: normal;
+  color: rgba(255, 217, 65, 0.88);
+}
+
+.maws-queue-slot.filled {
+  border-style: solid;
+  background: rgba(255, 217, 65, 0.12);
+  color: var(--maws-paper, #fff3d2);
+}
+
 .maws-target-control {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   min-width: 0;
+}
+
+.maws-objective-strip {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.maws-objective-strip > b {
+  color: var(--maws-gold, #ffd941);
+  font-size: 12px;
+}
+
+.maws-objective-strip > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.maws-objective-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 2px solid rgba(255, 243, 210, 0.58);
+  background: rgba(255, 243, 210, 0.08);
+  color: rgba(255, 243, 210, 0.78);
+  font-size: 11px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.maws-objective-strip span i {
+  color: var(--maws-gold, #ffd941);
+  font-style: normal;
+}
+
+.maws-objective-strip span.done {
+  border-color: var(--maws-gold, #ffd941);
+  background: rgba(255, 217, 65, 0.2);
+  color: var(--maws-paper, #fff3d2);
 }
 
 .maws-target-option {
@@ -2876,9 +3697,33 @@
   }
 
   .maws-choice-grid,
+  .maws-dialogue-choices,
   .maws-training-choices,
   .maws-card-grid.compact {
     grid-template-columns: 1fr;
+  }
+
+  .maws-dialogue-head {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .maws-dialogue-head > span {
+    width: 56px;
+    height: 56px;
+  }
+
+  .maws-dialogue-head h2 {
+    font-size: 20px;
+  }
+
+  .maws-dialogue-line {
+    min-height: 96px;
+    padding: 12px;
+  }
+
+  .maws-dialogue-line p {
+    font-size: 17px;
   }
 
   .maws-rhythm-track,
@@ -2984,6 +3829,63 @@
     font-size: 11px;
   }
 
+  .maws-combat-read {
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+
+  .maws-combat-read b {
+    font-size: 11px;
+  }
+
+  .maws-combat-read p,
+  .maws-combat-read ol {
+    display: none;
+  }
+
+  .maws-counter-hints {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    margin-top: 3px;
+    padding: 3px 5px;
+  }
+
+  .maws-counter-hints span {
+    font-size: 9px;
+  }
+
+  .maws-counter-hints strong {
+    font-size: 10px;
+  }
+
+  .maws-combat-feedback {
+    left: 8px;
+    right: 8px;
+    top: 82px;
+    width: auto;
+    max-width: none;
+    max-height: 58px;
+    padding: 6px 8px;
+    font-size: 11px;
+    overflow: hidden;
+  }
+
+  .maws-combat-log-toggle {
+    top: 146px;
+    right: 8px;
+    max-width: calc(100vw - 16px);
+  }
+
+  .maws-combat-log-toggle summary {
+    padding: 5px 7px;
+    font-size: 11px;
+  }
+
+  .maws-combat-log-toggle ol {
+    max-height: 22vh;
+    font-size: 11px;
+  }
+
   .maws-card-grid.combat {
     display: flex;
     min-height: 88px;
@@ -3086,5 +3988,163 @@
 
   .maws-skill.combat-card footer {
     display: none;
+  }
+}
+
+/* Batch 2: main screen noise reduction. */
+.maws-hud-compact .maws-resource-row {
+  justify-content: flex-end;
+}
+
+.maws-hud-compact .maws-chip {
+  white-space: nowrap;
+}
+
+.maws-hud-compact .maws-chip.risk {
+  border-color: rgba(255, 77, 61, 0.82);
+}
+
+.maws-location {
+  grid-template-columns: minmax(220px, 0.28fr) minmax(0, 1fr) minmax(290px, 0.38fr);
+}
+
+.maws-today-rail {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  overflow: auto;
+  border: 4px solid var(--maws-ink, #050506);
+  background:
+    linear-gradient(145deg, rgba(255, 18, 56, 0.08), transparent 34%),
+    var(--maws-panel, rgba(9, 9, 12, 0.94));
+  box-shadow: var(--maws-shadow, 8px 8px 0 rgba(0, 0, 0, 0.72));
+}
+
+.maws-action-rail-main {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.maws-today-stack,
+.maws-recommend-board {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  align-content: start;
+}
+
+.maws-recommend-board {
+  margin-bottom: 4px;
+}
+
+.maws-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  max-width: 100%;
+  margin-top: 8px;
+  color: #40331f;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.maws-card-meta span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-recommend-card button,
+.maws-today-stack .maws-task-card button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.maws-recommend-card small {
+  color: #5a2b16;
+}
+
+.maws-current-actions-title {
+  margin-top: 2px;
+}
+
+.maws-action-rail-main .maws-actions {
+  min-width: 0;
+}
+
+@media (max-width: 1120px) {
+  .maws-location {
+    grid-template-columns: minmax(210px, 0.38fr) minmax(0, 1fr);
+  }
+
+  .maws-scene {
+    order: 1;
+  }
+
+  .maws-today-rail {
+    order: 2;
+  }
+
+  .maws-action-rail-main {
+    order: 3;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .maws-location {
+    grid-template-columns: 1fr;
+  }
+
+  .maws-scene {
+    order: 3;
+    min-height: 34vh;
+  }
+
+  .maws-today-rail {
+    order: 1;
+  }
+
+  .maws-action-rail-main {
+    order: 2;
+    grid-column: auto;
+    grid-template-rows: auto auto auto auto;
+  }
+
+  .maws-today-rail,
+  .maws-action-rail-main {
+    overflow: visible;
+  }
+
+  .maws-hud-compact .maws-resource-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    justify-content: stretch;
+  }
+
+  .maws-hud-compact .maws-chip {
+    justify-content: center;
+    min-width: 0;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .maws-card-meta {
+    gap: 3px 8px;
+  }
+}
+
+@media (max-width: 430px) {
+  .maws-hud-compact .maws-chip {
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  .maws-card-meta {
+    font-size: 11px;
   }
 }

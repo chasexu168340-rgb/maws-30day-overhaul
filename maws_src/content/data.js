@@ -39,7 +39,78 @@ export const STYLE_RULES = {
   boxing: { name: '拳击实用', icon: '拳', desc: '提高拳类伤害、抱架稳定和基础换拳效率。朴素，但朴素得很疼。' },
   mma: { name: 'MMA防摔', icon: '摔', desc: '提高防摔、抱摔、地面脱身和上位控制收益。别让对面把你当瑜伽垫。' },
   traditional: { name: '传统拆解', icon: '武', desc: '把好看的架子拆成能复现的短动作；能打的留下，摆拍的靠边站。' },
-  street: { name: '街头判断', icon: '街', desc: '提高撤离、降温和风险胜利概率。真正的狠活，有时是让事别发生。' }
+  street: { name: '街头判断', icon: '街', desc: '提高撤离、降温和风险胜利概率。真正的狠活，有时是让事别发生。' },
+  sanda: { name: '散打实战', icon: '散', desc: '重视拳腿摔衔接和擂台距离感。打得不花，但每一步都在给下一下铺路。' },
+  karate: { name: '空手道正拳', icon: '空', desc: '强调架势、直线爆发和收招纪律。动作干净，问题是对面也会看见空档。' },
+  taekwondo: { name: '跆拳道腿法', icon: '跆', desc: '提高中远距离腿法节奏和反击威胁。腿能踢得高，也要记得落地。' }
+};
+
+export const MAW_RULES = {
+  belief: { name: '祖传信念', icon: '祖', desc: '陆小闲对“茂家拳天下第一”的相信程度。前期撑心气，后期必须被真实训练重写。' },
+  misread: { name: '误判值', icon: '误', desc: '把偶然胜利理解成神功的程度。Day 8 会被现实清账，不能当长期战力。' },
+  fatherMemory: { name: '父亲记忆', icon: '父', desc: '不是战斗力，而是陆小闲为什么还能站起来。影响日记、夜谈和终战冷静。' },
+  reforge: { name: '茂拳完成度', icon: '茂', desc: '把拳击、身体、传统拆解、地面和街头判断写回茂家拳谱的进度。' },
+  modules: { name: '百家入茂', icon: '入', desc: '散打、空手道、跆拳道等训练不平行堆系统，而是汇入重铸模块。' },
+  objectives: { name: '真东西目标', icon: '测', desc: 'Day 30 不只看 KO，而看能不能在压力里完成具体目标。' }
+};
+
+export const FATHER_DIARY = {
+  title: '父亲日记',
+  subtitle: '旧箱子里没有绝招，只有几页不太会说出口的话。',
+  dialogue: [
+    { speaker: '陆小闲', text: '箱子底下还有一本本子。封皮都起毛了。' },
+    { speaker: '陆小闲', text: '字是爸的。比拳谱难认，但比拳谱像真话。' },
+    { speaker: '父亲', text: '小闲，真要保护人，先学会别拿冲动当本事。' }
+  ],
+  entries: [
+    { date: '给小闲', text: '我怕你把拳谱当护身符。真要保护人，先学会别乱争胜，别把每一次冲动都说成祖传。' },
+    { date: '练拳记', text: '茂家拳如果还有用，不该是让人相信自己天下第一，而是把真正能用的东西一页页写回来。' },
+    { date: '没说出口的话', text: '输不丢人。丢人的是明知道不懂，还拿别人的安全替自己的面子撑场。' }
+  ],
+  closing: '你合上日记。父亲没有否定茂家拳，他只是把“能用”两个字放在了最前面。'
+};
+
+export const MAW_FORMS = {
+  kaishan: {
+    name: '茂家开山拳',
+    module: 'boxing',
+    skill: 'straight',
+    old: '父亲说这一拳能开山。小时候你信得很认真。',
+    doubt: '开山存疑。直拳回收、护住下巴，这些才先能开门。',
+    newNote: '新注：先用刺拳找路，再让直拳落在能回收的位置。'
+  },
+  tiebu: {
+    name: '茂家铁布衫',
+    module: 'body',
+    skill: 'guard',
+    old: '旧解说站稳就不怕打。现实会先问你的体能和抱架。',
+    doubt: '铁布衫存疑。抗压不是硬挨，是让身体有余量。',
+    newNote: '新注：耐力、核心和抱架一起算，能少挨一下就少挨一下。'
+  },
+  fenghou: {
+    name: '茂家封喉手',
+    module: 'traditional',
+    skill: 'palm',
+    old: '招名很凶，小时候听起来像能一招定胜负。',
+    doubt: '封喉存疑。近身短打要看距离、重心和时机。',
+    newNote: '新注：掌根短击只在近身成立，先破平衡，再谈落点。'
+  },
+  chuanbu: {
+    name: '茂家穿云步',
+    module: 'street',
+    skill: 'retreat',
+    old: '父亲说步法一开，人像从云里过。',
+    doubt: '穿云存疑。街头先看出口、障碍和情绪。',
+    newNote: '新注：能后撤、能降温、能不打，都是能用的步法。'
+  },
+  luodi: {
+    name: '茂家落地根',
+    module: 'grappling',
+    skill: 'sprawl',
+    old: '旧拳谱没写地面，只写“根在脚下”。',
+    doubt: '落地根存疑。被抱住之后，脚下那点根不一定够。',
+    newNote: '新注：防摔、脱身和重新站起，是现代茂家拳必须补的页。'
+  }
 };
 
 export const ORIGINS = {
@@ -56,6 +127,9 @@ export const LOCS = {
   boxing: { name: '拳馆', icon: '拳', open: [540, 1320], desc: '拳击基础、陪练和教练反馈。这里的真话通常带着汗味。' },
   wuguan: { name: '武馆', icon: '武', open: [540, 1260], desc: '传统动作拆解和压力测试。好看可以加分，能用才算毕业。' },
   mma: { name: 'MMA馆', icon: '摔', open: [600, 1320], desc: '防摔、抱摔和地面课。你会学到地板其实很有存在感。' },
+  sanda_gym: { name: '散打馆', icon: '散', open: [540, 1320], desc: '拳腿摔连在一起练，节奏硬，回合短。教练不爱玄学，只看你能不能站稳再出手。' },
+  karate_dojo: { name: '空手道道场', icon: '空', open: [570, 1260], desc: '基本功、型和组手都讲规矩。地板擦得很亮，犯错时也很亮。' },
+  taekwondo_club: { name: '跆拳道社', icon: '跆', open: [600, 1320], desc: '腿法、步伐和距离反击。踢得漂亮不算完，落回来还能防住才算数。' },
   gym: { name: '社区健身房', icon: '体', open: [540, 1320], desc: '基础体能馆，练力量、耐力、平衡和核心。镜子不计分，心率带计。' },
   physio: { name: '理疗店', icon: '疗', open: [600, 1320], desc: '恢复、降疲劳和处理小伤。花钱让身体停止投诉。' },
   street: { name: '旧城区', icon: '街', open: [900, 1430], desc: '线索、热度和高风险冲突。路灯不多，误会不少。' }
@@ -63,7 +137,8 @@ export const LOCS = {
 
 export const LOC_POS = {
   home: [1, 6], park: [2, 3], store: [2, 5], worksite: [4, 1], boxing: [4, 6],
-  wuguan: [6, 4], mma: [5, 8], gym: [9, 6], physio: [8, 8], street: [9, 3]
+  wuguan: [6, 4], mma: [5, 8], sanda_gym: [6, 6], karate_dojo: [7, 5], taekwondo_club: [7, 7],
+  gym: [9, 6], physio: [8, 8], street: [9, 3]
 };
 
 export const TRAVEL_TUNING = {
@@ -93,7 +168,13 @@ export const SKILLS = {
   talkdown: { name: '言语降温', icon: '谈', type: 'dirty', dist: ['far', 'mid', 'close'], dmg: 0, post: 0, sp: 6, ap: 1, hit: 0.58, risk: 0.05, style: 'street', desc: '降低敌意，避免硬拼。嘴不是武器，但有时能让武器先下班。' },
   palm: { name: '掌根短击', icon: '掌', assetKey: 'skill.palm', type: 'strike', dist: ['close'], dmg: 14, post: 14, sp: 9, ap: 1, hit: 0.66, risk: 0.14, style: 'traditional', desc: '把花架子拆成近身短打。动作不玄，落点很现实。' },
   offbalance: { name: '破平衡', icon: '破', type: 'grapple', dist: ['close'], dmg: 4, post: 20, sp: 10, ap: 1, hit: 0.62, risk: 0.16, style: 'traditional', desc: '扰乱重心，方便后续压制。先让对手站不明白，再让他输得明白。' },
-  mystic: { name: '混元一气掌', icon: '玄', type: 'mystic', dist: ['mid', 'close'], dmg: 15, post: 6, sp: 18, ap: 2, hit: 0.42, risk: 0.28, style: 'traditional', desc: '观赏性高，压力下风险也高。能赢是绝活，打空就是现场气氛组。' }
+  mystic: { name: '混元一气掌', icon: '玄', type: 'mystic', dist: ['mid', 'close'], dmg: 15, post: 6, sp: 18, ap: 2, hit: 0.42, risk: 0.28, style: 'traditional', desc: '观赏性高，压力下风险也高。能赢是绝活，打空就是现场气氛组。' },
+  sanda_whip_kick: { name: '散打鞭腿', icon: '鞭', type: 'kick', dist: ['mid'], dmg: 14, post: 13, sp: 11, ap: 2, hit: 0.68, risk: 0.16, style: 'sanda', desc: '从拳距后面抽出来的中段鞭腿。打中不是花活，是让对面肋部重新认识呼吸。' },
+  sanda_catch_throw: { name: '接腿摔', icon: '接', type: 'grapple', dist: ['mid', 'close'], dmg: 8, post: 18, sp: 13, ap: 2, hit: 0.58, risk: 0.22, style: 'sanda', desc: '抓住踢腿后的空档把人带倒。机会很短，犹豫一下就只剩尴尬。' },
+  karate_reverse_punch: { name: '逆突', icon: '突', type: 'strike', dist: ['mid'], dmg: 17, post: 15, sp: 10, ap: 2, hit: 0.70, risk: 0.15, style: 'karate', desc: '后手直线贯出去，讲究启动、落点和回收。拳路越直，借口越少。' },
+  karate_front_kick: { name: '前蹴', icon: '蹴', type: 'kick', dist: ['mid'], dmg: 11, post: 11, sp: 9, ap: 1, hit: 0.72, risk: 0.11, style: 'karate', desc: '用脚掌顶住中线，打断对手前压。不是踢远，是把门关上。' },
+  tkd_roundhouse: { name: '横踢', icon: '横', type: 'kick', dist: ['far', 'mid'], dmg: 13, post: 12, sp: 10, ap: 2, hit: 0.69, risk: 0.15, style: 'taekwondo', desc: '靠步伐和转髋把腿送到侧面。腿影好看，落点必须清楚。' },
+  tkd_back_kick: { name: '后踢', icon: '后', type: 'kick', dist: ['mid'], dmg: 20, post: 16, sp: 14, ap: 2, hit: 0.58, risk: 0.24, style: 'taekwondo', desc: '抓对手追进来的瞬间反打。打中像关门，打空像把后背递过去。' }
 };
 
 export const ITEMS = {
@@ -116,7 +197,12 @@ export const ENEMIES = {
   E07: { name: '木棍小混混', icon: '棍', risk: '高', tags: ['武器威胁', '街头不确定', '新伤风险'], hp: 90, sp: 82, posture: 70, morale: 80, calm: 58, stats: { str: 45, end: 42, spd: 46, tec: 28, tou: 42, bal: 40, rea: 43, jud: 30 }, skills: ['advance', 'dirtyescape', 'talkdown', 'straight'], ai: 'weapon', weapon: true, preferredRange: 'far', aiProfile: { patience: 28, pressure: 66, grapple: 0, counter: 6, dirty: 78 }, reward: { money: 35, fame: 72 } },
   E08: { name: '散打大学生', icon: '散', risk: '高', tags: ['远近转换', '低扫强', '冷静'], hp: 130, sp: 125, posture: 96, morale: 72, calm: 76, stats: { str: 58, end: 64, spd: 60, tec: 66, tou: 58, bal: 62, rea: 63, jud: 60 }, skills: ['jab', 'straight', 'lowkick', 'frontkick', 'sprawl', 'dodge'], ai: 'sanda', preferredRange: 'mid', aiProfile: { patience: 70, pressure: 58, grapple: 26, counter: 48, dirty: 0 }, reward: { money: 185, fame: 98 } },
   E09: { name: '地下赛试探者', icon: '黑', risk: '高', tags: ['街头不确定', '拳摔混合', '环境脏'], hp: 138, sp: 118, posture: 92, morale: 82, calm: 62, stats: { str: 62, end: 60, spd: 57, tec: 58, tou: 62, bal: 58, rea: 56, jud: 50 }, skills: ['straight', 'advance', 'grip', 'takedown', 'dirtyescape', 'lowkick'], ai: 'dirtymix', preferredRange: 'close', aiProfile: { patience: 44, pressure: 70, grapple: 62, counter: 20, dirty: 58 }, reward: { money: 260, fame: 125 } },
-  E18: { name: '陈见锋', icon: '陈', risk: '终局', tags: ['终局测试', '拳摔转换', '不吃嘴炮'], hp: 165, sp: 150, posture: 120, morale: 82, calm: 86, stats: { str: 68, end: 75, spd: 66, tec: 78, tou: 70, bal: 75, rea: 72, jud: 80 }, skills: ['jab', 'straight', 'frontkick', 'sprawl', 'advance', 'grip', 'takedown', 'guard', 'escape'], ai: 'boss', preferredRange: 'mid', aiProfile: { patience: 82, pressure: 64, grapple: 66, counter: 62, dirty: 0 }, reward: { money: 360, fame: 240 } }
+  E10: { name: '沉默拳击手', icon: '风', risk: '剧情', tags: ['真实拳距', '一阵风', '不配合演出'], hp: 100, sp: 100, posture: 90, morale: 70, calm: 85, stats: { str: 50, end: 55, spd: 62, tec: 62, tou: 52, bal: 55, rea: 64, jud: 60 }, skills: ['jab', 'straight', 'guard', 'retreat'], ai: 'boxer', preferredRange: 'mid', aiProfile: { patience: 78, pressure: 48, grapple: 0, counter: 68, dirty: 0 }, reward: { money: 0, fame: 0 }, script: 'first_wind' },
+  E11: { name: '短视频挑战者阿豹', icon: '豹', risk: '中', tags: ['短视频信徒', '自信过量', '基础半桶水'], hp: 96, sp: 92, posture: 75, morale: 90, calm: 42, stats: { str: 45, end: 47, spd: 48, tec: 43, tou: 43, bal: 43, rea: 45, jud: 34 }, skills: ['straight', 'advance', 'mystic', 'retreat', 'talkdown'], ai: 'brawler', preferredRange: 'mid', aiProfile: { patience: 30, pressure: 72, grapple: 10, counter: 18, dirty: 8 }, reward: { money: 80, fame: 40 } },
+  E18: { name: '陈见锋', icon: '陈', risk: '终局', tags: ['终局测试', '拳摔转换', '不吃嘴炮'], hp: 165, sp: 150, posture: 120, morale: 82, calm: 86, stats: { str: 68, end: 75, spd: 66, tec: 78, tou: 70, bal: 75, rea: 72, jud: 80 }, skills: ['jab', 'straight', 'frontkick', 'sprawl', 'advance', 'grip', 'takedown', 'guard', 'escape'], ai: 'boss', preferredRange: 'mid', aiProfile: { patience: 82, pressure: 64, grapple: 66, counter: 62, dirty: 0 }, reward: { money: 360, fame: 240 } },
+  E19: { name: '散打馆新人王', icon: '散', risk: '中', tags: ['拳腿摔衔接', '节奏压迫', '接腿反制'], hp: 118, sp: 116, posture: 90, morale: 72, calm: 70, stats: { str: 54, end: 60, spd: 58, tec: 62, tou: 54, bal: 60, rea: 58, jud: 56 }, skills: ['jab', 'straight', 'sanda_whip_kick', 'sanda_catch_throw', 'sprawl', 'guard'], ai: 'sanda', preferredRange: 'mid', aiProfile: { patience: 62, pressure: 62, grapple: 34, counter: 46, dirty: 0 }, reward: { money: 135, fame: 66 } },
+  E20: { name: '道场组手学员', icon: '空', risk: '中', tags: ['直线爆发', '收招规矩', '中线控制'], hp: 106, sp: 112, posture: 98, morale: 70, calm: 78, stats: { str: 50, end: 58, spd: 56, tec: 64, tou: 50, bal: 58, rea: 62, jud: 60 }, skills: ['karate_reverse_punch', 'karate_front_kick', 'guard', 'dodge', 'retreat'], ai: 'karate', preferredRange: 'mid', aiProfile: { patience: 76, pressure: 44, grapple: 4, counter: 62, dirty: 0 }, reward: { money: 125, fame: 62 } },
+  E21: { name: '跆拳道校队替补', icon: '跆', risk: '中', tags: ['中远腿法', '反击后踢', '近身怕缠'], hp: 102, sp: 122, posture: 84, morale: 74, calm: 66, stats: { str: 48, end: 60, spd: 66, tec: 60, tou: 48, bal: 56, rea: 64, jud: 54 }, skills: ['tkd_roundhouse', 'tkd_back_kick', 'frontkick', 'dodge', 'retreat'], ai: 'taekwondo', preferredRange: 'far', aiProfile: { patience: 58, pressure: 50, grapple: 0, counter: 66, dirty: 0 }, reward: { money: 120, fame: 64 } }
 };
 
 export const ACTIONS = {
@@ -145,7 +231,47 @@ export const ACTIONS = {
     { id: 'push_old', name: '推手大爷交流', icon: '推', time: 55, sp: 10, desc: '低风险近身控制训练。大爷笑得慈祥，重心拆得很不慈祥。', type: 'battle', enemy: 'E02', risk: 1 }
   ],
   boxing: [
-    { id: 'bag', name: '沙包连击', icon: '沙', time: 75, sp: 22, cost: 18, desc: '完成连击，提升拳击技能。沙包不会躲，所以别因此产生天才错觉。', type: 'simple', minigame: { template: 'rhythm', prompt: '看准节拍，别只追求把沙包打响。' }, gain: { skill: 'jab', xp: 8, skill2: 'straight', xp2: 6, boxing: 8, fatigue: 10, fitXp: 2 } },
+    {
+      id: 'bag',
+      name: '沙包连击',
+      icon: '沙',
+      time: 75,
+      sp: 22,
+      cost: 18,
+      desc: '完成连击，提升拳击技能。沙包不会躲，所以别因此产生天才错觉。',
+      type: 'simple',
+      minigame: {
+        template: 'combo',
+        prompt: '三轮沙包连击，重点不是打响，是让出拳、回收和脚步都在同一条线上。',
+        rounds: [
+          {
+            cue: '沙包回摆到胸口高度，第一下要起手。',
+            options: [
+              { id: 'bag_range_jab', label: '半步找距再刺拳', text: '先让肩、髋和前脚对上，再把拳送出去。', score: 2, feedback: '距离找住了，刺拳不是伸手摸门铃。' },
+              { id: 'bag_range_push', label: '原地直线推拳', text: '拳能碰到沙包，但身体没有跟上。', score: 1, feedback: '打中了，可重心还留在身后。' },
+              { id: 'bag_range_swing', label: '抡肩抢第一响', text: '声音最大，回收最慢。', score: 0, feedback: '沙包响了，动作也散了。' }
+            ]
+          },
+          {
+            cue: '第二拍接直拳，沙包开始往右偏。',
+            options: [
+              { id: 'bag_cross_line', label: '后脚蹬地走中线', text: '让直拳穿过目标，不追沙包的外侧。', score: 2, feedback: '直拳走线干净，力量没有漏到肩膀外面。' },
+              { id: 'bag_cross_follow', label: '跟着沙包补一拳', text: '能续上，但脚步被沙包牵着走。', score: 1, feedback: '节奏还在，方向感差一点。' },
+              { id: 'bag_cross_chase', label: '探身追着砸', text: '身体先倒出去，拳才跟上。', score: 0, feedback: '这一拳像借出去的重心，很难收回来。' }
+            ]
+          },
+          {
+            cue: '组合结束，沙包反弹回来。',
+            options: [
+              { id: 'bag_exit_guard', label: '收拳退半步架住', text: '把结束动作也当成连击的一部分。', score: 2, feedback: '打完还能站住，这才像能拿去实战的组合。' },
+              { id: 'bag_exit_reset', label: '原地抖肩重置', text: '能重新开始，但防守窗口偏大。', score: 1, feedback: '节奏回来了，防线还差半拍。' },
+              { id: 'bag_exit_pose', label: '看一眼打得响不响', text: '确认成绩时，脸正好留在线上。', score: 0, feedback: '沙包不会还手，不代表对手也这么客气。' }
+            ]
+          }
+        ]
+      },
+      gain: { skill: 'jab', xp: 8, skill2: 'straight', xp2: 6, boxing: 8, fatigue: 10, fitXp: 2 }
+    },
     { id: 'coach_drill', name: '梁教练纠错', icon: '教', time: 80, sp: 18, cost: 35, desc: '指出技能配置和战斗问题。教练的嘴很硬，通常是因为他说得对。', type: 'dialog', npc: 'coach' },
     { id: 'heavybag', name: '重靶爆点', icon: '爆', time: 70, sp: 26, cost: 22, desc: '提升直拳和爆发，但疲劳高。打得越响，肩膀越会记仇。', type: 'simple', gain: { skill: 'straight', xp: 9, str: 1, fatigue: 16, fitXp: 3 } },
     { id: 'spar_partner', name: '拳馆陪练', icon: '练', time: 70, sp: 15, desc: '中风险实战。陪练会收力，但不会配合你演赢。', type: 'battle', enemy: 'E05', risk: 2 }
@@ -157,13 +283,236 @@ export const ACTIONS = {
     { id: 'old_spar', name: '武馆高徒轻对抗', icon: '切', time: 70, sp: 15, desc: '检验传统拆解是否可靠。讲理归讲理，手上也得交卷。', type: 'battle', enemy: 'E02', risk: 2 }
   ],
   mma: [
-    { id: 'sprawl_drill', name: '防摔判断课', icon: '防', time: 70, sp: 20, cost: 28, desc: '根据对手动作选择防摔应对。膝盖落得快，尊严保得住。', type: 'simple', gain: { skill: 'sprawl', xp: 11, skill2: 'escape', xp2: 6, mma: 9, bal: 1, fatigue: 11, fitXp: 3 } },
+    {
+      id: 'sprawl_drill',
+      name: '防摔判断课',
+      icon: '防',
+      time: 70,
+      sp: 20,
+      cost: 28,
+      desc: '根据对手动作选择防摔应对。膝盖落得快，尊严保得住。',
+      type: 'simple',
+      minigame: {
+        template: 'read',
+        prompt: '读对手重心，先守住髋，再决定下压、转角还是脱身。',
+        rounds: [
+          {
+            cue: '对手肩线突然降低，前脚踩进来。',
+            options: [
+              { id: 'sprawl_read_hip', label: '先压头卡髋', text: '手先找到头和肩，髋往后撤。', score: 2, feedback: '第一拍挡在入口，对手很难吃到你的腿。' },
+              { id: 'sprawl_read_step', label: '只往后跳一步', text: '距离拉开了，但手没有处理对方头位。', score: 1, feedback: '退得够快，可下一拍还得补手。' },
+              { id: 'sprawl_read_punch', label: '低头挥拳截停', text: '眼睛丢了，髋也送上去了。', score: 0, feedback: '拳还没落，对方已经摸到腿了。' }
+            ]
+          },
+          {
+            cue: '对手抱住单腿，开始往内侧拧。',
+            options: [
+              { id: 'sprawl_single_whizzer', label: '沉髋做内夹和转角', text: '把腿变重，同时让身体转出正面线。', score: 2, feedback: '髋压住了，对方的角度被你抢回来。' },
+              { id: 'sprawl_single_pull', label: '双手往上拔腿', text: '能争一点空间，但上身会被拉低。', score: 1, feedback: '暂时没倒，可你还在对方节奏里。' },
+              { id: 'sprawl_single_hop', label: '单脚乱跳找平衡', text: '看起来顽强，其实每跳一下都更危险。', score: 0, feedback: '平衡被牵走，摔跤课变成跳房子。' }
+            ]
+          },
+          {
+            cue: '你把对手压到垫边，他开始换抱腰。',
+            options: [
+              { id: 'sprawl_wall_frame', label: '前臂架住转身离线', text: '先做框架，再把背从压力里转出去。', score: 2, feedback: '框架立住了，你不是靠蛮力逃出来的。' },
+              { id: 'sprawl_wall_sprawl', label: '继续趴重压死', text: '能消耗对方，但自己也被钉在原地。', score: 1, feedback: '压得住一秒，下一秒还要会走。' },
+              { id: 'sprawl_wall_push', label: '双手猛推胸口', text: '手伸直了，腰却暴露给对方。', score: 0, feedback: '这一推像邀请对方换抱腰。' }
+            ]
+          }
+        ]
+      },
+      gain: { skill: 'sprawl', xp: 11, skill2: 'escape', xp2: 6, mma: 9, bal: 1, fatigue: 11, fitXp: 3 }
+    },
     { id: 'ground_escape', name: '地面脱身课', icon: '脱', time: 80, sp: 24, cost: 34, desc: '提升脱身和地面冷静。被压住时，慌张通常是对手的第二个队友。', type: 'simple', gain: { skill: 'escape', xp: 10, mma: 9, bal: 1, fatigue: 14, fitXp: 3 } },
     { id: 'mma_spar', name: '开放垫子实战', icon: '垫', time: 75, sp: 16, desc: 'MMA 学员会主动抱摔。请提前和地面建立心理关系。', type: 'battle', enemy: 'E06', risk: 3 },
     { id: 'clinch_lab', name: '拳摔转换课', icon: '缠', time: 80, sp: 22, cost: 35, desc: '提升抓把、抱摔、前压。拳没打完，摔已经在路上。', type: 'simple', gain: { skill: 'grip', xp: 8, skill2: 'takedown', xp2: 6, mma: 10, fatigue: 15 } }
   ],
+  sanda_gym: [
+    { id: 'meet_coach_luo', name: '罗教练看你两眼', icon: '罗', time: 45, sp: 6, cost: 20, desc: '先看站架、距离和出手习惯。罗教练话不多，停顿通常比骂人还准。', type: 'dialog', npc: 'coach_luo' },
+    {
+      id: 'sanda_combo_drill',
+      name: '拳腿摔连贯课',
+      icon: '连',
+      time: 80,
+      sp: 24,
+      cost: 36,
+      desc: '刺拳逼反应，鞭腿打中段，接腿摔处理回敬。三段能连上，才算散打不是散着打。',
+      type: 'simple',
+      minigame: {
+        template: 'combo',
+        prompt: '把拳、腿、摔连成一条线。每一段都要给下一段留位置。',
+        rounds: [
+          {
+            cue: '搭档抬手护头，你要用第一拍逼反应。',
+            options: [
+              { id: 'sanda_jab_draw', label: '刺拳点头线', text: '不求重，先让对方护手上来。', score: 2, feedback: '反应骗出来了，中段露出一条缝。' },
+              { id: 'sanda_jab_power', label: '重拳直接压上', text: '有威胁，但后脚没准备起腿。', score: 1, feedback: '压力够了，转换慢了。' },
+              { id: 'sanda_jab_wait', label: '等对面先动', text: '你把节奏交给了搭档。', score: 0, feedback: '散打不是站着等答案。' }
+            ]
+          },
+          {
+            cue: '中段露出来，搭档重心偏在前腿。',
+            options: [
+              { id: 'sanda_kick_body', label: '鞭腿打中段后落位', text: '踢完脚落在能接摔的位置。', score: 2, feedback: '腿法不是结尾，而是把对方送进下一步。' },
+              { id: 'sanda_kick_low', label: '低扫前腿', text: '能破坏重心，但路线和本课目标有点散。', score: 1, feedback: '有效，但拳腿摔的链条短了一截。' },
+              { id: 'sanda_kick_high', label: '高扫头部', text: '动作漂亮，回收风险也漂亮。', score: 0, feedback: '你把训练课踢成了集锦赌局。' }
+            ]
+          },
+          {
+            cue: '搭档抓住你的腿准备回敬。',
+            options: [
+              { id: 'sanda_catch_counter', label: '压肩转角接腿摔', text: '先破方向，再把对方带过中心线。', score: 2, feedback: '对方抓腿没变成机会，你把机会抢走了。' },
+              { id: 'sanda_catch_pull', label: '硬把腿抽回来', text: '能脱出一点，但上身容易被追。', score: 1, feedback: '退出来了，主动权没完全回来。' },
+              { id: 'sanda_catch_spin', label: '转身乱摆脱', text: '背先给出去，摔法课会很高兴。', score: 0, feedback: '这一转把危险写在背上。' }
+            ]
+          },
+          {
+            cue: '摔法完成后，你还站着，对方在垫上。',
+            options: [
+              { id: 'sanda_finish_guard', label: '退半步架住等口令', text: '完成技术后保留规则意识和距离。', score: 2, feedback: '收尾干净，训练像训练，实战也能迁移。' },
+              { id: 'sanda_finish_touch', label: '伸手确认对方状态', text: '态度好，但距离管理松了。', score: 1, feedback: '安全意识有了，站位还要更职业。' },
+              { id: 'sanda_finish_pose', label: '原地庆祝这一摔', text: '练成一段，丢掉下一段。', score: 0, feedback: '庆祝太早，坏习惯也会被练进去。' }
+            ]
+          }
+        ]
+      },
+      gain: { skill: 'sanda_whip_kick', xp: 10, skill2: 'sanda_catch_throw', xp2: 7, sanda: 10, bal: 1, fatigue: 13, fitXp: 3 }
+    },
+    { id: 'sanda_ring_spar', name: '散打馆实战轮', icon: '擂', time: 75, sp: 16, desc: '新人王会用拳腿把你赶到合适位置，再找接腿和摔法。别只盯拳头，腿也会写计划。', type: 'battle', enemy: 'E19', risk: 2 }
+  ],
+  karate_dojo: [
+    { id: 'meet_senpai_yan', name: '严前辈带入门礼', icon: '严', time: 40, sp: 4, cost: 18, desc: '从行礼、站距和第一拳开始。规矩不是摆样子，是让你知道哪里不能乱。', type: 'dialog', npc: 'senpai_yan' },
+    {
+      id: 'karate_kihon_drill',
+      name: '基本功与组手线',
+      icon: '线',
+      time: 75,
+      sp: 21,
+      cost: 32,
+      desc: '反复练前蹴和逆突，找中线、收髋和回手。道场里最吵的东西，往往是你的脚步。',
+      type: 'simple',
+      minigame: {
+        template: 'read',
+        prompt: '道场不只练动作形状。你要读中线、距离和收招，别把基本功练成摆拍。',
+        rounds: [
+          {
+            cue: '对练者前手轻点，试探你的中线。',
+            options: [
+              { id: 'karate_line_cover', label: '小幅拨开守中线', text: '动作不大，但手还在回击路线上。', score: 2, feedback: '线守住了，下一拳才有资格谈速度。' },
+              { id: 'karate_line_block', label: '大幅格挡到外侧', text: '挡得明显，回手路线也变长。', score: 1, feedback: '安全了半拍，反击慢了半拍。' },
+              { id: 'karate_line_flinch', label: '闭眼后撤', text: '距离有了，判断没了。', score: 0, feedback: '你离开了拳，也离开了机会。' }
+            ]
+          },
+          {
+            cue: '教练喊前蹴，目标是对方腹线。',
+            options: [
+              { id: 'karate_kick_chamber', label: '提膝收髋再前蹴', text: '腿从身体中线出去，落地能继续打。', score: 2, feedback: '前蹴像尺子，不像踢门。' },
+              { id: 'karate_kick_push', label: '脚掌直接推远', text: '能推开人，但髋和膝没有组织好。', score: 1, feedback: '距离做出来了，技术质量一般。' },
+              { id: 'karate_kick_swing', label: '甩腿扫过去', text: '路线偏了，回收也慢。', score: 0, feedback: '这一脚像临时改行练腿法杂技。' }
+            ]
+          },
+          {
+            cue: '逆突命中后，教练盯着你的回手。',
+            options: [
+              { id: 'karate_punch_recover', label: '髋回正手回腮边', text: '把力量收回来，也把防线收回来。', score: 2, feedback: '收招利落，下一次启动才不会拖泥带水。' },
+              { id: 'karate_punch_hold', label: '拳停在目标上确认', text: '命中感清楚，但停得太久。', score: 1, feedback: '知道打到了，还要知道什么时候走。' },
+              { id: 'karate_punch_drop', label: '打完手自然垂下', text: '身体放松了，防线也放假了。', score: 0, feedback: '教练的沉默，比骂人还清楚。' }
+            ]
+          }
+        ]
+      },
+      gain: { skill: 'karate_reverse_punch', xp: 10, skill2: 'karate_front_kick', xp2: 8, karate: 10, tec: 1, fatigue: 11, auth: 1 }
+    },
+    { id: 'karate_kumite', name: '道场组手', icon: '组', time: 70, sp: 15, desc: '中风险对抗，学会在规矩里抓时机。对方不会乱冲，但你乱冲会很快被纠正。', type: 'battle', enemy: 'E20', risk: 2 }
+  ],
+  taekwondo_club: [
+    { id: 'meet_coach_min', name: '闵教练测腿距', icon: '闵', time: 45, sp: 6, cost: 20, desc: '先测柔韧、步伐和回收。腿抬得高只是门票，能安全落地才是课程。', type: 'dialog', npc: 'coach_min' },
+    {
+      id: 'tkd_kick_line',
+      name: '腿法线训练',
+      icon: '腿',
+      time: 75,
+      sp: 23,
+      cost: 34,
+      desc: '横踢打节奏，后踢抓追击。每一次转身都要知道对面在哪里，不然就是把背卖得很认真。',
+      type: 'simple',
+      minigame: {
+        template: 'combo',
+        prompt: '腿法线训练看的是起腿、落地和转身后的视线。踢得高不等于练得对。',
+        rounds: [
+          {
+            cue: '靶手横移一步，把中段靶露出来。',
+            options: [
+              { id: 'tkd_round_step', label: '垫步横踢打中段', text: '先跟上距离，再让腿走弧线。', score: 2, feedback: '距离和节奏对上了，腿法不是伸长去够。' },
+              { id: 'tkd_round_static', label: '原地抬腿够靶', text: '能碰到靶，但髋没完全送到。', score: 1, feedback: '打到了，身体没完全支持这一脚。' },
+              { id: 'tkd_round_high', label: '强行改踢头靶', text: '目标变花，落地也乱。', score: 0, feedback: '这不是惊喜，是计划失踪。' }
+            ]
+          },
+          {
+            cue: '靶手突然前压，逼你后退。',
+            options: [
+              { id: 'tkd_back_check', label: '看肩线后踢截进身', text: '先确认对方进线，再用后踢打进路。', score: 2, feedback: '转身前有判断，背才不是白送。' },
+              { id: 'tkd_back_space', label: '后撤再起腿', text: '安全但反击窗口变小。', score: 1, feedback: '你守住了距离，威胁少了一点。' },
+              { id: 'tkd_back_blind', label: '盲转后踢赌一下', text: '帅气建立在没看见的风险上。', score: 0, feedback: '这一脚像把答案交给运气。' }
+            ]
+          },
+          {
+            cue: '连续两脚后，支撑脚开始发飘。',
+            options: [
+              { id: 'tkd_reset_guard', label: '落地架住小碎步重置', text: '让脚下重新有根，再进下一轮。', score: 2, feedback: '重置不丢人，乱踢才丢训练质量。' },
+              { id: 'tkd_reset_skip', label: '小跳调整再踢', text: '能维持节奏，但稳定性一般。', score: 1, feedback: '节奏没断，脚底还没完全稳。' },
+              { id: 'tkd_reset_chain', label: '硬接第三脚', text: '动作连上了，身体没跟上。', score: 0, feedback: '连续不是目的，可控才是。' }
+            ]
+          }
+        ]
+      },
+      gain: { skill: 'tkd_roundhouse', xp: 10, skill2: 'tkd_back_kick', xp2: 7, taekwondo: 10, spd: 1, fatigue: 12, fitXp: 3 }
+    },
+    { id: 'tkd_club_spar', name: '跆拳道社实战', icon: '社', time: 70, sp: 15, desc: '中远距离腿法对抗。贴太近会乱，退太远会被横踢提醒。', type: 'battle', enemy: 'E21', risk: 2 }
+  ],
   gym: [
-    { id: 'gym_basic', name: '基础循环训练', icon: '循', time: 70, sp: 20, cost: 25, desc: '深蹲、推、拉、核心和跑台串成一轮。没花招，只有账单和心率。', type: 'simple', minigame: { template: 'judgement', prompt: '根据身体反馈选择下一组，别把训练做成自毁。' }, gain: { str: 1, end: 1, bal: 1, fitXp: 10, fatigue: 12 } },
+    {
+      id: 'gym_basic',
+      name: '基础循环训练',
+      icon: '循',
+      time: 70,
+      sp: 20,
+      cost: 25,
+      desc: '深蹲、推、拉、核心和跑台串成一轮。没花招，只有账单和心率。',
+      type: 'simple',
+      minigame: {
+        template: 'pacing',
+        prompt: '根据呼吸、动作质量和心率安排下一组。练得狠不等于练得明白。',
+        rounds: [
+          {
+            cue: '深蹲组结束，腿还稳，呼吸有点急。',
+            options: [
+              { id: 'gym_squat_rotate', label: '换推的动作，降一点心率', text: '肌群轮换，训练密度还在。', score: 2, feedback: '节奏稳住了，身体有机会把质量做出来。' },
+              { id: 'gym_squat_repeat', label: '原重量再蹲一组', text: '强度够，但动作质量开始吃紧。', score: 1, feedback: '能扛，但后半程可能变形。' },
+              { id: 'gym_squat_max', label: '直接加重量冲一下', text: '热血很足，计划很少。', score: 0, feedback: '基础循环不是今天把自己拆开。' }
+            ]
+          },
+          {
+            cue: '推的动作后，肩膀发紧，核心还能撑住。',
+            options: [
+              { id: 'gym_push_pull', label: '转拉的动作平衡肩背', text: '用下一组把关节位置找回来。', score: 2, feedback: '推拉平衡，肩膀没有被情绪牵着走。' },
+              { id: 'gym_push_core', label: '先做核心撑住', text: '稳妥，但上肢疲劳没有完全调开。', score: 1, feedback: '能过渡，效率一般。' },
+              { id: 'gym_push_more', label: '继续推到力竭', text: '这会很有感觉，明天也会。', score: 0, feedback: '力竭不是不能练，是不能拿来当默认答案。' }
+            ]
+          },
+          {
+            cue: '跑台间歇前，心率已经偏高。',
+            options: [
+              { id: 'gym_run_interval', label: '缩短冲刺，保留走跑间歇', text: '让强度留在可控区间。', score: 2, feedback: '你把训练推到边缘，但没有推下去。' },
+              { id: 'gym_run_walk', label: '改成轻跑收尾', text: '恢复更稳，刺激少一点。', score: 1, feedback: '保守但不坏，今天至少没有练崩。' },
+              { id: 'gym_run_sprint', label: '照原计划全速冲', text: '计划没有听见身体报警。', score: 0, feedback: '跑台很诚实，你的呼吸也很诚实。' }
+            ]
+          }
+        ]
+      },
+      gain: { str: 1, end: 1, bal: 1, fitXp: 10, fatigue: 12 }
+    },
     { id: 'treadmill', name: '跑台间歇', icon: '跑', time: 50, sp: 16, cost: 15, desc: '按心率做间歇跑，提升耐力和速度。跑台不通向远方，但通向喘。', type: 'simple', gain: { end: 1, spd: 1, fitXp: 8, fatigue: 10 } },
     { id: 'core_balance', name: '核心稳定', icon: '核', time: 45, sp: 12, cost: 15, desc: '平板、抗旋转和单腿稳定。核心强了，被推时少一些即兴舞蹈。', type: 'simple', gain: { bal: 1, tou: 1, fitXp: 5, fatigue: 8 } },
     { id: 'mobility', name: '拉伸放松', icon: '松', time: 35, sp: 0, cost: 10, desc: '训练日收尾用，降低疲劳。动作轻，但明天会感谢你。', type: 'simple', gain: { fitXp: 2, fatigue: -10, calm: 4 } }
@@ -186,14 +535,365 @@ export const NPCS = {
   coach: { name: '梁教练', icon: '梁' },
   master: { name: '周青山', icon: '周' },
   xiaoman: { name: '小满', icon: '满' },
-  chen: { name: '陈见锋', icon: '陈' }
+  chen: { name: '陈见锋', icon: '陈' },
+  coach_luo: { name: '罗教练', icon: '罗' },
+  senpai_yan: { name: '严前辈', icon: '严' },
+  coach_min: { name: '闵教练', icon: '闵' },
+  father: { name: '父亲', icon: '父', hidden: true },
+  abao: { name: '阿豹', icon: '豹' },
+  oldman: { name: '推手大爷', icon: '推' }
+};
+
+export const NPC_DIALOGUES = {
+  fatty: [
+    { speaker: '刘胖子', text: '别把名声当命。先看清对面是谁，再决定接不接。' },
+    { speaker: '陆小闲', text: '你这是关心我，还是怕我倒了没人请你吃粉？' },
+    { speaker: '刘胖子', text: '都怕。做人要全面。' }
+  ],
+  coach: [
+    { speaker: '梁教练', text: '你最大的问题不是不会打。是打完停在原地等人点评。' },
+    { speaker: '陆小闲', text: '我以为那叫气势。' },
+    { speaker: '梁教练', text: '那叫给对面续杯。手回来，人也要能动。' }
+  ],
+  master: [
+    { speaker: '周青山', text: '传统不是不能用，是不能只剩名字。' },
+    { speaker: '陆小闲', text: '那茂家拳还剩什么？' },
+    { speaker: '周青山', text: '放到压力里。剩下的，再谈传承。' }
+  ],
+  xiaoman: [
+    { speaker: '小满', text: '真遇到麻烦，能走就走。便利店货架都懂这个道理。' },
+    { speaker: '陆小闲', text: '货架懂什么？' },
+    { speaker: '小满', text: '懂你上次那一掌，赔得不算贵。' }
+  ],
+  chen: [
+    { speaker: '陈见锋', text: '第30天来拳馆。' },
+    { speaker: '陆小闲', text: '提前透露考试范围吗？' },
+    { speaker: '陈见锋', text: '范围很小。压力下，你到底会做什么。' }
+  ],
+  coach_luo: [
+    { speaker: '罗教练', text: '散打不是散着打。拳、腿、摔要连成一句话。' },
+    { speaker: '陆小闲', text: '中间断了呢？' },
+    { speaker: '罗教练', text: '对面会替你补标点。通常是感叹号。' }
+  ],
+  senpai_yan: [
+    { speaker: '严前辈', text: '规矩不是摆样子。站距、收手、停住，都算。' },
+    { speaker: '陆小闲', text: '听起来比挨打还累。' },
+    { speaker: '严前辈', text: '规矩里能收住，出了规矩才不容易乱。' }
+  ],
+  coach_min: [
+    { speaker: '闵教练', text: '腿法的重点不是抬多高。' },
+    { speaker: '陆小闲', text: '那短视频可能要失望。' },
+    { speaker: '闵教练', text: '短视频不负责你落地。距离错了，漂亮没用。' }
+  ],
+  father: [
+    { speaker: '父亲', text: '真要保护人，就去学真东西。' },
+    { speaker: '父亲', text: '输了不丢人。乱欺负人才丢人。' }
+  ],
+  abao: [
+    { speaker: '阿豹', text: '我刷到你了。你说祖传，我说秘传。' },
+    { speaker: '陆小闲', text: '今天是传统文化交流？' },
+    { speaker: '阿豹', text: '今天看看谁先露馅。' }
+  ],
+  oldman: [
+    { speaker: '推手大爷', text: '推手不是把人推出去。' },
+    { speaker: '陆小闲', text: '那是什么？' },
+    { speaker: '推手大爷', text: '先把自己站明白。你现在像赶末班车。' }
+  ]
 };
 
 export const MAIN_EVENTS = {
-  1: { title: '祖师爷给你点了赞', loc: 'home', npc: 'fatty', desc: '短视频里的神功把你点燃了。火很旺，真实性还没交电费，先验货再上头。', kind: 'dialog' },
-  5: { title: '公园第一次验货', loc: 'park', enemy: 'E01', desc: '低风险切磋，测试拳距和抱架。对方不邪门，只是基础比嘴硬可靠。', kind: 'battle' },
-  12: { title: '流量大师学徒', loc: 'park', enemy: 'E03', desc: '观赏性拉满，受击反应可能露馅。灯光之外，拳头会负责验收。', kind: 'battle' },
-  18: { title: '便利店门口的三个人', loc: 'store', npc: 'xiaoman', enemy: 'E07', desc: '持械风险事件。可撤离、降温、保护同伴或硬拼；别把热血当护甲。', kind: 'event' },
-  24: { title: 'MMA开放垫子', loc: 'mma', enemy: 'E06', desc: '如果不会防摔和脱身，就会一直被压制。地面课不讲面子，只讲位置。', kind: 'battle' },
-  30: { title: '真东西测试', loc: 'boxing', enemy: 'E18', desc: '30天公开测试。路线、技能、判断和伤病都会被检验；观众看热闹，系统看账本。', kind: 'battle' }
+  1: {
+    title: '给父亲上香',
+    loc: 'home',
+    npc: 'father',
+    desc: '你给父亲牌位上香，墙上那句“习武之人，绝不争强好胜”还在。你点点头，然后准备去争一口气。先选一个能落地的入口。',
+    kind: 'dialog',
+    dialogue: [
+      { speaker: '陆小闲', text: '爸，我开始练真的了。不是在客厅里对空气点头那种。' },
+      { speaker: '父亲', text: '习武之人，绝不争强好胜。' },
+      { speaker: '陆小闲', text: '我知道。先选一个能落地的入口，少吹点，先挨点实在的。' }
+    ],
+    eventNotebook: {
+      reason: '30天开始',
+      entry: '出租屋的香灰落得很慢，父亲牌位旁那句“习武之人，绝不争强好胜”还在。你点完香，心里却还憋着一口要证明的气。',
+      beats: [
+        '你没有再对着空气练套路，而是给自己选一个能被验证的入口。',
+        '散打重衔接，道场重规矩，跆拳道重距离；三条路都不是捷径。',
+        '30天从这里开始。不是把茂家拳吹回神坛，而是先弄清楚什么东西真的能用。'
+      ],
+      actionLabel: '选第一站',
+      actionText: '把热血先放低一点，从一个能被现实验货的入口开始。',
+      outcome: '你把“证明自己”的冲动压成第一条训练路线。父亲的话还在墙上，今天先不争强，先学会落地。'
+    },
+    maw: { fatherMemory: 3, belief: 4 },
+    choices: [
+      { id: 'route_sanda', label: '先看散打馆', text: '从拳、腿、摔连在一起的地方开始。罗教练不卖神秘感，只看你每一下能不能接住下一下。', hint: '偏向拳腿摔转换，后续更容易理解散打训练。', gain: { sanda: 4, auth: 2, rel_coach_luo: 1 }, flags: { route_sanda: true }, log: '你把第一站记到散打馆：少讲玄学，先看拳腿摔能不能连上。' },
+      { id: 'route_karate', label: '去道场看一拳', text: '从规矩、站距和中线开始。严前辈说话不重，但逆突落在护具上很诚实。', hint: '偏向直线爆发和收招纪律。', gain: { karate: 4, auth: 2, rel_senpai_yan: 1 }, flags: { route_karate: true }, log: '你决定去道场看第一拳：规矩不是摆样子，是压力里的边界。' },
+      { id: 'route_tkd', label: '测一下腿法距离', text: '从步伐、横踢和后踢的距离开始。腿能踢出去不稀奇，收回来还能防住才算数。', hint: '偏向中远距离腿法和反击节奏。', gain: { taekwondo: 4, auth: 2, rel_coach_min: 1 }, flags: { route_tkd: true }, log: '你把跆拳道社列进计划：先学会距离，再谈漂亮。' }
+    ]
+  },
+  2: {
+    title: '地铁见义勇为',
+    loc: 'street',
+    npc: 'fatty',
+    desc: '你以为是茂家拳起效，其实对方主要是被你的吨位、嗓门和运气镇住了。误判很甜，后账也会很准。',
+    kind: 'dialog',
+    eventNotebook: {
+      reason: '误判发酵',
+      entry: '地铁车厢里人挤得像一口没换气的锅。有人争执，有人后退，你的肩膀先替脑子做了决定。',
+      beats: [
+        '你站出去挡了一下，把声音抬高，也把自己推到所有人的视线里。',
+        '场面被镇住了，但里面有吨位、有嗓门，也有一截运气。',
+        '甜的是别人夸你；麻烦的是，你差点也信了。'
+      ],
+      actionLabel: '听刘胖子复盘',
+      actionText: '别急着把偶然当神功，先听旁边人怎么拆这件事。',
+      outcome: '见义勇为是真的，误判也是真的。你开始带着一层虚高的信心往后走。'
+    },
+    maw: { belief: 3, misread: 12 }
+  },
+  3: {
+    title: '便利店货架事件',
+    loc: 'store',
+    npc: 'xiaoman',
+    desc: '你一掌拍在货架上，三包薯片受到了震慑伤害。小满没拆穿你，只提醒你别把货架当擂台。',
+    kind: 'dialog',
+    eventNotebook: {
+      reason: '信心过热',
+      entry: '便利店货架窄得不适合英雄登场。你一掌拍下去，薯片袋震了三下，场面比伤害更响。',
+      beats: [
+        '你想把地铁那点误判延续下去，结果先让货架替现实开口。',
+        '小满没有当众拆穿，只把赔不赔钱这件事说得很轻。',
+        '你的脸有点热，手掌也有点疼。'
+      ],
+      actionLabel: '把话听完',
+      actionText: '先别解释“控场”，听小满把现实边界讲清楚。',
+      outcome: '便利店没有给你擂台感，只给了你一个更具体的问题：保护别人之前，别先把现场搞乱。'
+    },
+    maw: { misread: 8, fatherMemory: 1 }
+  },
+  5: {
+    title: '公园第一次验货',
+    loc: 'park',
+    enemy: 'E01',
+    desc: '低风险切磋，测试拳距和抱架。对方不邪门，只是基础比嘴硬可靠。',
+    kind: 'battle',
+    eventNotebook: {
+      reason: '第一次实战验货',
+      entry: '公园地砖有点潮，晨练的人把音箱声压得很低。对面的人戴着旧拳套，说话不重，站距却很实在。',
+      beats: [
+        '你先摸距离，不抢重拳；用刺拳试反应，再把抱架收紧。',
+        '这不是英雄时刻，是把动作放进轻压里看看会不会散。',
+        '基础不吵，但它会在每一次回收和换步里算账。'
+      ],
+      actionLabel: '进场验货',
+      actionText: '先看拳距和抱架，不把低风险切磋打成逞强。',
+      outcome: '你没有被打垮，但“我已经会了”的感觉被削掉一层。'
+    },
+    maw: { misread: 4 }
+  },
+  8: {
+    title: '一阵风',
+    loc: 'boxing',
+    enemy: 'E10',
+    desc: '你违背父亲遗训，第一次去证明茂家拳。现实没有配合演出。',
+    kind: 'scriptedBattle',
+    script: 'first_wind',
+    eventNotebook: {
+      reason: '现实清账',
+      entry: '拳馆灯光很硬，擂台边没有家里的香灰味。你带着父亲那句遗训上去，却把它理解成了必须赢。',
+      beats: [
+        '你试图用茂家拳证明自己，对面没有配合你的节奏，也没有给招名留面子。',
+        '每一次打空都比嘲笑更直白，每一次停在原地都像把答案交给对方。',
+        '现实像一阵风，把你吹得站不稳。'
+      ],
+      actionLabel: '上台面对',
+      actionText: '这次不靠气势解释，先让现实把问题指出来。',
+      outcome: '输不只是比分，它让你第一次怀疑自己到底在练什么。'
+    }
+  },
+  9: {
+    title: '父亲日记',
+    loc: 'home',
+    npc: 'father',
+    desc: '旧箱子里有一本日记。它没有绝招，但有父亲没有说出口的真话。',
+    kind: 'diary',
+    script: 'father_diary',
+    eventNotebook: {
+      reason: '父亲线揭示',
+      entry: '旧箱子有潮味，父亲的日记压在最底下。封皮起了毛，字迹却比你记忆里的拳谱更直接。',
+      beats: [
+        '你一页一页读，不急着找绝招，只看父亲当年没说出口的担心。',
+        '日记没有否定茂家拳，它只是把“能用”两个字放到了最前面。',
+        '你第一次感觉父亲不是在拦你练武，而是在拦你拿冲动冒充本事。'
+      ],
+      actionLabel: '翻开日记',
+      actionText: '别找秘籍，先读父亲到底怕你变成什么样。',
+      outcome: '父亲留下的不是神功线索，而是一条底线：真要保护人，先别骗自己。'
+    }
+  },
+  12: {
+    title: '阿豹刷到你了',
+    loc: 'park',
+    enemy: 'E11',
+    npc: 'abao',
+    desc: '阿豹信短视频，你信祖传。你们都需要一场不那么体面的验货。',
+    kind: 'battle',
+    eventNotebook: {
+      reason: '同类误判相撞',
+      entry: '阿豹在公园刷到你的视频，手机屏幕亮得刺眼。他说秘传，你说祖传，听起来像两个不同包装的同一种自信。',
+      beats: [
+        '你接下这场不体面的验货，但这次不再只想着招名。',
+        '你开始看对方重心、肩膀和出手前那点停顿。',
+        '你们都露了一点馅。不同的是，你开始愿意承认馅在哪里。'
+      ],
+      actionLabel: '接下验货',
+      actionText: '别跟短视频比嗓门，先看谁的动作更经得起压力。',
+      outcome: '这场不是为了赢阿豹的嘴，而是为了确认自己有没有从“一阵风”里醒一点。'
+    }
+  },
+  18: {
+    title: '便利店门口的三个人',
+    loc: 'store',
+    npc: 'xiaoman',
+    enemy: 'E07',
+    desc: '持械风险事件。可撤离、降温、保护同伴或硬拼；别把热血当护甲。',
+    kind: 'event',
+    eventNotebook: {
+      reason: '保护与风险选择',
+      entry: '便利店门口真的站了三个人。拿棍的那只手不稳，围观的眼神却很稳，像都在等谁先犯错。',
+      beats: [
+        '你先看出口、看小满的位置、看对方手里东西，也看自己有没有被热血推着走。',
+        '降温、保护、撤离、硬接都不是免费答案，每条路都会留下后果。',
+        '今天决定的不只是输赢，而是你到底把“保护”理解成什么。'
+      ],
+      actionLabel: '判断现场',
+      actionText: '别把热血当护甲，先决定怎样让事情不往最坏处走。',
+      outcome: '便利店不是擂台。你越能把事情处理得具体，越像真的学过东西。'
+    },
+    choices: [
+      { id: 'store_deescalate', label: '先降温', text: '站到门口侧面，把声音压低，先让对方看见退路。你不是认怂，是让事别变成伤。', hint: '不进入战斗，换冷静和真实性。', gain: { calm: 6, auth: 3, rel_xiaoman: 1, heat: -1 }, flags: { store_deescalated: true }, log: '你先降温，把便利店门口的火压了下去。' },
+      { id: 'store_protect', label: '护住小满', text: '先把小满推到收银台后，再处理拿棍的人。这样做风险更高，但你知道自己为什么站出来。', hint: '进入持械战斗，关系收益更高。', gain: { auth: 2, rel_xiaoman: 2, heat: 1 }, flags: { store_protect_xiaoman: true }, enemy: 'E07', log: '你挡在小满前面，持械冲突已经避不开了。' },
+      { id: 'store_exit', label: '带人撤出去', text: '不抢一句狠话，先带人从侧门撤。今天赢的不是面子，是没有人受伤。', hint: '避开战斗，降低热度，名声收益较少。', gain: { calm: 4, fame: 8, rel_xiaoman: 1, heat: -2 }, flags: { store_exited: true }, log: '你带小满从侧门撤走，没有给误会继续升级的空间。' }
+    ]
+  },
+  20: {
+    title: '散打馆的三段连击',
+    loc: 'sanda_gym',
+    npc: 'coach_luo',
+    enemy: 'E19',
+    desc: '罗教练让你把拳、腿、摔连成一口气。散打不靠吓人，靠每一下都能接到下一下。',
+    kind: 'battle',
+    eventNotebook: {
+      reason: '拳腿摔模块入茂',
+      entry: '散打馆的靶声一下一下砸在空气里。罗教练只看了你两眼，就把你放到拳、腿、摔的衔接线上。',
+      beats: [
+        '你先用刺拳逼反应，再接鞭腿，最后练对方前压时的接腿和换位。',
+        '每一下都要给下一下留路；中间断了，对面会替你补标点。',
+        '散打不散，乱的是人的脑子。'
+      ],
+      actionLabel: '上擂台连起来',
+      actionText: '别把三下打成三件事，先把拳、腿、摔连成一句话。',
+      outcome: '你第一次感觉到“连上”不是好看，而是对方没空插进来。'
+    }
+  },
+  21: {
+    title: '道场里的第一拳',
+    loc: 'karate_dojo',
+    npc: 'senpai_yan',
+    enemy: 'E20',
+    desc: '严前辈把你带到组手线前。规矩很安静，逆突落身上时一点也不安静。',
+    kind: 'battle',
+    eventNotebook: {
+      reason: '规矩与收招',
+      entry: '道场里的第一拳来得很安静，落到护具上却一点也不客气。严前辈站在线后，看你怎么处理急躁。',
+      beats: [
+        '你按规矩进入组手线，试图在限制里找时机。',
+        '不能乱冲，也不能只等；线不是装饰，是压力里的边界。',
+        '规矩没有保护你的面子，它只是让错误更清楚。'
+      ],
+      actionLabel: '按线进场',
+      actionText: '在规矩里抓时机，别把急躁包装成积极。',
+      outcome: '清楚，才有改的地方。你把“收住”也写进了能用的能力里。'
+    }
+  },
+  22: {
+    title: '跆拳道社的距离课',
+    loc: 'taekwondo_club',
+    npc: 'coach_min',
+    enemy: 'E21',
+    desc: '闵教练让你用腿法理解距离。踢得出去是能力，收得回来才是生存。',
+    kind: 'battle',
+    eventNotebook: {
+      reason: '腿法距离模块',
+      entry: '跆拳道社的护具挂成一排，脚靶被踢出闷响。闵教练让你先站远一点，再告诉你这不是安全，是距离作业。',
+      beats: [
+        '你练横踢进出、后踢抓追击，每次转身都要先确认对方在哪。',
+        '腿出去之后，回来才算动作结束。',
+        '高不高只是观众关心，回不回得来才是你关心。'
+      ],
+      actionLabel: '测腿法距离',
+      actionText: '先确认距离和回收，再谈漂亮。',
+      outcome: '你发现腿法不是越大越好，而是越清楚越安全。'
+    }
+  },
+  24: {
+    title: 'MMA开放垫子',
+    loc: 'mma',
+    enemy: 'E06',
+    desc: '如果不会防摔和脱身，就会一直被压制。地面课不讲面子，只讲位置。',
+    kind: 'battle',
+    eventNotebook: {
+      reason: '补上地面页',
+      entry: 'MMA开放垫子这天，地面距离你特别近。你还没被摔，就已经知道自己以前漏了多大一块。',
+      beats: [
+        '你练防摔、脱身和重新站起，不再把倒地当成剧情结束。',
+        '下巴收住，髋往后，手先找框架。',
+        '地板没有恶意，但它很会讲道理。'
+      ],
+      actionLabel: '上垫处理',
+      actionText: '先补防摔和脱身，别让面子替你在地上喘气。',
+      outcome: '你给茂家拳补上了以前最不愿看的那一页：倒地以后，还得能回来。'
+    }
+  },
+  29: {
+    title: '烧烤摊夜谈',
+    loc: 'street',
+    npc: 'father',
+    desc: '终战前一晚，你可以和一个人吃烧烤，也可以一个人把十串羊肉献给焦虑。父亲留下的不是神功，是别怕输。',
+    kind: 'nightTalk',
+    eventNotebook: {
+      reason: '终战前收束',
+      entry: '烧烤摊的烟把旧城夜色熏得发软。终战前一晚，你可以和一个人吃烧烤，也可以一个人把焦虑嚼完。',
+      beats: [
+        '你坐下来，听别人说一点不那么像训练的话。',
+        '肉串烫嘴，心跳慢了一点。',
+        '父亲留下的不是神功，是别怕输。你终于能把这句话听完整。'
+      ],
+      actionLabel: '坐下聊一会',
+      actionText: '终战前不用再加戏，先把心跳和话都放慢一点。',
+      outcome: '你没有得到最后一招，只得到一个更能站稳的理由。'
+    },
+    maw: { fatherMemory: 8 }
+  },
+  30: {
+    title: '真东西测试',
+    loc: 'boxing',
+    enemy: 'E18',
+    desc: '你不用证明茂家拳天下第一。你只要证明自己不再是一阵风。',
+    kind: 'objectiveBattle',
+    eventNotebook: {
+      reason: '30天终局测试',
+      entry: '拳馆灯光还是很硬，但你这次没有把它看成审判。护齿咬上去，呼吸短了一下，又被你拉回来。',
+      beats: [
+        '你不证明茂家拳天下第一，只证明自己能在压力里完成具体目标。',
+        '看见、收住、调整、站回来；这些词没有招名响，但更像真东西。',
+        '陈见锋不会吃嘴炮，系统也不会替你美化动作。'
+      ],
+      actionLabel: '开始测试',
+      actionText: '别追传奇结论，先在压力下完成你写下来的具体目标。',
+      outcome: '真东西测试不是给传奇盖章，而是给这30天一个交代。你不再是一阵风，至少不再只是一阵风。'
+    },
+    objectives: ['surviveWindow1', 'guardHeavy', 'landStraight', 'recoverFromHit', 'useReforgedSkill', 'keepCalm']
+  }
 };

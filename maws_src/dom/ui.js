@@ -1,4 +1,4 @@
-import { ACTIONS, LOCS, SKILLS } from '../content/data.js';
+import { ACTIONS, ENEMIES, LOCS, SKILLS } from '../content/data.js';
 import { assetPath } from '../assets/manifest.js';
 import { buildRenderModel } from '../simulation/state.js';
 
@@ -106,6 +106,17 @@ function resourceIconKey(label) {
   }[label] || null;
 }
 
+function renderHudChip([label, value, icon]) {
+  const displayLabel = label === '热度' ? '风险' : label;
+  const className = label === '热度' ? 'maws-chip risk' : 'maws-chip';
+  return `<span class="${className}">${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b>${esc(value)}</span>`;
+}
+
+function primaryHudResources(resources = []) {
+  const primary = new Set(['现金', '体力', '健康', '热度']);
+  return resources.filter(([label]) => primary.has(label));
+}
+
 function meter(label, value, max, iconKey = null) {
   const current = Number(value || 0);
   const limit = Math.max(1, Number(max || 1));
@@ -135,11 +146,9 @@ function renderBoot(model) {
 }
 
 function renderHud(model) {
-  const resources = (model.resources || []).map(([label, value, icon]) => `
-    <span class="maws-chip">${assetIcon(resourceIconKey(label), icon)}<b>${esc(label)}</b>${esc(value)}</span>
-  `).join('');
+  const resources = primaryHudResources(model.resources || []).map(renderHudChip).join('');
   return `
-    <header class="maws-hud">
+    <header class="maws-hud maws-hud-compact">
       <div><strong>${esc(model.dayText)}</strong><span>${esc(model.phase)}</span></div>
       <div class="maws-resource-row">${resources}</div>
     </header>
@@ -165,14 +174,35 @@ function renderNav(model) {
   `;
 }
 
-function renderMap(model) {
-  const locs = (model.locs || []).map((loc) => btn(
-    `<b>${esc(loc.icon)} ${esc(loc.name)}</b><small>${loc.active ? '当前位置' : loc.closed ? '未开放' : '前往'}</small>`,
-    loc.active ? 'noop' : loc.closed ? 'toast' : 'openTravel',
-    loc.closed ? { text: `${loc.name}现在不开放` } : { loc: loc.id },
-    `maws-loc ${loc.active ? 'active' : ''} ${loc.closed ? 'disabled' : ''}`
-  )).join('');
-  const actions = (model.actions || []).map((action) => `
+function compactReason(reason = '') {
+  return String(reason || '')
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' / ');
+}
+
+function opportunityRiskText(card = {}) {
+  const tags = Array.isArray(card.tags) ? card.tags : [];
+  if (card.enemy) return `战斗 ${card.riskLabel || card.risk || ENEMIES[card.enemy]?.risk || '中'}`;
+  const taggedRisk = tags.find((tag) => /风险|热度|伤病|风波|诱惑/.test(tag));
+  if (taggedRisk) return taggedRisk;
+  if (card.shop) return '支出/疲劳';
+  if (card.kind === 'dialog') return '社交低风险';
+  return card.risk || '普通';
+}
+
+function opportunityButtonLabel(card = {}, currentLoc = '') {
+  const locName = LOCS[card.loc]?.name || card.loc || '当前地点';
+  if (card.loc && card.loc !== currentLoc) return `前往${esc(locName)}`;
+  if (card.enemy) return '开打';
+  if (card.shop) return '去看看';
+  return '处理';
+}
+
+function renderActionCard(action) {
+  return `
     <article class="maws-action ${action.disabled ? 'disabled' : ''}">
       <div><strong>${esc(action.icon)} ${esc(action.name)}</strong><p>${esc(action.desc)}</p></div>
       ${summaryChips(action.summary?.cost || [], 'cost')}
@@ -180,8 +210,69 @@ function renderMap(model) {
       ${action.summary?.risk ? `<small class="maws-risk-note">${esc(action.summary.risk)}</small>` : ''}
       ${btn(action.type === 'battle' ? '开打' : '行动', 'doAction', { id: action.id }, action.disabled ? 'disabled' : 'primary')}
     </article>
-  `).join('');
-  const taskBoard = renderTaskBoard(model);
+  `;
+}
+
+function renderOpportunityCard(card, currentLoc) {
+  const locName = LOCS[card.loc]?.name || card.loc || '当前地点';
+  const reason = compactReason(card.reason);
+  const buttonClass = card.loc && card.loc !== currentLoc ? 'ghost' : 'primary';
+  return `
+    <article class="maws-task-card maws-recommend-card">
+      <header><b>${esc(card.title)}</b><span>${esc(locName)}</span></header>
+      <div class="maws-card-meta"><span>地点 ${esc(locName)}</span><span>风险 ${esc(opportunityRiskText(card))}</span></div>
+      ${reason ? `<small>触发：${esc(reason)}</small>` : ''}
+      ${btn(opportunityButtonLabel(card, currentLoc), 'takeOpportunity', { id: card.id }, buttonClass)}
+    </article>
+  `;
+}
+
+function renderTodayBoard(model) {
+  const main = model.mainEvent;
+  const injuries = model.player?.injuries?.length
+    ? `伤病 ${model.player.injuries.length}`
+    : '身体可用';
+  const mainCard = main ? `
+    <article class="maws-task-card main">
+      <header><b>今日主线</b><span>${esc(main.locName)}${main.enemyName ? ` · ${esc(main.enemyName)}` : ''}</span></header>
+      <strong>${esc(main.title)}</strong>
+      <p>${esc(main.desc)}</p>
+      ${btn(main.currentLoc ? '处理主线' : `前往${esc(main.locName)}`, 'startMainEvent', {}, 'primary')}
+    </article>
+  ` : `
+    <article class="maws-task-card done">
+      <header><b>今日主线</b><span>已收口</span></header>
+      <p>没有新的主线节点。把训练、恢复和装备补上，别空耗一天。</p>
+    </article>
+  `;
+  return `
+    <section class="maws-today-stack">
+      <article class="maws-task-card maws-today-card">
+        <header><b>${esc(model.dayText)}</b><span>${esc(model.locationScene?.timeText || '')}</span></header>
+        <strong>${esc(model.loc?.name || '')}</strong>
+        <div class="maws-card-meta"><span>${esc(model.locationScene?.openText || '')}</span><span>${esc(injuries)}</span></div>
+      </article>
+      ${mainCard}
+    </section>
+  `;
+}
+
+function renderRecommendations(model) {
+  const cards = (model.opportunities || []).slice(0, 3);
+  if (!cards.length) {
+    return `
+      <section class="maws-recommend-board">
+        <article class="maws-task-card done"><header><b>推荐行动</b><span>暂无</span></header><p>当前没有明显事件冒头，先把训练、恢复或装备补齐。</p></article>
+      </section>
+    `;
+  }
+  return `<section class="maws-recommend-board">${cards.map((card) => renderOpportunityCard(card, model.loc?.id)).join('')}</section>`;
+}
+
+function renderMap(model) {
+  const actions = (model.actions || []).map(renderActionCard).join('');
+  const recommendations = renderRecommendations(model);
+  const todayBoard = renderTodayBoard(model);
   const scene = model.locationScene || {};
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
@@ -205,9 +296,9 @@ function renderMap(model) {
   return `
     <section class="maws-map-shell">
       <section class="maws-location">
-        <aside class="maws-loc-rail">
-          <div class="maws-rail-title"><b>城市动线</b><span>${esc(scene.timeText || '')}</span>${btn('查看城市地图', 'openCityMap', {}, 'tiny maws-map-open')}</div>
-          <div class="maws-locs">${locs}</div>
+        <aside class="maws-today-rail">
+          <div class="maws-rail-title"><b>今日看板</b>${btn('城市地图', 'openCityMap', {}, 'tiny maws-map-open')}</div>
+          ${todayBoard}
         </aside>
         <div class="maws-scene" ${bgUrl ? `style="--scene-bg:url('${esc(bgUrl)}')"` : ''}>
           <div class="maws-scene-shade"></div>
@@ -218,9 +309,10 @@ function renderMap(model) {
           </div>
           <div class="maws-scene-cast">${characters}</div>
         </div>
-        <aside class="maws-action-rail">
-          <div class="maws-rail-title"><b>现场能做</b><span>${esc((model.actions || []).length)}项</span></div>
-          ${taskBoard}
+        <aside class="maws-action-rail maws-action-rail-main">
+          <div class="maws-rail-title"><b>推荐行动</b><span>${esc((model.opportunities || []).length)}条</span></div>
+          ${recommendations}
+          <div class="maws-rail-title maws-current-actions-title"><b>当前地点行动</b><span>${esc((model.actions || []).length)}项</span></div>
           <div class="maws-actions">${actions}</div>
         </aside>
       </section>
@@ -229,38 +321,60 @@ function renderMap(model) {
   `;
 }
 
-function renderTaskBoard(model) {
-  const main = model.mainEvent;
-  const mainCard = main ? `
-    <article class="maws-task-card main">
-      <header><b>今日主线</b><span>${esc(main.locName)}${main.enemyName ? ` · ${esc(main.enemyName)}` : ''}</span></header>
-      <strong>${esc(main.title)}</strong>
-      <p>${esc(main.desc)}</p>
-      ${btn(main.currentLoc ? '处理主线' : `前往${esc(main.locName)}`, 'startMainEvent', {}, 'primary')}
-    </article>
-  ` : `
-    <article class="maws-task-card done">
-      <header><b>今日主线</b><span>已收口</span></header>
-      <p>没有新的主线节点。把训练、恢复和装备补上，别空耗一天。</p>
-    </article>
-  `;
-  const todos = (model.opportunities || []).slice(0, 3).map((card) => `
-    <article class="maws-task-card">
-      <header><b>${esc(card.title)}</b><span>${esc(LOCS[card.loc]?.name || card.loc || '当前')}</span></header>
-      <p>${esc(card.desc)}</p>
-      <small>${esc(card.reason || '')}</small>
-      ${btn(card.loc === model.loc?.id || !card.loc ? '处理待办' : `前往${esc(LOCS[card.loc]?.name || card.loc)}`, 'takeOpportunity', { id: card.id }, 'ghost')}
+function renderMawPanel(model) {
+  const maw = model.maw || {};
+  const rule = maw.rules || {};
+  const metrics = ['belief', 'misread', 'fatherMemory', 'reforge'].map((key) => `
+    <article class="maws-maw-metric tone-${esc(key)}">
+      <strong>${esc(rule[key]?.icon || '')} ${esc(rule[key]?.name || key)}</strong>
+      <b>${esc(round(maw[key]))}</b>
+      <p>${esc(rule[key]?.desc || '')}</p>
     </article>
   `).join('');
-  return `<section class="maws-task-board">${mainCard}<div class="maws-task-list">${todos}</div></section>`;
+  const diary = maw.diaryAvailable ? `
+    <article class="maws-diary-card">
+      <header><strong>${esc(maw.diary?.title || '父亲日记')}</strong><span>已读</span></header>
+      <p>${esc(maw.diary?.closing || '父亲留下的不是神功，是把真东西练出来。')}</p>
+      ${btn('重读日记', 'openFatherDiary', {}, 'ghost')}
+    </article>
+  ` : '';
+  const modules = (maw.moduleList || []).map((module) => `
+    <article class="maws-reforge-card status-${esc(module.status)}">
+      <header><strong>${esc(module.name)}</strong><b>${esc(module.value)}%</b></header>
+      <div class="maws-reforge-bar"><i style="width:${Math.max(0, Math.min(100, Number(module.value || 0)))}%"></i></div>
+      <p>${esc(module.desc)}</p>
+      ${maw.revealed && module.next ? `<small>下一步：${esc(module.next.locName)} · ${esc(module.next.actionName)} / ${esc((module.next.skills || []).join('、'))}</small>` : '<small>父亲日记读完后，这里会变成训练清单。</small>'}
+    </article>
+  `).join('');
+  const forms = (maw.forms || []).map((form) => `
+    <article class="maws-form-card status-${esc(form.status)}">
+      <header><strong>${esc(form.name)}</strong><span>${esc(form.statusText)} · ${esc(form.reforge || 0)}%</span></header>
+      <small class="maws-form-status">${esc(form.moduleName)}</small>
+      <p>${esc(form.note || '')}</p>
+      <small class="maws-form-next">${esc(form.nextText || '')}</small>
+    </article>
+  `).join('');
+  return `
+    <section class="maws-reforge-panel ${maw.revealed ? 'revealed' : 'locked'}">
+      <div class="maws-panel-title small"><h2>茂家拳重铸</h2><p>${esc(maw.chapterText || '')} · ${maw.revealed ? '把现实训练写回旧拳谱。' : 'Day 9 前先记录信念和误判，不把它当战力。'}</p></div>
+      <div class="maws-maw-metrics">${metrics}</div>
+      ${diary}
+      <div class="maws-reforge-grid">${modules}</div>
+      <div class="maws-form-grid">${forms}</div>
+    </section>
+  `;
 }
 
 function renderProfile(model) {
   const stats = Object.entries(model.statRules || {}).map(([key, rule]) => `
     <article class="maws-stat"><strong>${esc(rule.icon)} ${esc(rule.name)}</strong><b>${esc(model.player?.stats?.[key])}</b><p>${esc(rule.desc)}</p><small>${esc(rule.formula || '')}</small></article>
   `).join('');
-  const styles = Object.entries(model.styleRules || {}).map(([key, rule]) => `
-    <span class="maws-chip"><i>${esc(rule.icon)}</i><b>${esc(rule.name)}</b>${round(model.styles?.[key])}</span>
+  const styles = (model.styleList || []).map((style) => `
+    <article class="maws-style-card">
+      <strong><i>${esc(style.icon)}</i>${esc(style.name)}</strong>
+      <b>${esc(style.value)}</b>
+      <p>${esc(style.desc)}</p>
+    </article>
   `).join('');
   const resourceValue = {
     money: model.player?.money,
@@ -276,7 +390,8 @@ function renderProfile(model) {
     <section class="maws-panel">
       <div class="maws-panel-title"><h2>${esc(model.player?.name)}</h2><p>${esc(model.player?.origin?.name)} · ${esc(model.player?.trait)}</p></div>
       <div class="maws-vitals">${meter('健康', model.player?.hp, model.player?.hpMax)}${meter('体力', model.player?.sp, model.player?.spMax)}${meter('架势', model.player?.posture, model.player?.postureMax)}</div>
-      <div class="maws-resource-row">${styles}</div>
+      ${renderMawPanel(model)}
+      <div class="maws-style-grid">${styles}</div>
       <div class="maws-stat-grid">${stats}</div>
       <div class="maws-panel-title small"><h2>资源注释</h2><p>这些不是装饰数字，它们会影响机会、风险、恢复和结局稳定性。</p></div>
       <div class="maws-stat-grid compact">${resources}</div>
@@ -431,8 +546,38 @@ function renderMain(model) {
 function renderCombat(model) {
   const combat = model.combat || {};
   const phaseLabel = combat.phase === 'auto' ? '自动交换中' : '暂停调整';
+  const queueLimit = combat.queueLimit || 2;
   const queueIds = combat.playerQueue?.length ? combat.playerQueue : combat.selected || [];
   const queue = queueIds.map((id) => SKILLS[id]?.name || id).join(' -> ') || '未选择，默认抱架';
+  const queueSlots = Array.from({ length: queueLimit }, (_, index) => {
+    const id = queueIds[index];
+    return `<span class="maws-queue-slot ${id ? 'filled' : ''}"><i>${index + 1}</i>${esc(id ? SKILLS[id]?.name || id : '待选')}</span>`;
+  }).join('');
+  const tell = combat.enemyTell || null;
+  const tellDangerClass = tell?.danger === '高' ? 'high' : tell?.danger === '中' ? 'mid' : 'low';
+  const tellTips = (tell?.tips || []).map((tip) => `<li>${esc(tip)}</li>`).join('');
+  const counterHints = tell?.counterSkillNames?.length
+    ? `<div class="maws-counter-hints"><span>推荐反制</span><strong>${tell.counterSkillNames.map((name) => esc(name)).join(' / ')}</strong></div>`
+    : '';
+  const enemyRead = tell ? `
+    <div class="maws-combat-read danger-${tellDangerClass}">
+      <b>敌人意图：${esc(tell.label)} <em>${esc(tell.danger || '低')}</em></b>
+      <span>${esc(tell.tell || '')}</span>
+      <small>预判 ${esc(tell.skillName || tell.skill || '行动')} · ${esc(tell.queueFit || '')} · ${esc(tell.recovery || '')}</small>
+      ${counterHints}
+      <p>${esc(tell.failure || '')}</p>
+      <ol>${tellTips}</ol>
+    </div>` : '';
+  const objectives = (combat.objectiveList || []).length ? `
+    <div class="maws-objective-strip">
+      <b>终战目标</b>
+      <div>
+        ${(combat.objectiveList || []).map((objective) => `
+          <span class="${objective.done ? 'done' : ''}" title="${esc(objective.desc || '')}"><i>${objective.done ? '✓' : '·'}</i> ${esc(objective.short || objective.label)}</span>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
   const targetControls = ['head', 'body', 'leg'].map((target) => btn(
     targetText(target),
     'setTarget',
@@ -449,9 +594,19 @@ function renderCombat(model) {
     desc: slot.skill.desc
   }, true)).join('');
   const logs = (combat.log || []).slice(0, 6).map((line) => `<li>${esc(line)}</li>`).join('');
+  const feedback = combat.lastWindow?.feedback;
+  const feedbackPanel = `
+    <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
+      <b>窗口反馈</b>
+      <span>${esc(feedback?.text || '先读意图，再放 1-2 张动作卡。')}</span>
+    </aside>`;
   const lastWindow = combat.lastWindow
-    ? `上个窗口 ${esc(combat.lastWindow.duration)}秒 · ${esc(combat.lastWindow.stepCount || 0)}个动作`
+    ? `上个窗口 ${esc(combat.lastWindow.duration)}秒 · ${esc(combat.lastWindow.stepCount || 0)}个动作 · ${esc(combat.lastWindow.pressure || '交换')}`
+    : '';
+  const currentWindow = tell
+    ? `当前约 ${esc(tell.windowDuration)}秒 · ${tell.queueCount ? `${esc(tell.queueCount)}招入列` : '默认抱架观察'}`
     : '选卡后进入 8-12 秒自动交换';
+  const phaseNote = [lastWindow, currentWindow].filter(Boolean).join(' / ');
   return `
     <section class="maws-combat-ui">
       <div class="maws-combat-top">
@@ -459,16 +614,18 @@ function renderCombat(model) {
         <strong>第 ${esc(combat.round)} 回合 · ${esc(combat.enemy?.name)} · ${esc(shortDist(combat.distance))}</strong>
         <div>${meter(combat.enemy?.name || '对手', combat.enemy?.hp, combat.enemy?.hpMax)}${meter('体力', combat.enemy?.sp, combat.enemy?.spMax)}${meter('架势', combat.enemy?.posture, combat.enemy?.postureMax)}</div>
       </div>
-      <aside class="maws-combat-log"><ol>${logs}</ol></aside>
-      <details class="maws-combat-log-toggle"><summary>战斗记录</summary><ol>${logs}</ol></details>
+      ${feedbackPanel}
+      <details class="maws-combat-log-toggle"><summary>详细战斗记录</summary><ol>${logs}</ol></details>
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
-          <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)}</span><small>${lastWindow}</small></div>
+          <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)}</span><small>${phaseNote}</small></div>
+          ${objectives}
+          ${enemyRead}
           <div class="maws-target-control" role="group" aria-label="攻击目标">${targetControls}</div>
-          <div class="maws-queue">队列：${esc(queue)} ${btn('清空', 'clearSkills', {}, 'tiny')}</div>
+          <div class="maws-combat-queue"><b>动作队列</b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
         <div class="maws-card-grid combat">${cards}</div>
-        <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行窗口', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
+        <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
       </div>
     </section>
   `;
@@ -482,6 +639,16 @@ function renderSettlementLine(line) {
   return `<li class="maws-settle-line ${tone} group-${esc(group)}"><span>${esc(line.label || line.key || '变化')}</span><b>${esc(line.text || `${delta > 0 ? '+' : ''}${delta}`)}</b></li>`;
 }
 
+function renderObjectiveResultLine(item) {
+  if (!item || typeof item !== 'object') return `<li>${esc(item)}</li>`;
+  return `
+    <li class="${item.done ? 'done' : 'miss'}">
+      <b>${item.done ? '✓' : '·'} ${esc(item.label || '')}<em>${esc(item.status || '')}</em></b>
+      <span>${esc(item.desc || '')}</span>
+    </li>
+  `;
+}
+
 function renderModalBody(body) {
   return String(body || '')
     .split('\n')
@@ -490,9 +657,157 @@ function renderModalBody(body) {
     .join('');
 }
 
+function renderStoryChoiceModal(modal) {
+  const choices = (modal.choices || []).map((choice) => {
+    const meta = [
+      ...(choice.gainPreview || []),
+      choice.danger,
+      choice.locName ? `地点：${choice.locName}` : ''
+    ].filter(Boolean);
+    return `
+      <article class="maws-story-choice">
+        <strong>${esc(choice.label)}</strong>
+        <p>${esc(choice.text)}</p>
+        ${choice.hint ? `<small>${esc(choice.hint)}</small>` : ''}
+        ${summaryChips(meta, choice.enemyName ? 'cost' : 'gain')}
+        ${btn('这么做', 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
+      </article>
+    `;
+  }).join('');
+  return `
+    <div class="maws-modal story">
+      <section>
+        <h2>${esc(modal.title || '主线选择')}</h2>
+        <div class="maws-modal-body">${renderModalBody(modal.body)}</div>
+        <div class="maws-choice-grid">${choices}</div>
+      </section>
+    </div>
+  `;
+}
+
+function renderDialogueModal(modal) {
+  const lines = Array.isArray(modal.lines) && modal.lines.length
+    ? modal.lines
+    : [{ speaker: modal.title || '对话', text: modal.body || '' }];
+  const index = Math.max(0, Math.min(Number(modal.index || 0), lines.length - 1));
+  const line = lines[index] || lines[0] || {};
+  const isLast = index >= lines.length - 1;
+  const choices = isLast ? (modal.choices || []) : [];
+  const choiceCards = choices.map((choice) => {
+    const meta = [
+      ...(choice.gainPreview || []),
+      choice.danger,
+      choice.locName ? `地点：${choice.locName}` : ''
+    ].filter(Boolean);
+    return `
+      <article class="maws-dialogue-choice">
+        <strong>${esc(choice.label)}</strong>
+        <p>${esc(choice.text)}</p>
+        ${choice.hint ? `<small>${esc(choice.hint)}</small>` : ''}
+        ${summaryChips(meta, choice.enemyName ? 'cost' : 'gain')}
+        ${btn('选这条路', 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
+      </article>
+    `;
+  }).join('');
+  const settlement = isLast && !choices.length
+    ? (modal.settlementLines || []).map(renderSettlementLine).join('')
+    : '';
+  const portrait = line.assetKey
+    ? assetIcon(line.assetKey, line.icon || line.speaker?.slice(0, 1), 'maws-dialogue-portrait-img')
+    : `<i class="maws-dialogue-portrait-fallback">${esc(line.icon || line.speaker?.slice(0, 1) || '?')}</i>`;
+  const action = !isLast
+    ? btn('下一句', 'advanceDialogue', {}, 'primary')
+    : choices.length
+      ? ''
+      : btn(modal.actionLabel || '知道了', 'completeDialogue', {}, 'primary');
+  return `
+    <div class="maws-modal dialogue">
+      <section>
+        <header class="maws-dialogue-head">
+          <span>${portrait}</span>
+          <div>
+            <small>${esc(modal.title || '对话')}</small>
+            <h2>${esc(line.speaker || modal.title || '对话')}</h2>
+            ${line.role ? `<em>${esc(line.role)}</em>` : ''}
+          </div>
+          <b>${esc(`${index + 1}/${lines.length}`)}</b>
+        </header>
+        <div class="maws-dialogue-line"><p>${esc(line.text || modal.body || '')}</p></div>
+        ${settlement ? `<ol class="maws-settle-list">${settlement}</ol>` : ''}
+        ${choiceCards ? `<div class="maws-dialogue-choices">${choiceCards}</div>` : ''}
+        ${action ? `<div class="maws-modal-actions">${action}</div>` : ''}
+      </section>
+    </div>
+  `;
+}
+
+function renderFatherDiaryModal(modal) {
+  const entries = (modal.entries || []).map((entry) => `
+    <article class="maws-diary-entry">
+      <strong>${esc(entry.date || '')}</strong>
+      <p>${esc(entry.text || '')}</p>
+    </article>
+  `).join('');
+  const lines = (modal.lines || []).map(renderSettlementLine).join('');
+  return `
+    <div class="maws-modal diary">
+      <section>
+        <h2>${esc(modal.title || '父亲日记')}</h2>
+        <div class="maws-modal-body">${renderModalBody(modal.body)}</div>
+        <div class="maws-diary-pages">${entries}</div>
+        ${modal.closing ? `<p class="maws-diary-closing">${esc(modal.closing)}</p>` : ''}
+        ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
+        <div class="maws-modal-actions">${btn('合上日记', 'closeModal', {}, 'primary')}</div>
+      </section>
+    </div>
+  `;
+}
+
+function renderEventNotebookModal(modal) {
+  const beats = (modal.beats || []).map((line, index) => `
+    <li><b>${esc(String(index + 1).padStart(2, '0'))}</b><span>${esc(line)}</span></li>
+  `).join('');
+  const choices = (modal.choices || []).map((choice) => `
+    <article class="maws-event-choice">
+      <strong>${esc(choice.label || '处理这件事')}</strong>
+      <p>${esc(choice.text || '')}</p>
+      ${btn('确认', 'resolveEventNotebook', { id: choice.id || 'resolve' }, choice.kind === 'battle' ? 'primary' : 'ghost')}
+    </article>
+  `).join('');
+  const meta = [
+    modal.locName ? `地点：${modal.locName}` : '',
+    modal.risk || '',
+    modal.reason ? `触发：${modal.reason}` : ''
+  ].filter(Boolean);
+  return `
+    <div class="maws-modal event-notebook">
+      <section>
+        <header class="maws-event-head">
+          <small>${esc(modal.kicker || '事件笔记')}</small>
+          <h2>${esc(modal.title || '现场事件')}</h2>
+          ${summaryChips(meta, 'cost')}
+        </header>
+        <div class="maws-modal-body">${renderModalBody(modal.body)}</div>
+        <ol class="maws-event-beats">${beats}</ol>
+        <div class="maws-event-summary">
+          ${summaryChips(modal.summary?.cost || [], 'cost')}
+          ${summaryChips(modal.summary?.gain || [], 'gain')}
+          ${modal.summary?.risk ? `<small>${esc(modal.summary.risk)}</small>` : ''}
+        </div>
+        <div class="maws-choice-grid event">${choices}</div>
+        <div class="maws-modal-actions">${btn('先不处理', 'closeModal', {}, 'dark')}</div>
+      </section>
+    </div>
+  `;
+}
+
 function renderModal(model) {
   const modal = model.modal;
   if (!modal) return '';
+  if (modal.type === 'storyChoice') return renderStoryChoiceModal(modal);
+  if (modal.type === 'dialogue') return renderDialogueModal(modal);
+  if (modal.type === 'fatherDiary') return renderFatherDiaryModal(modal);
+  if (modal.type === 'eventNotebook') return renderEventNotebookModal(modal);
   if (modal.type === 'travel') {
     const to = model.selectedTravel;
     const loc = LOCS[to];
@@ -502,11 +817,18 @@ function renderModal(model) {
     return `<div class="maws-modal"><section><h2>去 ${esc(loc?.name || '')}</h2><div class="maws-card-grid compact">${options}</div>${btn('取消', 'closeModal', {}, 'dark')}</section></div>`;
   }
   if (modal.type === 'trainingMini') {
-    const choices = (modal.choices || []).map((choice) => `
+    const rounds = Array.isArray(modal.rounds) ? modal.rounds : [];
+    const roundIndex = Math.max(0, Math.min(Number(modal.roundIndex) || 0, Math.max(0, rounds.length - 1)));
+    const round = rounds[roundIndex] || {};
+    const historyCount = Array.isArray(modal.history) ? modal.history.length : 0;
+    const scoreRatio = historyCount > 0 ? (Number(modal.score) || 0) / Math.max(1, historyCount * 2) : 0;
+    const trend = historyCount <= 0 ? '未出手' : scoreRatio >= 0.8 ? '超额' : scoreRatio >= 0.5 ? '稳定' : '吃力';
+    const progress = rounds.length ? Math.round((roundIndex / rounds.length) * 100) : 0;
+    const choices = (round.options || []).map((choice) => `
       <article class="maws-training-choice">
         <strong>${esc(choice.label)}</strong>
         <p>${esc(choice.text)}</p>
-        ${btn('按这个节奏完成', 'finishTraining', { grade: choice.grade }, choice.grade === 'solid' ? 'primary' : 'ghost')}
+        ${btn('选择这个处理', 'answerTraining', { id: choice.id }, 'ghost')}
       </article>
     `).join('');
     return `
@@ -515,20 +837,31 @@ function renderModal(model) {
           <h2>${esc(modal.title || '训练')}</h2>
           <div class="maws-modal-body">
             <p>${esc(modal.prompt || '')}</p>
+            <div class="maws-training-status">
+              <span>${esc(modal.templateLabel || '训练')}</span>
+              <span>第 ${esc(roundIndex + 1)} / ${esc(Math.max(1, rounds.length))} 轮</span>
+              <span>倾向：${esc(trend)}</span>
+            </div>
+            <div class="maws-training-meter"><i style="width:${esc(progress)}%"></i></div>
+            ${modal.feedback ? `<div class="maws-training-feedback"><b>上一拍</b><span>${esc(modal.feedback.text || '')}</span></div>` : ''}
+            <div class="maws-training-cue">${esc(round.cue || '按当前身体反馈做选择。')}</div>
             ${summaryChips(modal.summary?.cost || [], 'cost')}
             ${summaryChips(modal.summary?.gain || [], 'gain')}
           </div>
-          <div class="maws-card-grid compact">${choices}</div>
+          <div class="maws-training-choices">${choices}</div>
           <div class="maws-modal-actions">${btn('先不练', 'closeModal', {}, 'dark')}</div>
         </section>
       </div>
     `;
   }
   const lines = (modal.lines || []).map(renderSettlementLine).join('');
+  const objectiveLines = (modal.objectiveLines || []).length
+    ? `<ol class="maws-final-objectives">${modal.objectiveLines.map(renderObjectiveResultLine).join('')}</ol>`
+    : '';
   const review = modal.type === 'battleResult'
     ? `<div class="maws-modal-actions">${btn('技术复盘', 'postReview', { kind: 'tech' }, 'primary')}${btn('冷静复盘', 'postReview', { kind: 'calm' }, 'ghost')}${btn('情报复盘', 'postReview', { kind: 'intel' }, 'dark')}</div>`
     : `<div class="maws-modal-actions">${btn('知道了', 'closeModal', {}, 'primary')}</div>`;
-  return `<div class="maws-modal"><section><h2>${esc(modal.title || '提示')}</h2><div class="maws-modal-body">${renderModalBody(modal.body)}</div><ol class="maws-settle-list">${lines}</ol>${review}</section></div>`;
+  return `<div class="maws-modal"><section><h2>${esc(modal.title || '提示')}</h2><div class="maws-modal-body">${renderModalBody(modal.body)}</div>${objectiveLines}<ol class="maws-settle-list">${lines}</ol>${review}</section></div>`;
 }
 
 function render(model) {
@@ -547,8 +880,14 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'setTab') store.dispatch({ type: 'setTab', tab: dataset.tab });
   else if (action === 'doAction') store.dispatch({ type: 'doAction', actionId: dataset.id });
   else if (action === 'startMainEvent') store.dispatch({ type: 'startMainEvent' });
+  else if (action === 'resolveStoryChoice') store.dispatch({ type: 'resolveStoryChoice', choiceId: dataset.id });
+  else if (action === 'advanceDialogue') store.dispatch({ type: 'advanceDialogue' });
+  else if (action === 'completeDialogue') store.dispatch({ type: 'completeDialogue' });
   else if (action === 'takeOpportunity') store.dispatch({ type: 'takeOpportunity', id: dataset.id });
+  else if (action === 'resolveEventNotebook') store.dispatch({ type: 'resolveEventNotebook', choiceId: dataset.id });
+  else if (action === 'answerTraining') store.dispatch({ type: 'answerTraining', optionId: dataset.id });
   else if (action === 'finishTraining') store.dispatch({ type: 'finishTraining', grade: dataset.grade });
+  else if (action === 'openFatherDiary') store.dispatch({ type: 'openFatherDiary' });
   else if (action === 'saveGame') store.dispatch({ type: 'saveGame' });
   else if (action === 'openCityMap') store.dispatch({ type: 'openCityMap' });
   else if (action === 'closeCityMap') store.dispatch({ type: 'closeCityMap' });

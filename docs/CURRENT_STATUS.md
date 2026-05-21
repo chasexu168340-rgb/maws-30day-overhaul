@@ -256,3 +256,147 @@
 - 只覆盖核心 4 敌和 9 个常用技能对应的基础动作映射；其余敌人与技能仍需后续批次补。
 - 训练小游戏是 modal 原型，还不是有实时判定/音画节奏的最终小游戏。
 - 没有做完整 30 天经济曲线长跑。
+
+## 2026-05-20 Batch 16 Final
+
+执行状态：
+- Batch 16 已完成。已按 `game-design-core` 的 30/30/30 loop 与 meaningful decision 检查当前战斗循环，结论是 Batch 15 的短窗口结构方向正确，但规划态缺少敌方意图，导致卡牌选择信息不足。
+- 已按 `combat-design` 的 readability、commitment、recovery 原则做最小重构：规划态新增敌方读板，展示预判动作、危险等级、telegraph、建议反制和恢复/惩罚提示。
+- 自动窗口不再只是固定 10 秒文案；现在根据玩家队列、实际交换 steps 和敌方危险度估算 8-12 秒，并记录到 `lastWindow.duration`。
+- 自动窗口新增压力标签：`试探交换`、`中压交换`、`高压交换`，进入日志、HUD 和后续回合反馈。
+- DOM 战斗 UI 已展示读板模块和预计窗口时长，选卡后读板会随当前队列重新计算。
+- 存档 key 仍为 `maws_overhaul_save`，未改版本、经济、敌人属性、战斗伤害/命中公式或装备数值。
+
+本轮涉及文件：
+- `E:\TH比赛照片\maws_src\simulation\state.js`
+- `E:\TH比赛照片\maws_src\dom\ui.js`
+- `E:\TH比赛照片\maws_src\dom\ui.css`
+- `E:\TH比赛照片\docs\CURRENT_TASK.md`
+- `E:\TH比赛照片\docs\CURRENT_STATUS.md`
+- `E:\TH比赛照片\docs\CURRENT_TEST_REPORT.md`
+- `E:\TH比赛照片\docs\CHANGELOG.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CURRENT_TASK.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CURRENT_STATUS.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CURRENT_TEST_REPORT.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CHANGELOG.md`
+
+风险：
+- 本轮的敌方读板是确定性预览/提示层，不是完整 frame-data 或 hitbox/hurtbox 系统。
+- 目前没有做实时随时插卡；仍然是“短窗口自动打完后暂停调整”的保守半即时方案。
+- 压力标签来自本窗口结果聚合，不代表完整 30 天战斗曲线已经平衡。
+- UI 已做桌面和手机 smoke，但还没有做长时间连续多战斗压力测试。
+
+## 2026-05-20 Batch 17 Final
+
+执行状态：
+- Batch 17 已完成。项目现在有明确的 Skill Router：每轮开工前读取 `docs/SKILL_ROUTER.md`，按任务类型自动选择 2-4 个核心 skill。
+- `AGENTS.md` 已新增“技能自动路由”流程，要求修改前声明本轮使用的 skill、使用原因，以及不使用的明显但不适合的 skill。
+- `docs/SKILL_ROUTER.md` 已覆盖战斗、UI、资产、数值、文案、QA、GitHub、文档/checkpoint 8 类常见任务。
+- 已明确本项目是 Phaser + DOM，不默认使用 Godot 系列 skill。
+- 本轮实际使用 skill：`technical-writer`、`consistency-checker`。
+- 没有修改游戏代码、玩法、数值、资产 manifest、存档 key/version，也没有安装新依赖。
+
+本轮涉及文件：
+- `E:\TH比赛照片\AGENTS.md`
+- `E:\TH比赛照片\docs\SKILL_ROUTER.md`
+- `E:\TH比赛照片\docs\CURRENT_TASK.md`
+- `E:\TH比赛照片\docs\CURRENT_STATUS.md`
+- `E:\TH比赛照片\docs\CURRENT_TEST_REPORT.md`
+- `E:\TH比赛照片\docs\CHANGELOG.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\SKILL_ROUTER.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CURRENT_TASK.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CURRENT_STATUS.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CURRENT_TEST_REPORT.md`
+- `C:\Users\Administrator\Documents\New project 3\docs\CHANGELOG.md`
+
+风险：
+- 这是项目级文档路由，不是 Codex 全局自动加载机制；但它会随仓库走，适合你和朋友协作。
+- 如果未来更换技术栈，需要同步更新 `docs/SKILL_ROUTER.md` 的排除规则。
+- 单轮最多 4 个核心 skill 是为了减少冲突；极复杂任务仍需要人工点名额外 skill。
+
+## 2026-05-21 Batch 19 Final
+
+执行状态：
+- Batch 19 已完成。按用户要求使用 `planning-with-files` 文件化续跑，并调用三个子 Agent 分工恢复中断任务：data/events、combat/economy、UI/state 分析。
+- 新增散打、空手道、跆拳道三条第一可玩切片：流派、地点、NPC、训练行动、技能、敌人、主线日程和事件机会。
+- day 1 和 day 18 主线已支持选择弹窗；主线完成标记改为玩家提交选择后再写入，避免打开弹窗就丢失主线。
+- `state.js` 新增数据驱动的流派/关系迁移、新地点场景映射、城市 marker 信息和 `styleList` 渲染字段。
+- `ui.js` 新增 story-choice modal、选择 dispatch、流派网格和地点密度标签；`ui.css` 补移动端不溢出的 story choice/style/location 样式。
+- 新技能/新敌人在 `combat.js` 与 `economy.js` 中补齐运行时映射、风格结算和 E19/E20/E21 AI 读板。
+- 存档 key 仍为 `maws_overhaul_save`，版本仍为 `4.1-phaser-ui`；本轮没有改资产 manifest、没有重构 Phaser scene。
+
+本轮涉及文件：
+- `E:\TH比赛照片\maws_src\content\data.js`
+- `E:\TH比赛照片\maws_src\simulation\events.js`
+- `E:\TH比赛照片\maws_src\simulation\combat.js`
+- `E:\TH比赛照片\maws_src\simulation\economy.js`
+- `E:\TH比赛照片\maws_src\simulation\state.js`
+- `E:\TH比赛照片\maws_src\dom\ui.js`
+- `E:\TH比赛照片\maws_src\dom\ui.css`
+- `E:\TH比赛照片\task_plan.md`
+- `E:\TH比赛照片\progress.md`
+- `E:\TH比赛照片\findings.md`
+- `E:\TH比赛照片\docs\TASK_PLAN.md`
+- `E:\TH比赛照片\docs\CURRENT_STATUS.md`
+- `E:\TH比赛照片\docs\CURRENT_TEST_REPORT.md`
+- `E:\TH比赛照片\docs\CHANGELOG.md`
+
+风险：
+- 三条新武术线是首个可玩切片，不是最终完整门派系统；后续还需要更多日期节点、分支后果和长期曲线。
+- 新地点暂时复用现有背景和 standee 资源，没有新增专属场馆美术。
+- 新技能数值已能运行，但没有做完整 30 天战斗/经济长线平衡。
+- 浏览器验证依赖系统 Chrome；bundled Playwright 仍需通过 pnpm 包路径加载。
+
+## 2026-05-21 Batch 20 Final
+
+执行状态：
+- Batch 20 已完成。本批把 Batch 19 的散打、空手道、跆拳道切片收进“百家入茂 / 茂家拳重铸”主线骨架，但没有改 UI 布局、Phaser Scene、资产 manifest、经济曲线、战斗公式、存档 key 或存档版本。
+- `data.js` 已补齐 MAW 主线数据骨架：父亲、阿豹、推手大爷，E10“一阵风”、E11“阿豹”，以及 Day 1/2/3/5/8/9/12/18/20/21/22/24/29/30 主线节点。
+- `state.js` 已新增 `state.maw` 默认值、旧档迁移、`updateMawProgress()` 和 render model 暴露；Day 8 会把 `misread` 清零并按比例转入父亲记忆，Day 9 会切到 `reforge` 阶段。
+- `combat.js` 已同步 E10/E11 运行时模板和阿豹专用读板，避免数据层有敌人但战斗层回落到默认对手。
+- `events.js` 已补最小 MAW factor：机会卡规则后续可读取 `maw.chapter`、误判值、父亲记忆和茂拳完成度。
+- 验证已覆盖静态检查、`npm run build`、`git diff --check`、专项 Node MAW smoke 和 390x844 浏览器 smoke。
+- 本轮实际使用 skill：`planning-with-files`、`storytelling`、`consistency-checker`。
+
+本轮涉及文件：
+- `E:\TH比赛照片\maws_src\content\data.js`
+- `E:\TH比赛照片\maws_src\simulation\state.js`
+- `E:\TH比赛照片\maws_src\simulation\combat.js`
+- `E:\TH比赛照片\maws_src\simulation\events.js`
+- `E:\TH比赛照片\docs\TASK_PLAN.md`
+- `E:\TH比赛照片\docs\CURRENT_STATUS.md`
+- `E:\TH比赛照片\docs\CURRENT_TEST_REPORT.md`
+- `E:\TH比赛照片\docs\CHANGELOG.md`
+
+风险：
+- Day 8 目前是状态骨架接入：触发主线时进入 E10 并写入“broken”阶段，但还没有实现“一窗口后强制剧情失败”的专用结算，那仍属于后续 Batch。
+- Day 30 目前只暴露 `objectiveBattle` 和目标清单，不做目标制终战完整结算。
+- `maw` 已进入 render model，但本批按范围不改人物页/拳谱 UI，所以玩家可见呈现还需要后续批次接入。
+
+## 2026-05-21 Batch 21-23 Final
+
+执行状态：
+- Batch 21-23 已完成。本批接上 Batch 20 的 MAW 骨架：人物页现在可见“茂家拳重铸”面板，Day 9 前弱显示信念/误判，Day 9 后显示 5 个重铸模块、下一建议和拳谱条目。
+- 战斗读板已增强：敌人意图会带出危险等级、失败原因、反制技能和当前队列提示，但没有改战斗伤害、命中、敌人属性或经济公式。
+- Day 30 “真东西测试”现在是 6 目标战：撑过第一波、护住重压、直线打断、被击中后恢复、使用重铸技能、保持冷静。
+- 终战会按目标完成数给出“大胜 / 小胜 / 惜败 / 崩盘”结局；失败也会给主题收束。
+- 存档 key 仍为 `maws_overhaul_save`，版本仍为 `4.1-phaser-ui`；本轮没有改资产 manifest、Phaser Scene、经济曲线或资源目录。
+
+本轮涉及文件：
+- `E:\TH比赛照片\maws_src\simulation\state.js`
+- `E:\TH比赛照片\maws_src\simulation\combat.js`
+- `E:\TH比赛照片\maws_src\dom\ui.js`
+- `E:\TH比赛照片\maws_src\dom\ui.css`
+- `E:\TH比赛照片\docs\TASK_PLAN.md`
+- `E:\TH比赛照片\docs\CURRENT_STATUS.md`
+- `E:\TH比赛照片\docs\CURRENT_TEST_REPORT.md`
+- `E:\TH比赛照片\docs\CHANGELOG.md`
+- `E:\TH比赛照片\task_plan.md`
+- `E:\TH比赛照片\progress.md`
+- `E:\TH比赛照片\findings.md`
+
+风险：
+- Day 30 目标检测是窗口级启发式，不是完整 boss frame-data 判定。
+- 没有做完整 30 天经济/成长曲线长跑。
+- Batch 20 已记录的 Day 8 专用强制剧情失败仍未在本批实现。
+- 浏览器 smoke 使用系统 Chrome 与 npx 临时 Playwright 包；仓库仍未安装 `@playwright/test`。

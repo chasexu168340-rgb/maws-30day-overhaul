@@ -356,3 +356,142 @@ Spritesheet 验证：
 未覆盖：
 - 没有做完整 30 天经济曲线长跑。
 - 没有人工逐帧美术质量验收；当前动画 strips 仅作为 replaceable runtime base。
+
+## 2026-05-20 Batch 16 Final
+
+静态验证：
+- `node --check E:\TH比赛照片\maws_src\simulation\state.js`：通过。
+- `node --check E:\TH比赛照片\maws_src\dom\ui.js`：通过。
+- `node --check E:\TH比赛照片\maws_src\simulation\combat.js`：通过。
+- `Get-ChildItem -Path "E:\TH比赛照片\maws_src" -Recurse -Include *.js,*.mjs | ForEach-Object { node --check $_.FullName }`：通过。
+- `node E:\TH比赛照片\maws_src\tools\verify_assets.mjs`：通过，结果 `verified 93 manifest entries across 9 required groups`。
+- CSS 结构检查：通过，`open=447 close=447`。
+
+浏览器 smoke：
+- 使用 installed Chrome + bundled Playwright，目标 URL：`http://127.0.0.1:8137/maws_30day_overhaul_v3.html`。
+- 1365x768：读板出现；初始 phase 为 `planning`；排入 `jab/straight` 后读板和队列更新；确认后窗口推进，回到 `planning`，`windowCount=1`，`lastWindow.duration=10`，`pressure=试探交换`；console/page error 0，HTTP 4xx/5xx 0。
+- 390x844：确认后窗口推进，回到 `planning`，`windowCount=1`，`lastWindow.duration=10`，`pressure=中压交换`；无横向溢出；console/page error 0，HTTP 4xx/5xx 0。
+
+战斗回归：
+- E01：执行窗口后 phase=`planning`，windowCount=1，duration=9，pressure=`中压交换`，stepCount=3。
+- E06：执行窗口后 phase=`planning`，windowCount=1，duration=9，pressure=`试探交换`，读板继续显示抱摔切入相关提示。
+- E07：执行窗口后 phase=`planning`，windowCount=1，duration=9，pressure=`试探交换`，读板继续显示武器威胁相关提示。
+- E18：执行窗口后 phase=`planning`，windowCount=1，duration=9，pressure=`中压交换`。
+- 四个敌人回归均无 console error、page error 或 HTTP 4xx/5xx。
+
+截图输出：
+- `E:\TH比赛照片\test-results\batch16_combat_read_1365x768.png`
+- `E:\TH比赛照片\test-results\batch16_combat_read_390x844.png`
+
+未覆盖：
+- 没有做 30 天经济/战斗曲线长跑。
+- 没有做完整 frame-data、hitbox/hurtbox 或逐帧动画可读性验收。
+
+## 2026-05-20 Batch 17 Final
+
+文档验证：
+- `AGENTS.md` 已包含固定开工流程：读取 checkpoint、读取 `docs/SKILL_ROUTER.md`、按任务类型选最多 4 个 skill、修改前声明、checkpoint 记录实际使用 skill。
+- `docs/SKILL_ROUTER.md` 已包含任务路由表、排除规则和声明模板。
+- 文档检查未发现常见未完成占位词、空链接或 placeholder 文本。
+
+路由模拟检查：
+- “重做战斗 UI”：`game-design-core`, `combat-design`, `game-studio:phaser-2d-game`, `game-studio:game-playtest`。
+- “平衡训练收益”：`game-design-core`, `progression-systems`, `consistency-checker`, `testing-automation`。
+- “生成敌人动画 sprite”：`imagegen`, `game-studio:sprite-pipeline`, `ai-game-art-generation`, `art-consistency`。
+- “修手机端遮挡”：`game-studio:game-ui-frontend`, `frontend`, `ui-design`, `playwright`。
+- “写主线事件”：`storytelling`, `narrative-design`, `worldbuilding`, `technical-writer`。
+- “上传 GitHub/开 PR”：`github:github`, `github:yeet`, `technical-writer`。
+
+Git 检查：
+- `git diff --check`：通过，仅有 LF/CRLF 工作区提示。
+
+未运行：
+- 未运行浏览器 smoke 或 `node --check`，因为本批只改 Markdown 文档，不改运行时代码。
+
+## 2026-05-21 Batch 19 Final
+
+静态验证：
+- `node --check maws_src\content\data.js`：通过。
+- `node --check maws_src\simulation\state.js`：通过。
+- `node --check maws_src\dom\ui.js`：通过。
+- `npm run build`：通过，检查 20 个 JS/MJS 文件，并验证 93 个 manifest entries。
+- `git diff --check`：通过，仅有既有 LF/CRLF working-copy warning。
+
+专项 Node smoke：
+- 新开局 day 1 点击主线后出现 `storyChoice` modal。
+- 未选择前 `main_1` 不会提前写入。
+- 选择 `route_sanda` 后 `main_1=true`、`daily.mainDone=true`，散打流派收益写入。
+- day 18 在便利店选择 `store_protect` 后进入 E07 战斗。
+- `buildRenderModel()` 输出包含 `styleList` 和新增 `sanda_gym` 地点行动计数。
+
+浏览器 smoke：
+- 使用 installed Chrome + bundled pnpm Playwright，目标 URL：`http://127.0.0.1:5179/maws_30day_overhaul_v3.html`。
+- 桌面 1280x720：页面启动成功，console/page error 0。
+- day 1 主线选择弹窗可打开，`route_sanda` 可提交，提交后主线完成标记和散打收益正常。
+- `sanda_gym` 地点可渲染，`sanda_combo_drill` 可执行并解锁 `sanda_whip_kick`。
+- 技能页可卸下一格并装备 `sanda_whip_kick`。
+- day 20 在 `sanda_gym` 点击主线后进入 E19 战斗。
+- 手机 390x844：story-choice modal 无横向溢出，按钮可见可点。
+
+截图输出：
+- `E:\TH比赛照片\test-results\batch19-story-choice-desktop.png`
+- `E:\TH比赛照片\test-results\batch19-sanda-combat-desktop.png`
+- `E:\TH比赛照片\test-results\batch19-story-choice-mobile.png`
+
+未覆盖：
+- 没有做完整 30 天叙事分支长跑。
+- 没有对 E19/E20/E21 做多轮平衡和胜率统计。
+- 没有新增专属场馆美术资产，视觉仍复用现有背景/standee。
+
+## 2026-05-21 Batch 20 Final
+
+静态验证：
+- `node --check maws_src\content\data.js`：通过。
+- `node --check maws_src\simulation\state.js`：通过。
+- `node --check maws_src\simulation\combat.js`：通过。
+- `node --check maws_src\simulation\events.js`：通过。
+- `npm run build`：通过，检查 20 个 JS/MJS 文件，并验证 93 条 manifest entries。
+- `git diff --check`：通过，仅有既有 LF/CRLF working-copy warning。
+
+专项 Node smoke：
+- `SAVE_KEY` 仍为 `maws_overhaul_save`，`GAME_VERSION` 仍为 `4.1-phaser-ui`。
+- 新档包含 `state.maw`、`maw.forms.kaishan` 和数值型 `maw.reforge`。
+- 模拟旧档删除 `maw` 后执行 `migrateSave()`，迁移后仍保留版本并补齐 `maw.forms.luodi`。
+- Day 1/2/3/5/8/9/12/18/20/21/22/24/29/30 主线节点均存在。
+- Day 1 主线仍打开 `storyChoice` modal；选择 `route_sanda` 后写入 `main_1`，并增加父亲记忆。
+- Day 8 在拳馆触发主线后进入 E10，`combat.script === "first_wind"`，`maw.chapter === "broken"`，`misread` 被清零并转入父亲记忆。
+- Day 9 在家触发主线后 `maw.chapter === "reforge"`，`diaryRead/truthRevealed` 为 true，`misread` 被清零。
+- Day 30 render model 主线为 `objectiveBattle`，`model.maw.moduleList` 和 `model.maw.forms` 可读取；隐藏父亲不进入普通关系列表。
+- `resolveCombatExchange()` 可识别 E10“沉默拳击手”和 E11“短视频挑战者阿豹”。
+
+浏览器 smoke：
+- 使用本地静态服务器、bundled pnpm Playwright 包和系统 Chrome，目标 URL：`http://127.0.0.1:5188/maws_30day_overhaul_v3.html`。
+- 页面可打开，`window.MAWS_STORE` 初始化成功，console error 0，page error 0，非取消型 failed request 0。
+- 390x844 视口下，脚本开新档后触发 Day 8 主线：进入 E10，`combat.script === "first_wind"`，`maw.chapter === "broken"`，`misread` 清零并转入父亲记忆。
+- 同一浏览器会话切到 Day 9 后触发父亲日记：`maw.chapter === "reforge"`，`diaryRead/truthRevealed` 为 true，`misread` 清零。
+
+## 2026-05-21 Batch 21-23
+
+验证范围：
+- Batch 21：重铸模块评分和人物页呈现。
+- Batch 22：战斗读板增强。
+- Batch 23：Day 30 目标战推进和结局分层基础。
+
+结果：
+- `node --check maws_src\simulation\state.js`：通过。
+- `node --check maws_src\simulation\combat.js`：通过。
+- `node --check maws_src\dom\ui.js`：通过。
+- `npm run build`：通过，检查 20 个 JS/MJS 文件，验证 93 个 manifest entries。
+- Node smoke：通过；Day 9 后 `model.maw.revealed === true`，5 个模块都有下一建议，Day 30 战斗含 6 个 objectives 且一个窗口后能推进目标。
+- Browser smoke：通过；Chrome 打开 `http://127.0.0.1:5199/maws_30day_overhaul_v3.html`，桌面和 390x844 视口均无横向溢出。
+- Browser smoke 断言：locked reforge metrics=4，revealed reforge cards=5，Day30 objectives=6，desktop completed objectives=5，mobile objectives=6，console/page error=0，failed request=0。
+- 截图：`test-results/batch21_23_desktop.png`、`test-results/batch21_23_mobile.png`。
+- `git diff --check`：通过，仅有既有 LF/CRLF warning。
+
+注意：
+- 直接运行现有 `maws_src/tests/phaser-smoke.spec.js` 失败，因为仓库没有安装 `@playwright/test`；本轮改用 npx 临时包和系统 Chrome 做浏览器 smoke。
+- `body.scrollWidth === 390`，没有横向溢出。
+
+未覆盖：
+- 未做 Day 8 专用剧情失败结算和 Day 30 目标制终战结算。
+- 未做 30 天长线平衡或胜率统计。

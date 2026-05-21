@@ -1,0 +1,22 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - paragraph [ref=e6]: 30天，把能不能打这件事说清楚
+    - heading "了不起的武术模拟器" [level=1] [ref=e7]
+    - text: PHASER UI
+  - generic [ref=e8]:
+    - article [ref=e9]:
+      - strong [ref=e10]: 工 进城打工人
+      - paragraph [ref=e11]: 钱少但抗压，肩膀已经被生活预热过。便利店和工地收益高，恢复慢。
+      - generic [ref=e12]: 打工收益+20%
+      - button "从这里开局" [ref=e13] [cursor=pointer]
+    - article [ref=e14]:
+      - strong [ref=e15]: 燃 短视频信徒
+      - paragraph [ref=e16]: 士气很满，真实性很饿。适合开局冲劲，不适合把弹幕当教练。
+      - generic [ref=e17]: 士气高，真实性低
+      - button "选择开局" [ref=e18] [cursor=pointer]
+    - article [ref=e19]:
+      - strong [ref=e20]: 生 体育生旁听
+      - paragraph [ref=e21]: 基础体能好，现金紧。身体愿意努力，钱包表示需要战术暂停。
+      - generic [ref=e22]: 训练体能压力低
+      - button "选择开局" [ref=e23] [cursor=pointer]
+  - button "读取存档" [ref=e25] [cursor=pointer]

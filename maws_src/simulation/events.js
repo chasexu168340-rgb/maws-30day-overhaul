@@ -1,3 +1,5 @@
+import { ENEMIES } from '../content/data.js';
+
 const FACTOR_LABELS = Object.freeze({
   heat: '热度',
   fame: '名声',
@@ -11,7 +13,22 @@ const FACTOR_LABELS = Object.freeze({
   wins: '胜场',
   losses: '败场',
   riskWins: '风险处理',
-  combatMemory: '战斗记忆'
+  combatMemory: '战斗记忆',
+  mawMisread: '误判值',
+  fatherMemory: '父亲记忆',
+  mawReforge: '茂拳完成度',
+  currentLoc: '当前位置',
+  recoveryNeed: '恢复需求',
+  hardFightStress: '硬战压力',
+  highHeatChallenge: '热度挑战'
+});
+
+const RISK_LABEL_TO_LEVEL = Object.freeze({
+  低: 1,
+  中: 2,
+  高: 4,
+  剧情: 5,
+  终局: 5
 });
 
 function deepFreeze(value) {
@@ -45,6 +62,18 @@ export const EVENT_RULES = deepFreeze([
     title: '梁教练暂停你的玄学发挥',
     loc: 'boxing',
     desc: '他看了你上一场录像，准确指出一个让你沉默的问题。适合把挨打经验翻译成稳定训练。',
+    eventNotebook: {
+      reason: '上一场问题还在发酵',
+      entry: '拳馆的风扇把汗味吹得很均匀。梁教练把手机架在护栏上，屏幕停在你上一场最难看的那一秒：手还在外面，人已经在原地等反馈。',
+      beats: [
+        '你没有急着解释，把护齿盒合上，重新站进胶带贴出的中线。',
+        '梁教练只让你做一件事：打完一拳，手回来，人也要能走。',
+        '这次复盘不像表扬，也不像羞辱，更像把挨过的打拆成能保存的零件。'
+      ],
+      actionLabel: '接受复盘',
+      actionText: '花一点时间和面子，把上一场最丑的地方拆成下一次能用的训练。',
+      outcome: '你记住了一个问题：气势不能替你防反击。'
+    },
     npc: 'coach',
     kind: 'dialog',
     base: 46,
@@ -56,6 +85,18 @@ export const EVENT_RULES = deepFreeze([
     title: '公园有人约一局不嘴硬的',
     loc: 'park',
     desc: '低风险验货，适合测试新装备和基础技能；疲劳太高就别硬接，身体不是一次性道具。',
+    eventNotebook: {
+      reason: '低风险验货机会',
+      entry: '公园地砖有点潮，晨练的人把音箱声压得很低。对面的人戴着旧拳套，说话不重，站距却很实在。',
+      beats: [
+        '你先摸距离，不抢重拳；用刺拳试对方反应，再把抱架收紧。',
+        '这不是英雄时刻，是看看自己的动作会不会在轻压下散掉。',
+        '基础不吵，但它会在每一次回收和换步里算账。'
+      ],
+      actionLabel: '接下轻切磋',
+      actionText: '状态够就进场验货；疲劳高就别把小问题打成新伤。',
+      outcome: '你用一场不嘴硬的轻切磋，给基础动作交了一次现场作业。'
+    },
     enemy: 'E01',
     kind: 'battle',
     base: 42,
@@ -67,6 +108,18 @@ export const EVENT_RULES = deepFreeze([
     title: '网购页面开始对你眨眼',
     loc: 'home',
     desc: '训练工具在打折，但刷太久会长疲劳，也容易被直播间迷货带偏。便宜不等于有用，主播的嗓门也不等于科学。',
+    eventNotebook: {
+      reason: '装备诱惑',
+      entry: '出租屋里只亮着手机屏。购物页面把训练器械排得像门派秘宝，价格后面的倒计时比教练还会催人。',
+      beats: [
+        '你没有立刻付款，先翻差评、看尺寸、对照自己现在真正缺的东西。',
+        '便宜是一种诱惑，不是训练计划。',
+        '购物车删到只剩能用的以后，房间忽然安静得像在等你明天真的练。'
+      ],
+      actionLabel: '去看补给',
+      actionText: '把价格、用途和今天的训练计划对一遍，不把冲动消费当进步。',
+      outcome: '你把“想买”压成“需要”，至少这次没有让直播间替你排训练课。'
+    },
     shop: true,
     kind: 'shop',
     base: 36,
@@ -78,6 +131,18 @@ export const EVENT_RULES = deepFreeze([
     title: '刘胖子捡到一条旧城闲话',
     loc: 'store',
     desc: '聊天能获得旧城线索，也可能让热度继续往上拱。消息像便宜饮料，解渴，也可能上头。',
+    eventNotebook: {
+      reason: '旧城线索冒头',
+      entry: '便利店冰柜嗡嗡响，刘胖子把一瓶饮料推到你面前，表情像是刚从城市缝里捡到一张纸条。',
+      beats: [
+        '你没有把消息当挑战书，先问来源、问时间、问谁在场。',
+        '旧城闲话可以指路，也可以把人带进没灯的巷子。',
+        '线索留下了，热度也跟着有了气味。'
+      ],
+      actionLabel: '听他说完',
+      actionText: '别急着接成挑战，先把来源、地点和风险问清楚。',
+      outcome: '你开始明白，消息不是免费的，它只是先不收钱。'
+    },
     npc: 'fatty',
     kind: 'dialog',
     base: 34,
@@ -89,6 +154,18 @@ export const EVENT_RULES = deepFreeze([
     title: '小满被麻烦客人缠上',
     loc: 'store',
     desc: '可以降温、保护或找监控，不一定要打。热度越高越容易被卷进来，别把便利店门口打成决赛现场。',
+    eventNotebook: {
+      reason: '便利店风波',
+      entry: '收银台前的声音开始发硬。小满没有退后，只是把扫码器放慢了一拍，你能看见她指节在柜台边压白。',
+      beats: [
+        '你先站到能看见出口的位置，没有急着插话。',
+        '你观察对方手里有没有东西、身后有没有同伴、门口有没有退路。',
+        '便利店不是擂台，货架后面也没有裁判。'
+      ],
+      actionLabel: '先稳住现场',
+      actionText: '降温、保护、找监控都需要冷静；别把门口打成没人想收拾的现场。',
+      outcome: '你越能把事情压小，小满越能看见你不是只会把问题打响。'
+    },
     npc: 'xiaoman',
     kind: 'dialog',
     base: 34,
@@ -100,6 +177,18 @@ export const EVENT_RULES = deepFreeze([
     title: '武馆今天允许旁观真东西',
     loc: 'wuguan',
     desc: '看传统动作压力测试，把好看的东西拆成能重复的细节。招式可以有来历，落地必须有证据。',
+    eventNotebook: {
+      reason: '传统拆解窗口',
+      entry: '武馆地板擦得发亮，脚步声落上去很清楚。周青山没有讲招名，只让你看一个动作在被推、被撞、被打断时还剩多少。',
+      beats: [
+        '你站在旁边记重心、肩胯和回收，忍住了问“这招叫什么”。',
+        '名字可以晚点知道，能不能复现要先看见。',
+        '传统动作不再像一张老照片，而像一件需要重新校准的工具。'
+      ],
+      actionLabel: '旁观拆招',
+      actionText: '先看动作在压力下还剩什么，再决定它能不能写回拳谱。',
+      outcome: '好看不是罪，不能用才是问题。'
+    },
     npc: 'master',
     kind: 'dialog',
     base: 35,
@@ -111,6 +200,18 @@ export const EVENT_RULES = deepFreeze([
     title: 'MMA垫子空出一块地板',
     loc: 'mma',
     desc: '晚间开放垫子，适合练防摔、抱摔和地面脱身。地板很公平，它对每个人都一样硬。',
+    eventNotebook: {
+      reason: '地面短板暴露',
+      entry: 'MMA馆的垫子边缘翘了一点，汗水和消毒水混在一起。有人摔上去，声音不大，但你膝盖先替他紧了一下。',
+      beats: [
+        '你从防摔和脱身开始，不急着证明自己能摔人。',
+        '下巴收住，髋往后，手先找框架。',
+        '地面课把面子压得很扁，被压住时，慌张会帮对方加体重。'
+      ],
+      actionLabel: '上垫处理',
+      actionText: '先补防摔和脱身；疲劳或伤病高时，地板会比教练更不留情。',
+      outcome: '你学到一件实际的事：倒地不是剧情结束，慌张才是。'
+    },
     enemy: 'E06',
     kind: 'battle',
     base: 35,
@@ -118,10 +219,91 @@ export const EVENT_RULES = deepFreeze([
     weights: { fame: 0.9, fights: 1.2, lowFatigue: 0.9, injuries: -2.5 }
   },
   {
+    id: 'sanda_first_slice',
+    title: '散打馆今天开放体验轮',
+    loc: 'sanda_gym',
+    desc: '罗教练安排拳腿摔三段体验。这里不问你会不会喊招名，只看鞭腿之后还能不能接住下一步。疲劳太高时别硬上，擂台边不收英雄税。',
+    eventNotebook: {
+      reason: '拳腿摔衔接机会',
+      entry: '散打馆的靶声一下一下砸在空气里。罗教练只看了你两眼，就把你放到拳、腿、摔的衔接线上。',
+      beats: [
+        '你先用刺拳逼反应，再接鞭腿，最后练对方前压时的接腿和换位。',
+        '每一下都要给下一下留路。',
+        '散打不散，乱的是人的脑子。'
+      ],
+      actionLabel: '进体验轮',
+      actionText: '把拳、腿、摔连成一句话；体力不足就别硬交英雄税。',
+      outcome: '你开始把“出招”理解成一段完整动作，而不是一堆漂亮词。'
+    },
+    enemy: 'E19',
+    kind: 'battle',
+    base: 34,
+    tags: ['散打', '拳腿摔衔接'],
+    weights: { auth: 0.9, fame: 0.7, fights: 1.0, lowFatigue: 0.8, injuries: -2.2 }
+  },
+  {
+    id: 'karate_dojo_line',
+    title: '空手道道场在做组手线',
+    loc: 'karate_dojo',
+    desc: '严前辈把新人的距离线画得很清楚：前蹴管门，逆突管账。适合练中线和收招，也适合发现自己哪里太急。',
+    eventNotebook: {
+      reason: '中线和收招校准',
+      entry: '道场里没有太多声音，只有脚掌擦过地板的轻响。严前辈把线画得很直，直到你不好意思绕开。',
+      beats: [
+        '你按要求从站距、前蹴和逆突开始，打完必须收回来。',
+        '急了就停，歪了就重来。',
+        '规矩不是把人变慢，而是让你在压力里少犯一些便宜错误。'
+      ],
+      actionLabel: '站上线',
+      actionText: '在规矩里找时机，别把急躁包装成积极。',
+      outcome: '你开始明白，“收住”也是能力。'
+    },
+    enemy: 'E20',
+    kind: 'battle',
+    base: 32,
+    tags: ['空手道', '中线控制'],
+    weights: { auth: 1.0, lowAuth: 0.4, fame: 0.5, lowFatigue: 0.9, injuries: -2.0 }
+  },
+  {
+    id: 'taekwondo_distance_check',
+    title: '跆拳道社约了一场距离课',
+    loc: 'taekwondo_club',
+    desc: '闵教练让你看清腿法的距离和回收。横踢能抢节奏，后踢能罚追击；问题是每次转身都得交判断作业。',
+    eventNotebook: {
+      reason: '腿法距离作业',
+      entry: '跆拳道社的护具挂成一排，脚靶被踢出闷响。闵教练让你先站远一点，再告诉你这不是安全，是距离作业。',
+      beats: [
+        '你练横踢进出、后踢抓追击，每次转身都要先确认对方在哪。',
+        '腿出去之后，回来才算动作结束。',
+        '漂亮的腿法一旦失距，就会把后背送得很认真。'
+      ],
+      actionLabel: '测腿法距离',
+      actionText: '先确认距离和回收，再谈好不好看。',
+      outcome: '高不高只是观众关心，回不回得来才是你关心。'
+    },
+    enemy: 'E21',
+    kind: 'battle',
+    base: 32,
+    tags: ['跆拳道', '腿法距离'],
+    weights: { fame: 0.7, fights: 0.9, lowFatigue: 0.8, fatigue: -0.2, injuries: -2.0 }
+  },
+  {
     id: 'oldtown_video_clue',
     title: '旧城区刷出一条可疑视频',
     loc: 'street',
     desc: '可能找到流量大师学徒的破绽。热度越高，线索越多，风险也越近，像一群不请自来的观众。',
+    eventNotebook: {
+      reason: '旧城视频线索',
+      entry: '旧城区的路灯有一盏坏了，短视频里的背景却刚好拍到这条街。画面糊，声音乱，但破绽不一定藏得很深。',
+      beats: [
+        '你把视频反复停在出手前一帧，看脚下、看同伴位置、看拍摄的人为什么没退。',
+        '你找的不是热闹，是现场结构。',
+        '线索变清楚了，风险也靠近了。'
+      ],
+      actionLabel: '追这条线索',
+      actionText: '先看出口、围观和对方站位，再决定要不要走进视频背后的现场。',
+      outcome: '你知道自己不是在解谜，而是在走进别人已经点过名的地方。'
+    },
     enemy: 'E03',
     kind: 'battle',
     base: 32,
@@ -133,6 +315,18 @@ export const EVENT_RULES = deepFreeze([
     title: '热度把挑战者钓上来了',
     loc: 'park',
     desc: '网上有人约轻切，名声机会变多，但别让疲劳拖垮身体。观众爱看加赛，膝盖不爱。',
+    eventNotebook: {
+      reason: '热度引来挑战',
+      entry: '公园栏杆边多了几个看手机的人。有人叫你名字，语气不凶，却像把你推到一块临时画出来的圈里。',
+      beats: [
+        '你没有立刻接招，先看对手体型、护具、周围距离。',
+        '也看自己今天的腿还听不听话。',
+        '热度带来的机会不干净，但也不是全没价值。'
+      ],
+      actionLabel: '判断要不要接',
+      actionText: '接挑战能涨经验和名声，状态不好时硬接，观众不会替你恢复。',
+      outcome: '你开始分辨：哪些挑战是在练胆，哪些只是在消耗你。'
+    },
     enemy: 'E04',
     kind: 'battle',
     base: 44,
@@ -145,6 +339,18 @@ export const EVENT_RULES = deepFreeze([
     title: '旧城有人公开点你的名',
     loc: 'street',
     desc: '热度太高，旧城那边开始拿你当话题。风险高，收益也高，像一张没有小字条款的危险合同。',
+    eventNotebook: {
+      reason: '旧城高热度回流',
+      entry: '旧城街口有人直接喊你的名字，旁边手机屏幕已经亮起来。路不宽，退路却有好几条，只是每条都不太体面。',
+      beats: [
+        '你把手放低，没有摆架子吓人。',
+        '先确认出口、同伴、可能的武器，再决定今天是说话、撤离还是接下压力。',
+        '被点名不等于必须上桌。'
+      ],
+      actionLabel: '处理点名',
+      actionText: '硬接可能换来名声，也可能换来伤；退一步会丢面子，但能保住选择权。',
+      outcome: '你越晚被情绪牵走，越像真的学过东西。'
+    },
     enemy: 'E09',
     kind: 'battle',
     base: 50,
@@ -157,6 +363,18 @@ export const EVENT_RULES = deepFreeze([
     title: '上一战录像开始公开处刑',
     loc: 'home',
     desc: '针对上一位对手的问题做一次短复盘。镜头不会安慰你，但会告诉你下一场该读哪里。',
+    eventNotebook: {
+      reason: '战斗记忆触发复盘',
+      entry: '出租屋桌上摆着半瓶水，手机里循环播放上一战。每次你想快进，画面都刚好停在最该看的地方。',
+      beats: [
+        '你按下暂停，把被打中的前因写出来：站距、回收、视线、体力。',
+        '不是为了骂自己，是为了别让同一拳再来一次。',
+        '复盘没有让失败变好看，但让它变得有用。'
+      ],
+      actionLabel: '做短复盘',
+      actionText: '把上一战最难看的地方停住，拆成下一场该看的提示。',
+      outcome: '你开始接受一件事：挨打也能成为教材，前提是别把它剪掉。'
+    },
     npc: 'coach',
     kind: 'dialog',
     base: 58,
@@ -169,6 +387,18 @@ export const EVENT_RULES = deepFreeze([
     title: '你没硬拼这事传开了',
     loc: 'store',
     desc: '你没有把冲突打成硬拼，小满和刘胖子会给出新的线索。有时候最像高手的操作，是让事情没升级。',
+    eventNotebook: {
+      reason: '风险处理后的回声',
+      entry: '便利店门口今天安静得有点刻意。小满把零钱盒推回去，刘胖子在货架边假装整理薯片，耳朵却朝你这边。',
+      beats: [
+        '你没有把上次的事讲成战绩，只把当时怎么站位、怎么让人撤出去说了一遍。',
+        '事情没升级，本身就是结果。',
+        '小满看你的眼神松了一点，刘胖子也少开了半句玩笑。'
+      ],
+      actionLabel: '听后续线索',
+      actionText: '别把降温吹成战绩，先听他们怎么说这件事的后账。',
+      outcome: '你发现“不打起来”这件事，原来也会被人记住。'
+    },
     npc: 'xiaoman',
     kind: 'dialog',
     base: 56,
@@ -181,6 +411,18 @@ export const EVENT_RULES = deepFreeze([
     title: '身体向你递交投诉书',
     loc: 'physio',
     desc: '疲劳和伤病已经影响训练质量。今天不处理，明天身体会用更贵的方式提醒你。',
+    eventNotebook: {
+      reason: '疲劳或伤病预警',
+      entry: '理疗店的灯白得很诚实。师傅按到你肩后那一块时，你差点把“还行”咬碎在牙缝里。',
+      beats: [
+        '你把今天训练计划放低，听师傅讲哪里紧、哪里代偿。',
+        '哪里再硬练会把小伤拖成麻烦。',
+        '身体不是剧情道具，它会记账，也会催款。'
+      ],
+      actionLabel: '处理身体警告',
+      actionText: '花一点钱和时间，换明天还能继续动的资格。',
+      outcome: '恢复会耽误训练节奏，不恢复会让后面的选择一起变窄。'
+    },
     kind: 'recovery',
     base: 18,
     tags: ['恢复', '伤病预警'],
@@ -191,6 +433,18 @@ export const EVENT_RULES = deepFreeze([
     title: '工地日结正在招能喘气的人',
     loc: 'store',
     desc: '刘胖子转来一条日结活：不体面，但现金和体能沉淀都是真的。砖不会问梦想，只问你搬不搬。',
+    eventNotebook: {
+      reason: '现金和体能压力',
+      entry: '刘胖子转来的地址在工地边。太阳还没完全落下，砖堆已经把“梦想”两个字晒得很现实。',
+      beats: [
+        '你戴上手套，从最笨的搬运开始。',
+        '动作不光彩，但重心、呼吸和腰背都会在重复里给你反馈。',
+        '现金进账不浪漫，手臂发胀也不浪漫。'
+      ],
+      actionLabel: '接这趟日结',
+      actionText: '用时间和疲劳换现金，也顺手让身体记住现实重量。',
+      outcome: '你知道这一天没有白过，身体和钱包都被现实敲了一下。'
+    },
     action: 'worksite_day_labor',
     kind: 'work',
     base: 30,
@@ -217,12 +471,14 @@ function factorsFor(state = {}) {
   const wins = clamp(memory.wins, 0, 99);
   const losses = clamp(memory.losses, 0, 99);
   const riskWins = clamp(memory.riskWins, 0, 99);
+  const maw = state.maw || player.maw || {};
   const recentCount = Array.isArray(memory.recent) ? memory.recent.length : 0;
   const remembered = fights + riskWins * 2 + (memory.lastEnemy ? 2 : 0) + recentCount * 0.5;
 
   return {
     player,
     memory,
+    maw,
     heat: heat / 10,
     fame: fame / 40,
     lowFame: clamp((160 - fame) / 40, 0, 4),
@@ -235,7 +491,10 @@ function factorsFor(state = {}) {
     wins,
     losses,
     riskWins,
-    combatMemory: clamp(remembered, 0, 20)
+    combatMemory: clamp(remembered, 0, 20),
+    mawMisread: clamp(maw.misread, 0, 100) / 10,
+    fatherMemory: clamp(maw.fatherMemory, 0, 100) / 10,
+    mawReforge: clamp(maw.reforge, 0, 100) / 10
   };
 }
 
@@ -243,10 +502,16 @@ function passesRule(rule, factors) {
   const when = rule.when || {};
   const player = factors.player || {};
   const memory = factors.memory || {};
+  const maw = factors.maw || {};
   const heat = number(player.heat);
   const fame = number(player.fame);
   const fatigue = number(player.fatigue);
 
+  if (when.mawChapter && maw.chapter !== when.mawChapter) return false;
+  if (when.minMawMisread != null && number(maw.misread) < when.minMawMisread) return false;
+  if (when.maxMawMisread != null && number(maw.misread) > when.maxMawMisread) return false;
+  if (when.minFatherMemory != null && number(maw.fatherMemory) < when.minFatherMemory) return false;
+  if (when.minMawReforge != null && number(maw.reforge) < when.minMawReforge) return false;
   if (when.minHeat != null && heat < when.minHeat) return false;
   if (when.maxHeat != null && heat > when.maxHeat) return false;
   if (when.minFame != null && fame < when.minFame) return false;
@@ -288,17 +553,97 @@ function scoreRule(rule, factors, state) {
     breakdown.currentLoc = 3;
     score += 3;
   }
+  Object.entries(contextualBreakdown(rule, factors)).forEach(([key, value]) => {
+    if (!value) return;
+    breakdown[key] = Number(value.toFixed(2));
+    score += value;
+  });
   score += stableJitter(rule, state, factors);
   return { score: Number(score.toFixed(2)), breakdown };
+}
+
+function eventRiskRaw(rule = {}) {
+  return rule.risk ?? ENEMIES[rule.enemy]?.risk ?? (rule.enemy ? '中' : '低');
+}
+
+function riskNumber(value, fallback = 1) {
+  if (typeof value === 'string' && RISK_LABEL_TO_LEVEL[value]) return RISK_LABEL_TO_LEVEL[value];
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function eventRiskLevel(rule = {}) {
+  return clamp(riskNumber(eventRiskRaw(rule), rule.enemy ? 2 : 1), 1, 5);
+}
+
+function eventRiskLabel(rule = {}) {
+  const raw = eventRiskRaw(rule);
+  if (typeof raw === 'string') return raw;
+  const level = riskNumber(raw, 1);
+  if (level >= 4) return '高';
+  if (level >= 2) return '中';
+  return '低';
+}
+
+function contextualBreakdown(rule, factors) {
+  const player = factors.player || {};
+  const fatigue = clamp(player.fatigue, 0, 100);
+  const heat = clamp(player.heat, 0, 100);
+  const injuries = clamp(factors.injuries, 0, 10);
+  const risk = eventRiskLevel(rule);
+  const isBattle = Boolean(rule.enemy);
+  const out = {};
+
+  if (rule.kind === 'recovery' && (fatigue >= 45 || injuries > 0)) {
+    out.recoveryNeed = clamp((fatigue - 35) / 8 + injuries * 3, 0, 24);
+  }
+
+  if (isBattle && risk >= 3) {
+    const bodyPressure = clamp((fatigue - 55) / 10, 0, 8) + injuries * 1.35;
+    if (bodyPressure > 0) out.hardFightStress = -bodyPressure * (risk - 1) * 0.9;
+  }
+
+  if (isBattle && heat >= 18 && risk >= 2) {
+    out.highHeatChallenge = clamp((heat - 14) / 10, 0, 7) * Math.min(risk, 4) * 0.45;
+  }
+
+  return out;
+}
+
+function readableReason(key, value) {
+  const positive = value >= 0;
+  const map = {
+    heat: positive ? '热度把事情推上来' : '热度被压住',
+    fame: positive ? '名声带来机会' : '名声不足',
+    lowFame: '名声还低',
+    auth: positive ? '真实训练在起效' : '真实性不足',
+    lowAuth: '动作真实性不足',
+    fatigue: positive ? '疲劳偏高' : '疲劳压低强度',
+    lowFatigue: positive ? '身体余量够' : '身体余量不足',
+    injuries: positive ? '伤病牵动风险' : '伤病压低硬战',
+    fights: '实战次数在累积',
+    wins: '胜场带来机会',
+    losses: '失败复盘在提醒',
+    riskWins: '上次降温有回声',
+    combatMemory: '上一战还在发酵',
+    mawMisread: '误判还没消化',
+    fatherMemory: '父亲记忆在提醒',
+    mawReforge: '茂拳重铸推进',
+    recoveryNeed: '身体需要恢复',
+    hardFightStress: '身体状态不适合硬战',
+    highHeatChallenge: '热度引来挑战'
+  };
+  return map[key] || `${FACTOR_LABELS[key] || key}${positive ? '上升' : '下降'}`;
 }
 
 function reasonFromBreakdown(breakdown) {
   const entries = Object.entries(breakdown)
     .filter(([key]) => key !== 'currentLoc')
+    .filter(([key, value]) => value > 0 || key === 'hardFightStress')
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
-    .slice(0, 3)
-    .map(([key, value]) => `${FACTOR_LABELS[key] || key}${value > 0 ? '+' : ''}${value}`);
-  if (breakdown.currentLoc) entries.unshift('当前位置+3');
+    .slice(0, 2)
+    .map(([key, value]) => readableReason(key, value));
+  if (!entries.length && breakdown.currentLoc) entries.push('就在当前地点');
   return entries.join(' / ');
 }
 
@@ -307,6 +652,8 @@ function publicCard(rule, score, breakdown) {
   return {
     ...card,
     score,
+    riskLevel: eventRiskLevel(rule),
+    riskLabel: eventRiskLabel(rule),
     weightBreakdown: breakdown,
     reason: reasonFromBreakdown(breakdown)
   };

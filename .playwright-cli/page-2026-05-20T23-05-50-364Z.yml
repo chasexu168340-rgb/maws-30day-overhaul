@@ -1,0 +1,158 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - banner [ref=e1176]:
+      - generic [ref=e1177]:
+        - strong [ref=e1178]: 第1天 周一 08:25
+        - generic [ref=e1179]: 幻想期 · 上午 · 公园
+      - generic [ref=e1180]:
+        - generic [ref=e1181]: 现金420
+        - generic [ref=e1182]: 体力91/121
+        - generic [ref=e1183]: 健康106/146
+        - generic [ref=e1184]: 风险0
+    - navigation [ref=e1185]:
+      - generic [ref=e1186]:
+        - button "地图" [ref=e1187] [cursor=pointer]: 地图
+        - button "人物" [ref=e1189] [cursor=pointer]: 人物
+        - button "技能" [ref=e1191] [cursor=pointer]: 技能
+        - button "物品" [ref=e1193] [cursor=pointer]: 物品
+        - button "商城" [ref=e1195] [cursor=pointer]: 商城
+        - button "关系" [ref=e1197] [cursor=pointer]: 关系
+        - button "日志" [ref=e1199] [cursor=pointer]: 日志
+        - button "自检" [ref=e1201] [cursor=pointer]: 自检
+      - complementary [ref=e1203]:
+        - button "睡觉" [ref=e1204] [cursor=pointer]
+        - button "保存" [ref=e1205] [cursor=pointer]
+    - main [ref=e1206]:
+      - generic [ref=e1208]:
+        - complementary [ref=e1209]:
+          - generic [ref=e1210]:
+            - generic [ref=e1211]: 今日看板
+            - button "城市地图" [ref=e1212] [cursor=pointer]
+          - generic [ref=e1213]:
+            - article [ref=e1214]:
+              - generic [ref=e1215]: 第1天 周一 08:25日间
+              - strong [ref=e1216]: 公园
+              - generic [ref=e1217]:
+                - generic [ref=e1218]: 06:00-21:00
+                - generic [ref=e1219]: 身体可用
+            - article [ref=e1220]:
+              - generic [ref=e1221]: 今日主线已收口
+              - paragraph [ref=e1222]: 没有新的主线节点。把训练、恢复和装备补上，别空耗一天。
+        - generic [ref=e1223]:
+          - generic [ref=e1225]:
+            - generic [ref=e1226]: 日间 · 06:00-21:00
+            - heading "公园" [level=2] [ref=e1227]
+            - paragraph [ref=e1228]: 低风险验货、围观和街头观察。大爷们嘴上养生，手上不一定。
+          - generic [ref=e1229]:
+            - figure "陆小闲 今天的主角" [ref=e1230]:
+              - generic [ref=e1231]:
+                - generic [ref=e1232]: 陆小闲
+                - generic [ref=e1233]: 今天的主角
+            - figure "拳击新人 低风险验货" [ref=e1234]:
+              - generic [ref=e1235]:
+                - generic [ref=e1236]: 拳击新人
+                - generic [ref=e1237]: 低风险验货
+        - complementary [ref=e1238]:
+          - generic [ref=e1239]:
+            - generic [ref=e1240]: 推荐行动
+            - generic [ref=e1241]: 3条
+          - generic [ref=e1242]:
+            - article [ref=e1243]:
+              - generic [ref=e1244]: 上一战录像开始公开处刑出租屋
+              - generic [ref=e1245]:
+                - generic [ref=e1246]: 地点 出租屋
+                - generic [ref=e1247]: 风险 社交低风险
+              - generic [ref=e1248]: 触发：上一战还在发酵 / 真实训练在起效
+              - button "前往出租屋" [ref=e1249] [cursor=pointer]
+            - article [ref=e1250]:
+              - generic [ref=e1251]: 梁教练暂停你的玄学发挥拳馆
+              - generic [ref=e1252]:
+                - generic [ref=e1253]: 地点 拳馆
+                - generic [ref=e1254]: 风险 社交低风险
+              - generic [ref=e1255]: 触发：上一战还在发酵 / 动作真实性不足
+              - button "前往拳馆" [ref=e1256] [cursor=pointer]
+            - article [ref=e1257]:
+              - generic [ref=e1258]: 公园有人约一局不嘴硬的公园
+              - generic [ref=e1259]:
+                - generic [ref=e1260]: 地点 公园
+                - generic [ref=e1261]: 风险 战斗 低
+              - generic [ref=e1262]: 触发：身体余量够 / 名声带来机会
+              - button "开打" [ref=e1263] [cursor=pointer]
+          - generic [ref=e1264]:
+            - generic [ref=e1265]: 当前地点行动
+            - generic [ref=e1266]: 4项
+          - generic [ref=e1267]:
+            - article [ref=e1268]:
+              - generic [ref=e1269]:
+                - strong [ref=e1270]: 验 开放验货局
+                - paragraph [ref=e1271]: 和拳击新人低风险切磋。适合确认动作能不能离开教程区。
+              - generic [ref=e1272]:
+                - generic [ref=e1273]: 耗时 60分钟
+                - generic [ref=e1274]: 体力 -6
+                - generic [ref=e1275]: 现金 0
+              - generic [ref=e1276]:
+                - generic [ref=e1277]: 对手：半年拳击新人
+                - generic [ref=e1278]: 胜利奖励：￥60 / 名声+20
+              - generic [ref=e1279]: 风险 战斗 1
+              - button "开打" [ref=e1280] [cursor=pointer]
+            - article [ref=e1281]:
+              - generic [ref=e1282]:
+                - strong [ref=e1283]: 看 围观不插手
+                - paragraph [ref=e1284]: 观察别人出招，提升判断。站远点也能学，前提是别站成裁判。
+              - generic [ref=e1285]:
+                - generic [ref=e1286]: 耗时 40分钟
+                - generic [ref=e1287]: 体力 0
+                - generic [ref=e1288]: 现金 0
+              - generic [ref=e1289]:
+                - generic [ref=e1290]: 判断 +1
+                - generic [ref=e1291]: 冷静 +3
+                - generic [ref=e1292]: 真实性 +1
+              - generic [ref=e1293]: 风险 低
+              - button "行动" [ref=e1294] [cursor=pointer]
+            - article [ref=e1295]:
+              - generic [ref=e1296]:
+                - strong [ref=e1297]: 贴 帮拳馆贴海报
+                - paragraph [ref=e1298]: 提升拳馆关系和名声。胶水味不浪漫，但名声会一点点粘上来。
+              - generic [ref=e1299]:
+                - generic [ref=e1300]: 耗时 55分钟
+                - generic [ref=e1301]: 体力 -8
+                - generic [ref=e1302]: 现金 0
+              - generic [ref=e1303]:
+                - generic [ref=e1304]: 名声 +14
+                - generic [ref=e1305]: 梁教练关系 +1
+                - generic [ref=e1306]: 现金 +20
+              - generic [ref=e1307]: 风险 低
+              - button "行动" [ref=e1308] [cursor=pointer]
+            - article [ref=e1309]:
+              - generic [ref=e1310]:
+                - strong [ref=e1311]: 推 推手大爷交流
+                - paragraph [ref=e1312]: 低风险近身控制训练。大爷笑得慈祥，重心拆得很不慈祥。
+              - generic [ref=e1313]:
+                - generic [ref=e1314]: 耗时 55分钟
+                - generic [ref=e1315]: 体力 -6
+                - generic [ref=e1316]: 现金 0
+              - generic [ref=e1317]:
+                - generic [ref=e1318]: 对手：公园推手大爷
+                - generic [ref=e1319]: 胜利奖励：￥45 / 名声+24
+              - generic [ref=e1320]: 风险 战斗 1
+              - button "开打" [ref=e1321] [cursor=pointer]
+    - generic [ref=e1323]:
+      - heading "胜利" [level=2] [ref=e1324]
+      - generic [ref=e1325]:
+        - paragraph [ref=e1326]: 对手：半年拳击新人
+        - paragraph [ref=e1327]: 收益：现金 +60 / 名声 +20
+        - paragraph [ref=e1328]: 日常体力已恢复到 91/121。
+      - list [ref=e1329]:
+        - listitem [ref=e1330]:
+          - generic [ref=e1331]: 现金
+          - generic [ref=e1332]: 现金 +60
+        - listitem [ref=e1333]:
+          - generic [ref=e1334]: 士气
+          - generic [ref=e1335]: 士气 +6
+        - listitem [ref=e1336]:
+          - generic [ref=e1337]: 名声
+          - generic [ref=e1338]: 名声 +20
+      - generic [ref=e1339]:
+        - button "技术复盘" [ref=e1340] [cursor=pointer]
+        - button "冷静复盘" [ref=e1341] [cursor=pointer]
+        - button "情报复盘" [ref=e1342] [cursor=pointer]
