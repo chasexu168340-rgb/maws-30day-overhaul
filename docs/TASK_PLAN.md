@@ -34,7 +34,7 @@ Wave 3A：补真实浏览器 Playwright smoke，并推送 QA 分支给 GitHub/Ch
 - [x] 改造 smoke spec。
 - [x] 运行 build 和 smoke。
 - [x] 执行最终 diff/status 检查。
-- [ ] 提交并推送到 GitHub。
+- [x] 提交并推送到 GitHub。
 
 ## Validation
 
@@ -43,11 +43,11 @@ Wave 3A：补真实浏览器 Playwright smoke，并推送 QA 分支给 GitHub/Ch
 - [x] `npm run test:smoke`
 - [x] `git diff --check`
 - [x] `git status --short`
-- [ ] `git push -u origin feat/qa-playwright-smoke`
+- [x] `git push -u origin feat/qa-playwright-smoke`
 
 ## Result
 
-`npm run test:smoke` 已能启动真实 Chromium，并通过 4 个用例：地点锁与地铁站流程 1 个，390x844、900x700、1365x768 响应式 smoke 各 1 个。测试覆盖地图锁点、地铁站 travel/action、技能页和战斗页横向溢出。
+`npm run test:smoke` 已能启动真实 Chromium，并通过 4 个用例：地点锁与地铁站流程 1 个，390x844、900x700、1365x768 响应式 smoke 各 1 个。测试覆盖地图锁点、地铁站 travel/action、技能页和战斗页横向溢出。QA 提交为 `f5e58c0`，已推送到 `origin/feat/qa-playwright-smoke`。
 
 ## Risks
 
