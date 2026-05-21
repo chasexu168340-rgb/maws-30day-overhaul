@@ -1,32 +1,32 @@
 # AGENT_D_NARRATIVE_CONTENT
 
-## Status
+## Result
 
-Day 1-Day 3 content implemented in runtime data.
+接入 Day 4、Day 6、Day 7 主线事件到 `MAIN_EVENTS`，覆盖：
 
-## Output
+- Day 4: `工棚里的第一拳`
+- Day 6: `旧城区夜行`
+- Day 7: `镜子里的人`
 
-- Updated `maws_src/content/data.js` MAIN_EVENTS for Day 1, Day 2, and Day 3.
-- Day 1 now centers on incense in the rental room, father memory, Ma family boxing belief, and Lu Xiaoxian's first misread.
-- Day 2 is a metro intervention choice event focused on control, staff, distance, and closing the scene without a hard fight.
-- Day 3 is a convenience-store shelf misread choice event tied to Xiaoman relationship, heat, and light MAW misread.
-- Added `docs/workers/content_day1_day3.md` as the scoped worker handoff.
+## Files Changed
 
-## Boundaries
+- `maws_src/content/data.js`
+- `docs/workers/content_day4_7.md`
+- `docs/agent_reports/AGENT_D_NARRATIVE_CONTENT.md`
 
-- Did not implement Day 5, Day 8, Day 9, or the full 30-day arc.
-- Did not add a new event engine.
-- Did not add combat or enemy hooks to Day 2/Day 3.
-- Did not modify state, UI, CSS, combat, assets, manifest, task handoff, sprint board, or task plan.
-- Day 1 does not grant new skills.
+## Notes
+
+- 只使用现有 `MAIN_EVENTS` 数据字段。
+- 没有新增事件引擎。
+- 没有接 Day 8/9。
+- 奖励控制为轻量，偏 `misread`、`fatherMemory`、`calm`、`jud`，没有大幅送属性。
 
 ## Validation
 
-- `npm run build`: passed in manager validation.
-- `npm run test:smoke`: passed after linking the worktree to the main repository `node_modules` for local validation; 4 Chromium smoke tests passed.
-- `git diff --check`: passed; Git only printed CRLF working-copy warnings during earlier checks.
-- Route flag check: `route_sanda`, `route_karate`, and `route_tkd` have no remaining hard references in data/state/dom, so replacing the Day 1 route choices does not leave broken references.
+- `npm run build`: passed.
+- `npm run test:smoke`: blocked because `playwright` is not available in this workspace command environment.
+- `git diff --check`: passed after fixing a trailing blank line in this report.
 
-## Next
+## Risk
 
-Merge after `feat/metro-runtime-background` so the Day 2 metro event has runtime background support.
+- `docs/TASK_PLAN.md` 未更新，因为本轮用户允许修改范围只列出本报告、worker 输出和 `maws_src/content/data.js`。
