@@ -4,17 +4,18 @@
 
 ## Current Task
 
-Wave 3A：补真实浏览器 Playwright smoke，并推送 QA 分支给 GitHub/ChatGPT 审阅。
+合并 `feat/qa-playwright-smoke` 到 `staging/reforge-unlocks-v1`，把真实浏览器 smoke 纳入主重铸分支。
 
 ## Scope
 
-- 从 `staging/reforge-unlocks-v1` 新建 `feat/qa-playwright-smoke`。
-- 尝试运行 `AGENT_F_TECH_QA_TOOLS`。
-- 补 `@playwright/test` 和 Chromium 浏览器缓存。
-- 新增 `npm run test:smoke`。
-- 覆盖 390x844、900x700、1365x768 三档真实浏览器 smoke。
-- 验证地点锁 UI、地铁站 Day 1 可见可进入可行动、技能页和战斗页无横向溢出。
-- 不改玩法数据、技能解锁、战斗公式、经济曲线、存档 key/version 或资产结构。
+- 从远端同步 `staging/reforge-unlocks-v1`。
+- `--no-ff` 合并 `origin/feat/qa-playwright-smoke`。
+- 验证 `npm run build`。
+- 验证 `npm run test:smoke`。
+- 验证 `git diff --check`。
+- 更新当前 checkpoint。
+- 不启动 `AGENT_B_GAMEPLAY_SYSTEMS`。
+- 不改 data.js / state.js / ui.js / combat.js。
 
 ## Relevant Files
 
@@ -27,34 +28,31 @@ Wave 3A：补真实浏览器 Playwright smoke，并推送 QA 分支给 GitHub/Ch
 
 ## Plan
 
-- [x] 同步 staging 并创建 QA 分支。
-- [x] 尝试运行 `codex exec < docs\codex_tasks\AGENT_F_TECH_QA_TOOLS.md`。
-- [x] 在外部 Agent 因本机 CLI 认证失败后，由当前 Codex 手动完成同一任务。
-- [x] 安装 Playwright 测试依赖和 Chromium。
-- [x] 改造 smoke spec。
-- [x] 运行 build 和 smoke。
-- [x] 执行最终 diff/status 检查。
-- [x] 提交并推送到 GitHub。
+- [x] 切回 staging 并 fast-forward 到远端最新。
+- [x] 合并 `origin/feat/qa-playwright-smoke`。
+- [x] 运行 build。
+- [x] 运行真实浏览器 smoke。
+- [x] 运行 diff check。
+- [x] 更新 checkpoint。
+- [x] 推送 staging 到 GitHub。
 
 ## Validation
 
-- [x] `npx playwright install chromium`
-- [x] `npm run build`
-- [x] `npm run test:smoke`
-- [x] `git diff --check`
-- [x] `git status --short`
-- [x] `git push -u origin feat/qa-playwright-smoke`
+- [x] `npm run build`：通过。
+- [x] `npm run test:smoke`：通过，4 个 Chromium 用例。
+- [x] `git diff --check HEAD~1..HEAD`：通过。
+- [x] `git push`
 
 ## Result
 
-`npm run test:smoke` 已能启动真实 Chromium，并通过 4 个用例：地点锁与地铁站流程 1 个，390x844、900x700、1365x768 响应式 smoke 各 1 个。测试覆盖地图锁点、地铁站 travel/action、技能页和战斗页横向溢出。QA 提交为 `f5e58c0`，已推送到 `origin/feat/qa-playwright-smoke`。
+QA 分支已合并到 staging。真实浏览器 smoke 现在覆盖地点锁、地铁站 travel/action、技能页、战斗页，以及 390x844 / 900x700 / 1365x768 三档横向溢出检查。合并提交为 `615c8c1`。
 
 ## Risks
 
-- 外部 `codex exec` 没有成功，原因是本机 Codex CLI API key 无效；本分支改动由当前 Codex 手动完成。
-- Playwright 浏览器缓存安装在本机用户目录，不进入 Git。
-- 这轮只建立 QA 门槛，不处理 `SKILL_UNLOCKS`、早期战斗手感或地铁站视觉闭环。
+- Playwright 浏览器缓存仍是本机环境依赖，不进入 Git。
+- 这轮只建立 QA 门槛，没有做 `SKILL_UNLOCKS`、早期战斗手感或地铁站视觉闭环。
+- `AGENT_B_GAMEPLAY_SYSTEMS` 运行前需要明确边界：只做 `SKILL_UNLOCKS` 数据和解锁逻辑，不改 UI 布局、不改战斗公式、不写大段剧情。
 
 ## Next Step
 
-推送后让 ChatGPT 审阅 `feat/qa-playwright-smoke`。通过后再开 `AGENT_B_GAMEPLAY_SYSTEMS` 做 `SKILL_UNLOCKS` 数据驱动。
+推送 staging 后，下一轮开 `feat/skill-unlocks-data`，先让系统组实现 `SKILL_UNLOCKS` 数据驱动；UI 读取 `SKILL_UNLOCKS` 留给后续 `AGENT_E_UI_PRESENTATION`。
