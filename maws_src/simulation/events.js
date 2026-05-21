@@ -20,7 +20,9 @@ const FACTOR_LABELS = Object.freeze({
   currentLoc: '当前位置',
   recoveryNeed: '恢复需求',
   hardFightStress: '硬战压力',
-  highHeatChallenge: '热度挑战'
+  highHeatChallenge: '热度挑战',
+  earlyDay: '早期引导',
+  homeIdle: '宅家提醒'
 });
 
 const RISK_LABEL_TO_LEVEL = Object.freeze({
@@ -54,6 +56,11 @@ function playerOf(state = {}) {
 
 function combatMemoryOf(state = {}, player = {}) {
   return state.combatMemory || player.combatMemory || {};
+}
+
+function hasSkill(state = {}, skillId) {
+  if (!skillId) return false;
+  return Boolean(state.skillState?.[skillId] || state.unlocked?.[skillId]);
 }
 
 export const EVENT_RULES = deepFreeze([
@@ -127,6 +134,173 @@ export const EVENT_RULES = deepFreeze([
     weights: { lowAuth: 1.6, heat: 0.6, fatigue: 0.4, lowFame: 0.5 }
   },
   {
+    id: 'early_video_review',
+    title: '复盘录像先别快进',
+    loc: 'home',
+    desc: '低压复盘机会：不急着证明，也不急着约架。把今天看见的动作停住，先分清距离、回收和自己哪里想太快。',
+    eventNotebook: {
+      reason: '早期低压复盘',
+      entry: '出租屋里手机支在水杯旁。短视频里的拳很快，但暂停键比拳更诚实：每一帧都能看见站距、下巴和手有没有回来。',
+      beats: [
+        '你没有把复盘剪成爽点，只把动作停在出问题前一秒。',
+        '刘胖子在消息里发了个“别又看成神功”的表情。',
+        '这次没有输赢，只有一个更具体的问题：下一次手能不能收回来。'
+      ],
+      actionLabel: '做低压复盘',
+      actionText: '先看录像，不急着把今天安排成战斗。',
+      outcome: '复盘没有立刻让你变强，但让你少了一点把热闹当训练的冲动。'
+    },
+    npc: 'fatty',
+    kind: 'dialog',
+    base: 47,
+    tags: ['复盘录像', '低压推荐'],
+    when: { minDay: 1, maxDay: 7 },
+    weights: { earlyDay: 5, lowAuth: 0.8, homeIdle: 2.8, combatMemory: 0.5 }
+  },
+  {
+    id: 'early_boxing_visit',
+    title: '去拳馆看看，先不急着上台',
+    loc: 'metro_station',
+    desc: '低压路线建议：先把拳馆路线、开放时间和沙包声音记下来。今天可以只是看看，不需要把自己交给擂台。',
+    eventNotebook: {
+      reason: '拳馆路线预热',
+      entry: '地铁站广告牌旁边贴着拳馆传单，角落写着体验课时间。你看了很久，最后先把地址存进手机。',
+      beats: [
+        '你把“去看看”和“必须打一场”拆开。',
+        '真正的拳馆不靠弹幕开门，也不会因为你今天不打就消失。',
+        '先认路，先听靶声，先知道自己还没准备好哪里。'
+      ],
+      actionLabel: '把路线存好',
+      actionText: '先把拳馆当成训练方向，不把它变成证明自己的现场。',
+      outcome: '拳馆离你近了一点，但还没有变成压力。'
+    },
+    npc: 'coach',
+    kind: 'dialog',
+    base: 44,
+    tags: ['拳馆看看', '低压推荐'],
+    when: { minDay: 1, maxDay: 7 },
+    weights: { earlyDay: 4.4, lowAuth: 1.0, homeIdle: 1.6, fatigue: -0.4 }
+  },
+  {
+    id: 'early_metro_observe',
+    title: '地铁站观察一会儿',
+    loc: 'metro_station',
+    desc: '低压观察机会：看人群、出口、站务和情绪变化。不是每个冲突都需要你出手，很多时候先看清楚才是本事。',
+    eventNotebook: {
+      reason: '城市观察练习',
+      entry: '地铁站的人流像一条被闸机切开的河。有人赶路，有人争执，也有人把手机举得太快。',
+      beats: [
+        '你先找出口、站务位置和人群散开的方向。',
+        '刘胖子的语音从耳机里冒出来：别把“看见”自动翻译成“冲上去”。',
+        '你发现站稳和不添乱，有时比摆架势更难。'
+      ],
+      actionLabel: '观察现场',
+      actionText: '练判断，不练上头；先看清楚再决定要不要介入。',
+      outcome: '你没有打任何人，但对“现场”两个字更有概念了。'
+    },
+    npc: 'fatty',
+    kind: 'dialog',
+    base: 45,
+    tags: ['地铁站观察', '低压推荐'],
+    when: { minDay: 1, maxDay: 7 },
+    weights: { earlyDay: 4.6, lowFame: 0.7, homeIdle: 1.4, heat: -0.2 }
+  },
+  {
+    id: 'early_store_supply_xiaoman',
+    title: '便利店补给，小满顺手提醒',
+    loc: 'store',
+    desc: '低压补给机会：买不买都行，先检查水、饭团和今天的体力。小满提醒你别把饿、累、上头混成勇气。',
+    eventNotebook: {
+      reason: '便利店补给提醒',
+      entry: '便利店冰柜很亮，小满把临期饭团往外挪，顺手看了你一眼：你今天像是想靠热血省饭钱。',
+      beats: [
+        '你先看水和饭团，再看自己还剩多少体力。',
+        '小满没有劝你放弃，只提醒你别空着肚子去证明什么。',
+        '补给不是变强，它只是让你别把小问题拖成大问题。'
+      ],
+      actionLabel: '检查补给',
+      actionText: '把水、吃的和今天状态对一遍，不把冲动当计划。',
+      outcome: '你把今天的安排压低了一点，也现实了一点。'
+    },
+    npc: 'xiaoman',
+    kind: 'shop',
+    shop: true,
+    base: 46,
+    tags: ['便利店补给', '小满提醒', '低压推荐'],
+    when: { minDay: 1, maxDay: 7 },
+    weights: { earlyDay: 4.8, lowFatigue: 0.5, fatigue: 0.6, homeIdle: 1.8 }
+  },
+  {
+    id: 'home_idle_fatty_ping',
+    title: '刘胖子发来一句别憋屋里',
+    loc: 'home',
+    desc: '连续窝在出租屋时的轻提醒：不催你打架，只提醒你出去看一眼城市，或者至少把今天的计划说人话。',
+    eventNotebook: {
+      reason: '不出门轻提醒',
+      entry: '刘胖子的消息弹出来：你要是今天不出门，也行，但别把“修炼”修成刷手机。',
+      beats: [
+        '他没有给你约对手，也没有把你推去硬拼。',
+        '只是让你选一个很小的动作：看路线、买水、观察一会儿。',
+        '提醒很烦，但烦得有点实际。'
+      ],
+      actionLabel: '回他一句',
+      actionText: '先把今天要做的小事说清楚，不需要立刻接战斗。',
+      outcome: '你没有被惩罚，只是被从摆烂边上轻轻拽了一下。'
+    },
+    npc: 'fatty',
+    kind: 'dialog',
+    base: 52,
+    tags: ['刘胖子提醒', '防摆烂'],
+    when: { minDay: 2, maxDay: 7, requiresHomeIdle: true },
+    weights: { homeIdle: 6, earlyDay: 4, lowFame: 0.6 }
+  },
+  {
+    id: 'home_idle_phone_plan',
+    title: '手机日程弹出一个小计划',
+    loc: 'home',
+    desc: '防摆烂轻提醒：手机没有催你决斗，只把“复盘录像、便利店补给、地铁站观察”排成三个很小的选项。',
+    eventNotebook: {
+      reason: '手机轻计划',
+      entry: '手机日程提醒震了一下。不是广告，也不是挑战书，只是一条你昨晚随手写下的备忘：别把一天耗成一团。',
+      beats: [
+        '复盘十分钟，出门买水，或者去地铁站看一圈。',
+        '每个选项都很小，小到没有理由把它包装成大事。',
+        '这正好也是它们有用的地方。'
+      ],
+      actionLabel: '整理小计划',
+      actionText: '选一个低压动作，不把今天直接跳到战斗。',
+      outcome: '手机没有替你训练，但它把摆烂拆成了能处理的小格子。'
+    },
+    kind: 'dialog',
+    base: 49,
+    tags: ['手机提醒', '防摆烂'],
+    when: { minDay: 2, maxDay: 7, requiresHomeIdle: true },
+    weights: { homeIdle: 5.5, earlyDay: 3.6, fatigue: -0.3 }
+  },
+  {
+    id: 'home_idle_neighbor_noise',
+    title: '邻居敲墙提醒你别原地发霉',
+    loc: 'home',
+    desc: '轻量生活提醒：邻居嫌你在屋里来回踱步太久。没有惩罚，没有战斗，只是提醒今天该有一个具体动作。',
+    eventNotebook: {
+      reason: '邻居生活提醒',
+      entry: '隔壁敲了两下墙，不重，但很准。你才发现自己在屋里来回走了半小时，像一场没有开场铃的内耗。',
+      beats: [
+        '邻居没有讲武德，只讲隔音。',
+        '你把脚步停住，给今天写下一个很小的目的地。',
+        '有时出门不是为了赢，是为了别把脑子困在同一块地板上。'
+      ],
+      actionLabel: '停下内耗',
+      actionText: '把今天拆成一个低压目标，先不要找架打。',
+      outcome: '你没有受到惩罚，只是把原地打转停住了。'
+    },
+    kind: 'dialog',
+    base: 43,
+    tags: ['邻居提醒', '防摆烂'],
+    when: { minDay: 2, maxDay: 7, requiresHomeIdle: true },
+    weights: { homeIdle: 5, earlyDay: 2.8, lowAuth: 0.5 }
+  },
+  {
     id: 'store_rumor',
     title: '刘胖子捡到一条旧城闲话',
     loc: 'store',
@@ -194,6 +368,30 @@ export const EVENT_RULES = deepFreeze([
     base: 35,
     tags: ['传统拆解', '真实性校准'],
     weights: { auth: 1.1, lowAuth: 0.8, fame: 0.5, fatigue: -0.2 }
+  },
+  {
+    id: 'boxing_bag_combo_hint',
+    title: '拳馆 · 沙包连击',
+    loc: 'home',
+    desc: 'Day 5 后的低压提示：如果刚输过，或者还没有学会刺拳，先把拳馆沙包连击记进待办。目标是补基础，不是逼你马上开打。',
+    eventNotebook: {
+      reason: '刺拳基础提醒',
+      entry: '手机收藏夹里多了一条拳馆短课：沙包连击。标题不花，内容也不花，第一句就是“先用刺拳找到距离”。',
+      beats: [
+        '输过以后，最容易想找一招翻盘；没学刺拳时，最容易把距离交给运气。',
+        '这张卡没有把你推进战斗，只把基础训练放到更显眼的位置。',
+        '沙包不会嘲笑你，它只会把每一次回收算得很清楚。'
+      ],
+      actionLabel: '记下沙包连击',
+      actionText: '把刺拳、回收和连击顺序写进待办，等拳馆开放后再去补基础。',
+      outcome: '你没有获得新招，也没有被惩罚，只是知道下一步该补哪里。'
+    },
+    npc: 'coach',
+    kind: 'dialog',
+    base: 57,
+    tags: ['拳馆', '沙包连击', '刺拳提示'],
+    when: { minDay: 6, any: [{ lastResult: 'loss' }, { missingSkill: 'jab' }] },
+    weights: { losses: 4, lowAuth: 1.2, earlyDay: 2.5, homeIdle: 1.4 }
   },
   {
     id: 'mma_open_mat',
@@ -462,6 +660,8 @@ function injuryLoad(injuries) {
 function factorsFor(state = {}) {
   const player = playerOf(state);
   const memory = combatMemoryOf(state, player);
+  const day = clamp(state.day || 1, 1, 99);
+  const dailyActions = clamp(state.daily?.actions, 0, 99);
   const heat = clamp(player.heat, 0, 100);
   const fame = clamp(player.fame, 0, 400);
   const auth = clamp(player.auth, 0, 100);
@@ -479,6 +679,9 @@ function factorsFor(state = {}) {
     player,
     memory,
     maw,
+    state,
+    day,
+    dailyActions,
     heat: heat / 10,
     fame: fame / 40,
     lowFame: clamp((160 - fame) / 40, 0, 4),
@@ -494,12 +697,15 @@ function factorsFor(state = {}) {
     combatMemory: clamp(remembered, 0, 20),
     mawMisread: clamp(maw.misread, 0, 100) / 10,
     fatherMemory: clamp(maw.fatherMemory, 0, 100) / 10,
-    mawReforge: clamp(maw.reforge, 0, 100) / 10
+    mawReforge: clamp(maw.reforge, 0, 100) / 10,
+    earlyDay: day <= 7 ? (8 - day) / 2 : 0,
+    homeIdle: state.loc === 'home' && dailyActions <= 0 ? 1 : 0
   };
 }
 
 function passesRule(rule, factors) {
   const when = rule.when || {};
+  const state = factors.state || {};
   const player = factors.player || {};
   const memory = factors.memory || {};
   const maw = factors.maw || {};
@@ -507,6 +713,11 @@ function passesRule(rule, factors) {
   const fame = number(player.fame);
   const fatigue = number(player.fatigue);
 
+  if (when.any?.length) {
+    return when.any.some((branch) => passesRule({ ...rule, when: { ...when, any: undefined, ...branch } }, factors));
+  }
+  if (when.minDay != null && number(factors.day, 1) < when.minDay) return false;
+  if (when.maxDay != null && number(factors.day, 1) > when.maxDay) return false;
   if (when.mawChapter && maw.chapter !== when.mawChapter) return false;
   if (when.minMawMisread != null && number(maw.misread) < when.minMawMisread) return false;
   if (when.maxMawMisread != null && number(maw.misread) > when.maxMawMisread) return false;
@@ -522,6 +733,8 @@ function passesRule(rule, factors) {
   if (when.requiresLastEnemy && !memory.lastEnemy) return false;
   if (when.minRiskWins != null && number(memory.riskWins) < when.minRiskWins) return false;
   if (when.lastResult && memory.lastResult !== when.lastResult) return false;
+  if (when.missingSkill && hasSkill(state, when.missingSkill)) return false;
+  if (when.requiresHomeIdle && !factors.homeIdle) return false;
   return true;
 }
 
@@ -607,6 +820,11 @@ function contextualBreakdown(rule, factors) {
     out.highHeatChallenge = clamp((heat - 14) / 10, 0, 7) * Math.min(risk, 4) * 0.45;
   }
 
+  if (factors.homeIdle && factors.day <= 7) {
+    if (isBattle) out.homeIdle = -10;
+    else if (rule.kind === 'dialog' || rule.kind === 'shop') out.homeIdle = 4;
+  }
+
   return out;
 }
 
@@ -631,7 +849,9 @@ function readableReason(key, value) {
     mawReforge: '茂拳重铸推进',
     recoveryNeed: '身体需要恢复',
     hardFightStress: '身体状态不适合硬战',
-    highHeatChallenge: '热度引来挑战'
+    highHeatChallenge: '热度引来挑战',
+    earlyDay: '早期适合低压安排',
+    homeIdle: positive ? '今天还没出门，适合轻提醒' : '不优先推硬战'
   };
   return map[key] || `${FACTOR_LABELS[key] || key}${positive ? '上升' : '下降'}`;
 }
