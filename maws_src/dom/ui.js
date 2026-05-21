@@ -20,6 +20,29 @@ const shortDist = (value) => String(value || '')
 
 const targetText = (value) => ({ head: '头', body: '身', leg: '腿' }[value] || value || '身');
 
+const SKILL_SOURCE_HINTS = {
+  dodge: { loc: '公园', action: '围观不插手 / 站台步法小练' },
+  jab: { loc: '拳馆', action: '沙包连击 / 梁教练纠错' },
+  straight: { loc: '拳馆', action: '重靶爆点' },
+  palm: { loc: '武馆', action: '压力测试' },
+  offbalance: { loc: '武馆', action: '推手拆招' },
+  sprawl: { loc: 'MMA馆', action: '防摔判断课' },
+  escape: { loc: 'MMA馆', action: '地面脱身课' },
+  dirtyescape: { loc: '旧城区', action: '街头观察 / 风险事件' },
+  advance: { loc: 'MMA馆 / 散打馆', action: '进身压力课' },
+  lowkick: { loc: '散打馆', action: '拳腿衔接' },
+  frontkick: { loc: '空手道道场 / 跆拳道社', action: '距离拒门' },
+  grip: { loc: 'MMA馆', action: '抓把入门' },
+  takedown: { loc: 'MMA馆 / 散打馆', action: '拳摔转换' },
+  sidecontrol: { loc: 'MMA馆', action: '上位控制' },
+  sanda_whip_kick: { loc: '散打馆', action: '散打组合课' },
+  sanda_catch_throw: { loc: '散打馆', action: '接腿摔课' },
+  karate_reverse_punch: { loc: '空手道道场', action: '逆突基本功' },
+  karate_front_kick: { loc: '空手道道场', action: '前蹴距离课' },
+  tkd_roundhouse: { loc: '跆拳道社', action: '横踢距离课' },
+  tkd_back_kick: { loc: '跆拳道社', action: '后踢反击课' }
+};
+
 function summaryChips(parts = [], className = '') {
   return parts.length
     ? `<div class="maws-summary-chips ${className}">${parts.map((part) => `<span>${esc(part)}</span>`).join('')}</div>`
@@ -77,17 +100,36 @@ function renderSceneCharacter(character) {
 
 function renderCityMarker(marker) {
   const label = `${marker.icon || ''} ${marker.name || ''}`.trim();
-  const status = marker.active ? '当前位置' : marker.closed ? '未开放' : '前往';
-  const action = marker.active ? 'noop' : marker.closed ? 'toast' : 'openTravel';
-  const params = marker.closed ? { text: `${marker.name}现在不开放` } : { loc: marker.id };
+  const status = marker.active ? '当前位置' : marker.locked ? '暂未开放' : marker.closed ? '休息中' : '前往';
+  const action = marker.active ? 'noop' : (marker.locked || marker.closed) ? 'toast' : 'openTravel';
+  const params = (marker.locked || marker.closed) ? { text: marker.lockReason || `${marker.name}现在不开放` } : { loc: marker.id };
+  const statusClass = marker.locked ? 'locked' : marker.closed ? 'disabled' : '';
+  const tip = marker.locked ? (marker.lockReason || marker.unlockHint || '线索还不成熟') : marker.closed ? '当前时段不能前往' : '点击选择出行方式';
   const attrs = Object.entries({ action, ...params })
     .filter(([, value]) => value !== undefined && value !== null)
     .map(([key, value]) => `data-${key}="${esc(value)}"`)
     .join(' ');
   return `
-    <button type="button" class="maws-city-marker ${marker.active ? 'active' : ''} ${marker.closed ? 'disabled' : ''}" style="--x:${Number(marker.x) || 50}%;--y:${Number(marker.y) || 50}%" aria-label="${esc(`${label} ${status} ${marker.openText || ''}`)}" ${attrs}>
+    <button type="button" class="maws-city-marker ${marker.active ? 'active' : ''} ${statusClass}" style="--x:${Number(marker.x) || 50}%;--y:${Number(marker.y) || 50}%" aria-label="${esc(`${label} ${status} ${marker.openText || ''}`)}" ${attrs}>
       <span class="maws-city-marker-icon">${esc(marker.icon || marker.name?.slice(0, 1) || '?')}</span><b>${esc(marker.name || '')}</b><small>${esc(status)}</small>
-      <span class="maws-city-marker-tip" aria-hidden="true"><strong>${esc(marker.name || '')}</strong><em>${esc(status)} · ${esc(marker.openText || '')}</em><i>${marker.active ? '你现在就在这里' : marker.closed ? '当前时段不能前往' : '点击选择出行方式'}</i></span>
+      <span class="maws-city-marker-tip" aria-hidden="true"><strong>${esc(marker.name || '')}</strong><em>${esc(status)} · ${esc(marker.unlockHint || marker.openText || '')}</em><i>${esc(marker.active ? '你现在就在这里' : tip)}</i></span>
+    </button>
+  `;
+}
+
+function renderLocationCard(loc) {
+  const status = loc.active ? '当前位置' : loc.locked ? '暂未开放' : loc.closed ? '休息中' : '已开放';
+  const action = loc.active ? 'noop' : (loc.locked || loc.closed) ? 'toast' : 'openTravel';
+  const params = (loc.locked || loc.closed) ? { text: loc.lockReason || `${loc.name}现在不开放` } : { loc: loc.id };
+  const detail = loc.locked ? (loc.lockReason || loc.unlockHint) : loc.closed ? `开放 ${loc.openText || ''}` : (loc.unlockHint || loc.openText || '');
+  const attrs = Object.entries({ action, ...params })
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `data-${key}="${esc(value)}"`)
+    .join(' ');
+  return `
+    <button type="button" class="maws-loc ${loc.active ? 'active' : ''} ${loc.locked ? 'locked' : ''} ${loc.closed && !loc.locked ? 'closed' : ''} ${loc.mainHere ? 'main-here' : ''}" ${attrs}>
+      <b>${esc(loc.icon || '')} ${esc(loc.name || '')}</b>
+      <span><em>${esc(status)}</em><small>${esc(detail || '')}</small></span>
     </button>
   `;
 }
@@ -281,6 +323,7 @@ function renderMap(model) {
   const cityBg = assetPath(cityMap.backgroundKey);
   const cityBgUrl = cityBg ? `/${cityBg}` : '';
   const cityMarkers = (cityMap.markers || []).map(renderCityMarker).join('');
+  const locCards = (model.locs || []).map(renderLocationCard).join('');
   const cityOverlay = model.cityMapOpen ? `
     <div class="maws-city-overlay">
       <section class="maws-city-sheet">
@@ -299,6 +342,8 @@ function renderMap(model) {
         <aside class="maws-today-rail">
           <div class="maws-rail-title"><b>今日看板</b>${btn('城市地图', 'openCityMap', {}, 'tiny maws-map-open')}</div>
           ${todayBoard}
+          <div class="maws-rail-title maws-loc-title"><b>地点开放</b><span>${esc((model.locs || []).filter((loc) => !loc.locked).length)}处可去</span></div>
+          <div class="maws-locs">${locCards}</div>
         </aside>
         <div class="maws-scene" ${bgUrl ? `style="--scene-bg:url('${esc(bgUrl)}')"` : ''}>
           <div class="maws-scene-shade"></div>
@@ -402,15 +447,18 @@ function renderProfile(model) {
 function renderSkillCard(skill, inCombat = false) {
   const preview = skill.preview || {};
   const disabled = inCombat && preview.unavailableReason;
+  const learned = Boolean(skill.state);
+  const source = SKILL_SOURCE_HINTS[skill.id];
+  const sourceText = source ? `来源：${source.loc} · ${source.action}` : (skill.unavailableReason || '来源：继续推进地点和主线');
   const damage = inCombat ? preview.damageText : skill.dmg;
   const posture = inCombat ? preview.postureText : skill.post;
   const hit = inCombat ? `${preview.hit || Math.round((skill.hit || 0) * 100)}%` : pct(skill.hit);
   const risk = inCombat ? `${preview.risk || Math.round((skill.risk || 0) * 100)}%` : pct(skill.risk);
   const dist = shortDist(inCombat ? preview.dist : (skill.dist || []).join('/'));
-  const action = inCombat ? (disabled ? 'toast' : 'selectSkill') : (skill.equipped ? 'toast' : 'equipSkill');
+  const action = inCombat ? (disabled ? 'toast' : 'selectSkill') : (!learned ? 'toast' : skill.equipped ? 'toast' : 'equipSkill');
   const params = inCombat
     ? (disabled ? { text: preview.unavailableReason } : { id: skill.id })
-    : (skill.equipped ? { text: '已经装备' } : { id: skill.id });
+    : (!learned ? { text: sourceText } : skill.equipped ? { text: '已经装备' } : { id: skill.id });
   if (inCombat) {
     const cost = `${esc(skill.sp || 0)}/${esc(skill.ap || 1)}`;
     const no = String(skill.displayNo || 1).padStart(2, '0');
@@ -441,9 +489,9 @@ function renderSkillCard(skill, inCombat = false) {
     `;
   }
   return `
-    <article class="maws-skill ${skill.equipped || skill.selected ? 'active' : ''} ${disabled ? 'disabled' : ''}">
+    <article class="maws-skill ${skill.equipped || skill.selected ? 'active' : ''} ${!learned ? 'locked' : ''} ${disabled ? 'disabled' : ''}">
       ${assetIcon(skill.assetKey, '', 'maws-skill-art')}
-      <header><strong>${assetIcon(skill.assetKey, skill.icon)} ${esc(skill.name)}</strong><small>${skill.equipped ? '已装备' : esc(skill.type)}</small></header>
+      <header><strong>${assetIcon(skill.assetKey, skill.icon)} ${esc(skill.name)}</strong><small>${!learned ? '未学会' : skill.equipped ? '已装备' : esc(skill.type)}</small></header>
       <p>${esc(skill.desc)}</p>
       <dl>
         <div><dt>伤害</dt><dd>${esc(damage)}</dd></div>
@@ -454,8 +502,8 @@ function renderSkillCard(skill, inCombat = false) {
         <div><dt>距离</dt><dd>${esc(dist)}</dd></div>
       </dl>
       <footer>
-        <span>${esc(preview.unavailableReason || skill.unavailableReason || `熟练度 ${round(skill.state?.p)}%`)}</span>
-        ${btn(inCombat ? '加入队列' : '装备', action, params, disabled ? 'disabled' : 'primary')}
+        <span>${esc(!learned ? sourceText : preview.unavailableReason || skill.unavailableReason || `熟练度 ${round(skill.state?.p)}%`)}</span>
+        ${btn(inCombat ? '加入队列' : learned ? '装备' : '未学会', action, params, (!learned || disabled) ? 'disabled' : 'primary')}
       </footer>
     </article>
   `;
