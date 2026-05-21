@@ -36,18 +36,18 @@
 - [x] 保留旧 prompt，避免破坏当前自动执行器兼容性。
 - [x] 更新本任务 checkpoint。
 - [x] 执行文档级校验。
-- [ ] 提交并推送到 GitHub。
+- [x] 提交并推送到 GitHub。
 
 ## Validation
 
 - [x] `git status --short --branch`
 - [x] `git diff --check`
 - [x] `npm run build`
-- [ ] `git push`
+- [x] `git push`
 
 ## Result
 
-本轮尚未提交。目标是让 GitHub 上同时具备旧一次性 Agent prompt 和新长期制作部门 prompt，下一轮可优先由 `AGENT_F_TECH_QA_TOOLS` 处理真实浏览器 smoke，再进入 `SKILL_UNLOCKS` 数据驱动改造。
+已接入 v0.5 大类 Agent 路由包。GitHub 上同时保留旧一次性 Agent prompt 和新长期制作部门 prompt，下一轮可优先由 `AGENT_F_TECH_QA_TOOLS` 处理真实浏览器 smoke，再进入 `SKILL_UNLOCKS` 数据驱动改造。路由包提交为 `9b35568`。
 
 ## Risks
 
