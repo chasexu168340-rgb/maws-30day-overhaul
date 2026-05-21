@@ -1925,6 +1925,7 @@ const LOCATION_BACKGROUND_KEYS = {
   taekwondo_club: { day: 'bg.gym.day', night: 'bg.gym.night' },
   gym: { day: 'bg.gym.day', night: 'bg.gym.night' },
   physio: { day: 'bg.physio.day', night: 'bg.physio.night' },
+  metro_station: { day: 'bg.metro_station.day', night: 'bg.metro_station.night' },
   street: { day: 'bg.street.day', night: 'bg.street.night' }
 };
 
