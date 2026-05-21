@@ -27,4 +27,16 @@ Implemented minimal metro visual bridge fallback on `asset/metro-visual-bridge`.
 
 ## Runtime Note
 
-`metro_station` still needs a later scoped runtime mapping in `LOCATION_BACKGROUND_KEYS` to use `bg.metro_station.day/night`. This branch intentionally does not touch `state.js`.
+`metro_station` runtime mapping is now wired to the existing fallback keys:
+
+- day: `bg.metro_station.day`
+- night: `bg.metro_station.night`
+
+This is still a fallback bridge that reuses existing manifest entries. It is not final metro station art.
+
+## Runtime Mapping Validation
+
+- `npm run build`: passed in manager validation.
+- `node maws_src/tools/verify_assets.mjs`: passed, 95 manifest entries.
+- `npm run test:smoke`: passed after linking the worktree to the main repository `node_modules` for local validation; 4 Chromium smoke tests passed.
+- `git diff --check`: passed; Git only printed CRLF working-copy warnings during earlier checks.

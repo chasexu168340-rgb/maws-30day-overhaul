@@ -15,6 +15,7 @@ const BG_BY_LOC = {
   mma: 'bg.mma.day',
   gym: 'bg.gym.day',
   physio: 'bg.physio.day',
+  metro_station: { day: 'bg.metro_station.day', night: 'bg.metro_station.night' },
   street: 'bg.street.day'
 };
 
@@ -40,6 +41,14 @@ function distText(value) {
 
 function groundText(value) {
   return { none: '站立', ground_neutral: '地面中立', player_top: '我方上位', player_bottom: '我方下位' }[value] || value;
+}
+
+function fallbackBackgroundKey(model) {
+  const locId = model?.loc?.id;
+  const timeOfDay = model?.timeOfDay === 'night' ? 'night' : 'day';
+  const fallback = BG_BY_LOC[locId];
+  if (fallback && typeof fallback === 'object') return fallback[timeOfDay] || fallback.day || fallback.night;
+  return fallback || 'bg.home.day';
 }
 
 export class ShellScene extends PhaserScene {
@@ -129,7 +138,7 @@ export class ShellScene extends PhaserScene {
   }
 
   renderShell() {
-    this.drawBackground(this.model.locationScene?.backgroundKey || BG_BY_LOC[this.model.loc.id] || 'bg.home.day');
+    this.drawBackground(this.model.locationScene?.backgroundKey || fallbackBackgroundKey(this.model));
   }
 
   renderHud() {
