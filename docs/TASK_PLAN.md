@@ -4,50 +4,47 @@
 
 ## Current Task
 
-Wave 2 启动准备：合并 Agent 01，并将 Agent 03 改为地铁站实现型任务。
+Agent 03：实现地铁站地点数据。
 
 ## Scope
 
-- 合并 `feat/reforge-core-unlocks` 到 staging。
-- 验证合并后的 build 与 diff check。
-- 推送 `staging/reforge-unlocks-v1`。
-- 将 Wave 2 worktree 重置到最新 staging。
-- 修改 Agent 03 prompt：从 proposal-only 改为只改 `data.js` 的地铁站实现任务。
-- 暂不启动 Wave 2 之前的全自动合并。
+- 只在 `data.js` 接入地铁站，不改 `state.js`。
+- 新增 `LOCS.metro_station`、`LOC_POS.metro_station`、`ACTIONS.metro_station`。
+- 至少 4 个地铁站行动。
+- 将 Day 2 主线地点迁移到 `metro_station`。
+- 不改 UI、combat、economy、存档 key/version 或资产。
 
 ## Relevant Files
 
 - `docs/TASK_PLAN.md`
-- `docs/codex_tasks/AGENT_03_METRO_CONTENT.md`
-- `docs/agent_reports/AGENT_01_CORE_UNLOCKS.md`
 - `maws_src/content/data.js`
-- `maws_src/simulation/state.js`
+- `docs/agent_reports/AGENT_03_METRO_CONTENT.md`
+- `.codex/DONE.md`
 
 ## Plan
 
-- [x] 合并 `feat/reforge-core-unlocks`。
-- [x] 合并后运行 `npm run build`。
-- [x] 合并后运行 `git diff --check HEAD~1..HEAD`。
-- [x] 推送 `origin/staging/reforge-unlocks-v1`。
-- [x] 重置 Wave 2 worktree 到最新 staging，并逐个 build。
-- [x] 修改 Agent 03 prompt 为地铁站实现型任务。
+- [x] 新增 `LOCS.metro_station`。
+- [x] 新增 `LOC_POS.metro_station`。
+- [x] 新增 `ACTIONS.metro_station` 四个行动。
+- [x] 将 Day 2 主线 loc 改为 `metro_station`。
+- [x] 运行 build、数据 smoke 和 diff check。
 
 ## Validation
 
 - [x] `npm run build`：通过，检查 20 个 JavaScript / MJS 文件，并验证 93 个 manifest entries。
-- [x] `git diff --check HEAD~1..HEAD`：通过。
-- [x] Wave 2 六个 worktree 重置后各自 `npm run build`：全部通过。
+- [x] Node 数据 smoke：通过。`metro_station` 存在、Day 1 不锁定、4 个行动存在、Day 2 主线迁移成功。
+- [x] `git diff --check`：通过。
 
 ## Result
 
-Agent 01 已合并进 staging 并推送。Wave 2 worktree 已同步到合并后的地基。Agent 03 prompt 已改为实现 `metro_station` 地点，允许只修改 `maws_src/content/data.js`、`docs/TASK_PLAN.md` 和 Agent 03 报告。
+地铁站已作为 Day 1 默认开放地点进入运行数据。Day 2 “地铁见义勇为”现在挂到 `metro_station`。地铁站包含观察人流、刷短视频、站台步法和听线索四个行动。
 
 ## Risks
 
-- `metro_station` 还没进运行数据，需由 Agent 03 落地。
-- Agent 02 / 03 启动后要重点检查是否都基于最新 staging。
-- Agent 04 / 05 仍建议 proposal-only，避免再次抢 `data.js` / `state.js`。
+- 地铁站暂未新增专属背景或资产，当前依赖现有 fallback 表现。
+- 没有新增 `misread` gain 字段，避免改 economy。
+- 地铁站视觉和锁点说明仍需 Agent 02 接 UI。
 
 ## Next Step
 
-下一步启动 Wave 2：`powershell -ExecutionPolicy Bypass -File .\scripts\30_launch_wave2_parallel.ps1`。Wave 2 完成后先运行 `scripts\40_collect_reports.ps1` 收报告，不要立即全合并。
+下一步由 Integrator 收集报告并合并 `feat/reforge-metro-content`。合并后运行 `npm run build`，并检查 Day 1 地图中 `metro_station` 未锁定。

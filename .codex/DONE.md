@@ -1,7 +1,7 @@
 # DONE
 
-Agent 01 core unlock foundation completed.
+Agent 03 metro station implementation completed.
 
 - Build passed.
-- State smoke passed.
-- Report written to `docs/agent_reports/AGENT_01_CORE_UNLOCKS.md`.
+- Metro data smoke passed.
+- Report written to `docs/agent_reports/AGENT_03_METRO_CONTENT.md`.
