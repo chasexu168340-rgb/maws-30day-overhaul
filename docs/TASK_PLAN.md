@@ -36,7 +36,7 @@
 - [x] 将 `model.skillUnlocks` 固定为对象形态。
 - [x] 运行 fixup build 和 Node smoke。
 - [x] 运行 fixup Playwright smoke 和 diff check。
-- [ ] 提交并 push fixup。
+- [x] 提交并 push fixup。
 
 ## Validation
 
@@ -62,4 +62,4 @@
 
 ## Next Step
 
-完成 fixup smoke / diff check 后推送 `feat/skill-unlocks-data`。下一步交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks[skillId]`。
+`feat/skill-unlocks-data` fixup 已推送。下一步交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks[skillId]`。
