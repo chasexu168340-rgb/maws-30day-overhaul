@@ -659,71 +659,95 @@ export const MAIN_EVENTS = {
     title: '给父亲上香',
     loc: 'home',
     npc: 'father',
-    desc: '你给父亲牌位上香，墙上那句“习武之人，绝不争强好胜”还在。你点点头，然后准备去争一口气。先选一个能落地的入口。',
+    desc: '出租屋窗台很窄，香灰很轻。陆小闲却觉得自己背了很重的东西：父亲、茂家拳，还有一点把遗训听歪的热血。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '陆小闲', text: '爸，我开始练真的了。不是在客厅里对空气点头那种。' },
+      { speaker: '陆小闲', text: '爸，我给你上香了。水果是打折的，但心不是。' },
+      { speaker: '旁白', text: '香烧到一半，你忽然发现小票还压在果盘底下。父亲如果真在看，第一句大概是问你有没有凑满减。' },
       { speaker: '父亲', text: '习武之人，绝不争强好胜。' },
-      { speaker: '陆小闲', text: '我知道。先选一个能落地的入口，少吹点，先挨点实在的。' }
+      { speaker: '陆小闲', text: '我懂。就是……如果有人不讲理，我总不能站着当摆设吧？' },
+      { speaker: '旁白', text: '你把“不争强好胜”听成了“该出手时要很帅”。误读不大，但已经够30天用了。' }
     ],
     eventNotebook: {
-      reason: '30天开始',
-      entry: '出租屋的香灰落得很慢，父亲牌位旁那句“习武之人，绝不争强好胜”还在。你点完香，心里却还憋着一口要证明的气。',
+      reason: '出租屋上香',
+      entry: '香灰落得很慢。你看着父亲牌位旁那句“习武之人，绝不争强好胜”，心里却还憋着一口想证明的气。',
       beats: [
-        '你没有再对着空气练套路，而是给自己选一个能被验证的入口。',
-        '散打重衔接，道场重规矩，跆拳道重距离；三条路都不是捷径。',
-        '30天从这里开始。不是把茂家拳吹回神坛，而是先弄清楚什么东西真的能用。'
+        '你认真把香插正，动作像在做一件很大的事，虽然香炉其实是旧饭碗。',
+        '父亲的话没有变，你的理解却偷偷拐了个弯。',
+        '30天从这里开始。不是得到新招，而是先承认自己还想把这件事学明白。'
       ],
-      actionLabel: '选第一站',
-      actionText: '把热血先放低一点，从一个能被现实验货的入口开始。',
-      outcome: '你把“证明自己”的冲动压成第一条训练路线。父亲的话还在墙上，今天先不争强，先学会落地。'
+      actionLabel: '把香上完',
+      actionText: '先别急着证明茂家拳，至少把香插直。',
+      outcome: '你不是在求神，是在承认自己还想学明白。父亲的照片没有回答，但房间安静了一点。'
     },
-    maw: { fatherMemory: 3, belief: 4 },
+    maw: { fatherMemory: 2, belief: 2, misread: 1 },
     choices: [
-      { id: 'route_sanda', label: '先看散打馆', text: '从拳、腿、摔连在一起的地方开始。罗教练不卖神秘感，只看你每一下能不能接住下一下。', hint: '偏向拳腿摔转换，后续更容易理解散打训练。', gain: { sanda: 4, auth: 2, rel_coach_luo: 1 }, flags: { route_sanda: true }, log: '你把第一站记到散打馆：少讲玄学，先看拳腿摔能不能连上。' },
-      { id: 'route_karate', label: '去道场看一拳', text: '从规矩、站距和中线开始。严前辈说话不重，但逆突落在护具上很诚实。', hint: '偏向直线爆发和收招纪律。', gain: { karate: 4, auth: 2, rel_senpai_yan: 1 }, flags: { route_karate: true }, log: '你决定去道场看第一拳：规矩不是摆样子，是压力里的边界。' },
-      { id: 'route_tkd', label: '测一下腿法距离', text: '从步伐、横踢和后踢的距离开始。腿能踢出去不稀奇，收回来还能防住才算数。', hint: '偏向中远距离腿法和反击节奏。', gain: { taekwondo: 4, auth: 2, rel_coach_min: 1 }, flags: { route_tkd: true }, log: '你把跆拳道社列进计划：先学会距离，再谈漂亮。' }
+      { id: 'day1_incense_sincere', label: '认真上香', text: '你把香插正，把果盘摆稳。热血还在，但总算没有抢在父亲的话前面。', hint: '不解锁新技能，获得一点冷静和真实性。', gain: { calm: 2, auth: 1 }, flags: { flag_day1_incense: true, day1_incense_sincere: true }, log: '你认真给父亲上香。香灰很轻，但你第一次觉得这件事不只是热血开场。' },
+      { id: 'day1_incense_promise', label: '把话说清楚', text: '你小声保证：不是去逞强，是想把茂家拳里真的东西找出来。说完你自己也觉得这话需要日后验货。', hint: '不解锁新技能，获得一点判断和真实性。', gain: { jud: 1, auth: 1 }, flags: { flag_day1_incense: true, day1_incense_promise: true }, log: '你在牌位前把话说清楚：先学明白，再谈证明。' },
+      { id: 'day1_incense_showy', label: '补一个抱拳', text: '你对着牌位抱拳，动作很满，出租屋很小。父亲应该不会骂你，但大概率会让你先把椅子扶正。', hint: '不解锁新技能，获得一点热度，也留下误读的开端。', gain: { heat: 1, auth: 1 }, flags: { flag_day1_incense: true, day1_incense_showy: true }, log: '你把仪式做得很有气势。椅子差点被你碰倒，茂家拳的现实第一课来得很近。' }
     ]
   },
   2: {
     title: '地铁见义勇为',
     loc: 'metro_station',
     npc: 'fatty',
-    desc: '你以为是茂家拳起效，其实对方主要是被你的吨位、嗓门和运气镇住了。误判很甜，后账也会很准。',
+    desc: '地铁不是擂台。车门提示音响了三遍，没人真的想当英雄，大家只是把一个没写完的选择题塞进你手里。',
     kind: 'dialog',
+    dialogue: [
+      { speaker: '旁白', text: '早高峰的车厢像一口没换气的锅。有人争执，有人缩手，有人举起手机，像先给结局买了票。' },
+      { speaker: '陆小闲', text: '别推人，站稳说。' },
+      { speaker: '刘胖子', text: '你先别把“站出来”和“冲上去”写成同一个词。' },
+      { speaker: '旁白', text: '这里没有铃声，没有裁判，也没有漂亮的胜利姿势。赢不是把人打倒，是别让事情升级。' }
+    ],
     eventNotebook: {
-      reason: '误判发酵',
-      entry: '地铁车厢里人挤得像一口没换气的锅。有人争执，有人后退，你的肩膀先替脑子做了决定。',
+      reason: '地铁站见义勇为',
+      entry: '地铁车厢里人挤得像一口没换气的锅。有人争执，有人后退，你的肩膀很想先替脑子做决定。',
       beats: [
-        '你站出去挡了一下，把声音抬高，也把自己推到所有人的视线里。',
-        '场面被镇住了，但里面有吨位、有嗓门，也有一截运气。',
-        '甜的是别人夸你；麻烦的是，你差点也信了。'
+        '你站出去挡了一下，但没有把车厢当成擂台。',
+        '站务、距离、退路和声音大小，全都比招名更具体。',
+        '场面被压住了。里面有判断，也有一点运气。甜的是别人夸你，麻烦的是你差点也信了。'
       ],
       actionLabel: '听刘胖子复盘',
-      actionText: '别急着把偶然当神功，先听旁边人怎么拆这件事。',
-      outcome: '见义勇为是真的，误判也是真的。你开始带着一层虚高的信心往后走。'
+      actionText: '别急着把偶然当神功，先把“控制”和“收场”分清。',
+      outcome: '见义勇为是真的，误判也是真的。你没有打倒谁，但地铁还像地铁，这已经比三秒钟的帅更值钱。'
     },
-    maw: { belief: 3, misread: 12 }
+    maw: { belief: 1, misread: 2 },
+    choices: [
+      { id: 'day2_metro_control', label: '侧身挡住升级路线', text: '你站到侧面，给被推的人留退路，也把对方的前压路线卡住。动作不大，但人群终于有地方散开。', hint: '偏判断和冷静，少量真实性。', gain: { jud: 2, calm: 1, auth: 1 }, flags: { flag_day2_metro: true, day2_metro_control: true }, log: '你在地铁站先控距离，再控声音。事情没有变成打架，这次算处理得像回事。' },
+      { id: 'day2_metro_staff', label: '先喊站务', text: '你没有抢着当主角，而是把站务和周围乘客都拉进来。对方发现自己不是在跟你单挑，火就短了一截。', hint: '偏冷静和判断，避免热度上升。', gain: { calm: 2, jud: 1, auth: 1 }, flags: { flag_day2_metro: true, day2_metro_staff: true }, log: '你先喊站务，把冲突从“谁更狠”拉回“怎么收场”。' },
+      { id: 'day2_metro_loud', label: '嗓门压过去', text: '你吼了一句，车厢安静了半秒。有效，但有效得有点危险；监控和围观群众会替你剪出十二个版本。', hint: '获得少量名声，但热度上升。', gain: { fame: 3, heat: 1, jud: 1 }, flags: { flag_day2_metro: true, day2_metro_loud: true }, log: '你用嗓门把场面压住了。赢了三秒钟，也把自己送进了围观群众的素材库。' }
+    ]
   },
   3: {
     title: '便利店货架事件',
     loc: 'store',
     npc: 'xiaoman',
-    desc: '你一掌拍在货架上，三包薯片受到了震慑伤害。小满没拆穿你，只提醒你别把货架当擂台。',
+    desc: '便利店的过道很窄，货架挡视线，熟人挡面子。你看见对方肩膀一沉，以为是起手，三秒后发现他只是想绕开泡面货架。',
     kind: 'dialog',
+    dialogue: [
+      { speaker: '小满', text: '他只是想拿泡面。你刚才那个架势，像要替酸辣牛肉面出头。' },
+      { speaker: '陆小闲', text: '我以为他要冲你来。' },
+      { speaker: '小满', text: '我知道。所以我才没笑太大声。' },
+      { speaker: '旁白', text: '货架没倒，面子倒得很整齐。你忽然明白，低风险场景也能被自以为是抬成高风险。' }
+    ],
     eventNotebook: {
-      reason: '信心过热',
+      reason: '便利店货架误判',
       entry: '便利店货架窄得不适合英雄登场。你一掌拍下去，薯片袋震了三下，场面比伤害更响。',
       beats: [
         '你想把地铁那点误判延续下去，结果先让货架替现实开口。',
-        '小满没有当众拆穿，只把赔不赔钱这件事说得很轻。',
-        '你的脸有点热，手掌也有点疼。'
+        '小满没有当众拆穿，只提醒你便利店不是擂台，货架也不是护具。',
+        '你的脸有点热，手掌也有点疼。最疼的是，你刚才还觉得自己控住了场。'
       ],
       actionLabel: '把话听完',
       actionText: '先别解释“控场”，听小满把现实边界讲清楚。',
       outcome: '便利店没有给你擂台感，只给了你一个更具体的问题：保护别人之前，别先把现场搞乱。'
     },
-    maw: { misread: 8, fatherMemory: 1 }
+    maw: { misread: 2 },
+    choices: [
+      { id: 'day3_store_ask_first', label: '先问一句', text: '你把手放低，先问对方是不是要过去。小满退到收银台后，泡面也保住了自己的清白。', hint: '关系提升，获得少量冷静和真实性。', gain: { calm: 2, auth: 1, rel_xiaoman: 2 }, flags: { flag_day3_store_shelf: true, day3_store_ask_first: true }, log: '你先问清楚，再让小满后退。便利店还像便利店，小满看你的眼神也没那么想报警。' },
+      { id: 'day3_store_shelf_between', label: '挡住货架边线', text: '你没有抢着出手，只把自己放在货架外侧，给小满和对方都留出能走的路。', hint: '偏判断，关系小幅提升。', gain: { jud: 1, auth: 1, rel_xiaoman: 1 }, flags: { flag_day3_store_shelf: true, day3_store_shelf_between: true }, log: '你用位置而不是招式处理了便利店过道。没有赢谁，但事情没有乱起来。' },
+      { id: 'day3_store_show_form', label: '摆出祖传架势', text: '你把架势摆满，对方愣住，薯片也愣住。三秒后，小满替你把“胜利”翻译成“别挡着补货”。', hint: '误判胜利发酵，热度上升。', gain: { heat: 1, rel_xiaoman: -1 }, flags: { flag_day3_store_shelf: true, day3_store_show_form: true }, log: '你误把愣住当成震慑。货架没倒，面子倒得很整齐，小满决定晚点再跟你算这笔现实账。' }
+    ]
   },
   5: {
     title: '公园第一次验货',

@@ -2,24 +2,31 @@
 
 ## Status
 
-Proposal only. No runtime code changed.
+Day 1-Day 3 content implemented in runtime data.
 
 ## Output
 
-- Added `docs/content_proposals/day1_day9_vertical_slice.md`.
-- Covered Day 1 incense, Day 2 metro intervention, Day 3 convenience-store misread, Day 5 park validation, Day 8 first-wind setback, and Day 9 father diary.
+- Updated `maws_src/content/data.js` MAIN_EVENTS for Day 1, Day 2, and Day 3.
+- Day 1 now centers on incense in the rental room, father memory, Ma family boxing belief, and Lu Xiaoxian's first misread.
+- Day 2 is a metro intervention choice event focused on control, staff, distance, and closing the scene without a hard fight.
+- Day 3 is a convenience-store shelf misread choice event tied to Xiaoman relationship, heat, and light MAW misread.
+- Added `docs/workers/content_day1_day3.md` as the scoped worker handoff.
 
 ## Boundaries
 
-- Did not modify `maws_src/`.
-- Did not modify data, state, UI, combat, or assets.
-- Did not mark proposal content as implemented.
+- Did not implement Day 5, Day 8, Day 9, or the full 30-day arc.
+- Did not add a new event engine.
+- Did not add combat or enemy hooks to Day 2/Day 3.
+- Did not modify state, UI, CSS, combat, assets, manifest, task handoff, sprint board, or task plan.
+- Day 1 does not grant new skills.
 
 ## Validation
 
-- `git diff --check`: passed.
-- Build skipped because this branch only adds documentation proposal files.
+- `npm run build`: passed in manager validation.
+- `npm run test:smoke`: passed after linking the worktree to the main repository `node_modules` for local validation; 4 Chromium smoke tests passed.
+- `git diff --check`: passed; Git only printed CRLF working-copy warnings during earlier checks.
+- Route flag check: `route_sanda`, `route_karate`, and `route_tkd` have no remaining hard references in data/state/dom, so replacing the Day 1 route choices does not leave broken references.
 
 ## Next
 
-After review, content can be translated into data entries by a separate scoped content task.
+Merge after `feat/metro-runtime-background` so the Day 2 metro event has runtime background support.
