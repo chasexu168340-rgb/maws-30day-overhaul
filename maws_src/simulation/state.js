@@ -18,6 +18,7 @@ import {
   RESOURCE_RULES,
   SAVE_KEY,
   SKILLS,
+  SKILL_UNLOCKS,
   STAT_KEYS,
   STAT_RULES,
   STYLE_RULES,
@@ -467,6 +468,60 @@ function actionSummary(action) {
     ? `风险 战斗 ${action.risk || ENEMIES[action.enemy]?.risk || '中'}`
     : action.risk ? `风险 事件 ${action.risk}` : '风险 低';
   return { cost, gain, risk };
+}
+
+function actionSourceLabel(locId, actionId, fallbackAction = null) {
+  const locName = LOCS[locId]?.name || locId || LOCS.home.name;
+  const action = (ACTIONS[locId] || []).find((item) => item.id === actionId) || fallbackAction;
+  return `${locName} · ${action?.name || actionId || '行动'}`;
+}
+
+function skillUnlocksModel(state) {
+  return Object.entries(SKILL_UNLOCKS).map(([id, unlock]) => {
+    const skillId = unlock.skillId || id;
+    const locId = unlock.locationId;
+    const action = (ACTIONS[locId] || []).find((item) => item.id === unlock.actionId) || null;
+    const locked = locId ? !isLocationUnlocked(state, locId) : false;
+    const closed = locId && locId !== 'home' && locId !== 'store' ? !inOpen(state, locId) : false;
+    return {
+      id,
+      skillId,
+      skillName: SKILLS[skillId]?.name || skillId,
+      skillIcon: SKILLS[skillId]?.icon || '',
+      locationId: locId,
+      locationName: LOCS[locId]?.name || locId || '',
+      actionId: unlock.actionId,
+      actionName: action?.name || unlock.actionId,
+      openCondition: unlock.openCondition,
+      unlockText: unlock.unlockText,
+      sourceSummary: unlock.sourceSummary || actionSourceLabel(locId, unlock.actionId, action),
+      learned: Boolean(state.skillState?.[skillId]),
+      locked,
+      lockReason: locked ? locationLockReason(state, locId) : '',
+      availableHere: state.loc === locId && !locked && !closed
+    };
+  });
+}
+
+function skillIdsFromGain(gain = {}) {
+  return [...new Set([gain.skill, gain.skill2].filter(Boolean))];
+}
+
+function skillUnlockSettlementLines(beforeSkillState = {}, state, action, gain = action?.gain || {}) {
+  return skillIdsFromGain(gain)
+    .filter((id) => !beforeSkillState[id] && state.skillState?.[id])
+    .map((id) => {
+      const unlock = SKILL_UNLOCKS[id] || {};
+      const source = unlock.sourceSummary || actionSourceLabel(unlock.locationId || state.loc, unlock.actionId || action?.id, action);
+      return {
+        group: 'skills',
+        key: id,
+        label: '学会',
+        delta: 1,
+        tone: 'good',
+        text: `学会：${SKILLS[id]?.name || id} / 来源：${source}`
+      };
+    });
 }
 
 function applyStoryFlags(state, flags = {}) {
@@ -993,13 +1048,15 @@ function executeAction(state, action, options = {}) {
     state.ui.modal = npcDialogueModal(action.npc, settlementLines(before, snapshotState(state)));
     addLog(state, `${NPCS[action.npc]?.name || '有人'}给了你一段建议。`);
   } else {
+    const beforeSkillState = clone(state.skillState || {});
     applyGain(state, action.gain || {});
+    const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
     addLog(state, `完成行动：${action.name}`);
     state.ui.modal = {
       type: 'settlement',
       title: `${action.name} 结算`,
       body: eventSettlementBody(action, options.eventContext),
-      lines: settlementLines(before, snapshotState(state))
+      lines
     };
   }
 }
@@ -1192,16 +1249,19 @@ function finishTrainingMini(state, gradeId, result = {}) {
     return;
   }
   const before = snapshotState(state);
+  const beforeSkillState = clone(state.skillState || {});
+  const gain = scaledGain(action.gain || {}, grade.multiplier);
   state.player.sp -= actionSpCost(action);
   if (action.cost) state.player.money -= action.cost;
   advanceTime(state, action.time || 30);
-  applyGain(state, scaledGain(action.gain || {}, grade.multiplier));
+  applyGain(state, gain);
+  const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action, gain));
   addLog(state, `完成训练小游戏：${action.name} · ${grade.label}`);
   state.ui.modal = {
     type: 'settlement',
     title: `${action.name} · ${grade.label}`,
     body: trainingResultBody(grade, result),
-    lines: settlementLines(before, snapshotState(state))
+    lines
   };
 }
 
@@ -2245,6 +2305,7 @@ export function buildRenderModel(state) {
     statRules: STAT_RULES,
     resourceRules: RESOURCE_RULES,
     styleRules: STYLE_RULES,
+    skillUnlocks: skillUnlocksModel(state),
     skills: Object.entries(SKILLS).map(([id, skill]) => ({
       id,
       ...skill,

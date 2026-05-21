@@ -197,6 +197,21 @@ export const SKILLS = {
   tkd_back_kick: { name: '后踢', icon: '后', type: 'kick', dist: ['mid'], dmg: 20, post: 16, sp: 14, ap: 2, hit: 0.58, risk: 0.24, style: 'taekwondo', desc: '抓对手追进来的瞬间反打。打中像关门，打空像把后背递过去。' }
 };
 
+export const SKILL_UNLOCKS = {
+  jab: { skillId: 'jab', locationId: 'boxing', actionId: 'bag', openCondition: '拳馆开放后，完成沙包连击。', sourceSummary: '拳馆 · 沙包连击', unlockText: '你开始用刺拳先碰距离，而不是一上来就把重心借出去。' },
+  straight: { skillId: 'straight', locationId: 'boxing', actionId: 'bag', openCondition: '拳馆开放后，完成沙包连击。', sourceSummary: '拳馆 · 沙包连击', unlockText: '后手直拳有了中线和回收，终于不只是用力砸沙包。' },
+  palm: { skillId: 'palm', locationId: 'wuguan', actionId: 'pressure_test', openCondition: '武馆开放后，完成混元一气掌压力测试。', sourceSummary: '武馆 · 混元一气掌压力测试', unlockText: '掌根短击从招名里拆出来，变成近身时能落地的一下。' },
+  offbalance: { skillId: 'offbalance', locationId: 'wuguan', actionId: 'pressure_test', openCondition: '武馆开放后，完成混元一气掌压力测试。', sourceSummary: '武馆 · 混元一气掌压力测试', unlockText: '你开始看见对方脚下的重心，而不是只盯着手上的动作。' },
+  sprawl: { skillId: 'sprawl', locationId: 'mma', actionId: 'sprawl_drill', openCondition: 'MMA 馆开放后，完成防摔判断课。', sourceSummary: 'MMA 馆 · 防摔判断课', unlockText: '对方降肩切入时，你知道先把髋收走。' },
+  escape: { skillId: 'escape', locationId: 'mma', actionId: 'sprawl_drill', openCondition: 'MMA 馆开放后，完成防摔判断课。', sourceSummary: 'MMA 馆 · 防摔判断课', unlockText: '被压住不再只剩硬扛，你开始会找框架和出口。' },
+  sanda_whip_kick: { skillId: 'sanda_whip_kick', locationId: 'sanda_gym', actionId: 'sanda_combo_drill', openCondition: 'Day 20 后散打馆开放，完成拳腿摔连贯课。', sourceSummary: '散打馆 · 拳腿摔连贯课', unlockText: '鞭腿接在拳距后面，不是单独摆一个好看的动作。' },
+  sanda_catch_throw: { skillId: 'sanda_catch_throw', locationId: 'sanda_gym', actionId: 'sanda_combo_drill', openCondition: 'Day 20 后散打馆开放，完成拳腿摔连贯课。', sourceSummary: '散打馆 · 拳腿摔连贯课', unlockText: '对方回敬腿法时，你开始能把危险接成摔法机会。' },
+  karate_reverse_punch: { skillId: 'karate_reverse_punch', locationId: 'karate_dojo', actionId: 'karate_kihon_drill', openCondition: 'Day 22 后空手道道场开放，完成基本功与组手线。', sourceSummary: '空手道道场 · 基本功与组手线', unlockText: '逆突有了启动、落点和收招，拳路越直，借口越少。' },
+  karate_front_kick: { skillId: 'karate_front_kick', locationId: 'karate_dojo', actionId: 'karate_kihon_drill', openCondition: 'Day 22 后空手道道场开放，完成基本功与组手线。', sourceSummary: '空手道道场 · 基本功与组手线', unlockText: '前蹴开始像关门，不再只是把腿伸出去推远。' },
+  tkd_roundhouse: { skillId: 'tkd_roundhouse', locationId: 'taekwondo_club', actionId: 'tkd_kick_line', openCondition: 'Day 24 后跆拳道社开放，完成腿法线训练。', sourceSummary: '跆拳道社 · 腿法线训练', unlockText: '横踢有了距离和落地，腿影不再只是好看。' },
+  tkd_back_kick: { skillId: 'tkd_back_kick', locationId: 'taekwondo_club', actionId: 'tkd_kick_line', openCondition: 'Day 24 后跆拳道社开放，完成腿法线训练。', sourceSummary: '跆拳道社 · 腿法线训练', unlockText: '后踢从盲转变成反击，对方追进来时门会关上。' }
+};
+
 export const ITEMS = {
   rice: { name: '便利店饭团', icon: '饭', assetKey: 'item.rice', cat: '补给', price: 22, type: 'food', desc: '碳水，顶一阵。包装纸一撕，体力条暂时相信生活。', gain: { sp: 22, fatigue: -4 } },
   drink: { name: '运动饮料', icon: '饮', assetKey: 'item.drink', cat: '补给', price: 16, type: 'drink', desc: '糖和电解质，顺手给士气擦亮一点。不是神水，但比干扛强。', gain: { sp: 14, morale: 3 } },
