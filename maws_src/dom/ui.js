@@ -20,28 +20,68 @@ const shortDist = (value) => String(value || '')
 
 const targetText = (value) => ({ head: '头', body: '身', leg: '腿' }[value] || value || '身');
 
-const SKILL_SOURCE_HINTS = {
-  dodge: { loc: '公园', action: '围观不插手 / 站台步法小练' },
-  jab: { loc: '拳馆', action: '沙包连击 / 梁教练纠错' },
-  straight: { loc: '拳馆', action: '重靶爆点' },
-  palm: { loc: '武馆', action: '压力测试' },
-  offbalance: { loc: '武馆', action: '推手拆招' },
-  sprawl: { loc: 'MMA馆', action: '防摔判断课' },
-  escape: { loc: 'MMA馆', action: '地面脱身课' },
-  dirtyescape: { loc: '旧城区', action: '街头观察 / 风险事件' },
-  advance: { loc: 'MMA馆 / 散打馆', action: '进身压力课' },
-  lowkick: { loc: '散打馆', action: '拳腿衔接' },
-  frontkick: { loc: '空手道道场 / 跆拳道社', action: '距离拒门' },
-  grip: { loc: 'MMA馆', action: '抓把入门' },
-  takedown: { loc: 'MMA馆 / 散打馆', action: '拳摔转换' },
-  sidecontrol: { loc: 'MMA馆', action: '上位控制' },
-  sanda_whip_kick: { loc: '散打馆', action: '散打组合课' },
-  sanda_catch_throw: { loc: '散打馆', action: '接腿摔课' },
-  karate_reverse_punch: { loc: '空手道道场', action: '逆突基本功' },
-  karate_front_kick: { loc: '空手道道场', action: '前蹴距离课' },
-  tkd_roundhouse: { loc: '跆拳道社', action: '横踢距离课' },
-  tkd_back_kick: { loc: '跆拳道社', action: '后踢反击课' }
-};
+function skillUnlockSource(unlock) {
+  if (!unlock) return '';
+  if (unlock.sourceSummary) return unlock.sourceSummary;
+  return [unlock.locationName, unlock.actionName].filter(Boolean).join(' · ');
+}
+
+function skillUnlockState(unlock, learned) {
+  if (!unlock) return learned ? '已学会' : '来源未记录';
+  if (unlock.initial) return 'initial · 开局已会';
+  if (unlock.planned) return 'planned · 暂未接入真实训练来源';
+  if (learned || unlock.learned) return '已学会';
+  if (unlock.availableHere) return 'available · 当前位置可尝试';
+  return `locked · ${unlock.lockReason || '按开放条件完成训练'}`;
+}
+
+function skillUnlockTitle(skill, unlock, learned) {
+  if (unlock?.initial) {
+    const source = skillUnlockSource(unlock).replace(/^开局已会\s*·\s*/, '');
+    return `开局已会：${source || '家传旧招 / 基础生存技能'}`;
+  }
+  if (unlock?.planned) return `未学会：${skill.name}`;
+  if (!learned) return `未学会：${skill.name}`;
+  return `已学会：${skill.name}`;
+}
+
+function skillUnlockToast(skill, unlock, learned) {
+  if (learned) return `熟练度 ${round(skill.state?.p)}%`;
+  if (!unlock) return '来源：继续推进地点和主线';
+  if (unlock.planned) return '暂未接入真实训练来源，后续由系统/战斗组补真实来源';
+  if (unlock.initial) return skillUnlockTitle(skill, unlock, learned);
+  return [
+    `来源：${skillUnlockSource(unlock) || '继续推进地点和主线'}`,
+    unlock.openCondition ? `开放条件：${unlock.openCondition}` : '',
+    `状态：${skillUnlockState(unlock, learned)}`
+  ].filter(Boolean).join(' / ');
+}
+
+function renderSkillUnlock(skill, unlock, learned) {
+  if (!unlock && learned) return '';
+  const title = skillUnlockTitle(skill, unlock, learned);
+  const source = unlock?.planned ? '暂未接入真实训练来源' : (skillUnlockSource(unlock) || '继续推进地点和主线');
+  const condition = unlock?.planned
+    ? '后续由系统/战斗组补真实来源'
+    : (unlock?.openCondition || (unlock?.initial ? '开局自带。' : '继续推进地点和主线。'));
+  const state = skillUnlockState(unlock, learned);
+  const classes = [
+    'maws-skill-unlock',
+    unlock?.initial ? 'initial' : '',
+    unlock?.planned ? 'planned' : '',
+    !learned && !unlock?.planned && !unlock?.initial ? 'locked' : ''
+  ].filter(Boolean).join(' ');
+  return `
+    <div class="${classes}">
+      <strong>${esc(title)}</strong>
+      <dl>
+        <div><dt>来源</dt><dd>${esc(source)}</dd></div>
+        <div><dt>开放条件</dt><dd>${esc(condition)}</dd></div>
+        <div><dt>状态</dt><dd>${esc(state)}</dd></div>
+      </dl>
+    </div>
+  `;
+}
 
 function summaryChips(parts = [], className = '') {
   return parts.length
@@ -444,12 +484,11 @@ function renderProfile(model) {
   `;
 }
 
-function renderSkillCard(skill, inCombat = false) {
+function renderSkillCard(skill, inCombat = false, unlock = null) {
   const preview = skill.preview || {};
   const disabled = inCombat && preview.unavailableReason;
   const learned = Boolean(skill.state);
-  const source = SKILL_SOURCE_HINTS[skill.id];
-  const sourceText = source ? `来源：${source.loc} · ${source.action}` : (skill.unavailableReason || '来源：继续推进地点和主线');
+  const sourceText = skillUnlockToast(skill, unlock, learned);
   const damage = inCombat ? preview.damageText : skill.dmg;
   const posture = inCombat ? preview.postureText : skill.post;
   const hit = inCombat ? `${preview.hit || Math.round((skill.hit || 0) * 100)}%` : pct(skill.hit);
@@ -493,6 +532,7 @@ function renderSkillCard(skill, inCombat = false) {
       ${assetIcon(skill.assetKey, '', 'maws-skill-art')}
       <header><strong>${assetIcon(skill.assetKey, skill.icon)} ${esc(skill.name)}</strong><small>${!learned ? '未学会' : skill.equipped ? '已装备' : esc(skill.type)}</small></header>
       <p>${esc(skill.desc)}</p>
+      ${renderSkillUnlock(skill, unlock, learned)}
       <dl>
         <div><dt>伤害</dt><dd>${esc(damage)}</dd></div>
         <div><dt>架势</dt><dd>${esc(posture)}</dd></div>
@@ -517,7 +557,7 @@ function renderSkills(model) {
     <section class="maws-panel">
       <div class="maws-panel-title"><h2>技能卡</h2><p>伤害、架势、命中、体力、风险、距离和描述都来自当前模型。</p></div>
       <div class="maws-slots">${slots}</div>
-      <div class="maws-card-grid">${(model.skills || []).map((skill) => renderSkillCard(skill)).join('')}</div>
+      <div class="maws-card-grid">${(model.skills || []).map((skill) => renderSkillCard(skill, false, model.skillUnlocks?.[skill.id])).join('')}</div>
     </section>
   `;
 }
