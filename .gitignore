@@ -22,6 +22,9 @@ test-results/
 playwright-report/
 coverage/
 
+# Local Codex worktree copies. Reviewable agent records are archived under docs/agent_workspaces/.
+/maws-agent-*/
+
 # Source/reference media that should not be published by default
 新建文件夹/
 *.mp4
