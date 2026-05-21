@@ -477,15 +477,18 @@ function actionSourceLabel(locId, actionId, fallbackAction = null) {
 }
 
 function skillUnlocksModel(state) {
-  return Object.entries(SKILL_UNLOCKS).map(([id, unlock]) => {
+  return Object.fromEntries(Object.entries(SKILL_UNLOCKS).map(([id, unlock]) => {
     const skillId = unlock.skillId || id;
     const locId = unlock.locationId;
     const action = (ACTIONS[locId] || []).find((item) => item.id === unlock.actionId) || null;
     const locked = locId ? !isLocationUnlocked(state, locId) : false;
     const closed = locId && locId !== 'home' && locId !== 'store' ? !inOpen(state, locId) : false;
-    return {
+    return [skillId, {
       id,
       skillId,
+      source: unlock.source || (unlock.initial ? 'initial' : 'action'),
+      initial: Boolean(unlock.initial),
+      planned: Boolean(unlock.planned),
       skillName: SKILLS[skillId]?.name || skillId,
       skillIcon: SKILLS[skillId]?.icon || '',
       locationId: locId,
@@ -498,9 +501,9 @@ function skillUnlocksModel(state) {
       learned: Boolean(state.skillState?.[skillId]),
       locked,
       lockReason: locked ? locationLockReason(state, locId) : '',
-      availableHere: state.loc === locId && !locked && !closed
-    };
-  });
+      availableHere: Boolean(locId && state.loc === locId && !locked && !closed)
+    }];
+  }));
 }
 
 function skillIdsFromGain(gain = {}) {
