@@ -4,7 +4,7 @@
 
 ## Current Task
 
-执行 `AGENT_B_SKILL_UNLOCKS_FIXUP`：补齐 `SKILL_UNLOCKS` 覆盖，并把 `model.skillUnlocks` 定为按 `skillId` 索引的对象。
+解决 GitHub PR #10 的 merge conflict：将 `origin/main` 合入 `feat/skill-unlocks-data`，保留 `SKILL_UNLOCKS` fixup 结果，并同步 main 上已有的 asset / narrative / QA 文档变化。
 
 ## Scope
 
@@ -25,6 +25,14 @@
 
 ## Plan
 
+- [x] 确认 staging 与 `origin/staging/reforge-unlocks-v1` 一致。
+- [x] 创建 `feat/codex-harness-delta`。
+- [x] 归档旧 `CURRENT_*` / `CHANGELOG`。
+- [x] 新增 handoff / contract / validation / board。
+- [x] 补 `check` / `check:full` alias。
+- [x] 运行 build、smoke、diff check。
+- [x] 提交并 push Harness Delta。
+- [x] 创建 `feat/skill-unlocks-data` 并完成 `SKILL_UNLOCKS` 第一版数据化。
 - [x] 从 `feat/codex-harness-delta` 创建 `feat/skill-unlocks-data`。
 - [x] 新增 `SKILL_UNLOCKS` 数据。
 - [x] `state.js` import `SKILL_UNLOCKS` 并输出 `skillUnlocks` render model。
@@ -38,6 +46,7 @@
 - [x] 运行 fixup Playwright smoke 和 diff check。
 - [x] 提交并 push fixup。
 - [x] 合入最新 `origin/staging/reforge-unlocks-v1`，准备回合到 staging。
+- [x] 合入 `origin/main` 并解决 `docs/TASK_PLAN.md` 冲突。
 
 ## Validation
 
@@ -53,7 +62,8 @@
 ## Result
 
 - 已实现数据驱动技能来源和结算提示；fixup 已补全当前技能覆盖，并把 `model.skillUnlocks` 固定为对象形态。
-- 分支已同步最新 staging，等待合并到 `staging/reforge-unlocks-v1`。
+- Harness Delta 已完成本地验证并推送到 GitHub：新增当前 handoff、执行合同、验证入口、sprint board；旧 `CURRENT_*` / `CHANGELOG` 已归档并替换为历史 stub；`package.json` 已补 `check` / `check:full` alias。
+- 分支已同步最新 staging 和 main，等待 GitHub PR #10 重新计算 mergeability。
 
 ## Risks
 
@@ -64,4 +74,4 @@
 
 ## Next Step
 
-合并 `feat/skill-unlocks-data` 到 staging。下一轮交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks[skillId]`。
+push `feat/skill-unlocks-data` 后确认 PR #10 merge conflict 消失。下一轮交给 `AGENT_E_UI_PRESENTATION` 让技能页读取 `model.skillUnlocks[skillId]`。
