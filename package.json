@@ -2,6 +2,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "node maws_src/tools/build_check.mjs"
+    "build": "node maws_src/tools/build_check.mjs",
+    "test:smoke": "playwright test maws_src/tests/phaser-smoke.spec.js --browser=chromium --reporter=line"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }
