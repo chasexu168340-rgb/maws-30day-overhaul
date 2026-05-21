@@ -6,7 +6,9 @@ import {
   GAME_VERSION,
   ITEMS,
   LOC_POS,
+  LOC_UNLOCKS,
   LOCS,
+  INITIAL_SKILLS,
   MAW_FORMS,
   MAW_RULES,
   MAIN_EVENTS,
@@ -339,8 +341,8 @@ export function createNewState(origin = 'worker') {
     eventLog: [],
     combatMemory: { fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recent: [] },
     maw: createDefaultMaw(),
-    unlocked: { jab: 1, straight: 1, guard: 1, dodge: 1, advance: 1, retreat: 1, dirtyescape: 1, talkdown: 1, mystic: 1 },
-    equipSkills: ['jab', 'straight', 'guard', 'dodge', 'advance', 'retreat'],
+    unlocked: Object.fromEntries(INITIAL_SKILLS.filter((id) => SKILLS[id]).map((id) => [id, 1])),
+    equipSkills: ['mystic', 'guard', 'retreat', 'talkdown', null, null],
     skillState: {}
   };
   Object.keys(SKILLS).forEach((id) => {
@@ -823,6 +825,39 @@ function inOpen(state, locId) {
   if (!loc) return false;
   const [start, end] = loc.open;
   return state.time >= start && state.time <= end;
+}
+
+function mawReforgeScore(state) {
+  const forms = Object.values(state.maw?.forms || {});
+  if (!forms.length) return 0;
+  return forms.reduce((sum, form) => sum + Number(form?.reforge || 0), 0) / forms.length;
+}
+
+export function isLocationUnlocked(state, locId) {
+  if (!LOCS[locId]) return false;
+  const rule = LOC_UNLOCKS[locId];
+  if (!rule) return true;
+  if (rule.default) return true;
+  if (rule.flag && state.flags?.[rule.flag]) return true;
+  if (rule.day && Number(state.day || 1) >= rule.day) return true;
+  if (rule.minReforge && mawReforgeScore(state) >= rule.minReforge) return true;
+  return false;
+}
+
+export function locationUnlockHint(locId) {
+  const rule = LOC_UNLOCKS[locId];
+  if (!rule) return '';
+  if (rule.hint) return rule.hint;
+  if (rule.day) return `Day ${rule.day} 开放。`;
+  if (rule.minReforge) return `茂拳重铸 ${rule.minReforge}% 后开放。`;
+  return '';
+}
+
+export function locationLockReason(state, locId) {
+  if (!LOCS[locId]) return '地点尚未接入。';
+  if (isLocationUnlocked(state, locId)) return '';
+  const rule = LOC_UNLOCKS[locId] || {};
+  return rule.reason || locationUnlockHint(locId) || '线索还不成熟。';
 }
 
 function learnSkill(state, id, xp = 5) {
@@ -1621,12 +1656,19 @@ export class GameStore {
     } else if (action.type === 'completeDialogue') {
       completeDialogue(s);
     } else if (action.type === 'openTravel') {
-      s.ui.selectedTravel = action.loc;
-      s.ui.modal = { type: 'travel', loc: action.loc };
-      s.ui.cityMapOpen = false;
+      if (!isLocationUnlocked(s, action.loc)) {
+        s.ui.toast = locationLockReason(s, action.loc);
+        s.ui.cityMapOpen = false;
+      } else {
+        s.ui.selectedTravel = action.loc;
+        s.ui.modal = { type: 'travel', loc: action.loc };
+        s.ui.cityMapOpen = false;
+      }
     } else if (action.type === 'travel') {
+      const allowLocked = Boolean(s.ui.modal?.allowLocked && s.ui.modal?.loc === action.loc);
       const q = travelQuote(s, action.loc, action.mode);
-      if (q.money > s.player.money) s.ui.toast = '钱不够';
+      if (!allowLocked && !isLocationUnlocked(s, action.loc)) s.ui.toast = locationLockReason(s, action.loc);
+      else if (q.money > s.player.money) s.ui.toast = '钱不够';
       else if (q.sp > s.player.sp) s.ui.toast = '体力不足';
       else {
         const before = snapshotState(s);
@@ -1648,7 +1690,7 @@ export class GameStore {
       if (!main || s.flags[`main_${s.day}`]) s.ui.toast = '今天没有新的主线节点';
       else if (main.loc && main.loc !== s.loc) {
         s.ui.selectedTravel = main.loc;
-        s.ui.modal = { type: 'travel', loc: main.loc };
+        s.ui.modal = { type: 'travel', loc: main.loc, allowLocked: true };
         s.ui.cityMapOpen = false;
       } else {
         if (main.choices?.length) {
@@ -1692,6 +1734,10 @@ export class GameStore {
     } else if (action.type === 'takeOpportunity') {
       const card = buildOpportunities(s).find((item) => item.id === action.id);
       if (!card) s.ui.toast = '这个待办已经过期';
+      else if (card.loc && !isLocationUnlocked(s, card.loc)) {
+        s.ui.toast = locationLockReason(s, card.loc);
+        s.ui.cityMapOpen = false;
+      }
       else if (card.loc && card.loc !== s.loc) {
         s.ui.selectedTravel = card.loc;
         s.ui.modal = { type: 'travel', loc: card.loc };
@@ -1900,16 +1946,22 @@ function cityMapModel(state, timeOfDay) {
   return {
     backgroundKey: CITY_MAP_BACKGROUND_KEYS[timeOfDay] || CITY_MAP_BACKGROUND_KEYS.day,
     timeOfDay,
-    markers: Object.entries(LOCS).map(([id, loc]) => ({
-      id,
-      ...loc,
-      ...(CITY_MAP_MARKERS[id] || { x: 50, y: 50 }),
-      active: id === state.loc,
-      closed: id !== 'home' && id !== 'store' && !inOpen(state, id),
-      mainHere: mainEvent?.loc === id,
-      actionCount: (ACTIONS[id] || []).length,
-      openText: locationOpenText(loc)
-    }))
+    markers: Object.entries(LOCS).map(([id, loc]) => {
+      const locked = !isLocationUnlocked(state, id);
+      return {
+        id,
+        ...loc,
+        ...(CITY_MAP_MARKERS[id] || { x: 50, y: 50 }),
+        active: id === state.loc,
+        locked,
+        lockReason: locationLockReason(state, id),
+        unlockHint: locationUnlockHint(id),
+        closed: locked || (id !== 'home' && id !== 'store' && !inOpen(state, id)),
+        mainHere: mainEvent?.loc === id,
+        actionCount: (ACTIONS[id] || []).length,
+        openText: locationOpenText(loc)
+      };
+    })
   };
 }
 
@@ -2147,15 +2199,21 @@ export function buildRenderModel(state) {
     dayText: `第${state.day}天 周${DOW[(state.day - 1) % 7]} ${fmtTime(state.time)}`,
     phase: `${dayStage(state.day)} · ${phaseText(state.time)} · ${LOCS[state.loc]?.name || ''}`,
     loc: { id: state.loc, ...(LOCS[state.loc] || {}) },
-    locs: Object.entries(LOCS).map(([id, loc]) => ({
-      id,
-      ...loc,
-      active: id === state.loc,
-      closed: id !== 'home' && id !== 'store' && !inOpen(state, id),
-      mainHere: decoratedMainEvent?.loc === id,
-      actionCount: (ACTIONS[id] || []).length,
-      openText: locationOpenText(loc)
-    })),
+    locs: Object.entries(LOCS).map(([id, loc]) => {
+      const locked = !isLocationUnlocked(state, id);
+      return {
+        id,
+        ...loc,
+        active: id === state.loc,
+        locked,
+        lockReason: locationLockReason(state, id),
+        unlockHint: locationUnlockHint(id),
+        closed: locked || (id !== 'home' && id !== 'store' && !inOpen(state, id)),
+        mainHere: decoratedMainEvent?.loc === id,
+        actionCount: (ACTIONS[id] || []).length,
+        openText: locationOpenText(loc)
+      };
+    }),
     timeOfDay,
     cityMap: cityMapModel(state, timeOfDay),
     locationScene: {
