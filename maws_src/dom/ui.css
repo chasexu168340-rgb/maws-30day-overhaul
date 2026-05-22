@@ -1,10 +1,19 @@
 #maws-ui-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   color: #f7f0df;
+  pointer-events: none;
 }
 
 #maws-ui-root * {
   box-sizing: border-box;
+}
+
+#game-root,
+#game-root canvas {
+  pointer-events: none;
 }
 
 .maws-ui {
@@ -1485,7 +1494,7 @@
     linear-gradient(180deg, rgba(12, 12, 14, 0.94), rgba(2, 2, 3, 0.96));
   box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.82);
   max-height: 22vh;
-  overflow: visible;
+  overflow: auto;
   clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 8px 100%);
 }
 
@@ -5238,7 +5247,7 @@
 }
 
 .maws-combat-dock {
-  grid-template-columns: minmax(220px, 0.85fr) minmax(260px, 1.15fr) minmax(136px, 0.36fr);
+  grid-template-columns: minmax(190px, 0.72fr) minmax(320px, 1.8fr) minmax(120px, 0.32fr);
   grid-template-areas:
     "planner window actions"
     "planner drawer actions";
@@ -5248,7 +5257,7 @@
 
 .maws-combat-ui {
   z-index: 60;
-  --batch15-dock-max: min(248px, 34vh);
+  --batch15-dock-max: min(184px, 23vh);
 }
 
 .maws-combat-planner {
@@ -5272,14 +5281,15 @@
 
 .maws-card-grid.combat.focus {
   display: grid;
-  grid-template-columns: repeat(2, minmax(132px, 1fr));
+  grid-template-columns: repeat(2, minmax(116px, 1fr));
   align-items: stretch;
   gap: 8px;
-  overflow: visible;
+  min-height: 0;
+  overflow: auto;
 }
 
 .maws-card-grid.combat.focus .maws-skill.combat-card {
-  min-height: 148px;
+  min-height: 118px;
   border-color: rgba(255, 217, 65, 0.78);
   box-shadow: inset 0 0 0 2px rgba(255, 217, 65, 0.18), 5px 5px 0 rgba(0, 0, 0, 0.8);
 }
@@ -5299,12 +5309,12 @@
 
 .maws-tactics-drawer .maws-card-grid.combat {
   margin: 8px;
-  max-height: 132px;
+  max-height: 104px;
   overflow: auto;
 }
 
 .maws-tactics-drawer .maws-skill.combat-card {
-  min-height: 112px;
+  min-height: 96px;
 }
 
 .maws-combat-actions {
@@ -5568,5 +5578,260 @@
 
   .maws-reward-stack {
     display: none;
+  }
+}
+
+/* Wave 12 visual strike: keep the stage dominant and make interactions visible. */
+.maws-scene {
+  --scene-ground: clamp(4px, 1.2vh, 14px);
+  --player-stage-height: clamp(390px, 74%, 780px);
+  --npc-stage-height: clamp(300px, 62%, 660px);
+  background-position: center center;
+}
+
+.maws-scene-shade {
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.38), transparent 24%, transparent 76%, rgba(0, 0, 0, 0.4)),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.5), transparent 56%),
+    radial-gradient(ellipse at 50% 82%, rgba(255, 243, 210, 0.14), transparent 46%);
+}
+
+.maws-action-rail-main {
+  top: clamp(116px, 15vh, 148px);
+  right: 12px;
+  bottom: 14px;
+  width: min(300px, 25vw);
+  max-height: none;
+}
+
+.maws-recommend-card,
+.maws-action-rail-main .maws-actions-primary .maws-action {
+  padding: 8px 9px;
+}
+
+.maws-action-rail-main .maws-action-visible-summary span {
+  padding: 4px 6px;
+}
+
+.maws-scene-character.actionable figcaption {
+  border-color: rgba(255, 217, 65, 0.78);
+  box-shadow: 0 0 0 2px rgba(255, 217, 65, 0.14), 0 8px 18px rgba(0, 0, 0, 0.36);
+}
+
+.maws-character-bubble {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: clamp(58px, 9vh, 86px);
+  transform: translate(-50%, 8px);
+  max-width: min(180px, 100%);
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 243, 210, 0.7);
+  border-radius: 999px;
+  background: rgba(8, 8, 10, 0.7);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maws-scene-character:hover .maws-character-bubble,
+.maws-scene-character:focus-visible .maws-character-bubble,
+.maws-scene-character.maws-click-hit .maws-character-bubble {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.maws-scene-character.maws-click-hit {
+  transform: translateY(-8px) scale(1.025);
+  filter: drop-shadow(0 0 18px rgba(255, 217, 65, 0.48));
+}
+
+.maws-click-burst.character i {
+  background: rgba(255, 217, 65, 0.95);
+}
+
+.maws-combat-ui {
+  --batch15-dock-max: min(190px, 22vh);
+}
+
+.maws-combat-dock {
+  bottom: max(8px, env(safe-area-inset-bottom));
+  padding: 7px;
+  gap: 7px;
+  background: rgba(5, 5, 6, 0.82);
+  backdrop-filter: blur(1px);
+}
+
+.maws-combat-planner,
+.maws-combat-queue,
+.maws-tactics-drawer .maws-card-grid.combat,
+.maws-combat-log-toggle ol {
+  scrollbar-color: rgba(255, 217, 65, 0.55) rgba(5, 5, 6, 0.7);
+  scrollbar-width: thin;
+}
+
+.maws-combat-phase,
+.maws-combat-read {
+  padding: 6px 7px;
+}
+
+.maws-target-control {
+  gap: 5px;
+}
+
+.maws-combat-window-cards {
+  align-content: start;
+}
+
+.maws-card-grid.combat.focus {
+  gap: 6px;
+}
+
+.maws-skill.combat-card {
+  min-height: 96px;
+  max-height: 126px;
+  padding: 7px;
+  overflow: hidden;
+}
+
+.maws-card-grid.combat.focus .maws-skill.combat-card {
+  height: 126px;
+  min-height: 126px;
+  max-height: 126px;
+}
+
+.maws-skill.combat-card footer {
+  position: absolute;
+  right: 6px;
+  top: 42px;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.maws-skill.combat-card footer button {
+  min-height: 24px;
+  width: 40px;
+  padding: 3px 4px;
+  border-width: 2px;
+  box-shadow: 2px 2px 0 #000;
+  font-size: 10px;
+}
+
+.maws-skill.combat-card header strong {
+  font-size: 12px;
+}
+
+.maws-combat-card-use {
+  -webkit-line-clamp: 1;
+}
+
+.maws-skill dl.maws-combat-key {
+  gap: 4px;
+  padding-right: 44px;
+}
+
+.maws-skill dl.maws-combat-key div {
+  padding: 4px;
+}
+
+.maws-skill dl.maws-combat-key dt {
+  font-size: 10px;
+}
+
+.maws-skill dl.maws-combat-key dd {
+  font-size: 12px;
+}
+
+.maws-combat-log-toggle {
+  top: clamp(172px, 29vh, 250px);
+}
+
+.maws-combat-log-toggle ol {
+  border-color: rgba(255, 243, 210, 0.36);
+}
+
+.maws-modal.event-notebook section,
+.maws-modal.result-compact section {
+  width: min(620px, calc(100vw - 28px));
+}
+
+.maws-modal.result-compact .maws-modal-lead {
+  padding: 9px 11px;
+  font-size: 14px;
+}
+
+.maws-skill-fold:not([open]) {
+  padding-bottom: 0;
+}
+
+@media (max-width: 1120px) {
+  .maws-action-rail-main {
+    width: auto;
+    bottom: auto;
+  }
+
+  .maws-scene {
+    --player-stage-height: clamp(320px, 66%, 620px);
+    --npc-stage-height: clamp(240px, 54%, 520px);
+  }
+}
+
+@media (max-width: 760px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(250px, 31vh);
+  }
+
+  .maws-combat-dock {
+    max-height: min(250px, 31vh);
+  }
+
+  .maws-card-grid.combat.focus .maws-skill.combat-card {
+    flex-basis: 142px;
+    min-width: 142px;
+    min-height: 92px;
+  }
+
+  .maws-character-bubble {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(232px, 28vh);
+  }
+
+  .maws-combat-dock {
+    max-height: min(232px, 28vh);
+  }
+
+  .maws-card-grid.combat.focus .maws-skill.combat-card {
+    flex-basis: 130px;
+    min-width: 130px;
+  }
+}
+
+@media (max-height: 760px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(176px, 22vh);
+  }
+
+  .maws-card-grid.combat.focus .maws-skill.combat-card {
+    height: 112px;
+    min-height: 112px;
+    max-height: 112px;
+  }
+
+  .maws-skill.combat-card footer {
+    top: 36px;
   }
 }

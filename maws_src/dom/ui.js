@@ -153,6 +153,8 @@ function rewardChipFromLine(line) {
 
 function collectRewardChips(modal = {}, limit = 5) {
   const items = [
+    ...(modal.rewardDeltas || []),
+    ...(modal.rewards || []),
     ...(modal.gain || []),
     ...(modal.summary?.gain || []),
     ...(modal.summaryChips || []),
@@ -247,7 +249,12 @@ function sceneCharacterInteraction(character, actions = []) {
     .filter(([, value]) => value !== undefined && value !== null)
     .map(([key, value]) => `data-${key}="${esc(value)}"`)
     .join(' ');
-  return { attrs, label };
+  return {
+    attrs,
+    label,
+    actionName: relatedAction?.name || '',
+    actionable: Boolean(relatedAction && !relatedAction.disabled)
+  };
 }
 
 function renderSceneCharacter(character, actions = []) {
@@ -259,9 +266,10 @@ function renderSceneCharacter(character, actions = []) {
     ? `<img src="${esc(src)}" alt="" ${loadAttrs} decoding="async" />`
     : `<span class="maws-scene-token">${esc(character.icon || character.name?.slice(0, 1) || '?')}</span>`;
   return `
-    <figure class="maws-scene-character ${esc(character.side || 'npc')} ${esc(character.kind || 'portrait')} ${placeholderClass}" role="button" tabindex="0" aria-label="${esc(interaction.label)}" ${interaction.attrs}>
+    <figure class="maws-scene-character ${esc(character.side || 'npc')} ${esc(character.kind || 'portrait')} ${placeholderClass} ${interaction.actionable ? 'actionable' : 'inspectable'}" role="button" tabindex="0" aria-label="${esc(interaction.label)}" ${interaction.attrs}>
       ${art}
       <figcaption><b>${esc(character.name)}</b><span>${esc(character.role)}</span></figcaption>
+      <span class="maws-character-bubble">${esc(interaction.actionable ? (interaction.actionName || '可互动') : '查看')}</span>
     </figure>
   `;
 }
@@ -697,7 +705,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
         <span>${esc(learned ? `熟练度 ${round(skill.state?.p)}%` : sourceText)}</span>
         <span>${esc(learned ? (skill.equipped ? '已装备' : '可装备') : '待解锁')}</span>
       </div>
-      <details class="maws-fold maws-skill-fold" open>
+      <details class="maws-fold maws-skill-fold">
         <summary>${learned ? '长描述 / 完整数值' : '解锁详情 / 完整数值'}</summary>
         <p>${esc(skill.desc)}</p>
         ${renderSkillUnlock(skill, unlock, learned)}
@@ -1227,10 +1235,13 @@ function renderModal(model) {
     const rewardChips = collectRewardChips(modal, 5);
     const gain = summaryChips(modal.gain || [], 'gain');
     const hasSummary = (modal.cost || []).length || (modal.gain || []).length || modal.risk;
+    const leadText = rewardChips.length
+      ? (modal.kicker ? `${modal.kicker}完成。` : '结果已结算。')
+      : (modal.lead || lead);
     return renderModalShell(modal, `
       <small class="maws-result-kicker">${esc(modal.kicker || modal.title || '行动')}</small>
       <h2>${esc(modal.title || '结果')}</h2>
-      <p class="maws-modal-lead">${esc(modal.lead || lead)}</p>
+      <p class="maws-modal-lead">${esc(leadText)}</p>
       ${renderRewardChips(rewardChips, 'hero')}
       <div class="maws-modal-actions">${resultActions}</div>
       <details class="maws-fold maws-modal-fold">
@@ -1264,7 +1275,7 @@ function renderModal(model) {
       ${objectiveLines}
       ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
     </details>
-  `);
+  `, rewardChips.length ? 'result-feedback result-compact' : '');
 }
 
 function render(model) {
@@ -1317,7 +1328,7 @@ function dispatchFromDataset(store, dataset) {
 function emitClickFx(root, event, target) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const fx = document.createElement('span');
-  fx.className = `maws-click-burst ${target.classList.contains('maws-city-marker') ? 'marker' : ''}`;
+  fx.className = `maws-click-burst ${target.classList.contains('maws-city-marker') ? 'marker' : ''} ${target.classList.contains('maws-scene-character') ? 'character' : ''}`;
   fx.style.left = `${event.clientX}px`;
   fx.style.top = `${event.clientY}px`;
   for (let i = 0; i < 6; i += 1) {
