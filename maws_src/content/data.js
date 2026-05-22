@@ -32,6 +32,7 @@ export const RESOURCE_RULES = {
   fame: { name: '名声', icon: '星', desc: '公开评价和挑战吸引力。名声高了，机会会来，嘴硬的人也会来。' },
   auth: { name: '真实性', icon: '真', desc: '衡量训练到底能不能落地。真实性低时，动作看着像秘籍，用起来像请假条。' },
   heat: { name: '热度', icon: '热', desc: '决定你被看见的程度。热度越高，挑战、旧城风险和新伤压力越容易排队敲门。' },
+  insightPoints: { name: '洞察点', icon: '悟', desc: '训练、复盘和主线之后留下的可分配理解，用于后续技能树 UI 消耗。' },
   fitXp: { name: '体能沉淀', icon: '体', desc: '出行、打工和训练留下的长期底子。每 20 点形成 1 级派生加成，身体会记账。' }
 };
 
@@ -241,6 +242,120 @@ export const SKILL_UNLOCKS = {
   tkd_back_kick: { skillId: 'tkd_back_kick', locationId: 'taekwondo_club', actionId: 'tkd_kick_line', openCondition: 'Day 24 后跆拳道社开放，完成腿法线训练。', sourceSummary: '跆拳道社 · 腿法线训练', unlockText: '后踢从盲转变成反击，对方追进来时门会关上。' }
 };
 
+export const SKILL_TREE_NODES = [
+  {
+    id: 'street_wild_swing_mastery',
+    tree: 'street_wild',
+    treeName: 'Street Wild',
+    label: '野路挥拳掌握',
+    kind: 'mastery',
+    role: 'passive',
+    skillId: 'wild_swing',
+    cost: 1,
+    requires: [],
+    unlockText: '把急眼挥拳改成能收得住的一拍。',
+    effectText: '被动节点：后续 UI 可把它解释为野路挥拳熟练向掌握推进；本切片不改战斗公式。'
+  },
+  {
+    id: 'street_push_away_space',
+    tree: 'street_wild',
+    treeName: 'Street Wild',
+    label: '推搡抢距',
+    kind: 'utility',
+    skillId: 'push_away',
+    cost: 1,
+    requires: ['street_wild_swing_mastery'],
+    unlockText: '先把人顶开一点，再决定打、退还是降温。',
+    effectText: '功能节点：标记 push_away 的技能树入口，供 UI 后续接购买和说明。'
+  },
+  {
+    id: 'street_queue_slot_future',
+    tree: 'street_wild',
+    treeName: 'Street Wild',
+    label: '临场队列槽',
+    kind: 'future',
+    cost: null,
+    requires: ['street_push_away_space'],
+    locked: true,
+    future: true,
+    unlockText: '后续战斗节奏分支预留。',
+    effectText: 'Future only：只在 render model 中标 locked/future，不改变当前队列长度。'
+  },
+  {
+    id: 'boxing_jab_unlock_boost',
+    tree: 'boxing_basics',
+    treeName: 'Boxing Basics',
+    label: '刺拳入门/强化',
+    kind: 'unlock_boost',
+    skillId: 'jab',
+    cost: 1,
+    requires: [],
+    sourceSkill: 'jab',
+    unlockText: '用刺拳先碰距离，不再一开场就把重心借出去。',
+    effectText: '解锁/强化节点：若 jab 未学会，UI 可显示为解锁目标；已学会后显示为基础强化。'
+  },
+  {
+    id: 'boxing_guard_recovery',
+    tree: 'boxing_basics',
+    treeName: 'Boxing Basics',
+    label: '抱架回收',
+    kind: 'passive',
+    skillId: 'guard',
+    cost: 1,
+    requires: ['boxing_jab_unlock_boost'],
+    unlockText: '打完之后手要回来，脸不是公共靶位。',
+    effectText: '被动节点：记录拳击基础对 guard 的重写入口；本切片只提供数据。'
+  },
+  {
+    id: 'boxing_straight_line',
+    tree: 'boxing_basics',
+    treeName: 'Boxing Basics',
+    label: '直拳中线',
+    kind: 'mastery',
+    skillId: 'straight',
+    cost: 2,
+    requires: ['boxing_jab_unlock_boost'],
+    unlockText: '后手直拳先走线，再谈力量。',
+    effectText: '掌握节点：后续可接直拳稳定性或连击分支。'
+  },
+  {
+    id: 'traditional_mystic_rewrite',
+    tree: 'traditional_reforge',
+    treeName: 'Traditional Reforge',
+    label: '旧招拆解',
+    kind: 'rewrite',
+    skillId: 'mystic',
+    cost: 1,
+    requires: [],
+    unlockText: '把“玄”先拆成站距、重心和收手。',
+    effectText: '重写节点：标记 mystic 从旧招名进入可复盘动作。'
+  },
+  {
+    id: 'traditional_guard_rewrite',
+    tree: 'traditional_reforge',
+    treeName: 'Traditional Reforge',
+    label: '铁布衫改写',
+    kind: 'rewrite',
+    skillId: 'guard',
+    cost: 1,
+    requires: ['traditional_mystic_rewrite'],
+    unlockText: '抗压不是硬挨，是用抱架和体能少挨一下。',
+    effectText: '重写节点：把传统防护叙事接到 guard 的现实版本。'
+  },
+  {
+    id: 'traditional_reforge_note',
+    tree: 'traditional_reforge',
+    treeName: 'Traditional Reforge',
+    label: '拳谱新注',
+    kind: 'passive',
+    skillId: 'palm',
+    cost: 2,
+    requires: ['traditional_guard_rewrite'],
+    unlockText: '能用的留下，摆拍的靠边站。',
+    effectText: '被动节点：为后续传统拆解和茂拳完成度 UI 留入口。'
+  }
+];
+
 export const ITEMS = {
   rice: { name: '便利店饭团', icon: '饭', assetKey: 'item.rice', cat: '补给', price: 22, type: 'food', desc: '碳水，顶一阵。包装纸一撕，体力条暂时相信生活。', gain: { sp: 22, fatigue: -4 } },
   drink: { name: '运动饮料', icon: '饮', assetKey: 'item.drink', cat: '补给', price: 16, type: 'drink', desc: '糖和电解质，顺手给士气擦亮一点。不是神水，但比干扛强。', gain: { sp: 14, morale: 3 } },
@@ -275,8 +390,8 @@ export const ACTIONS = {
     { id: 'fatty_today_advice', name: '问今日建议', icon: '问', time: 15, sp: 0, desc: '问刘胖子今天先别犯哪种蠢。建议很短，但够你少冲一次。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_advice', flags: { fatty_advice_seen: true }, gain: { jud: 1, rel_fatty: 1 } },
     { id: 'father_incense', name: '给父亲上香', icon: '香', time: 20, sp: 0, desc: '把香插稳，不把今天的急劲带到父亲面前。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_incense', flags: { father_incense_seen: true }, gain: { calm: 1 }, maw: { fatherMemory: 1 } },
     { id: 'father_self_check', name: '对父亲自省', icon: '省', time: 15, sp: 0, desc: '在旧照片前承认一句：有些动作不是勇，是莽。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_self_check', flags: { father_self_check_seen: true }, gain: { jud: 1, calm: 1 }, maw: { fatherMemory: 1 } },
-    { id: 'review', name: '视频复盘', icon: '复', time: 45, sp: 0, desc: '分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。', type: 'simple', gain: { jud: 1, calm: 4, skill: 'jab', xp: 4 } },
-    { id: 'shadow', name: '影子拳节拍', icon: '影', time: 50, sp: 12, desc: '轻训练，练直拳回收和步法节奏。影子不会还手，但它也不会夸你。', type: 'simple', gain: { skill: 'dodge', xp: 6, boxing: 4, fatigue: 6, fitXp: 2 } },
+    { id: 'review', name: '视频复盘', icon: '复', time: 45, sp: 0, desc: '分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。', type: 'simple', gain: { jud: 1, calm: 4, skill: 'jab', xp: 4, insight: 1 } },
+    { id: 'shadow', name: '影子拳节拍', icon: '影', time: 50, sp: 12, desc: '轻训练，练直拳回收和步法节奏。影子不会还手，但它也不会夸你。', type: 'simple', gain: { skill: 'dodge', xp: 6, boxing: 4, fatigue: 6, fitXp: 2, insight: 1 } },
     { id: 'idle_blank', name: '发呆放空', icon: '空', time: 15, sp: 0, desc: '不刷视频，不加练，只让脑子从热度里退出来一点。可能想起父亲、写下几句日记，或收到朋友消息。', type: 'idle', noDurationOptions: true, gain: { calm: 1, fatigue: -1 } },
     { id: 'read_notes', name: '看训练笔记', icon: '本', time: 20, sp: 0, desc: '翻几页自己挨过的错，不把复盘变成新一轮硬练。笔记有用，但不能替你出汗。', type: 'idle', noDurationOptions: true, gain: { jud: 1, calm: 1 } },
     { id: 'scroll_short_video', name: '刷短视频', icon: '刷', time: 15, sp: 0, desc: '快速刷几条打假和训练片段，情绪会亮一点，判断也可能被带偏。适合消磨，不适合当训练。', type: 'idle', noDurationOptions: true, gain: { morale: 1, heat: 1, calm: -1 } },
@@ -355,7 +470,7 @@ export const ACTIONS = {
           }
         ]
       },
-      gain: { skill: 'jab', xp: 8, skill2: 'straight', xp2: 6, boxing: 8, fatigue: 10, fitXp: 2 }
+      gain: { skill: 'jab', xp: 8, skill2: 'straight', xp2: 6, boxing: 8, fatigue: 10, fitXp: 2, insight: 1 }
     },
     { id: 'coach_drill', name: '梁教练纠错', icon: '教', time: 80, sp: 18, cost: 35, desc: '指出技能配置和战斗问题。教练的嘴很硬，通常是因为他说得对。', type: 'dialog', npc: 'coach' },
     { id: 'heavybag', name: '重靶爆点', icon: '爆', time: 70, sp: 26, cost: 22, desc: '提升直拳和爆发，但疲劳高。打得越响，肩膀越会记仇。', type: 'simple', gain: { skill: 'straight', xp: 9, str: 1, fatigue: 16, fitXp: 3 } },
@@ -363,7 +478,7 @@ export const ACTIONS = {
   ],
   wuguan: [
     { id: 'meet_master', name: '周青山拆招课', icon: '师', time: 60, sp: 8, desc: '传统不等于玄学，关键是压力测试。师傅不怕你问，就怕你只点头。', type: 'dialog', npc: 'master' },
-    { id: 'pressure_test', name: '混元一气掌压力测试', icon: '压', time: 80, sp: 20, cost: 24, desc: '把花架子拆成可用动作。招名可以飞，落点必须落地。', type: 'simple', gain: { skill: 'palm', xp: 10, skill2: 'offbalance', xp2: 8, traditional: 10, auth: 2, fatigue: 10 } },
+    { id: 'pressure_test', name: '混元一气掌压力测试', icon: '压', time: 80, sp: 20, cost: 24, desc: '把花架子拆成可用动作。招名可以飞，落点必须落地。', type: 'simple', gain: { skill: 'palm', xp: 10, skill2: 'offbalance', xp2: 8, traditional: 10, auth: 2, fatigue: 10, insight: 1 } },
     { id: 'push_train', name: '近身推击训练', icon: '推', time: 70, sp: 19, cost: 18, desc: '提升掌根短击和破平衡。近身之后，浪漫会迅速让位给重心。', type: 'simple', gain: { skill: 'palm', xp: 8, traditional: 8, fatigue: 10 } },
     { id: 'old_spar', name: '武馆高徒轻对抗', icon: '切', time: 70, sp: 15, desc: '检验传统拆解是否可靠。讲理归讲理，手上也得交卷。', type: 'battle', enemy: 'E02', risk: 2 }
   ],

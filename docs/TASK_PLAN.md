@@ -4,33 +4,32 @@
 
 ## Current Task
 
-`NPC-ACT-001`: replace part of Wave 13 NPC menu toast feedback with real Day 1-7 NPC light actions.
+`TREE-001`: add the first runtime skill tree slice.
 
 ## Scope
 
-- Modify only `maws_src/content/data.js`, `maws_src/simulation/state.js`, this task plan, and required worker/report docs.
-- Add real short actions for Liu Pangzi, father memory, Xiaoman, and Liang Coach.
-- Preserve DOM UI, combat formulas, events, assets, package scripts, save key/version, and major story scope.
+- Modify skill tree data/state and worker reports only.
+- Preserve DOM UI, combat formulas, assets, package scripts, save key/version, enemy data, economy curves, and major story scope.
 
 ## Current Result
 
-- Added 8 NPC-linked light actions using existing `ACTIONS` and `gain` data.
-- Added generic `dailyGate` support so same-day NPC light actions cannot be reward-farmed.
-- Added action `flags` handling and structured `maw` reward deltas for father memory.
-- Added father as a home scene token so `father_incense` and `father_self_check` are reachable from the compact NPC menu.
+- Added first-slice `SKILL_TREE_NODES` for Street Wild, Boxing Basics, and Traditional Reforge.
+- Added required starter nodes for `wild_swing`, `push_away`, `jab`, `mystic`, `guard`, plus a locked/future queue-slot node.
+- Added `player.insightPoints` with old-save default `0`.
+- Added light insight gain from review/training/mainline completion.
+- Added `skillTree` to `buildRenderModel` for the next UI branch.
 
 ## Validation
 
-- Pass: `npm run build`
 - Pass: `npm run check:full`
 - Pass: `npm run test:playtest`
 - Pass: `git diff --check`
 
 ## Risks
 
-- Low runtime risk. The compact NPC menu now considers up to 3 related actions instead of 2, but still returns at most 3 menu entries.
-- Father is represented as a home scene token for the old photo/incense interaction; this is intentional and not a new story branch.
+- Skill nodes do not yet apply combat effects or spending behavior; this is intentional for the system slice.
+- The queue-slot node is data-only and marked future/locked.
 
 ## Next Step
 
-Commit with `feat: add day 1-7 npc real actions`.
+Commit with `feat: add skill tree system slice`.

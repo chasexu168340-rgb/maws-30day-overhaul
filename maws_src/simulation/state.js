@@ -19,6 +19,7 @@ import {
   RESOURCE_RULES,
   SAVE_KEY,
   SKILLS,
+  SKILL_TREE_NODES,
   SKILL_UNLOCKS,
   STAT_KEYS,
   STAT_RULES,
@@ -27,12 +28,52 @@ import {
   TIME_DOSAGE_OPTIONS,
   TRAVEL_TUNING
 } from '../content/data.js';
-import { applyGain, settlementLines } from './economy.js';
+import { applyGain as applyEconomyGain, settlementLines as economySettlementLines } from './economy.js';
 import { buildOpportunities } from './events.js';
 import { chooseEnemyResponse, previewPlayerAction, resolveCombatExchange, suggestCombatQueue } from './combat.js';
 
 export const clone = (value) => JSON.parse(JSON.stringify(value));
 export const clamp = (value, min, max) => Math.max(min, Math.min(max, Number.isFinite(Number(value)) ? Number(value) : 0));
+
+function normalizeInsightPoints(state) {
+  const player = state?.player;
+  if (!player) return 0;
+  player.insightPoints = Math.max(0, Math.round(Number(player.insightPoints ?? 0) || 0));
+  return player.insightPoints;
+}
+
+function addInsight(state, amount = 0) {
+  const value = Math.max(0, Math.round(Number(amount) || 0));
+  if (!value) return 0;
+  normalizeInsightPoints(state);
+  state.player.insightPoints += value;
+  return value;
+}
+
+function applyGain(state, gain = {}) {
+  applyEconomyGain(state, gain);
+  addInsight(state, gain?.insight ?? gain?.insightPoints ?? 0);
+  return state;
+}
+
+function settlementLines(before, after) {
+  const lines = economySettlementLines(before, after);
+  const beforePlayer = before?.player || before || {};
+  const afterPlayer = after?.player || after || {};
+  const delta = Math.round(Number(afterPlayer.insightPoints || 0) - Number(beforePlayer.insightPoints || 0));
+  if (delta) {
+    lines.push({
+      group: 'player',
+      key: 'insightPoints',
+      label: '洞察点',
+      delta,
+      kind: 'skill',
+      tone: delta > 0 ? 'good' : 'bad',
+      text: `洞察点 ${delta > 0 ? '+' : ''}${delta}`
+    });
+  }
+  return lines;
+}
 
 const EQUIPMENT_SLOTS = [
   { id: 'hand', name: '手部', empty: '拳套/缠手' },
@@ -373,6 +414,7 @@ export function createNewState(origin = 'worker') {
       calm: 58,
       fatigue: 10,
       fitXp: 0,
+      insightPoints: 0,
       money: o.money,
       fame: 0,
       face: 45,
@@ -386,6 +428,7 @@ export function createNewState(origin = 'worker') {
     inventory: { rice: 1, drink: 1 },
     equipment: { hand: null, foot: null, body: null, head: null, accessory: null },
     ownedZhus: [],
+    skillTree: { unlocked: {} },
     log: [],
     eventLog: [],
     combatMemory: { fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recent: [] },
@@ -417,6 +460,7 @@ export function migrateSave(input) {
   s.player ||= {};
   s.player.fitXp ||= 0;
   s.player.face ||= 45;
+  normalizeInsightPoints(s);
   s.player.injuries = Array.isArray(s.player.injuries) ? s.player.injuries : [];
   s.player.stats ||= clone(ORIGINS.worker.stats);
   STAT_KEYS.forEach((key) => { if (s.player.stats[key] == null) s.player.stats[key] = ORIGINS.worker.stats[key]; });
@@ -425,6 +469,8 @@ export function migrateSave(input) {
   s.inventory ||= {};
   s.equipment = { hand: null, foot: null, body: null, head: null, accessory: null, ...(s.equipment || {}) };
   s.ownedZhus ||= [];
+  s.skillTree ||= { unlocked: {} };
+  s.skillTree.unlocked ||= {};
   s.log ||= [];
   s.eventLog ||= [];
   s.unlocked ||= {};
@@ -528,6 +574,8 @@ function gainParts(gain = {}) {
     auth: '真实性',
     heat: '热度',
     fitXp: '体能沉淀',
+    insight: '洞察点',
+    insightPoints: '洞察点',
     fatigue: '疲劳',
     hp: '生命',
     sp: '体力',
@@ -614,6 +662,53 @@ function skillUnlocksModel(state) {
       availableHere: Boolean(locId && state.loc === locId && !locked && !closed)
     }];
   }));
+}
+
+function skillTreeModel(state) {
+  const points = Math.max(0, Math.round(Number(state.player?.insightPoints || 0)));
+  const purchased = state.skillTree?.unlocked || {};
+  const nodeById = Object.fromEntries(SKILL_TREE_NODES.map((node) => [node.id, node]));
+  const nodeModels = SKILL_TREE_NODES.map((node) => {
+    const future = Boolean(node.future || node.locked);
+    const owned = Boolean(purchased[node.id]);
+    const learnedSkill = Boolean(node.skillId && state.skillState?.[node.skillId]);
+    const missingRequires = (node.requires || []).filter((id) => !purchased[id]);
+    const cost = Number.isFinite(Number(node.cost)) ? Number(node.cost) : null;
+    const affordable = cost == null || points >= cost;
+    const lockedReason = future
+      ? '后续版本开放'
+      : missingRequires.length
+        ? `需要先点亮：${missingRequires.map((id) => nodeById[id]?.label || id).join('、')}`
+        : (!affordable ? '洞察点不足' : '');
+    const status = future ? 'future' : (owned ? 'owned' : (lockedReason ? 'locked' : 'available'));
+    return {
+      ...node,
+      cost,
+      owned,
+      learnedSkill,
+      available: status === 'available',
+      status,
+      locked: status === 'locked' || status === 'future',
+      lockedReason
+    };
+  });
+  const treeMap = new Map();
+  nodeModels.forEach((node) => {
+    if (!treeMap.has(node.tree)) {
+      treeMap.set(node.tree, {
+        id: node.tree,
+        name: node.treeName || node.tree,
+        nodes: []
+      });
+    }
+    treeMap.get(node.tree).nodes.push(node);
+  });
+  return {
+    points,
+    pointKey: 'insightPoints',
+    pointName: RESOURCE_RULES.insightPoints?.name || '洞察点',
+    trees: [...treeMap.values()]
+  };
 }
 
 function skillIdsFromGain(gain = {}) {
@@ -888,6 +983,7 @@ function resolveStoryChoice(state, choiceId) {
   }
   const before = snapshotState(state);
   if (choice.gain) applyGain(state, choice.gain);
+  addInsight(state, 1);
   applyStoryFlags(state, choice.flags || {});
   applyMainlineMawEffects(state, {
     ...main,
@@ -1259,6 +1355,7 @@ const REWARD_KIND_BY_KEY = Object.freeze({
   face: 'gain',
   auth: 'gain',
   fitXp: 'gain',
+  insightPoints: 'skill',
   fatigue: 'risk',
   heat: 'risk',
   injury: 'risk',
@@ -2129,6 +2226,7 @@ function finishFirstWindBattle(state, reason = 'first_wind') {
   state.flags.needFatherDiary = true;
   state.flags[`main_${state.day}`] = true;
   state.daily.mainDone = true;
+  addInsight(state, 2);
   const targetSp = Math.round(state.player.spMax * 0.66);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   addLog(state, '一阵风之后，你知道旧招名接不住真实拳距。第9天，该回家翻开父亲日记。');
@@ -2169,6 +2267,7 @@ function finishObjectiveBattle(state, reason = 'normal') {
   };
   state.player.morale = clamp(state.player.morale + (completed >= 3 ? 7 : completed >= 2 ? 2 : -5), 0, 100);
   state.player.calm = clamp(state.player.calm + (completed >= 2 ? 4 : -4), 0, 100);
+  addInsight(state, completed >= 3 ? 3 : 1);
   const targetSp = Math.round(state.player.spMax * 0.58);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   addLog(state, `第30天目标战：${tier.title}（${completed}/${objectives.length}）。`);
@@ -2210,6 +2309,7 @@ function finishParkCheckBattle(state, reason = 'normal') {
   state.daily.mainDone = true;
   state.player.morale = clamp(state.player.morale + (win ? 4 : -2), 0, 100);
   state.player.calm = clamp(state.player.calm + 3, 0, 100);
+  addInsight(state, win ? 2 : 1);
   const targetSp = Math.round(state.player.spMax * 0.64);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   addLog(state, win
@@ -2450,6 +2550,7 @@ export class GameStore {
         } else {
           const before = snapshotState(s);
           if (main.gain) applyGain(s, main.gain);
+          addInsight(s, 1);
           applyMainlineMawEffects(s, main);
           s.flags[`main_${s.day}`] = true;
           s.daily.mainDone = true;
@@ -3164,6 +3265,7 @@ export function buildRenderModel(state) {
       ['真实性', Math.round(p.auth), '真'],
       ['名声', Math.round(p.fame), '星'],
       ['热度', Math.round(p.heat), '热'],
+      ['洞察点', Math.round(p.insightPoints || 0), '悟'],
       ['体能沉淀', `Lv${fit.level} ${fit.progress}/20`, '体']
     ],
     player: { ...p, stats, fit, origin: ORIGINS[state.origin], injuries: p.injuries || [] },
@@ -3178,6 +3280,7 @@ export function buildRenderModel(state) {
     resourceRules: RESOURCE_RULES,
     styleRules: STYLE_RULES,
     skillUnlocks: skillUnlocksModel(state),
+    skillTree: skillTreeModel(state),
     skills: Object.entries(SKILLS).map(([id, skill]) => ({
       id,
       ...skill,
