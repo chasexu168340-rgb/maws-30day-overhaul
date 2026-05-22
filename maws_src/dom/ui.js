@@ -145,22 +145,35 @@ function rewardChipFromText(value) {
 function rewardChipFromLine(line) {
   if (!line || typeof line !== 'object') return rewardChipFromText(line);
   const label = rewardLabelAliases[line.key] || line.label || line.key || line.group || '收益';
+  const kind = line.kind || rewardChipKind(label, line.text || line.value || '', line.group);
+  const isSkillUnlock = kind === 'skill'
+    && (String(line.key || '').startsWith('skills:') || /^学会\s+/.test(String(label)) || /学会|习得|掌握|解锁/.test(String(line.text || '')));
+  if (isSkillUnlock) {
+    const skillName = String(label).replace(/^学会\s*/, '').trim()
+      || String(line.value || line.text || '').replace(/^(学会|习得|掌握|解锁)[：:\s]*/, '').split('/')[0].trim()
+      || '新技能';
+    return { label: '学会', value: skillName, text: line.text || skillName, kind };
+  }
   const delta = Number(line.delta || 0);
-  const text = line.text || (delta ? `${delta > 0 ? '+' : ''}${delta}` : '');
-  const parsed = rewardChipFromText(`${label} ${text}`);
-  return parsed ? { ...parsed, kind: rewardChipKind(label, text, line.group) } : null;
+  const value = delta
+    ? `${delta > 0 ? '+' : ''}${delta}`
+    : String(line.value ?? line.text ?? '').trim();
+  if (!value) return null;
+  return { label, value, text: line.text || `${label} ${value}`, kind: kind === 'skill' ? 'gain' : kind };
 }
 
 function collectRewardChips(modal = {}, limit = 5) {
-  const items = [
+  const structuredItems = [
     ...(modal.rewardDeltas || []),
-    ...(modal.rewards || []),
+    ...(modal.rewards || [])
+  ];
+  const fallbackItems = [
     ...(modal.gain || []),
     ...(modal.summary?.gain || []),
     ...(modal.summaryChips || []),
-    ...(modal.settlementLines || []),
-    ...(modal.lines || [])
+    ...(modal.settlementLines || [])
   ];
+  const items = structuredItems.length ? structuredItems : fallbackItems;
   const chips = [];
   const seen = new Set();
   items.forEach((item) => {
@@ -860,7 +873,8 @@ function renderCombat(model) {
   }));
   const selectedCards = equippedCards.filter((skill) => skill.selected);
   const standbyCards = equippedCards.filter((skill) => !skill.selected);
-  const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, Math.min(queueLimit, 2)));
+  const visibleCardLimit = Math.max(queueLimit, Math.min(4, equippedCards.length || queueLimit));
+  const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, visibleCardLimit));
   const windowIds = new Set(windowCards.map((skill) => skill.id));
   const drawerCards = equippedCards.filter((skill) => !windowIds.has(skill.id));
   const windowCardHtml = windowCards.map((skill) => renderSkillCard(skill, true)).join('');
@@ -897,10 +911,10 @@ function renderCombat(model) {
           <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>本窗口动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
         <div class="maws-combat-window-cards">
-          <b>本窗口行动卡</b>
+          <b>行动卡 · 本窗口最多 ${esc(queueLimit)} 招</b>
           <div class="maws-card-grid combat focus">${windowCardHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
         </div>
-        <details class="maws-fold maws-tactics-drawer">
+        <details class="maws-fold maws-tactics-drawer" ${drawerCards.length ? 'open' : ''}>
           <summary>更多动作 / 战术抽屉 <span>${esc(drawerCards.length)}张</span></summary>
           <div class="maws-card-grid combat">${drawerCardHtml || '<p class="maws-empty">没有更多可用动作。</p>'}</div>
         </details>
@@ -942,7 +956,9 @@ function modalBodyLines(body) {
 
 function renderModalShell(modal, inner, className = '') {
   const classes = ['maws-modal', className].filter(Boolean).join(' ');
-  return `<div class="${classes}">${renderRewardStack(modal)}<section class="maws-modal-shell">${inner}</section></div>`;
+  const hasInlineRewards = ['dialogue', 'settlement', 'battleResult'].includes(modal.type)
+    || /\b(dialogue|result-feedback|battle-result)\b/.test(className);
+  return `<div class="${classes}">${hasInlineRewards ? '' : renderRewardStack(modal)}<section class="maws-modal-shell">${inner}</section></div>`;
 }
 
 function renderModalAction(action) {

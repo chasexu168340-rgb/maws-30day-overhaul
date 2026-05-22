@@ -203,6 +203,23 @@ test('desktop map visual geometry stays inside the viewport', async ({ page }) =
   expect(errors).toEqual([]);
 });
 
+test('structured reward chips stay compact after an action result', async ({ page }) => {
+  const errors = await loadGame(page, DESKTOP);
+
+  await page.locator('.maws-action-rail-main button[data-action="doAction"]').first().click();
+  await expect(page.locator('.maws-modal.duration')).toBeVisible();
+  await page.locator('.maws-duration-choice.standard button[data-action="chooseDuration"]').click();
+  await expect(page.locator('.maws-reward-chip').first()).toBeVisible();
+
+  const chips = await page.locator('.maws-reward-chip').evaluateAll((nodes) => nodes.map((node) => node.textContent.replace(/\s+/g, ' ').trim()));
+  expect(chips.length, 'action result should expose reward chips').toBeGreaterThan(0);
+  expect(new Set(chips).size, 'reward chips should not duplicate the same delta').toBe(chips.length);
+  chips.forEach((chip) => {
+    expect(chip, 'reward chip should not include long source/detail prose').not.toMatch(/来源|开放条件|沙包连击|\/|后续/);
+  });
+  expect(errors).toEqual([]);
+});
+
 test('desktop combat visual geometry keeps cards, queue, and log contained', async ({ page }) => {
   const errors = await loadGame(page, DESKTOP);
 
@@ -215,6 +232,12 @@ test('desktop combat visual geometry keeps cards, queue, and log contained', asy
   const cardGrid = await box(page, '.maws-combat-window-cards');
   expect(cardGrid.height, 'combat card grid should stay below 28% of viewport height').toBeLessThanOrEqual(DESKTOP.height * 0.28);
   expect(await page.locator('.maws-queue-slot').count(), 'combat queue slots should exist').toBeGreaterThan(0);
+  const visibleCombatCardCount = await page.locator('.maws-combat-ui .maws-skill.combat-card').evaluateAll((cards) => cards.filter((card) => {
+    const rect = card.getBoundingClientRect();
+    const style = window.getComputedStyle(card);
+    return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+  }).length);
+  expect(visibleCombatCardCount, 'combat HUD should show the focused 1-2 cards plus visible tactical options').toBeGreaterThan(2);
 
   const logAndPage = await page.locator('.maws-combat-log-toggle').evaluate((log) => {
     const rect = log.getBoundingClientRect();

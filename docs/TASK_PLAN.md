@@ -4,29 +4,36 @@
 
 ## Current Task
 
-WAVE12_VISUAL_STAGE_HUD_STRIKE：主界面、战斗 HUD、人物站位、弹窗密度视觉实现。
+Wave 12：Visual Slice Strike。
 
 ## Result
 
-- 已修改 `maws_src/dom/ui.js`、`maws_src/dom/ui.css`。
-- 地图舞台放大角色/NPC，增加接触阴影、柔和描边、角色 hover/click 气泡反馈。
-- 战斗 HUD 改为舞台优先：底部 dock 限高，1-2 个窗口行动卡突出，更多动作进入抽屉，卡牌默认只保留名称、效果、命中、体/AP。
-- 行动/技能默认显示关键耗时、体力/现金、收益、熟练度/来源，长描述和完整数值折叠。
-- 小事件/结算优先使用结构化 `rewardDeltas` 数字 chip，长句进入 details。
-- 已新增报告：`docs/workers/visual_stage_hud_strike.md`、`docs/agent_reports/AGENT_E_VISUAL_STAGE_HUD_STRIKE.md`。
+- 已按 staged pipeline 完成并合并：`feat/structured-reward-deltas` -> `feat/visual-stage-hud-strike` -> `test/wave12-visual-smoke` -> `docs/wave12-art-direction-shotlist` -> `qa/wave12-visual-review`。
+- QA 在实现分支全部合并并推送后才启动，避免了提前审老版本。
+- Manager follow-up 已修复 QA P1/P2：
+  - reward chips 结构化优先，不再把 `settlementLines` / 长对话句重复解析成 chip。
+  - 弹窗内已有 hero chips 时不再额外叠一层 reward stack。
+  - 战斗 HUD 可见 4 张小行动卡，队列仍限制本窗口 1-2 招。
+  - Wave 12 visual smoke 增加结构化 reward chip 去重/短文本断言，以及可见战斗卡数量断言。
+- 已推送 `staging/reforge-unlocks-v1`。
 
 ## Validation
 
 - `npm run check:full`：通过。
 - `npm run test:playtest`：通过。
+- `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`：通过。
 - `git diff --check`：通过。
-- 人工截图：`test-results/wave12-visual-strike/` 下 1536x864 地图、1536x864 战斗、390x844、小事件结果均已查看。
+- 人工查看截图：
+  - `test-results/wave12/desktop-combat.png`
+  - `test-results/wave12/desktop-map-modal.png`
+  - `test-results/wave12/mobile-main-cta.png`
 
 ## Risks
 
-- 为避免 Phaser canvas 抢 DOM 控件点击，CSS 将 `#game-root` 指针事件关闭；当前交互都由 DOM UI 承接，后续若新增 Phaser canvas 直接点击玩法，需要重新分层。
-- 390x844 信息密度较高，但无横向溢出，底部导航可见。
+- `GameDesigner_CombatAnalysis/` 仍是未跟踪目录，本轮未触碰。
+- QA 报告保留了原始 findings；本文件记录 manager follow-up 已修复 P1/P2。P3 是 manager/pipeline setup scope，不属于 worker 越界。
+- 视觉截图已明显改善，但高分辨率最终美术质量仍需后续人工 playtest 继续看第一眼观感。
 
 ## Next Step
 
-提交并推送当前 worker 分支；合并前按 Wave 12 顺序等待 structured reward 分支在前。
+人工进 `maws_30day_overhaul_v3.html` 看 Wave 12 最终画面；如果 5 个视觉硬门槛通过，再开下一轮，不要直接跳技能树 implementation。

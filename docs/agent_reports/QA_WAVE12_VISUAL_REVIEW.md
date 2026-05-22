@@ -40,3 +40,19 @@ The integrated Wave 12 range includes changes under `scripts/`, including `scrip
 - `git diff --check` passed.
 
 Note: `git fetch --all --prune` failed with `Recv failure: Connection was reset`; this review used the local `origin/*` refs already present in the QA worktree.
+
+## Manager Follow-up
+
+Status after follow-up: **ready for producer visual review**.
+
+- P1 addressed: UI reward chips now prefer `modal.rewardDeltas` / structured rewards and no longer mix `settlementLines` or dialogue `lines` into the same chip pass when structured deltas exist. Inline reward modals also suppress the duplicate floating reward stack.
+- P2 addressed: the combat HUD now shows up to 4 visible compact action cards while keeping the queue limit at 1-2 actions. `wave12_visual.spec.js` now asserts more than 2 visible combat cards.
+- Added a visual smoke assertion that action reward chips are compact, deduped, and do not contain long source/detail prose.
+- P3 accepted as manager setup scope: the script changes were pipeline fixes, not worker branch implementation changes.
+
+Validation after follow-up:
+
+- `npm run check:full`: passed.
+- `npm run test:playtest`: passed.
+- `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`: passed.
+- `git diff --check`: passed.
