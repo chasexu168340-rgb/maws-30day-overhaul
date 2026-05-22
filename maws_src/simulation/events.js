@@ -22,7 +22,8 @@ const FACTOR_LABELS = Object.freeze({
   hardFightStress: '硬战压力',
   highHeatChallenge: '热度挑战',
   earlyDay: '早期引导',
-  homeIdle: '宅家提醒'
+  homeIdle: '宅家提醒',
+  jabNeed: '刺拳基础缺口'
 });
 
 const RISK_LABEL_TO_LEVEL = Object.freeze({
@@ -391,7 +392,7 @@ export const EVENT_RULES = deepFreeze([
     base: 57,
     tags: ['拳馆', '沙包连击', '刺拳提示'],
     when: { minDay: 6, any: [{ lastResult: 'loss' }, { missingSkill: 'jab' }] },
-    weights: { losses: 4, lowAuth: 1.2, earlyDay: 2.5, homeIdle: 1.4 }
+    weights: { losses: 4, lowAuth: 1.2, earlyDay: 2.5, homeIdle: 1.4, jabNeed: 12 }
   },
   {
     id: 'mma_open_mat',
@@ -699,7 +700,8 @@ function factorsFor(state = {}) {
     fatherMemory: clamp(maw.fatherMemory, 0, 100) / 10,
     mawReforge: clamp(maw.reforge, 0, 100) / 10,
     earlyDay: day <= 7 ? (8 - day) / 2 : 0,
-    homeIdle: state.loc === 'home' && dailyActions <= 0 ? 1 : 0
+    homeIdle: state.loc === 'home' && (dailyActions <= 0 || number(state.daily?.idleSleepStreak) > 0) ? 1 : 0,
+    jabNeed: day >= 6 && !hasSkill(state, 'jab') ? 1 : 0
   };
 }
 
@@ -851,7 +853,8 @@ function readableReason(key, value) {
     hardFightStress: '身体状态不适合硬战',
     highHeatChallenge: '热度引来挑战',
     earlyDay: '早期适合低压安排',
-    homeIdle: positive ? '今天还没出门，适合轻提醒' : '不优先推硬战'
+    homeIdle: positive ? '今天还没出门，适合轻提醒' : '不优先推硬战',
+    jabNeed: '刺拳还没补上'
   };
   return map[key] || `${FACTOR_LABELS[key] || key}${positive ? '上升' : '下降'}`;
 }
@@ -867,10 +870,22 @@ function reasonFromBreakdown(breakdown) {
   return entries.join(' / ');
 }
 
+function opportunityCooldownKey(rule = {}) {
+  if (rule.cooldownKey) return rule.cooldownKey;
+  if (rule.when?.requiresHomeIdle || rule.tags?.includes('防摆烂')) return 'home_idle_reminder';
+  if (rule.tags?.includes('低压推荐')) return 'early_soft_guide';
+  if (rule.tags?.includes('沙包连击') || rule.tags?.includes('刺拳提示')) return 'jab_bag_hint';
+  if (rule.kind === 'battle') return `battle_${rule.loc || 'any'}`;
+  if (rule.kind === 'shop') return `shop_${rule.loc || 'any'}`;
+  if (rule.kind === 'recovery') return 'recovery';
+  return `${rule.kind || 'event'}_${rule.loc || 'any'}`;
+}
+
 function publicCard(rule, score, breakdown) {
   const { base, weights, when, ...card } = rule;
   return {
     ...card,
+    cooldownKey: opportunityCooldownKey(rule),
     score,
     riskLevel: eventRiskLevel(rule),
     riskLabel: eventRiskLabel(rule),
@@ -881,7 +896,9 @@ function publicCard(rule, score, breakdown) {
 
 export function buildOpportunities(state = {}) {
   const factors = factorsFor(state);
-  const count = Math.max(1, Math.floor(number(state.opportunityCount, 3)));
+  const count = clamp(Math.floor(number(state.opportunityCount, 3)), 1, 3);
+  const cooldowns = state.daily?.opportunityCooldowns || {};
+  const usedKeys = new Set();
   return EVENT_RULES
     .filter((rule) => passesRule(rule, factors))
     .map((rule) => {
@@ -889,5 +906,11 @@ export function buildOpportunities(state = {}) {
       return publicCard(rule, score, breakdown);
     })
     .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+    .filter((card) => {
+      if (cooldowns[card.cooldownKey]) return false;
+      if (usedKeys.has(card.cooldownKey)) return false;
+      usedKeys.add(card.cooldownKey);
+      return true;
+    })
     .slice(0, count);
 }

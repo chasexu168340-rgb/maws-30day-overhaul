@@ -71,6 +71,13 @@ export function phaseText(time) {
   return '深夜';
 }
 
+function dayPeriod(time) {
+  if (time < 720) return { id: 'morning', label: '上午', actionWindow: 1 };
+  if (time < 1020) return { id: 'afternoon', label: '下午', actionWindow: 2 };
+  if (time < 1320) return { id: 'evening', label: '傍晚/夜晚', actionWindow: 3 };
+  return { id: 'night', label: '深夜', actionWindow: 4 };
+}
+
 export function dayStage(day) {
   if (day <= 7) return '幻想期';
   if (day <= 14) return '验货期';
@@ -880,10 +887,17 @@ function sleep(state, forced = false) {
   p.morale = clamp(p.morale + (forced ? -3 : 3), 0, 100);
   p.injuries.forEach((injury) => { injury.turn -= 1; });
   p.injuries = p.injuries.filter((injury) => injury.turn > 0);
+  const sleptIdle = state.loc === 'home' && Number(state.daily?.actions || 0) <= 0;
   state.day += 1;
   state.time = 420;
   state.loc = 'home';
-  state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: state.day };
+  state.daily = {
+    talked: {},
+    actions: 0,
+    mainDone: false,
+    sideSeed: state.day,
+    idleSleepStreak: sleptIdle ? Number(state.daily?.idleSleepStreak || 0) + 1 : 0
+  };
   addLog(state, `进入第${state.day}天。${forced ? '熬夜导致恢复变差。' : '睡了一觉，状态恢复。'}`);
 }
 
@@ -1094,6 +1108,14 @@ function executeAction(state, action, options = {}) {
   }
 }
 
+function markOpportunityCooldown(state, card = {}) {
+  const key = card.cooldownKey || card.id;
+  if (!key) return;
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  state.daily.opportunityCooldowns ||= {};
+  state.daily.opportunityCooldowns[key] = true;
+}
+
 function resolveEventNotebook(state) {
   const modal = state.ui.modal;
   if (!modal || modal.type !== 'eventNotebook') {
@@ -1115,16 +1137,20 @@ function resolveEventNotebook(state) {
   }
 
   if (card.enemy) {
+    markOpportunityCooldown(state, card);
     addLog(state, `进入事件：${card.title}`);
     startBattle(state, card.enemy);
   } else if (card.shop) {
+    markOpportunityCooldown(state, card);
     state.ui.tab = 'shop';
     state.ui.modal = null;
     addLog(state, `处理待办：${card.title}`);
   } else if (card.action) {
+    markOpportunityCooldown(state, card);
     const action = findAction(state, card.action) || actionById(card.action);
     executeAction(state, action, { allowNotebook: false, eventContext: modal });
   } else {
+    markOpportunityCooldown(state, card);
     if (card.npc) state.relations[card.npc] = (state.relations[card.npc] || 0) + 1;
     state.ui.modal = dialogueModal({
       title: card.title,
@@ -2305,6 +2331,61 @@ function mawRenderModel(state) {
   };
 }
 
+function todayFocusModel(state, mainEvent) {
+  if (mainEvent) {
+    const locName = LOCS[mainEvent.loc]?.name || mainEvent.loc || '当前地点';
+    return {
+      id: mainEvent.id || `main_${state.day}`,
+      title: mainEvent.title,
+      loc: mainEvent.loc,
+      locName,
+      done: Boolean(state.daily?.mainDone || state.flags?.[`main_${state.day}`]),
+      soft: state.day <= 7,
+      text: state.day <= 7
+        ? `今日主线锚点：${mainEvent.title}。先到${locName}看清楚，不强制把今天变成战斗。`
+        : `今日主线锚点：${mainEvent.title}。优先处理，再安排自由行动。`
+    };
+  }
+  const missingJab = state.day >= 6 && !state.skillState?.jab && !state.unlocked?.jab;
+  return {
+    id: missingJab ? 'jab_bag_hint' : 'daily_baseline',
+    title: missingJab ? '拳馆 · 沙包连击' : '把今天做成一个闭环',
+    loc: missingJab ? 'boxing' : state.loc,
+    locName: missingJab ? LOCS.boxing?.name || '拳馆' : LOCS[state.loc]?.name || '',
+    done: false,
+    soft: true,
+    text: missingJab
+      ? '今日主线锚点：先补刺拳距离感。去拳馆做沙包连击比继续找架更实际。'
+      : '今日主线锚点：选一个训练、恢复或复盘目标，完成后再决定要不要加码。'
+  };
+}
+
+function dailyDirectorModel(state, mainEvent, opportunities = []) {
+  const period = dayPeriod(state.time);
+  const actionsDone = clamp(state.daily?.actions, 0, 99);
+  const baselineSlots = state.time < 1320 ? 3 : 1;
+  const remainingActions = clamp(Math.min(baselineSlots - actionsDone, 3), 0, 3);
+  const focus = todayFocusModel(state, mainEvent);
+  const idleSleepStreak = Number(state.daily?.idleSleepStreak || 0);
+  const freeActionHint = remainingActions <= 0
+    ? '今天的自由行动感已经很满了，适合收尾、恢复或睡觉。'
+    : idleSleepStreak > 0
+      ? '先做一个很小的出门动作：复盘、补给、观察都可以，不需要立刻战斗。'
+      : `还适合安排 ${remainingActions} 个自由行动；优先从当前推荐里挑，不要无限刷地图。`;
+  return {
+    period,
+    todayFocus: focus,
+    mainline: focus,
+    recommendedCount: Math.min(opportunities.length, 3),
+    remainingActions,
+    softCombatDays: state.day <= 7,
+    freeActionHint,
+    homeIdleReminder: idleSleepStreak > 0 || (state.loc === 'home' && actionsDone <= 0)
+      ? '如果今天只想休息也可以；先让手机、刘胖子或邻居给一个轻提醒。'
+      : ''
+  };
+}
+
 export function buildRenderModel(state) {
   if (!state) return { boot: true, origins: ORIGINS };
   const p = state.player;
@@ -2312,6 +2393,7 @@ export function buildRenderModel(state) {
   const fit = fitBonus(p);
   const mainEvent = MAIN_EVENTS[state.day] && !state.flags[`main_${state.day}`] ? MAIN_EVENTS[state.day] : null;
   const opportunities = buildOpportunities(state);
+  const dailyDirector = dailyDirectorModel(state, mainEvent, opportunities);
   const timeOfDay = timeOfDayKey(state.time);
   const backgroundKey = locationBackgroundKey(state.loc, timeOfDay);
   const combatInput = state.combat ? toCombatInput(state) : null;
@@ -2360,6 +2442,9 @@ export function buildRenderModel(state) {
     toast: state.ui.toast,
     day: state.day,
     dayText: `第${state.day}天 周${DOW[(state.day - 1) % 7]} ${fmtTime(state.time)}`,
+    dayPeriod: dailyDirector.period,
+    todayFocus: dailyDirector.todayFocus,
+    dailyDirector,
     phase: `${dayStage(state.day)} · ${phaseText(state.time)} · ${LOCS[state.loc]?.name || ''}`,
     loc: { id: state.loc, ...(LOCS[state.loc] || {}) },
     locs: Object.entries(LOCS).map(([id, loc]) => {
