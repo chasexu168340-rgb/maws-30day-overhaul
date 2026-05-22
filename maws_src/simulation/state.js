@@ -688,7 +688,7 @@ function storyChoiceItems(main) {
   }));
 }
 
-function dialogueModal({ title, npc, body = '', lines = null, choices = [], settlementLines = [], onComplete = null, actionLabel = '知道了' }) {
+function dialogueModal({ title, npc, body = '', lines = null, choices = [], settlementLines = [], rewardDeltas = [], followUps = [], onComplete = null, actionLabel = '知道了' }) {
   const fallback = {
     title,
     npc,
@@ -706,6 +706,8 @@ function dialogueModal({ title, npc, body = '', lines = null, choices = [], sett
     index: 0,
     choices,
     settlementLines,
+    rewardDeltas,
+    followUps: followUps.slice(0, 2),
     onComplete,
     actionLabel
   };
@@ -721,7 +723,7 @@ function storyChoiceModal(state, main) {
   });
 }
 
-function npcDialogueModal(npcId, settlement = []) {
+function npcDialogueModal(npcId, settlement = [], rewardDeltas = []) {
   const npc = NPCS[npcId] || {};
   return dialogueModal({
     title: npc.name || '对话',
@@ -729,6 +731,7 @@ function npcDialogueModal(npcId, settlement = []) {
     body: npcLine(npcId),
     lines: NPC_DIALOGUES[npcId],
     settlementLines: settlement,
+    rewardDeltas,
     actionLabel: '记下'
   });
 }
@@ -882,12 +885,14 @@ function resolveStoryChoice(state, choiceId) {
     startBattle(state, enemyId, true, { script: choice.script || main.script, objectives: choice.objectives || main.objectives });
     return;
   }
+  const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = dialogueModal({
     title: choice.resultTitle || choice.label || main.title,
     npc: choice.npc || main.npc,
     body: choice.result || choice.text || main.desc,
     lines: choice.dialogue || [{ speaker: '陆小闲', text: choice.result || choice.text || main.desc }],
-    settlementLines: settlementLines(before, snapshotState(state)),
+    settlementLines: lines,
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'storyChoice' }),
     actionLabel: '收住'
   });
 }
@@ -1150,7 +1155,13 @@ function useItem(state, id) {
   applyGain(state, item.gain || {});
   state.inventory[id] -= 1;
   if (state.inventory[id] <= 0) delete state.inventory[id];
-  return { title: `${item.name} 使用结算`, lines: settlementLines(before, snapshotState(state)) };
+  const lines = settlementLines(before, snapshotState(state));
+  return {
+    title: `${item.name} 使用结算`,
+    lead: `${item.name}已经使用。`,
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'item' }),
+    lines
+  };
 }
 
 function unequipItem(state, slot) {
@@ -1176,11 +1187,116 @@ function settlementText(line) {
   return line.text || [line.label, line.delta ? `${Number(line.delta) > 0 ? '+' : ''}${line.delta}` : ''].filter(Boolean).join(' ');
 }
 
+const REWARD_KIND_BY_KEY = Object.freeze({
+  money: 'money',
+  sp: 'sp',
+  hp: 'hp',
+  calm: 'calm',
+  morale: 'morale',
+  fatigue: 'risk',
+  heat: 'risk',
+  injury: 'risk',
+  inventory: 'item',
+  time: 'time'
+});
+
+const REWARD_ICON_BY_KIND = Object.freeze({
+  money: '钱',
+  sp: '体',
+  hp: '命',
+  calm: '静',
+  morale: '气',
+  relation: '人',
+  skill: '技',
+  maw: '茂',
+  risk: '险',
+  item: '物',
+  time: '时'
+});
+
+function rewardKind(line = {}) {
+  if (line.group === 'skills') return 'skill';
+  if (line.group === 'relations') return 'relation';
+  if (line.group === 'styles' || line.group === 'stats') return 'skill';
+  return REWARD_KIND_BY_KEY[line.key] || 'maw';
+}
+
+function rewardValueFromSnapshot(line = {}, snapshot = {}) {
+  const state = snapshot.player ? snapshot : { player: snapshot.player || {}, styles: snapshot.styles || {}, relations: snapshot.relations || {}, skillState: snapshot.skillState || {} };
+  if (line.group === 'relations') return state.relations?.[line.key] ?? null;
+  if (line.group === 'styles') return state.styles?.[line.key] ?? null;
+  if (line.group === 'stats') return state.player?.stats?.[line.key] ?? null;
+  if (line.group === 'skills') return state.skillState?.[line.key]?.p ?? 1;
+  return state.player?.[line.key] ?? null;
+}
+
+function rewardLabel(line = {}) {
+  if (line.group === 'relations') return `${NPCS[line.key]?.name || line.key}关系`;
+  if (line.group === 'skills') return `学会 ${SKILLS[line.key]?.name || line.key}`;
+  return line.label || line.key || '变化';
+}
+
+function rewardDeltaText(delta) {
+  const n = Math.round(Number(delta || 0));
+  return n > 0 ? `+${n}` : String(n);
+}
+
+function rewardDeltaFromLine(line = {}, after = {}, source = 'settlement', index = 0) {
+  const delta = Math.round(Number(line.delta || 0));
+  if (!delta) return null;
+  const kind = rewardKind(line);
+  const label = rewardLabel(line);
+  return {
+    key: `${line.group || 'player'}:${line.key || label}`,
+    label,
+    value: rewardValueFromSnapshot(line, after),
+    delta,
+    kind,
+    icon: REWARD_ICON_BY_KIND[kind] || '得',
+    tone: line.tone || (delta > 0 ? 'good' : 'bad'),
+    priority: index + (kind === 'money' ? 0 : kind === 'time' ? 90 : kind === 'skill' ? 10 : 20),
+    source
+  };
+}
+
+function timeRewardDelta(minutes = 0, source = 'time') {
+  const value = Math.round(Number(minutes || 0));
+  if (!value) return null;
+  return {
+    key: 'time',
+    label: '时间',
+    value: null,
+    delta: -value,
+    kind: 'time',
+    icon: REWARD_ICON_BY_KIND.time,
+    tone: 'bad',
+    priority: 95,
+    source
+  };
+}
+
+function rewardDeltasFromSettlement(lines = [], after = {}, { source = 'settlement', minutes = 0 } = {}) {
+  return [
+    ...lines.map((line, index) => rewardDeltaFromLine(line, after, source, index)).filter(Boolean),
+    timeRewardDelta(minutes, source)
+  ]
+    .filter(Boolean)
+    .sort((a, b) => a.priority - b.priority);
+}
+
+function oneSentence(text = '', fallback = '') {
+  const source = String(text || fallback || '').replace(/\s+/g, ' ').trim();
+  if (!source) return '';
+  const match = source.match(/^.*?[。！？.!?](?=\s|$)/);
+  const sentence = match ? match[0] : source;
+  return sentence.length > 42 ? `${sentence.slice(0, 42)}...` : sentence;
+}
+
 function resultLead(title = '行动', body = '', lines = []) {
-  const firstBodyLine = textList(body)[0];
-  if (firstBodyLine) return firstBodyLine;
+  const firstBodyLine = textList(body).find((line) => !line.startsWith('投入：'));
+  if (firstBodyLine) return oneSentence(firstBodyLine);
   const firstChange = lines.map(settlementText).find(Boolean);
-  if (firstChange) return `${title}完成了，最明显的变化是：${firstChange}`;
+  if (firstChange) return oneSentence(`${title}完成了，最明显的变化是：${firstChange}。`);
   return `${title}已经处理完，可以决定下一步。`;
 }
 
@@ -1200,7 +1316,7 @@ function resultActions(state, recommendLoc = '') {
   return actions;
 }
 
-function resultFeedbackModal(state, { title = '行动', body = '', lines = [], summary = null, logText = '', recommendLoc = '' } = {}) {
+function resultFeedbackModal(state, { title = '行动', body = '', lines = [], summary = null, logText = '', recommendLoc = '', rewardDeltas = [], followUps = [] } = {}) {
   return {
     type: 'settlement',
     title: '结果',
@@ -1210,6 +1326,8 @@ function resultFeedbackModal(state, { title = '行动', body = '', lines = [], s
     cost: summary?.cost || [],
     gain: summary?.gain || [],
     risk: summary?.risk || '',
+    rewardDeltas,
+    followUps: followUps.slice(0, 2),
     lines,
     logText: logText || state.log?.[0]?.text || '',
     actions: resultActions(state, recommendLoc)
@@ -1225,6 +1343,10 @@ function actionResultModal(state, action, lines, options = {}) {
     body: [dosageLine, eventSettlementBody(action, context)].filter(Boolean).join('\n'),
     lines,
     summary: actionSummary(action, dosage),
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, {
+      source: context.type === 'eventNotebook' ? 'eventNotebook' : 'action',
+      minutes: dosage ? dosage.minutes : (action?.time || 30)
+    }),
     logText: state.log?.[0]?.text || '',
     recommendLoc: context.locId || action?.loc || ''
   });
@@ -1279,7 +1401,11 @@ function executeAction(state, action, options = {}) {
   } else if (action.type === 'dialog') {
     state.relations[action.npc] = (state.relations[action.npc] || 0) + 1;
     state.player.calm = clamp(state.player.calm + 2, 0, 100);
-    state.ui.modal = npcDialogueModal(action.npc, settlementLines(before, snapshotState(state)));
+    const lines = settlementLines(before, snapshotState(state));
+    state.ui.modal = npcDialogueModal(action.npc, lines, rewardDeltasFromSettlement(lines, state, {
+      source: options.eventContext?.type === 'eventNotebook' ? 'eventNotebook' : 'action',
+      minutes: dosage ? dosage.minutes : (action.time || 30)
+    }));
     addLog(state, `${NPCS[action.npc]?.name || '有人'}给了你一段建议。`);
   } else {
     const beforeSkillState = clone(state.skillState || {});
@@ -1339,6 +1465,7 @@ function resolveEventNotebook(state) {
       body: card.result || '你把这件待办处理到可以继续采购和整理装备。',
       lines: [],
       summary: { cost: [], gain: ['商店已打开'], risk: riskText(card) },
+      rewardDeltas: [],
       logText: state.log?.[0]?.text || ''
     });
   } else if (card.action) {
@@ -1347,12 +1474,16 @@ function resolveEventNotebook(state) {
     executeAction(state, action, { allowNotebook: false, eventContext: modal });
   } else {
     markOpportunityCooldown(state, card);
+    const before = snapshotState(state);
     if (card.npc) state.relations[card.npc] = (state.relations[card.npc] || 0) + 1;
+    const settlementLinesForCard = settlementLines(before, snapshotState(state));
     state.ui.modal = dialogueModal({
       title: card.title,
       npc: card.npc,
       body: card.desc,
       lines: card.dialogue || [{ speaker: card.title, text: card.desc }],
+      settlementLines: settlementLinesForCard,
+      rewardDeltas: rewardDeltasFromSettlement(settlementLinesForCard, state, { source: 'eventNotebook' }),
       actionLabel: '记下'
     });
     addLog(state, `处理待办：${card.title}`);
@@ -1528,6 +1659,11 @@ function finishTrainingMini(state, gradeId, result = {}) {
     type: 'settlement',
     title: `${action.name} · ${grade.label}`,
     body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result), repeat.note].filter(Boolean).join('\n'),
+    lead: oneSentence(trainingResultBody(grade, result), `${action.name}完成。`),
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, {
+      source: 'training',
+      minutes: dosage ? dosage.minutes : (action.time || 30)
+    }),
     lines
   };
 }
@@ -1823,6 +1959,7 @@ function finishFirstWindBattle(state, reason = 'first_wind') {
   const targetSp = Math.round(state.player.spMax * 0.66);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   addLog(state, '一阵风之后，你知道旧招名接不住真实拳距。第9天，该回家翻开父亲日记。');
+  const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
     title: '一阵风之后',
@@ -1831,7 +1968,9 @@ function finishFirstWindBattle(state, reason = 'first_wind') {
       '误判被清账，祖传信念被打碎一角。父亲留下的东西，可能不在招名里。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
     ].join('\n'),
-    lines: settlementLines(before, snapshotState(state)),
+    lead: '你被第一波真实拳距打醒了。',
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
+    lines,
     win: false,
     reason
   };
@@ -1860,6 +1999,7 @@ function finishObjectiveBattle(state, reason = 'normal') {
   const targetSp = Math.round(state.player.spMax * 0.58);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   addLog(state, `第30天目标战：${tier.title}（${completed}/${objectives.length}）。`);
+  const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
     title: tier.title,
@@ -1874,7 +2014,9 @@ function finishObjectiveBattle(state, reason = 'normal') {
       done: item.done,
       status: item.done ? '完成' : '未完成'
     })),
-    lines: settlementLines(before, snapshotState(state)),
+    lead: oneSentence(tier.body, tier.title),
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
+    lines,
     win,
     reason: tier.key,
     tier: tier.key
@@ -1900,6 +2042,7 @@ function finishParkCheckBattle(state, reason = 'normal') {
   addLog(state, win
     ? `公园验货通过：完成 ${completed}/${objectives.length} 个轻目标。`
     : `公园验货未通过：完成 ${completed}/${objectives.length} 个轻目标，复盘后去拳馆学刺拳。`);
+  const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
     title: win ? '验货通过' : '验货未通过',
@@ -1916,7 +2059,9 @@ function finishParkCheckBattle(state, reason = 'normal') {
       done: item.done,
       status: item.done ? '完成' : '未完成'
     })),
-    lines: settlementLines(before, snapshotState(state)),
+    lead: win ? '你在第一波拳距里做出了具体选择。' : '这次验货留下了明确复盘目标。',
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
+    lines,
     win,
     reason: win ? 'park_check_pass' : 'park_check_review',
     tier: win ? 'pass' : 'review'
@@ -1973,6 +2118,7 @@ function finishBattle(state, reason = 'normal') {
   }
   const targetSp = Math.round(state.player.spMax * (reason === 'surrender' ? 0.66 : 0.58));
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
+  const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
     title: reason === 'riskwin' ? '风险胜利' : win ? '胜利' : '失败/撤离',
@@ -1981,7 +2127,9 @@ function finishBattle(state, reason = 'normal') {
       win ? `收益：现金 +${reward.money || 0} / 名声 +${reward.fame || 0}` : '失败也能复盘，别只看输赢。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
     ].join('\n'),
-    lines: settlementLines(before, snapshotState(state)),
+    lead: win ? `你战胜了${combat.enemy.name}。` : `你从${combat.enemy.name}这场里拿到了复盘材料。`,
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
+    lines,
     win,
     reason
   };
@@ -2077,7 +2225,15 @@ export class GameStore {
         s.loc = action.loc;
         advanceTime(s, q.time);
         addLog(s, `乘${TRAVEL_TUNING[action.mode].name}到 ${LOCS[action.loc].name}`);
-        s.ui.modal = { type: 'settlement', title: '出行结算', lines: settlementLines(before, snapshotState(s)), body: `到达 ${LOCS[action.loc].name} · ${TRAVEL_TUNING[action.mode].name} · ${q.time}分钟` };
+        const lines = settlementLines(before, snapshotState(s));
+        s.ui.modal = {
+          type: 'settlement',
+          title: '出行结算',
+          lead: `到达 ${LOCS[action.loc].name}。`,
+          rewardDeltas: rewardDeltasFromSettlement(lines, s, { source: 'travel', minutes: q.time }),
+          lines,
+          body: `到达 ${LOCS[action.loc].name} · ${TRAVEL_TUNING[action.mode].name} · ${q.time}分钟`
+        };
         s.ui.selectedTravel = null;
         s.ui.cityMapOpen = false;
       }
@@ -2117,6 +2273,7 @@ export class GameStore {
               body: main.desc,
               lines: FATHER_DIARY.dialogue || main.dialogue,
               settlementLines: lines,
+              rewardDeltas: rewardDeltasFromSettlement(lines, s, { source: 'mainEvent' }),
               onComplete: { type: 'fatherDiary', lines },
               actionLabel: '翻开日记'
             })
@@ -2126,6 +2283,7 @@ export class GameStore {
               body: main.desc,
               lines: main.dialogue || [{ speaker: main.title, text: main.desc }],
               settlementLines: lines,
+              rewardDeltas: rewardDeltasFromSettlement(lines, s, { source: 'mainEvent' }),
               actionLabel: '继续'
             });
           addLog(s, `完成主线：${main.title}`);
@@ -2225,7 +2383,14 @@ export class GameStore {
       if (action.kind === 'tech') { learnSkill(s, 'jab', 4); learnSkill(s, 'guard', 4); }
       if (action.kind === 'calm') { s.player.calm = clamp(s.player.calm + 12, 0, 100); s.player.posture = s.player.postureMax; }
       if (action.kind === 'intel') { s.player.stats.jud += 1; s.player.auth = clamp(s.player.auth + 3, 0, 100); s.player.heat += 1; }
-      s.ui.modal = { type: 'settlement', title: '战后复盘结算', lines: settlementLines(before, snapshotState(s)) };
+      const lines = settlementLines(before, snapshotState(s));
+      s.ui.modal = {
+        type: 'settlement',
+        title: '战后复盘结算',
+        lead: '战后复盘完成。',
+        rewardDeltas: rewardDeltasFromSettlement(lines, s, { source: 'postReview' }),
+        lines
+      };
     } else if (action.type === 'buyItem') {
       const item = ITEMS[action.itemId];
       if (!item || s.player.money < item.price) s.ui.toast = '钱不够';

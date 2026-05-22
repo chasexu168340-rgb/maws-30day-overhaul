@@ -4,42 +4,36 @@
 
 ## Current Task
 
-Wave 11：Flow + Combat + UI 收敛多 CLI 集成收尾。
+Wave 12：Visual Slice Strike。
 
-## Scope
+## Result
 
-- 已合并并验证：`feat/combat-plan-mode-v1`、`feat/time-activity-pass-v1`、`feat/ui-readable-reward-pass`、`test/wave11-flow-smoke`、`docs/skill-tree-vertical-slice-v1`。
-- 已在所有分支合并推送后运行 QA：`qa/wave11-review`。
-- 本轮没有改初始正式技能赠送，没有把 `jab` / `advance` 放回开局。
-
-## Plan
-
-- [x] Wave 11 prompts/scripts 提交并推送。
-- [x] 5 个实现/测试/文档 worker 完成并推送。
-- [x] Combat Plan、Time Activity、UI Readable Reward、Flow Smoke、Skill Tree Slice 按顺序合并。
-- [x] Flow Smoke 首次发现技能 details 默认关闭，已按验收补丁恢复技能 details 默认展开。
-- [x] 合并后运行 `check:full`、`test:playtest`、Day 5 sim、Wave 11 flow smoke、`diff check`。
-- [x] QA 在最新 staging 后启动并提交报告。
-- [x] QA 报告已合回 staging。
+- 已按 staged pipeline 完成并合并：`feat/structured-reward-deltas` -> `feat/visual-stage-hud-strike` -> `test/wave12-visual-smoke` -> `docs/wave12-art-direction-shotlist` -> `qa/wave12-visual-review`。
+- QA 在实现分支全部合并并推送后才启动，避免了提前审老版本。
+- Manager follow-up 已修复 QA P1/P2：
+  - reward chips 结构化优先，不再把 `settlementLines` / 长对话句重复解析成 chip。
+  - 弹窗内已有 hero chips 时不再额外叠一层 reward stack。
+  - 战斗 HUD 可见 4 张小行动卡，队列仍限制本窗口 1-2 招。
+  - Wave 12 visual smoke 增加结构化 reward chip 去重/短文本断言，以及可见战斗卡数量断言。
+- 已推送 `staging/reforge-unlocks-v1`。
 
 ## Validation
 
 - `npm run check:full`：通过。
 - `npm run test:playtest`：通过。
-- `node maws_src/tools/sim_day5_park_check.mjs`：通过。
-- `npx playwright test maws_src/tests/wave11_flow.spec.js --browser=chromium --reporter=line`：通过，4/4。
+- `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`：通过。
 - `git diff --check`：通过。
-
-## Result
-
-Wave 11 集成完成。战斗主视图收敛到当前 1-2 招窗口，奖励反馈更直接，小弹窗更紧凑，关键行动/技能信息默认可见，Time Activity 增加粗粒度反刷压力，技能树第一片实现方案已写入文档。
+- 人工查看截图：
+  - `test-results/wave12/desktop-combat.png`
+  - `test-results/wave12/desktop-map-modal.png`
+  - `test-results/wave12/mobile-main-cta.png`
 
 ## Risks
 
-- Combat plan mode 当前是 state/combat foundation，还没有 DOM 可选控件。
-- Time Activity repeat pressure 仍是粗粒度 bucket，后续可以按地点/技能细化。
-- 技能树 vertical slice 仍是文档，不是运行代码。
+- `GameDesigner_CombatAnalysis/` 仍是未跟踪目录，本轮未触碰。
+- QA 报告保留了原始 findings；本文件记录 manager follow-up 已修复 P1/P2。P3 是 manager/pipeline setup scope，不属于 worker 越界。
+- 视觉截图已明显改善，但高分辨率最终美术质量仍需后续人工 playtest 继续看第一眼观感。
 
 ## Next Step
 
-人工进游戏检查战斗面板、奖励弹窗、时间投入弹窗和技能页；通过后再开下一轮 skill tree implementation 或 plan-mode UI 控件切片。
+人工进 `maws_30day_overhaul_v3.html` 看 Wave 12 最终画面；如果 5 个视觉硬门槛通过，再开下一轮，不要直接跳技能树 implementation。

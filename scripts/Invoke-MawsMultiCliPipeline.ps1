@@ -67,6 +67,16 @@ function Ensure-NodeModulesJunction {
   }
 }
 
+function Clear-WorkerGeneratedTemp {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$WorkerPath
+  )
+
+  Get-ChildItem -LiteralPath $WorkerPath -Force -Filter ".wave*_local_skill_preamble.md" -ErrorAction SilentlyContinue |
+    Remove-Item -Force
+}
+
 function Start-CodexWorker {
   param(
     [Parameter(Mandatory = $true)]
@@ -137,6 +147,7 @@ function Prepare-Worker {
   if (!(Test-Path -LiteralPath $Worker.Path)) {
     Invoke-Git $RepoRoot @("worktree", "add", "-B", $Worker.Branch, $Worker.Path, $BaseBranch)
   } else {
+    Clear-WorkerGeneratedTemp $Worker.Path
     $dirty = git -C $Worker.Path status --porcelain
     if ($dirty) {
       throw "$($Worker.Name) worktree is dirty before launch. Clean it first:`n$dirty"

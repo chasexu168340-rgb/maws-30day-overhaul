@@ -1,0 +1,79 @@
+{
+  "name": "wave12-visual-slice-strike",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave12",
+  "reasoning": "medium",
+  "visibleWorkers": true,
+  "implementationWorkers": [
+    {
+      "name": "Wave12-Reward-Deltas",
+      "path": "E:\\maws_cli_parallel_wave12\\reward-deltas",
+      "branch": "feat/structured-reward-deltas",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE12_STRUCTURED_REWARD_DELTAS.md"
+    },
+    {
+      "name": "Wave12-Visual-Strike",
+      "path": "E:\\maws_cli_parallel_wave12\\visual-strike",
+      "branch": "feat/visual-stage-hud-strike",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE12_VISUAL_STAGE_HUD_STRIKE.md"
+    },
+    {
+      "name": "Wave12-Visual-Smoke",
+      "path": "E:\\maws_cli_parallel_wave12\\visual-tests",
+      "branch": "test/wave12-visual-smoke",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE12_VISUAL_SMOKE_TESTS.md"
+    },
+    {
+      "name": "Wave12-Art-Direction",
+      "path": "E:\\maws_cli_parallel_wave12\\art-direction",
+      "branch": "docs/wave12-art-direction-shotlist",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE12_ART_DIRECTION_SHOTLIST.md"
+    }
+  ],
+  "mergeOrder": [
+    {
+      "name": "structured reward deltas",
+      "branch": "feat/structured-reward-deltas",
+      "validate": [
+        "npm run check:full",
+        "npm run test:playtest",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "visual stage hud strike",
+      "branch": "feat/visual-stage-hud-strike",
+      "validate": [
+        "npm run check:full",
+        "npm run test:playtest",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "wave12 visual smoke",
+      "branch": "test/wave12-visual-smoke",
+      "validate": [
+        "npm run build",
+        "npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "wave12 art direction shotlist",
+      "branch": "docs/wave12-art-direction-shotlist",
+      "validate": [
+        "git diff --check"
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave12-QA",
+    "path": "E:\\maws_cli_parallel_wave12\\qa-wave12",
+    "branch": "qa/wave12-visual-review",
+    "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE12_QA_VISUAL_REVIEW.md",
+    "commitMessage": "docs: add wave12 visual qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
