@@ -881,13 +881,20 @@ function renderCombat(model) {
   }));
   const selectedCards = equippedCards.filter((skill) => skill.selected);
   const standbyCards = equippedCards.filter((skill) => !skill.selected);
-  const visibleCardLimit = Math.max(queueLimit, Math.min(4, equippedCards.length || queueLimit));
+  const visibleCardLimit = Math.max(4, Math.min(6, equippedCards.length || 4));
   const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, visibleCardLimit));
   const windowIds = new Set(windowCards.map((skill) => skill.id));
   const drawerCards = equippedCards.filter((skill) => !windowIds.has(skill.id));
   const windowCardHtml = windowCards.map((skill) => renderSkillCard(skill, true)).join('');
   const drawerCardHtml = drawerCards.map((skill) => renderSkillCard(skill, true)).join('');
-  const logs = (combat.log || []).slice(0, 6).map((line) => `<li>${esc(line)}</li>`).join('');
+  const commandFillers = [
+    btn('<strong>抱架</strong><small>空队列交换</small>', 'confirmBattle', {}, `maws-combat-command-chip ${combat.phase === 'auto' ? 'disabled' : 'primary'}`),
+    btn('<strong>清队</strong><small>重排 1-2 招</small>', 'clearSkills', {}, 'maws-combat-command-chip'),
+    btn('<strong>攻身</strong><small>稳妥目标</small>', 'setTarget', { target: 'body' }, `maws-combat-command-chip ${combat.target === 'body' ? 'active' : ''}`),
+    btn('<strong>读招</strong><small>悬停看详情</small>', 'toast', { text: '悬停或聚焦指令卡查看完整数值与描述。' }, 'maws-combat-command-chip')
+  ].slice(0, Math.max(0, 4 - windowCards.length)).join('');
+  const windowCommandHtml = windowCardHtml + commandFillers;
+  const logs = (combat.log || []).slice(0, 7).map((line) => `<li>${esc(line)}</li>`).join('');
   const feedback = combat.lastWindow?.feedback;
   const feedbackPanel = `
     <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
@@ -909,7 +916,6 @@ function renderCombat(model) {
         <div>${meter(combat.enemy?.name || '对手', combat.enemy?.hp, combat.enemy?.hpMax)}${meter('体力', combat.enemy?.sp, combat.enemy?.spMax)}${meter('架势', combat.enemy?.posture, combat.enemy?.postureMax)}</div>
       </div>
       ${feedbackPanel}
-      <details class="maws-combat-log-toggle"><summary>详细战斗记录</summary><ol>${logs}</ol></details>
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
           <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)} · 本窗口 ${esc(queueIds.length)}/${esc(queueLimit)} 槽</span><small>${phaseNote}</small></div>
@@ -919,14 +925,20 @@ function renderCombat(model) {
           <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>本窗口动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
         <div class="maws-combat-window-cards">
-          <b>行动卡 · 本窗口最多 ${esc(queueLimit)} 招</b>
-          <div class="maws-card-grid combat focus">${windowCardHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
+          <b>指令栏 · 选 ${esc(queueLimit)} 招入队</b>
+          <div class="maws-card-grid combat focus">${windowCommandHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
         </div>
         <details class="maws-fold maws-tactics-drawer" ${drawerCards.length ? 'open' : ''}>
           <summary>更多动作 / 战术抽屉 <span>${esc(drawerCards.length)}张</span></summary>
           <div class="maws-card-grid combat">${drawerCardHtml || '<p class="maws-empty">没有更多可用动作。</p>'}</div>
         </details>
-        <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
+        <aside class="maws-combat-side-panel">
+          <div class="maws-combat-side-log maws-combat-log-toggle">
+            <b>复盘</b>
+            <ol>${logs || '<li>等待第一轮交换。</li>'}</ol>
+          </div>
+          <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
+        </aside>
       </div>
     </section>
   `;
