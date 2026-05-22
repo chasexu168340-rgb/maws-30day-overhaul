@@ -806,15 +806,18 @@ function renderStoryChoiceModal(modal) {
             ${summaryChips(meta, choice.enemyName ? 'cost' : 'gain')}
           </details>
         ` : ''}
-        ${btn('这么做', 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
+        ${btn('选择', 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
       </article>
     `;
   }).join('');
   return renderModalShell(modal, `
-    <h2>${esc(modal.title || '主线选择')}</h2>
-    <p class="maws-modal-lead">${esc(lead)}</p>
-    ${moreBody ? `<details class="maws-fold maws-modal-fold"><summary>背景详情</summary><div class="maws-modal-body">${moreBody}</div></details>` : ''}
+    <header class="maws-rpg-title">
+      <small>主线选择</small>
+      <h2>${esc(modal.title || '主线选择')}</h2>
+    </header>
+    <p class="maws-scene-summary">${esc(lead)}</p>
     <div class="maws-choice-grid">${choices}</div>
+    ${moreBody ? `<details class="maws-fold maws-modal-fold"><summary>背景详情</summary><div class="maws-modal-body">${moreBody}</div></details>` : ''}
   `, 'story');
 }
 
@@ -850,6 +853,9 @@ function renderDialogueModal(modal) {
   const settlement = isLast && !choices.length
     ? (modal.settlementLines || []).map(renderSettlementLine).join('')
     : '';
+  const history = lines.slice(0, index).map((prev) => `
+    <li><b>${esc(prev.speaker || modal.title || '对话')}</b><span>${esc(prev.text || '')}</span></li>
+  `).join('');
   const portrait = line.assetKey
     ? assetIcon(line.assetKey, line.icon || line.speaker?.slice(0, 1), 'maws-dialogue-portrait-img')
     : `<i class="maws-dialogue-portrait-fallback">${esc(line.icon || line.speaker?.slice(0, 1) || '?')}</i>`;
@@ -859,19 +865,24 @@ function renderDialogueModal(modal) {
       ? ''
       : btn(modal.actionLabel || '知道了', 'completeDialogue', {}, 'primary');
   return renderModalShell(modal, `
-    <header class="maws-dialogue-head">
-      <span>${portrait}</span>
-      <div>
-        <small>${esc(modal.title || '对话')}</small>
-        <h2>${esc(line.speaker || modal.title || '对话')}</h2>
+    <div class="maws-dialogue-stage">
+      <div class="maws-dialogue-portrait">
+        ${portrait}
+        <strong>${esc(line.speaker || modal.title || '对话')}</strong>
         ${line.role ? `<em>${esc(line.role)}</em>` : ''}
       </div>
-      <b>${esc(`${index + 1}/${lines.length}`)}</b>
-    </header>
-    <div class="maws-dialogue-line"><p>${esc(line.text || modal.body || '')}</p></div>
-    ${settlement ? `<details class="maws-fold maws-modal-fold"><summary>结算明细</summary><ol class="maws-settle-list">${settlement}</ol></details>` : ''}
+      <div class="maws-dialogue-box">
+        <header class="maws-dialogue-nameplate">
+          <span>${esc(line.speaker || modal.title || '对话')}</span>
+          <b>${esc(`${index + 1}/${lines.length}`)}</b>
+        </header>
+        <p>${esc(line.text || modal.body || '')}</p>
+      </div>
+    </div>
     ${choiceCards ? `<div class="maws-dialogue-choices">${choiceCards}</div>` : ''}
     ${action ? `<div class="maws-modal-actions">${action}</div>` : ''}
+    ${history ? `<details class="maws-fold maws-modal-fold maws-dialogue-history"><summary>回看对话</summary><ol>${history}</ol></details>` : ''}
+    ${settlement ? `<details class="maws-fold maws-modal-fold"><summary>查看收益 / 结算</summary><ol class="maws-settle-list">${settlement}</ol></details>` : ''}
   `, 'dialogue');
 }
 
@@ -885,8 +896,11 @@ function renderFatherDiaryModal(modal) {
   const lines = (modal.lines || []).map(renderSettlementLine).join('');
   const lead = modalBodyLines(modal.body)[0] || modal.closing || '旧纸页里只留下能立刻用上的线索。';
   return renderModalShell(modal, `
-    <h2>${esc(modal.title || '父亲日记')}</h2>
-    <p class="maws-modal-lead">${esc(lead)}</p>
+    <header class="maws-rpg-title">
+      <small>旧纸页</small>
+      <h2>${esc(modal.title || '父亲日记')}</h2>
+    </header>
+    <p class="maws-diary-lead">${esc(lead)}</p>
     <details class="maws-fold maws-modal-fold">
       <summary>日记全文</summary>
       <div class="maws-modal-body">${renderModalBody(modal.body)}</div>
@@ -916,11 +930,11 @@ function renderEventNotebookModal(modal) {
   ].filter(Boolean);
   const lead = modalBodyLines(modal.body)[0] || '现场已经有动静，先决定怎么处理。';
   return renderModalShell(modal, `
-    <header class="maws-event-head">
+    <header class="maws-event-head maws-rpg-title">
       <small>${esc(modal.kicker || '事件笔记')}</small>
       <h2>${esc(modal.title || '现场事件')}</h2>
     </header>
-    <p class="maws-modal-lead">${esc(lead)}</p>
+    <p class="maws-scene-summary">${esc(lead)}</p>
     <div class="maws-choice-grid event">${choices}</div>
     <details class="maws-fold maws-modal-fold">
       <summary>现场细节 / 收益风险</summary>
@@ -999,27 +1013,33 @@ function renderModal(model) {
     : `<div class="maws-modal-actions">${btn('知道了', 'closeModal', {}, 'primary')}</div>`;
   if (modal.type === 'battleResult') {
     return renderModalShell(modal, `
-      <h2>${esc(modal.title || '战斗结果')}</h2>
-      <p class="maws-modal-lead">${esc(lead)}</p>
+      <header class="maws-rpg-title">
+        <small>结果</small>
+        <h2>${esc(modal.title || '战斗结果')}</h2>
+      </header>
+      <p class="maws-scene-summary">${esc(lead)}</p>
       ${objectiveLines ? `<div class="maws-battle-learned"><b>你学到了什么</b>${objectiveLines}</div>` : '<div class="maws-battle-learned"><b>你学到了什么</b><p>复盘会把这场的判断写进下一步行动。</p></div>'}
       ${review}
       <details class="maws-fold maws-modal-fold">
-        <summary>结算明细</summary>
+        <summary>查看详细结算</summary>
         ${restBody ? `<div class="maws-modal-body">${restBody}</div>` : ''}
         ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
       </details>
     `);
   }
   return renderModalShell(modal, `
-    <h2>${esc(modal.title || '提示')}</h2>
-    <p class="maws-modal-lead">${esc(lead)}</p>
+    <header class="maws-rpg-title">
+      <small>结果</small>
+      <h2>${esc(modal.title || '提示')}</h2>
+    </header>
+    <p class="maws-scene-summary">${esc(lead)}</p>
+    ${review}
     <details class="maws-fold maws-modal-fold">
-      <summary>详细内容</summary>
-      <div class="maws-modal-body">${restBody || renderModalBody(modal.body)}</div>
+      <summary>查看详细结算</summary>
+      ${restBody ? `<div class="maws-modal-body">${restBody}</div>` : ''}
       ${objectiveLines}
       ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
     </details>
-    ${review}
   `);
 }
 
