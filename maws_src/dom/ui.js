@@ -272,14 +272,20 @@ function sceneCharacterInteraction(character, actions = []) {
 
 function renderSceneInteractionMenu(menu) {
   if (!menu) return '';
-  const actionButtons = (menu.actions || []).slice(0, 3).map((item) => btn(
-    esc(item.label || '行动'),
-    item.action || 'toast',
-    { id: item.id, text: item.text },
-    `maws-npc-menu-action ${item.kind === 'primary' ? 'primary' : item.kind === 'disabled' ? 'is-disabled' : 'ghost'}`
-  )).join('');
+  const actions = (menu.actions || []).slice(0, 3);
+  const hasRealAction = actions.some((item) => item.kind === 'primary' && item.action && item.action !== 'toast');
+  const actionButtons = actions.map((item) => {
+    const realAction = item.kind === 'primary' && item.action && item.action !== 'toast';
+    const tone = realAction ? 'primary real-action' : item.kind === 'disabled' ? 'is-disabled' : 'ghost is-feedback';
+    return btn(
+      esc(item.label || '行动'),
+      item.action || 'toast',
+      { id: item.id, text: item.text },
+      `maws-npc-menu-action ${tone}`
+    );
+  }).join('');
   return `
-    <aside class="maws-npc-menu" aria-label="${esc(`${menu.name}互动菜单`)}">
+    <aside class="maws-npc-menu ${hasRealAction ? 'has-real-action' : 'feedback-only'}" aria-label="${esc(`${menu.name}互动菜单`)}">
       <header>
         <div><b>${esc(menu.name)}</b><span>${esc(menu.role || '场景角色')}</span></div>
         ${btn('收起', 'closeInteractionMenu', {}, 'tiny maws-npc-menu-close')}
@@ -538,14 +544,15 @@ function renderRecommendations(model) {
 
 function renderMap(model) {
   const currentActions = model.actions || [];
-  const primaryAction = currentActions[0] ? renderActionCard(currentActions[0]) : '';
-  const secondaryActions = currentActions.slice(1).map(renderActionCard).join('');
+  const featuredAction = currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length) || currentActions[0];
+  const primaryAction = featuredAction ? renderActionCard(featuredAction) : '';
+  const secondaryActions = currentActions.filter((action) => action !== featuredAction).map(renderActionCard).join('');
   const recommendations = renderRecommendations(model);
   const todayBoard = renderTodayBoard(model);
   const scene = model.locationScene || {};
   const mainTitle = model.mainEvent?.title || '暂无主线节点';
   const mainPlace = model.mainEvent?.locName || model.loc?.name || '当前地点';
-  const recommendTitle = model.opportunities?.[0]?.title || currentActions[0]?.name || '训练 / 恢复 / 装备';
+  const recommendTitle = model.opportunities?.[0]?.title || featuredAction?.name || '训练 / 恢复 / 装备';
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
   const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
@@ -769,6 +776,48 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
   `;
 }
 
+function renderSkillTree(treeModel) {
+  const trees = treeModel?.trees || [];
+  if (!trees.length) return '';
+  const statusText = {
+    owned: '已点亮',
+    available: '可查看',
+    locked: 'Locked',
+    future: 'Future'
+  };
+  const cards = trees.map((tree) => {
+    const nodes = (tree.nodes || []).map((node) => {
+      const detail = node.lockedReason || node.effectText || node.unlockText || '节点说明待接入。';
+      const meta = [
+        node.kind || '',
+        node.skillId ? `skill:${node.skillId}` : '',
+        node.cost == null ? '' : `${node.cost} ${treeModel.pointName || '洞察点'}`
+      ].filter(Boolean);
+      return `
+        <article class="maws-tree-node status-${esc(node.status || 'locked')}">
+          <header><strong>${esc(node.label || node.id)}</strong><span>${esc(statusText[node.status] || node.status || 'Locked')}</span></header>
+          <p>${esc(node.unlockText || node.effectText || '')}</p>
+          <div class="maws-tree-node-meta">${meta.map((part) => `<small>${esc(part)}</small>`).join('')}</div>
+          ${node.lockedReason ? `<em>${esc(node.lockedReason)}</em>` : ''}
+          ${btn(node.status === 'future' ? '后续' : node.status === 'locked' ? '锁定' : '查看', 'toast', { text: detail }, node.locked ? 'ghost' : 'primary')}
+        </article>
+      `;
+    }).join('');
+    return `
+      <section class="maws-skill-tree">
+        <header><b>${esc(tree.name || tree.id)}</b><span>${esc((tree.nodes || []).length)} nodes</span></header>
+        <div class="maws-tree-node-grid">${nodes}</div>
+      </section>
+    `;
+  }).join('');
+  return `
+    <section class="maws-skill-tree-slice" aria-label="技能树切片">
+      <div class="maws-panel-title small"><h2>技能树切片</h2><p>${esc(treeModel.pointName || '洞察点')} ${esc(treeModel.points || 0)} · 三条路线的当前领悟状态。</p></div>
+      <div class="maws-skill-tree-grid">${cards}</div>
+    </section>
+  `;
+}
+
 function renderSkills(model) {
   const slots = (model.equipSkills || []).map((slot) => `
     <span class="maws-slot">${slot.skill ? `${esc(slot.skill.icon)} ${esc(slot.skill.name)} ${btn('卸下', 'unequipSkill', { index: slot.index }, 'tiny')}` : '空槽'}</span>
@@ -777,6 +826,7 @@ function renderSkills(model) {
     <section class="maws-panel">
       <div class="maws-panel-title"><h2>技能卡</h2><p>伤害、架势、命中、体力、风险、距离和描述都来自当前模型。</p></div>
       <div class="maws-slots">${slots}</div>
+      ${renderSkillTree(model.skillTree)}
       <div class="maws-card-grid">${(model.skills || []).map((skill) => renderSkillCard(skill, false, model.skillUnlocks?.[skill.id])).join('')}</div>
     </section>
   `;
@@ -892,6 +942,12 @@ function renderCombat(model) {
     { target },
     `maws-target-option ${combat.target === target ? 'active' : ''}`
   )).join('');
+  const planControls = (combat.planModes || []).map((mode) => btn(
+    `<strong>${esc(mode.label || mode.id)}</strong><small>${esc(mode.id)}</small>`,
+    'setCombatPlan',
+    { mode: mode.id },
+    `maws-plan-mode-option ${combat.planMode === mode.id ? 'active' : ''} ${combat.phase === 'auto' ? 'disabled' : ''}`
+  )).join('');
   const equippedCards = (model.equipSkills || []).filter((slot) => slot.skill).map((slot, index) => ({
     id: slot.id,
     ...slot.skill,
@@ -941,6 +997,7 @@ function renderCombat(model) {
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
           <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)} · 本窗口 ${esc(queueIds.length)}/${esc(queueLimit)} 槽</span><small>${phaseNote}</small></div>
+          <div class="maws-plan-mode-control" role="group" aria-label="战斗计划模式">${planControls}</div>
           ${objectives}
           ${enemyRead}
           <div class="maws-target-control" role="group" aria-label="攻击目标">${targetControls}</div>
@@ -1181,16 +1238,20 @@ function renderDurationChoiceModal(modal) {
     const meta = [
       `${option.minutes || 0}分钟`,
       `体力-${option.sp || 0}`,
-      option.cost ? `现金-￥${option.cost}` : '现金0',
-      `收益x${Number(option.multiplier || 1).toFixed(2)}`,
-      option.riskText || ''
+      `收益x${Number(option.multiplier || 1).toFixed(2)}`
+    ].filter(Boolean);
+    const riskLine = option.riskText || '风险正常。';
+    const foldedMeta = [
+      option.note || '',
+      option.cost ? `现金-￥${option.cost}` : '',
+      ...(option.gainPreview || [])
     ].filter(Boolean);
     return `
       <article class="maws-duration-choice ${esc(option.id || '')}">
         <strong>${esc(option.name || '标准 60m')}</strong>
-        <p>${esc(option.note || '')}</p>
         ${summaryChips(meta, option.id === 'hard' ? 'cost' : 'gain')}
-        ${summaryChips(option.gainPreview || [], 'gain')}
+        <p>${esc(riskLine)}</p>
+        ${foldedMeta.length ? `<details class="maws-fold maws-duration-fold"><summary>长说明</summary><div>${foldedMeta.map((line) => `<small>${esc(line)}</small>`).join('')}</div></details>` : ''}
         ${btn('选择', 'chooseDuration', { id: modal.actionId, duration: option.id }, option.id === 'standard' ? 'primary' : 'ghost')}
       </article>
     `;
@@ -1375,6 +1436,7 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'selectSkill') store.dispatch({ type: 'selectSkill', skillId: dataset.id });
   else if (action === 'clearSkills') store.dispatch({ type: 'clearSkills' });
   else if (action === 'setTarget') store.dispatch({ type: 'setTarget', target: dataset.target });
+  else if (action === 'setCombatPlan') store.dispatch({ type: 'setCombatPlan', planMode: dataset.mode });
   else if (action === 'confirmBattle') store.dispatch({ type: 'confirmBattle' });
   else if (action === 'surrender') store.dispatch({ type: 'surrender' });
   else if (action === 'postReview') store.dispatch({ type: 'postReview', kind: dataset.kind });

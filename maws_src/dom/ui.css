@@ -6850,6 +6850,25 @@
   border-color: rgba(255, 243, 210, 0.38);
 }
 
+.maws-npc-menu.has-real-action {
+  border-color: rgba(255, 217, 65, 0.86);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42), 5px 5px 0 rgba(255, 217, 65, 0.28);
+}
+
+.maws-npc-menu-action.real-action {
+  min-height: 50px;
+  border-color: var(--maws-ink, #050506);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.84);
+  font-weight: 950;
+}
+
+.maws-npc-menu-action.is-feedback {
+  min-height: 38px;
+  border-style: dashed;
+  color: rgba(255, 243, 210, 0.78);
+  box-shadow: none;
+}
+
 .maws-npc-menu-close {
   flex: 0 0 auto;
   min-height: 32px;
@@ -6865,6 +6884,273 @@
 
   .maws-npc-menu-action {
     flex-basis: 128px;
+  }
+}
+
+/* Wave 14 UI presentation: skill tree slice, combat plan mode, duration comfort. */
+.maws-skill-tree-slice {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 12px 0;
+}
+
+.maws-skill-tree-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.maws-skill-tree {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 243, 210, 0.2);
+  background: rgba(5, 5, 6, 0.16);
+}
+
+.maws-skill-tree > header,
+.maws-tree-node header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.maws-skill-tree > header b,
+.maws-tree-node strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.maws-skill-tree > header span {
+  flex: 0 0 auto;
+  color: rgba(255, 243, 210, 0.7);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.maws-tree-node-grid {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.maws-tree-node {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  min-height: 128px;
+  padding: 9px;
+  border: 2px solid rgba(255, 243, 210, 0.22);
+  background: rgba(13, 13, 17, 0.78);
+  color: var(--maws-paper, #fff3d2);
+  overflow-wrap: anywhere;
+}
+
+.maws-tree-node.status-owned {
+  border-color: rgba(109, 241, 199, 0.62);
+  box-shadow: inset 4px 0 0 rgba(109, 241, 199, 0.5);
+}
+
+.maws-tree-node.status-available {
+  border-color: rgba(255, 217, 65, 0.66);
+  box-shadow: inset 4px 0 0 rgba(255, 217, 65, 0.58);
+}
+
+.maws-tree-node.status-locked,
+.maws-tree-node.status-future {
+  border-style: dashed;
+  opacity: 0.82;
+}
+
+.maws-tree-node.status-future {
+  background: rgba(5, 5, 6, 0.38);
+}
+
+.maws-tree-node header span {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 243, 210, 0.24);
+  color: rgba(255, 243, 210, 0.76);
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.maws-tree-node p,
+.maws-tree-node em {
+  margin: 0;
+  color: rgba(255, 243, 210, 0.78);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.maws-tree-node em {
+  color: rgba(255, 217, 65, 0.82);
+  font-style: normal;
+}
+
+.maws-tree-node-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+.maws-tree-node-meta small {
+  margin: 0;
+  padding: 2px 5px;
+  border: 1px solid rgba(255, 243, 210, 0.2);
+  color: rgba(255, 243, 210, 0.74);
+  font-size: 10px;
+}
+
+.maws-tree-node button {
+  min-height: 32px;
+  padding: 5px 8px;
+}
+
+.maws-plan-mode-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  min-width: 0;
+}
+
+.maws-plan-mode-option {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  min-height: 31px;
+  padding: 4px 6px;
+  border-width: 2px;
+  background: rgba(13, 13, 17, 0.86);
+  color: var(--maws-paper, #fff3d2);
+  text-align: left;
+  white-space: normal;
+}
+
+.maws-plan-mode-option strong,
+.maws-plan-mode-option small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maws-plan-mode-option strong {
+  font-size: 11px;
+  line-height: 1.05;
+}
+
+.maws-plan-mode-option small {
+  color: rgba(255, 243, 210, 0.68);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.maws-plan-mode-option.active {
+  border-color: var(--maws-gold, #ffd941);
+  background: rgba(255, 217, 65, 0.16);
+  box-shadow: inset 3px 0 0 var(--maws-gold, #ffd941);
+}
+
+.maws-duration .maws-modal-shell {
+  gap: 9px;
+}
+
+.maws-duration-grid {
+  grid-template-columns: repeat(2, minmax(142px, 1fr));
+  gap: 8px;
+}
+
+.maws-duration-choice {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 0;
+  padding: 9px;
+}
+
+.maws-duration-choice p {
+  min-height: 0;
+  margin: 0;
+  font-size: 12px;
+}
+
+.maws-duration-choice .maws-summary-chips {
+  gap: 5px;
+}
+
+.maws-duration-choice .maws-summary-chips span {
+  padding: 3px 5px;
+  font-size: 10px;
+}
+
+.maws-duration-fold {
+  background: rgba(255, 243, 210, 0.06);
+}
+
+.maws-duration-fold summary {
+  padding: 5px 7px;
+  font-size: 11px;
+}
+
+.maws-duration-fold div {
+  display: grid;
+  gap: 4px;
+  margin: 7px;
+}
+
+.maws-duration-fold small {
+  margin: 0;
+  color: rgba(255, 243, 210, 0.74);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+  .maws-skill-tree-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .maws-tree-node {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .maws-duration .maws-modal-shell {
+    gap: 7px;
+  }
+
+  .maws-duration .maws-modal-lead {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .maws-duration-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .maws-duration-choice {
+    padding: 8px;
+  }
+
+  .maws-duration-choice strong {
+    font-size: 13px;
+    line-height: 1.15;
+  }
+
+  .maws-duration-choice button {
+    min-height: 32px;
+    padding: 5px 7px;
   }
 }
 

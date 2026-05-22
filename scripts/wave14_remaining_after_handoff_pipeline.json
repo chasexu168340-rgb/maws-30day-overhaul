@@ -1,31 +1,11 @@
 {
-  "name": "Wave14 Playable Loop Slice",
+  "name": "Wave14 Playable Loop Slice Remaining After Handoff",
   "baseBranch": "staging/reforge-unlocks-v1",
   "workerRoot": "E:\\maws_cli_parallel_wave14",
   "model": "gpt-5.5",
   "reasoning": "high",
   "visibleWorkers": true,
   "stages": [
-    {
-      "name": "handoff-refresh",
-      "workers": [
-        {
-          "name": "Wave14-Handoff",
-          "path": "E:\\maws_cli_parallel_wave14\\handoff",
-          "branch": "chore/wave14-current-context",
-          "prompt": "docs\\codex_tasks\\WAVE14_HANDOFF_REFRESH.md"
-        }
-      ],
-      "mergeOrder": [
-        {
-          "name": "Wave14-Handoff",
-          "branch": "chore/wave14-current-context",
-          "validate": [
-            "git diff --check"
-          ]
-        }
-      ]
-    },
     {
       "name": "npc-real-actions",
       "workers": [
