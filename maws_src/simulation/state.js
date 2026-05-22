@@ -9,6 +9,7 @@ import {
   LOC_UNLOCKS,
   LOCS,
   INITIAL_SKILLS,
+  IDLE_EVENTS,
   MAW_FORMS,
   MAW_RULES,
   MAIN_EVENTS,
@@ -23,6 +24,7 @@ import {
   STAT_RULES,
   STYLE_RULES,
   TABS,
+  TIME_DOSAGE_OPTIONS,
   TRAVEL_TUNING
 } from '../content/data.js';
 import { applyGain, settlementLines } from './economy.js';
@@ -453,6 +455,43 @@ function actionSpCost(action) {
   return action.type === 'battle' ? Math.min(action.sp || 0, 6) : (action.sp || 0);
 }
 
+function timeDosageEligible(action) {
+  if (!action || action.noDurationOptions) return false;
+  if (action.type !== 'simple') return false;
+  const text = `${action.id || ''} ${action.name || ''} ${action.desc || ''}`;
+  if (action.minigame) return true;
+  if (/(练|训练|观察|围观|复盘|步法|沙包|靶|拳|摔|打工|收银|搬|运料|杂工|贴海报|拉伸|短工)/.test(text)) return true;
+  const gain = action.gain || {};
+  return Boolean(gain.skill || gain.skill2 || gain.fitXp || gain.money || gain.jud || gain.str || gain.end || gain.spd || gain.bal || gain.tou);
+}
+
+function dosageOption(id) {
+  return TIME_DOSAGE_OPTIONS[id] || TIME_DOSAGE_OPTIONS.standard;
+}
+
+function actionDosageOptions(action) {
+  if (!timeDosageEligible(action)) return [];
+  return Object.entries(TIME_DOSAGE_OPTIONS).map(([id, option]) => {
+    const sp = Math.round(actionSpCost(action) * Number(option.spMultiplier || 1));
+    const cost = Math.round(Number(action.cost || 0) * Number(option.costMultiplier || 1));
+    return {
+      id,
+      ...option,
+      sp,
+      cost,
+      gainPreview: gainParts(scaledGain(action.gain || {}, Number(option.multiplier || 1), option)),
+      riskText: option.injuryRisk ? `小伤风险 ${Math.round(option.injuryRisk * 100)}%` : ''
+    };
+  });
+}
+
+function scaleNumericGain(key, value, multiplier, option = {}) {
+  if (key === 'fatigue' && value > 0) return Math.max(1, Math.round(value * Number(option.fatigueMultiplier || multiplier)));
+  if (key === 'fatigue' && value < 0) return Math.round(value * Math.min(1, Number(option.multiplier || multiplier)));
+  if (key === 'sp' && value > 0) return Math.round(value * Math.min(1.15, Number(option.multiplier || multiplier)));
+  return Math.round(value * multiplier);
+}
+
 function gainParts(gain = {}) {
   const parts = [];
   const labels = {
@@ -490,19 +529,24 @@ function gainParts(gain = {}) {
   return parts;
 }
 
-function actionSummary(action) {
+function actionSummary(action, dosage = null) {
   if (!action) return { cost: [], gain: [], risk: '' };
+  const option = typeof dosage === 'string' ? dosageOption(dosage) : dosage;
   const cost = [];
-  const spCost = actionSpCost(action);
-  const moneyCost = Number(action.cost || 0);
-  cost.push(action.time ? `耗时 ${action.time}分钟` : '耗时 即时');
+  const spCost = option ? Math.round(actionSpCost(action) * Number(option.spMultiplier || 1)) : actionSpCost(action);
+  const moneyCost = option ? Math.round(Number(action.cost || 0) * Number(option.costMultiplier || 1)) : Number(action.cost || 0);
+  const timeCost = option ? option.minutes : action.time;
+  cost.push(timeCost ? `耗时 ${timeCost}分钟` : '耗时 即时');
   cost.push(spCost ? `体力 -${spCost}` : '体力 0');
   cost.push(moneyCost ? `现金 -￥${moneyCost}` : '现金 0');
+  const gainSource = option ? scaledGain(action.gain || {}, Number(option.multiplier || 1), option) : action.gain;
   const gain = action.type === 'battle'
     ? [`对手：${ENEMIES[action.enemy]?.name || action.enemy}`, `胜利奖励：￥${ENEMIES[action.enemy]?.reward?.money || 0} / 名声+${ENEMIES[action.enemy]?.reward?.fame || 0}`]
-    : gainParts(action.gain);
+    : gainParts(gainSource);
   if (!gain.length) gain.push(action.type === 'dialog' ? '收益：关系/线索' : '收益：状态推进');
-  const risk = action.type === 'battle'
+  const risk = option?.injuryRisk
+    ? `风险 疲劳/小伤 ${Math.round(option.injuryRisk * 100)}%`
+    : action.type === 'battle'
     ? `风险 战斗 ${action.risk || ENEMIES[action.enemy]?.risk || '中'}`
     : action.risk ? `风险 事件 ${action.risk}` : '风险 低';
   return { cost, gain, risk };
@@ -860,15 +904,14 @@ function effectSummary(eff = {}) {
   return Object.entries(eff || {}).map(([key, value]) => `${labels[key] || key} ${Number(value) > 0 ? '+' : ''}${value}`);
 }
 
-function scaledGain(gain = {}, multiplier = 1) {
+function scaledGain(gain = {}, multiplier = 1, option = {}) {
   const out = {};
   Object.entries(gain || {}).forEach(([key, value]) => {
     if (typeof value !== 'number') {
       out[key] = value;
       return;
     }
-    if (key === 'fatigue' && value > 0) out[key] = Math.max(1, Math.round(value * (multiplier > 1 ? 1.05 : 1)));
-    else out[key] = Math.round(value * multiplier);
+    out[key] = scaleNumericGain(key, value, multiplier, option);
   });
   return out;
 }
@@ -877,6 +920,25 @@ function advanceTime(state, minutes) {
   state.time += minutes;
   state.daily.actions += 1;
   if (state.time >= 1500) sleep(state, true);
+}
+
+function actionRoll(state, salt = 0) {
+  const seed = (Number(state.seed || 1) + state.day * 977 + state.time * 37 + Number(state.daily?.actions || 0) * 101 + salt) >>> 0;
+  return ((seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+}
+
+function addMinorInjury(state, label = '硬练拉伤') {
+  state.player.injuries ||= [];
+  state.player.injuries.push({ name: label, turn: 2, desc: '硬顶强度留下的小伤，睡眠和理疗能慢慢压下去。' });
+}
+
+function maybeIdleEvent(state) {
+  if (!IDLE_EVENTS.length) return null;
+  if (actionRoll(state, 17) > 0.35) return null;
+  const event = IDLE_EVENTS[Math.floor(actionRoll(state, 31) * IDLE_EVENTS.length)] || IDLE_EVENTS[0];
+  if (event.gain) applyGain(state, event.gain);
+  if (event.maw) applyMawPatch(state, event.maw);
+  return event;
 }
 
 function sleep(state, forced = false) {
@@ -1100,11 +1162,13 @@ function resultFeedbackModal(state, { title = '行动', body = '', lines = [], s
 
 function actionResultModal(state, action, lines, options = {}) {
   const context = options.eventContext || {};
+  const dosage = options.dosage ? dosageOption(options.dosage) : null;
+  const dosageLine = dosage ? `投入：${dosage.name}。${dosage.note}` : '';
   return resultFeedbackModal(state, {
     title: context.title || action?.name || '行动',
-    body: eventSettlementBody(action, context),
+    body: [dosageLine, eventSettlementBody(action, context)].filter(Boolean).join('\n'),
     lines,
-    summary: actionSummary(action),
+    summary: actionSummary(action, dosage),
     logText: state.log?.[0]?.text || '',
     recommendLoc: context.locId || action?.loc || ''
   });
@@ -1116,11 +1180,19 @@ function executeAction(state, action, options = {}) {
     state.ui.toast = '行动不存在';
     return;
   }
-  if (actionSpCost(action) > state.player.sp) {
+  const dosageId = options.dosageId || null;
+  const dosage = dosageId ? dosageOption(dosageId) : null;
+  const spCost = dosage ? Math.round(actionSpCost(action) * Number(dosage.spMultiplier || 1)) : actionSpCost(action);
+  const moneyCost = dosage ? Math.round(Number(action.cost || 0) * Number(dosage.costMultiplier || 1)) : Number(action.cost || 0);
+  if (allowNotebook && !dosageId && actionDosageOptions(action).length) {
+    state.ui.modal = { type: 'durationChoice', actionId: action.id, title: action.name, desc: action.desc, options: actionDosageOptions(action), summary: actionSummary(action) };
+    return;
+  }
+  if (spCost > state.player.sp) {
     state.ui.toast = '体力不足';
     return;
   }
-  if (action.cost && action.cost > state.player.money) {
+  if (moneyCost > state.player.money) {
     state.ui.toast = '钱不够';
     return;
   }
@@ -1137,14 +1209,14 @@ function executeAction(state, action, options = {}) {
     return;
   }
   if (action.minigame) {
-    startTrainingMini(state, action);
+    startTrainingMini(state, action, dosageId);
     return;
   }
 
   const before = snapshotState(state);
-  state.player.sp -= actionSpCost(action);
-  if (action.cost) state.player.money -= action.cost;
-  advanceTime(state, action.time || 30);
+  state.player.sp -= spCost;
+  if (moneyCost) state.player.money -= moneyCost;
+  advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
   if (action.type === 'battle') {
     addLog(state, `进入事件：${options.eventContext?.title || action.name}`);
     startBattle(state, action.enemy);
@@ -1155,10 +1227,17 @@ function executeAction(state, action, options = {}) {
     addLog(state, `${NPCS[action.npc]?.name || '有人'}给了你一段建议。`);
   } else {
     const beforeSkillState = clone(state.skillState || {});
-    applyGain(state, action.gain || {});
+    const gain = dosage ? scaledGain(action.gain || {}, Number(dosage.multiplier || 1), dosage) : (action.gain || {});
+    applyGain(state, gain);
+    const idleEvent = action.type === 'idle' ? maybeIdleEvent(state) : null;
+    if (dosage?.injuryRisk && actionRoll(state, 59) < dosage.injuryRisk) {
+      addMinorInjury(state);
+      state.player.fatigue = clamp((state.player.fatigue || 0) + 4, 0, 100);
+    }
     const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
-    addLog(state, `完成行动：${action.name}`);
-    state.ui.modal = actionResultModal(state, action, lines, options);
+    addLog(state, `完成行动：${action.name}${dosage ? ` · ${dosage.name}` : ''}`);
+    const idleBody = idleEvent ? `${idleEvent.title}：${idleEvent.text}` : '';
+    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, idleBody].filter(Boolean).join('\n') } });
   }
 }
 
@@ -1284,18 +1363,20 @@ function trainingResultBody(grade, result = {}) {
   return [grade.note, scoreText, result.finalFeedback].filter(Boolean).join('。');
 }
 
-function startTrainingMini(state, action) {
+function startTrainingMini(state, action, dosageId = null) {
   const template = action.minigame?.template || 'combo';
   const rounds = normalizeTrainingRounds(action);
   const maxScore = trainingMaxScore(rounds);
+  const dosage = dosageId ? dosageOption(dosageId) : null;
   state.ui.modal = {
     type: 'trainingMini',
     actionId: action.id,
+    dosageId,
     title: action.name,
     template,
     templateLabel: TRAINING_TEMPLATE_LABELS[template] || '训练',
-    prompt: action.minigame?.prompt || action.desc,
-    summary: actionSummary(action),
+    prompt: [dosage ? `${dosage.name}：${dosage.note}` : '', action.minigame?.prompt || action.desc].filter(Boolean).join('\n'),
+    summary: actionSummary(action, dosage),
     rounds,
     roundIndex: 0,
     score: 0,
@@ -1357,29 +1438,37 @@ function finishTrainingMini(state, gradeId, result = {}) {
     state.ui.modal = null;
     return;
   }
-  if (actionSpCost(action) > state.player.sp) {
+  const dosage = modal?.dosageId ? dosageOption(modal.dosageId) : null;
+  const spCost = dosage ? Math.round(actionSpCost(action) * Number(dosage.spMultiplier || 1)) : actionSpCost(action);
+  const moneyCost = dosage ? Math.round(Number(action.cost || 0) * Number(dosage.costMultiplier || 1)) : Number(action.cost || 0);
+  if (spCost > state.player.sp) {
     state.ui.toast = '体力不足';
     state.ui.modal = null;
     return;
   }
-  if (action.cost && action.cost > state.player.money) {
+  if (moneyCost > state.player.money) {
     state.ui.toast = '钱不够';
     state.ui.modal = null;
     return;
   }
   const before = snapshotState(state);
   const beforeSkillState = clone(state.skillState || {});
-  const gain = scaledGain(action.gain || {}, grade.multiplier);
-  state.player.sp -= actionSpCost(action);
-  if (action.cost) state.player.money -= action.cost;
-  advanceTime(state, action.time || 30);
+  const durationMultiplier = dosage ? Number(dosage.multiplier || 1) : 1;
+  const gain = scaledGain(action.gain || {}, grade.multiplier * durationMultiplier, dosage || {});
+  state.player.sp -= spCost;
+  if (moneyCost) state.player.money -= moneyCost;
+  advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
   applyGain(state, gain);
+  if (dosage?.injuryRisk && actionRoll(state, 71) < dosage.injuryRisk) {
+    addMinorInjury(state);
+    state.player.fatigue = clamp((state.player.fatigue || 0) + 4, 0, 100);
+  }
   const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action, gain));
-  addLog(state, `完成训练小游戏：${action.name} · ${grade.label}`);
+  addLog(state, `完成训练小游戏：${action.name} · ${grade.label}${dosage ? ` · ${dosage.name}` : ''}`);
   state.ui.modal = {
     type: 'settlement',
     title: `${action.name} · ${grade.label}`,
-    body: trainingResultBody(grade, result),
+    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result)].filter(Boolean).join('\n'),
     lines
   };
 }
@@ -1931,6 +2020,9 @@ export class GameStore {
     } else if (action.type === 'doAction') {
       const a = findAction(s, action.actionId);
       executeAction(s, a);
+    } else if (action.type === 'chooseDuration') {
+      const a = findAction(s, action.actionId);
+      executeAction(s, a, { dosageId: action.durationId });
     } else if (action.type === 'startMainEvent') {
       const main = MAIN_EVENTS[s.day];
       if (!main || s.flags[`main_${s.day}`]) s.ui.toast = '今天没有新的主线节点';
@@ -2469,12 +2561,18 @@ export function buildRenderModel(state) {
       unavailableReason: queueReason || preview.reason || ''
     };
   };
-  const actions = (ACTIONS[state.loc] || []).map((action) => ({
-    ...action,
-    disabled: actionSpCost(action) > p.sp || (action.cost && action.cost > p.money),
-    spCost: actionSpCost(action),
-    summary: actionSummary(action)
-  }));
+  const actions = (ACTIONS[state.loc] || []).map((action) => {
+    const durationOptions = actionDosageOptions(action);
+    const cheapestSp = durationOptions.length ? Math.min(...durationOptions.map((option) => option.sp)) : actionSpCost(action);
+    const cheapestCost = durationOptions.length ? Math.min(...durationOptions.map((option) => option.cost)) : Number(action.cost || 0);
+    return {
+      ...action,
+      disabled: cheapestSp > p.sp || cheapestCost > p.money,
+      spCost: actionSpCost(action),
+      durationOptions,
+      summary: actionSummary(action)
+    };
+  });
   const equipmentSlots = EQUIPMENT_SLOTS.map((slot) => {
     const itemId = state.equipment?.[slot.id] || null;
     const item = itemId ? ITEMS[itemId] : null;
