@@ -1,33 +1,34 @@
+# TASK_PLAN
+
 > Current task sheet. Keep only this task, result, validation, risks, and next step.
 
 ## Current Task
 
-`WAVE14_UI_TREE_PLAN_TIME_SLICE`: expose the Wave 14 skill tree, combat plan mode, time-investment modal, and NPC interaction affordances in the DOM UI.
+Wave 15 Addiction Loop Slice setup: refresh checkpoint and launch first-stage worker pipeline.
 
 ## Scope
 
-- Allowed: `maws_src/dom/ui.js`, `maws_src/dom/ui.css`, `docs/workers/ui_tree_plan_time_slice.md`, `docs/agent_reports/AGENT_E_UI_TREE_PLAN_TIME_SLICE.md`.
-- Forbidden: data logic, state logic, combat formulas, assets, package scripts, save keys/version.
+- Prepare Wave15 first-stage prompts and pipeline.
+- Refresh `TASK_HANDOFF`, `TASK_PLAN`, and `SPRINT_BOARD` to Wave15.
+- First implementation stage will run `SkillTreeSpend` and `CombatRecipe` in parallel where file ownership is acceptable.
+- Do not manually implement gameplay in this setup step.
 
 ## Current Result
 
-- Added a compact Skill Tree Slice area on the Skills tab for Street Wild, Boxing Basics, and Traditional Reforge.
-- Added combat plan mode controls for `manual`, `safe`, `pressure`, and `exit` using existing `setCombatPlan`.
-- Reduced duration-choice cards to time, stamina, reward multiplier, and one risk line, with long details folded.
-- Tuned NPC interaction menu affordance so real actions read as primary and feedback-only options read as suggestions.
+- Added Wave15 prompts for handoff, skill-tree spend, combat recipe, loop smoke, QA, and second-stage proposal work.
+- Added `scripts/wave15_addiction_loop_pipeline.json`.
+- Added `scripts/wave15_second_stage_proposals_pipeline.json`.
+- Current checkpoint now points to Wave15 Addiction Loop Slice.
 
 ## Validation
 
-- Pass: `npm run check:full`
-- Pass: `npm run test:playtest`
-- Pass: `npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line`
-- Pass: `git diff --check`
+- Pending after this refresh: `git diff --check`.
 
 ## Risks
 
-- Skill tree nodes are presentation-only; no purchase behavior is added in this worker.
-- First duration action is visually promoted into the main action slot so the time-investment modal is reachable without opening the folded action list.
+- `SkillTreeSpend` and `CombatRecipe` can run together only because combat recipe is instructed to avoid `data.js` and treat `state.js` as read-mostly/minimal bridge.
+- NPC memory, event follow-ups, and alt route implementation are deferred because they would contend for `data.js/state.js`.
 
 ## Next Step
 
-Commit `feat: add ui tree plan time slice`.
+Commit/push this checkpoint refresh, then start `scripts/wave15_remaining_after_handoff_pipeline.json`.
