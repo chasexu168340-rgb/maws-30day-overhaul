@@ -1,0 +1,93 @@
+{
+  "name": "wave10-coreloop-combat-tree",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave10",
+  "reasoning": "medium",
+  "visibleWorkers": true,
+  "implementationWorkers": [
+    {
+      "name": "Wave10-Starter-Wild",
+      "path": "E:\\maws_cli_parallel_wave10\\starter-wild",
+      "branch": "feat/starter-wild-kit-v3",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE10_STARTER_WILD_KIT.md"
+    },
+    {
+      "name": "Wave10-Reward-UI",
+      "path": "E:\\maws_cli_parallel_wave10\\reward-ui",
+      "branch": "feat/reward-ui-juice",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE10_REWARD_UI_JUICE.md"
+    },
+    {
+      "name": "Wave10-Combat-Combo",
+      "path": "E:\\maws_cli_parallel_wave10\\combat-combo",
+      "branch": "feat/combat-combo-autoplan-v1",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE10_COMBAT_COMBO_AUTOPLAN.md"
+    },
+    {
+      "name": "Wave10-Time-Dosage",
+      "path": "E:\\maws_cli_parallel_wave10\\time-dosage",
+      "branch": "feat/time-dosage-prototype",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE10_TIME_DOSAGE_PROTOTYPE.md"
+    },
+    {
+      "name": "Wave10-Tree-Routes",
+      "path": "E:\\maws_cli_parallel_wave10\\tree-routes",
+      "branch": "docs/skill-tree-alt-routes-masterplan",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE10_SKILL_TREE_ALT_ROUTES_MASTERPLAN.md"
+    }
+  ],
+  "mergeOrder": [
+    {
+      "name": "starter wild kit v3",
+      "branch": "feat/starter-wild-kit-v3",
+      "validate": [
+        "npm run check:full",
+        "npm run test:playtest",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "combat combo autoplan v1",
+      "branch": "feat/combat-combo-autoplan-v1",
+      "validate": [
+        "npm run check:full",
+        "node maws_src/tools/sim_day5_park_check.mjs",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "reward ui juice",
+      "branch": "feat/reward-ui-juice",
+      "validate": [
+        "npm run check:full",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "time dosage prototype",
+      "branch": "feat/time-dosage-prototype",
+      "validate": [
+        "npm run check:full",
+        "npm run test:playtest",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "skill tree alt routes masterplan",
+      "branch": "docs/skill-tree-alt-routes-masterplan",
+      "validate": [
+        "git diff --check"
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave10-QA",
+    "path": "E:\\maws_cli_parallel_wave10\\qa-wave10",
+    "branch": "qa/wave10-review",
+    "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE10_QA_REVIEW.md",
+    "commitMessage": "docs: add wave10 qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
