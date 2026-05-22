@@ -271,6 +271,10 @@ export const ENEMIES = {
 
 export const ACTIONS = {
   home: [
+    { id: 'fatty_review_together', name: '一起复盘', icon: '复', time: 25, sp: 0, desc: '刘胖子陪你把今天最容易上头的一拍讲清楚。话不长，能让脑子慢下来。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_review', flags: { fatty_review_seen: true }, gain: { jud: 1, calm: 1, rel_fatty: 1 } },
+    { id: 'fatty_today_advice', name: '问今日建议', icon: '问', time: 15, sp: 0, desc: '问刘胖子今天先别犯哪种蠢。建议很短，但够你少冲一次。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_advice', flags: { fatty_advice_seen: true }, gain: { jud: 1, rel_fatty: 1 } },
+    { id: 'father_incense', name: '给父亲上香', icon: '香', time: 20, sp: 0, desc: '把香插稳，不把今天的急劲带到父亲面前。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_incense', flags: { father_incense_seen: true }, gain: { calm: 1 }, maw: { fatherMemory: 1 } },
+    { id: 'father_self_check', name: '对父亲自省', icon: '省', time: 15, sp: 0, desc: '在旧照片前承认一句：有些动作不是勇，是莽。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_self_check', flags: { father_self_check_seen: true }, gain: { jud: 1, calm: 1 }, maw: { fatherMemory: 1 } },
     { id: 'review', name: '视频复盘', icon: '复', time: 45, sp: 0, desc: '分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。', type: 'simple', gain: { jud: 1, calm: 4, skill: 'jab', xp: 4 } },
     { id: 'shadow', name: '影子拳节拍', icon: '影', time: 50, sp: 12, desc: '轻训练，练直拳回收和步法节奏。影子不会还手，但它也不会夸你。', type: 'simple', gain: { skill: 'dodge', xp: 6, boxing: 4, fatigue: 6, fitXp: 2 } },
     { id: 'idle_blank', name: '发呆放空', icon: '空', time: 15, sp: 0, desc: '不刷视频，不加练，只让脑子从热度里退出来一点。可能想起父亲、写下几句日记，或收到朋友消息。', type: 'idle', noDurationOptions: true, gain: { calm: 1, fatigue: -1 } },
@@ -283,6 +287,8 @@ export const ACTIONS = {
     { id: 'sleep', name: '睡觉到明天', icon: '眠', time: 0, sp: 0, desc: '结束当天。太晚不睡，明天的身体会带着账本来找你。', type: 'sleep' }
   ],
   store: [
+    { id: 'xiaoman_supply_hint', name: '听补给提醒', icon: '补', time: 10, sp: 0, desc: '小满扫一眼你包里的东西，提醒你别把补给当玄学。', type: 'simple', npc: 'xiaoman', noDurationOptions: true, dailyGate: 'xiaoman_supply_hint', flags: { xiaoman_supply_hint_seen: true }, gain: { jud: 1, rel_xiaoman: 1 } },
+    { id: 'xiaoman_night_chat', name: '夜班短聊', icon: '夜', time: 20, sp: 0, desc: '夜班柜台前聊两句，把白天的硬撑放下一点。', type: 'simple', npc: 'xiaoman', noDurationOptions: true, dailyGate: 'xiaoman_night_chat', flags: { xiaoman_night_chat_seen: true }, gain: { calm: 1, fatigue: -2, rel_xiaoman: 1 } },
     { id: 'cashier', name: '便利店收银班', icon: '钱', time: 120, sp: 18, desc: '赚钱，遇到小满/刘胖子事件概率上升。扫码枪很轻，站两小时很重。', type: 'simple', gain: { money: 125, fatigue: 10, rel_xiaoman: 1 } },
     { id: 'carry', name: '搬货硬练', icon: '箱', time: 80, sp: 24, desc: '赚钱少一点，但力量、耐力和体能沉淀都会涨。纸箱沉默，收益诚实。', type: 'simple', gain: { money: 70, str: 1, end: 1, fitXp: 6, fatigue: 14 } },
     { id: 'chat_xiaoman', name: '和小满聊几句', icon: '聊', time: 25, sp: 0, desc: '分段对话。关系收益每日有限，别把聊天当连招搓。', type: 'dialog', npc: 'xiaoman' },
@@ -308,6 +314,8 @@ export const ACTIONS = {
     { id: 'push_old', name: '推手大爷交流', icon: '推', time: 55, sp: 10, desc: '低风险近身控制训练。大爷笑得慈祥，重心拆得很不慈祥。', type: 'battle', enemy: 'E02', risk: 1 }
   ],
   boxing: [
+    { id: 'coach_one_correction', name: '一句纠错', icon: '纠', time: 20, sp: 0, desc: '梁教练只纠一处：打完别站着等夸。', type: 'simple', npc: 'coach', noDurationOptions: true, dailyGate: 'coach_one_correction', flags: { coach_one_correction_seen: true }, gain: { jud: 1, calm: 1, rel_coach: 1 } },
+    { id: 'coach_gym_advice', name: '拳馆建议', icon: '议', time: 15, sp: 0, desc: '问梁教练今天该补哪一块。他没有长篇，只给你一个方向。', type: 'simple', npc: 'coach', noDurationOptions: true, dailyGate: 'coach_gym_advice', flags: { coach_gym_advice_seen: true }, gain: { jud: 1, rel_coach: 1 } },
     {
       id: 'bag',
       name: '沙包连击',

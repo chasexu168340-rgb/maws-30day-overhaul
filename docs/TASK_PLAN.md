@@ -4,32 +4,33 @@
 
 ## Current Task
 
-Wave 14 handoff refresh: update current checkpoints from Wave 12/Wave 13 state to Wave 14 Playable Loop Slice.
+`NPC-ACT-001`: replace part of Wave 13 NPC menu toast feedback with real Day 1-7 NPC light actions.
 
 ## Scope
 
-- Update `docs/TASK_HANDOFF.md` with the Wave 14 baseline and next target.
-- Update `docs/SPRINT_BOARD.md` Ready Tasks to `NPC-ACT-001`, `TREE-001`, `UI-PLAN-001`, and `QA-014`.
-- Add this worker output and Agent A report.
-- Do not change game runtime code, assets, or package metadata.
+- Modify only `maws_src/content/data.js`, `maws_src/simulation/state.js`, this task plan, and required worker/report docs.
+- Add real short actions for Liu Pangzi, father memory, Xiaoman, and Liang Coach.
+- Preserve DOM UI, combat formulas, events, assets, package scripts, save key/version, and major story scope.
 
 ## Current Result
 
-- Updated `docs/TASK_HANDOFF.md` from Wave 12 Visual Slice Strike to Wave 14 Playable Loop Slice.
-- Updated `docs/SPRINT_BOARD.md` Ready Tasks to `NPC-ACT-001`, `TREE-001`, `UI-PLAN-001`, and `QA-014`.
-- Added worker output and Agent A report for this refresh.
-- Recorded that QA must run last and that no skill tree runtime implementation exists yet.
+- Added 8 NPC-linked light actions using existing `ACTIONS` and `gain` data.
+- Added generic `dailyGate` support so same-day NPC light actions cannot be reward-farmed.
+- Added action `flags` handling and structured `maw` reward deltas for father memory.
+- Added father as a home scene token so `father_incense` and `father_self_check` are reachable from the compact NPC menu.
 
 ## Validation
 
+- Pass: `npm run build`
+- Pass: `npm run check:full`
+- Pass: `npm run test:playtest`
 - Pass: `git diff --check`
-- Skipped: `npm run build` because this is a documentation-only checkpoint refresh.
 
 ## Risks
 
-- This refresh records that no skill tree runtime implementation exists yet; future `TREE-001` work must verify that separately.
-- QA must run last, after implementation work is complete and integrated into a review base.
+- Low runtime risk. The compact NPC menu now considers up to 3 related actions instead of 2, but still returns at most 3 menu entries.
+- Father is represented as a home scene token for the old photo/incense interaction; this is intentional and not a new story branch.
 
 ## Next Step
 
-Commit with `docs: refresh wave14 playable loop handoff`.
+Commit with `feat: add day 1-7 npc real actions`.

@@ -358,7 +358,7 @@ export function createNewState(origin = 'worker') {
     loc: 'home',
     seed: 123456,
     flags: {},
-    daily: { talked: {}, actions: 0, mainDone: false, sideSeed: 1 },
+    daily: { talked: {}, actions: 0, mainDone: false, sideSeed: 1, npcActionGates: {} },
     ui: { tab: 'map', toast: '第1天，先把能打中人的东西练出来。', modal: null, selectedTravel: null, cityMapOpen: false, interactionMenu: null },
     player: {
       name: '陆小闲',
@@ -410,6 +410,7 @@ export function migrateSave(input) {
   s.flags ||= {};
   s.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: s.day || 1 };
   s.daily.talked ||= {};
+  s.daily.npcActionGates ||= {};
   s.ui ||= { tab: s.tab || 'map', toast: null, modal: null, selectedTravel: null, cityMapOpen: false, interactionMenu: null };
   s.ui.cityMapOpen = Boolean(s.ui.cityMapOpen);
   s.ui.interactionMenu = null;
@@ -458,6 +459,24 @@ export function snapshotState(state) {
 
 function findAction(state, actionId) {
   return (ACTIONS[state.loc] || []).find((a) => a.id === actionId) || null;
+}
+
+function dailyGateKey(action = {}) {
+  return action.dailyGate || '';
+}
+
+function dailyGateReason(state, action = {}) {
+  const key = dailyGateKey(action);
+  if (!key) return '';
+  return state.daily?.npcActionGates?.[key] ? '今天已经做过这类轻行动' : '';
+}
+
+function markDailyGate(state, action = {}) {
+  const key = dailyGateKey(action);
+  if (!key) return;
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  state.daily.npcActionGates ||= {};
+  state.daily.npcActionGates[key] = true;
 }
 
 function actionSpCost(action) {
@@ -966,6 +985,7 @@ function positiveGainMultiplier(gain = {}, multiplier = 1) {
 
 function trainingRepeatKind(action = {}) {
   if (!action || action.type === 'idle' || action.type === 'sleep' || action.type === 'shop' || action.type === 'battle') return '';
+  if (action.dailyGate) return '';
   const gain = action.gain || {};
   if (gain.fatigue < 0 || gain.hp || gain.sp || action.id?.includes('work') || gain.money) return '';
   if (action.minigame?.template) return action.minigame.template;
@@ -1056,6 +1076,7 @@ function sleep(state, forced = false) {
   state.loc = 'home';
   state.daily = {
     talked: {},
+    npcActionGates: {},
     actions: 0,
     mainDone: false,
     sideSeed: state.day,
@@ -1386,6 +1407,28 @@ function itemRewardDelta(itemId, delta = 0, source = 'item') {
   }, source, 0);
 }
 
+function mawRewardDeltas(beforeMaw = {}, state = {}, patch = {}, source = 'action') {
+  if (!patch || typeof patch !== 'object') return [];
+  return Object.keys(patch)
+    .map((key, index) => {
+      const beforeValue = Number(beforeMaw?.[key] || 0);
+      const afterValue = Number(state.maw?.[key] || 0);
+      const delta = Math.round(afterValue - beforeValue);
+      if (!delta) return null;
+      const rule = RESOURCE_RULES[key] || {};
+      return normalizeRewardDelta({
+        key: `maw:${key}`,
+        label: rule.name || key,
+        value: afterValue,
+        delta,
+        kind: delta < 0 ? 'risk' : 'gain',
+        icon: rule.icon || '得',
+        source
+      }, source, index + 12);
+    })
+    .filter(Boolean);
+}
+
 function rewardDeltasFromSettlement(lines = [], after = {}, { source = 'settlement', minutes = 0, extra = [] } = {}) {
   return [
     ...lines.map((line, index) => rewardDeltaFromLine(line, after, source, index)).filter(Boolean),
@@ -1457,7 +1500,8 @@ function actionResultModal(state, action, lines, options = {}) {
     summary: actionSummary(action, dosage),
     rewardDeltas: rewardDeltasFromSettlement(lines, state, {
       source: context.type === 'eventNotebook' ? 'eventNotebook' : 'action',
-      minutes: dosage ? dosage.minutes : (action?.time || 30)
+      minutes: dosage ? dosage.minutes : (action?.time || 30),
+      extra: options.extraRewardDeltas || []
     }),
     logText: state.log?.[0]?.text || '',
     recommendLoc: context.locId || action?.loc || ''
@@ -1468,6 +1512,11 @@ function executeAction(state, action, options = {}) {
   const allowNotebook = options.allowNotebook !== false;
   if (!action) {
     state.ui.toast = '行动不存在';
+    return;
+  }
+  const gateReason = dailyGateReason(state, action);
+  if (gateReason) {
+    state.ui.toast = gateReason;
     return;
   }
   const dosageId = options.dosageId || null;
@@ -1507,6 +1556,8 @@ function executeAction(state, action, options = {}) {
   state.player.sp -= spCost;
   if (moneyCost) state.player.money -= moneyCost;
   advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
+  markDailyGate(state, action);
+  if (action.flags) applyStoryFlags(state, action.flags);
   if (action.type === 'battle') {
     addLog(state, `进入事件：${options.eventContext?.title || action.name}`);
     startBattle(state, action.enemy);
@@ -1521,10 +1572,12 @@ function executeAction(state, action, options = {}) {
     addLog(state, `${NPCS[action.npc]?.name || '有人'}给了你一段建议。`);
   } else {
     const beforeSkillState = clone(state.skillState || {});
+    const beforeMaw = createDefaultMaw(state.maw);
     const baseGain = dosage ? scaledGain(action.gain || {}, Number(dosage.multiplier || 1), dosage) : (action.gain || {});
     const micro = applyMicroActionPressure(state, action, baseGain);
     const repeat = applyTrainingRepeatPressure(state, action, micro.gain);
     applyGain(state, repeat.gain);
+    if (action.maw) applyMawPatch(state, action.maw);
     const idleEvent = action.type === 'idle' ? maybeIdleEvent(state) : null;
     const scheduleNote = applyDosageSchedulePressure(state, dosage);
     if (dosage?.injuryRisk && actionRoll(state, 59) < dosage.injuryRisk) {
@@ -1534,7 +1587,12 @@ function executeAction(state, action, options = {}) {
     const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
     addLog(state, `完成行动：${action.name}${dosage ? ` · ${dosage.name}` : ''}`);
     const idleBody = idleEvent ? `${idleEvent.title}：${idleEvent.text}` : '';
-    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, micro.note, repeat.note, scheduleNote, idleBody].filter(Boolean).join('\n') } });
+    state.ui.modal = actionResultModal(state, action, lines, {
+      ...options,
+      dosage: dosageId,
+      extraRewardDeltas: mawRewardDeltas(beforeMaw, state, action.maw, options.eventContext?.type === 'eventNotebook' ? 'eventNotebook' : 'action'),
+      eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, micro.note, repeat.note, scheduleNote, idleBody].filter(Boolean).join('\n') }
+    });
   }
 }
 
@@ -2608,7 +2666,10 @@ const CITY_MAP_MARKERS = {
 };
 
 const SCENE_CAST_BY_LOC = {
-  home: [{ id: 'fatty', name: '刘胖子', role: '凑热闹的熟人', kind: 'token', icon: '胖' }],
+  home: [
+    { id: 'fatty', name: '刘胖子', role: '凑热闹的熟人', kind: 'token', icon: '胖' },
+    { id: 'father', name: '父亲', role: '旧照片和香炉', kind: 'token', icon: '父' }
+  ],
   store: [{ id: 'xiaoman', name: '小满', role: '便利店值班', kind: 'token', icon: '满' }],
   worksite: [{ id: 'worker', name: '工友老周', role: '等活的临工', kind: 'token', icon: '工' }],
   park: [{ id: 'rookie', name: '拳击新人', role: '低风险验货', assetKey: 'fighter.enemy.boxer', kind: 'standee', icon: '拳' }],
@@ -2752,7 +2813,7 @@ function sceneInteractionMenuModel(state, characters = [], actions = []) {
     (character.id && action.npc === character.id) ||
     (character.id && action.enemy === character.id)
   ));
-  const menuActions = relatedActions.slice(0, 2).map((action) => {
+  const menuActions = relatedActions.slice(0, 3).map((action) => {
     const unavailable = action.disabledReason || action.lockReason || action.unavailableReason || '现在条件不够';
     return action.disabled
       ? { label: menuActionLabel(action), action: 'toast', text: unavailable, kind: 'disabled' }
@@ -3023,9 +3084,11 @@ export function buildRenderModel(state) {
     const durationOptions = actionDosageOptions(action);
     const cheapestSp = durationOptions.length ? Math.min(...durationOptions.map((option) => option.sp)) : actionSpCost(action);
     const cheapestCost = durationOptions.length ? Math.min(...durationOptions.map((option) => option.cost)) : Number(action.cost || 0);
+    const gateReason = dailyGateReason(state, action);
     return {
       ...action,
-      disabled: cheapestSp > p.sp || cheapestCost > p.money,
+      disabled: Boolean(gateReason) || cheapestSp > p.sp || cheapestCost > p.money,
+      disabledReason: gateReason || (cheapestSp > p.sp ? '体力不足' : (cheapestCost > p.money ? '钱不够' : '')),
       spCost: actionSpCost(action),
       durationOptions,
       summary: actionSummary(action)
