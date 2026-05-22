@@ -4,44 +4,44 @@
 
 ## Current Task
 
-建立多 CLI 两阶段编排：实现 worker 全部完成并合入 staging 后，才启动 QA；QA 完成后再自动交回 Manager 合并报告。完成的 worker 窗口自动关闭。
+Wave 9：Scene Presentation 多 CLI。先复制任务包并用两阶段 pipeline 启动：实现 A-D 并行，Manager 合并并推送 staging 后才启动 QA。
 
 ## Scope
 
-- 新增通用编排脚本：`scripts/Invoke-MawsMultiCliPipeline.ps1`。
-- 新增 spec 模板：`scripts/wave_pipeline.example.json`。
-- 新增 QA 延后规则：`docs/codex_tasks/QA_AFTER_MERGE_RULES.md`。
-- 更新本 checkpoint。
-- 不改游戏代码、数据、UI、战斗、经济、资产或存档。
+- 新增/更新 Wave 9 worker prompts：`docs/codex_tasks/WAVE9_*.md`。
+- 新增 Wave 9 pipeline spec：`scripts/wave9_scene_pipeline.json`。
+- 新增安全启动 wrapper：`scripts/run_wave9_scene_workers.ps1`。
+- 不采用包内旧 launcher 的 QA 并跑逻辑。
+- 不直接改游戏运行代码；实现由 worker 分支负责。
 
 ## Plan
 
-- [x] 保留实现 worker 并行。
-- [x] QA 从实现同批窗口中移除，改为 Manager 合并/推送 staging 之后启动。
-- [x] worker 启动不使用 `-NoExit` / `-Hold`，完成后自动关闭窗口。
-- [x] Manager 等待 worker 退出、保留自动关闭窗口日志、推送 clean 分支、按顺序合并并验证。
-- [x] QA 完成后 Manager 自动提交/推送 QA docs，合并 QA 分支并推送 staging。
-- [x] 验证脚本语法与 diff。
+- [x] 解压 `MAWS_Wave9_Scene_Presentation_MultiCLI_v0.2.zip`。
+- [x] 复制 Wave 9 prompts。
+- [x] 给 prompts 补充 skill 指导和 commit/Manager 交接规则。
+- [x] 生成两阶段 pipeline spec：A-D 实现先跑，QA 延后。
+- [x] 生成安全 wrapper。
+- [x] 验证 prompt/spec/script。
+- [ ] 提交并推送 Wave 9 启动配置。
+- [ ] 运行 Wave 9 pipeline。
 
 ## Validation
 
 - [x] PowerShell scriptblock parse：通过。
-- [x] `scripts/wave_pipeline.example.json` JSON parse：通过。
+- [x] Wave 9 JSON spec parse：通过。
 - [x] `git diff --check`：通过。
 
 ## Result
 
-- 新增通用两阶段多 CLI pipeline。
-- 实现 worker 先并行；Manager 等全部完成后合并、验证、推送 staging。
-- QA worker 延后启动，只看最终集成 staging；QA 完成后 Manager 自动合并 QA 报告。
-- worker 不再用 `-NoExit` / `-Hold`，完成后窗口自动关闭，日志写到 wave `_logs`。
+- Wave 9 prompts 已复制并补充 skill/交接规则。
+- 旧的 QA 并跑 launcher 已被安全 wrapper 替代。
+- Wave 9 pipeline 将先跑 A-D，再由 Manager 合并，最后启动 QA。
 
 ## Risks
 
-- 实现 worker 必须提交干净；脚本只会自动 push clean implementation 分支，不会替它们乱提交业务代码。
-- worker 输出日志保存在当前 wave 的 `_logs` 目录，便于窗口自动关闭后排查。
-- QA 如果留下非 docs 报告改动，脚本会拒绝自动提交。
+- A/B/C 都会碰 UI 文件，并行实现后合并可能冲突；Manager 需要按 A -> B -> C 顺序处理。
+- QA 必须等 staging 集成后才跑。
 
 ## Next Step
 
-验证通过后提交并推送；后续每个 Wave 用 `scripts/wave_pipeline.example.json` 复制出自己的 pipeline spec。
+提交推送 Wave 9 配置，然后运行 `scripts/run_wave9_scene_workers.ps1`。
