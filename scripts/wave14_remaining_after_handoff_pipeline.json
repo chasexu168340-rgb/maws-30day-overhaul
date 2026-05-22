@@ -1,0 +1,109 @@
+{
+  "name": "Wave14 Playable Loop Slice Remaining After Handoff",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave14",
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "visibleWorkers": true,
+  "stages": [
+    {
+      "name": "npc-real-actions",
+      "workers": [
+        {
+          "name": "Wave14-NPC-Actions",
+          "path": "E:\\maws_cli_parallel_wave14\\npc-actions",
+          "branch": "feat/npc-real-actions-day1-7",
+          "prompt": "docs\\codex_tasks\\WAVE14_NPC_REAL_ACTIONS.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave14-NPC-Actions",
+          "branch": "feat/npc-real-actions-day1-7",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "skill-tree-system",
+      "workers": [
+        {
+          "name": "Wave14-Tree-System",
+          "path": "E:\\maws_cli_parallel_wave14\\tree-system",
+          "branch": "feat/skill-tree-system-slice-v1",
+          "prompt": "docs\\codex_tasks\\WAVE14_SKILL_TREE_SYSTEM_SLICE.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave14-Tree-System",
+          "branch": "feat/skill-tree-system-slice-v1",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ui-tree-plan-time",
+      "workers": [
+        {
+          "name": "Wave14-UI-Slice",
+          "path": "E:\\maws_cli_parallel_wave14\\ui-slice",
+          "branch": "feat/ui-tree-plan-time-slice",
+          "prompt": "docs\\codex_tasks\\WAVE14_UI_TREE_PLAN_TIME_SLICE.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave14-UI-Slice",
+          "branch": "feat/ui-tree-plan-time-slice",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wave14-loop-smoke",
+      "workers": [
+        {
+          "name": "Wave14-Loop-Smoke",
+          "path": "E:\\maws_cli_parallel_wave14\\tests",
+          "branch": "test/wave14-loop-smoke",
+          "prompt": "docs\\codex_tasks\\WAVE14_LOOP_SMOKE_TESTS.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave14-Loop-Smoke",
+          "branch": "test/wave14-loop-smoke",
+          "validate": [
+            "npm run build",
+            "npx playwright test maws_src/tests/wave14_loop.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave14-QA",
+    "path": "E:\\maws_cli_parallel_wave14\\qa",
+    "branch": "qa/wave14-review",
+    "prompt": "docs\\codex_tasks\\WAVE14_QA_REVIEW.md",
+    "commitMessage": "docs: add wave14 qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
