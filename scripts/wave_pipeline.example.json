@@ -1,0 +1,35 @@
+{
+  "name": "wave-example",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave_example",
+  "reasoning": "medium",
+  "visibleWorkers": true,
+  "implementationWorkers": [
+    {
+      "name": "Example-Impl-A",
+      "path": "E:\\maws_cli_parallel_wave_example\\impl-a",
+      "branch": "feat/example-a",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\EXAMPLE_IMPL_A.md"
+    }
+  ],
+  "mergeOrder": [
+    {
+      "name": "example a",
+      "branch": "feat/example-a",
+      "validate": [
+        "npm run check:full",
+        "git diff --check"
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Example-QA",
+    "path": "E:\\maws_cli_parallel_wave_example\\qa",
+    "branch": "qa/example-review",
+    "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\EXAMPLE_QA.md",
+    "commitMessage": "docs: add example qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
