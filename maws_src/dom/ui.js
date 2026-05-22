@@ -123,15 +123,34 @@ function assetIcon(key, fallback = '', className = 'maws-asset-icon') {
   return `<img class="${className}" src="${esc(src)}" alt="" loading="lazy" decoding="async" />`;
 }
 
-function renderSceneCharacter(character) {
+function sceneCharacterInteraction(character, actions = []) {
+  const relatedAction = actions.find((action) => (
+    (character.id && action.npc === character.id) ||
+    (character.id && action.enemy === character.id)
+  ));
+  const action = relatedAction && !relatedAction.disabled
+    ? { action: 'doAction', id: relatedAction.id }
+    : { action: 'toast', text: relatedAction?.disabledReason || relatedAction?.lockReason || `${character.name || '这个人'}现在没有可执行行动` };
+  const label = relatedAction
+    ? `${character.name || '角色'}：${relatedAction.name || '行动'}`
+    : `${character.name || '角色'}：${character.role || '场景角色'}`;
+  const attrs = Object.entries(action)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `data-${key}="${esc(value)}"`)
+    .join(' ');
+  return { attrs, label };
+}
+
+function renderSceneCharacter(character, actions = []) {
   const src = character.assetKey ? assetPath(character.assetKey) : null;
   const placeholderClass = character.assetKey?.startsWith('scene.npc.') ? 'placeholder-npc' : '';
   const loadAttrs = character.side === 'player' ? 'loading="eager" fetchpriority="high"' : 'loading="eager"';
+  const interaction = sceneCharacterInteraction(character, actions);
   const art = src
     ? `<img src="${esc(src)}" alt="" ${loadAttrs} decoding="async" />`
     : `<span class="maws-scene-token">${esc(character.icon || character.name?.slice(0, 1) || '?')}</span>`;
   return `
-    <figure class="maws-scene-character ${esc(character.side || 'npc')} ${esc(character.kind || 'portrait')} ${placeholderClass}">
+    <figure class="maws-scene-character ${esc(character.side || 'npc')} ${esc(character.kind || 'portrait')} ${placeholderClass}" role="button" tabindex="0" aria-label="${esc(interaction.label)}" ${interaction.attrs}>
       ${art}
       <figcaption><b>${esc(character.name)}</b><span>${esc(character.role)}</span></figcaption>
     </figure>
@@ -371,7 +390,7 @@ function renderMap(model) {
   const scene = model.locationScene || {};
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
-  const characters = (scene.characters || []).map(renderSceneCharacter).join('');
+  const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
   const cityMap = model.cityMap || {};
   const cityBg = assetPath(cityMap.backgroundKey);
   const cityBgUrl = cityBg ? `/${cityBg}` : '';
