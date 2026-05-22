@@ -94,3 +94,11 @@ Create a small fix branch before skill tree implementation:
 1. Register `wild_swing` and `push_away` in combat `SKILLS`.
 2. Add Day 1 playtest coverage for selecting/resolving a starter wild action.
 3. Re-run `npm run check:full`, `npm run test:playtest`, `node maws_src/tools/sim_day5_park_check.mjs`, and `git diff --check`.
+
+## Manager Follow-Up
+
+Completed on staging after QA:
+
+- `wild_swing` and `push_away` are now registered in `maws_src/simulation/combat.js`.
+- `maws_src/tests/day1_day7_playtest.spec.js` now verifies both starter wild actions preview as valid and resolve through a combat window.
+- Validation passed: `npm run check:full`, `npm run test:playtest`, `node maws_src/tools/sim_day5_park_check.mjs`, `git diff --check`.

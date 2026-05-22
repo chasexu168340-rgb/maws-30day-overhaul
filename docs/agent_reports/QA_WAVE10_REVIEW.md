@@ -54,3 +54,11 @@ PASS
 ## Recommendation
 
 Before the next skill tree implementation batch, add `wild_swing` and `push_away` to combat `SKILLS` and extend Day 1/Day 5 playtest coverage to select and resolve a starter wild action. After that fix, the masterplan is a reasonable input for the next implementation round.
+
+## Manager Follow-Up
+
+Resolved after QA in `fix: register starter wild combat skills`:
+
+- Added `wild_swing` and `push_away` to the combat resolver's local `SKILLS` table.
+- Extended Day 1-Day 7 playtest coverage so starter wild skills must preview as valid, enter the combat queue, and resolve a real combat window.
+- Re-ran `npm run check:full`, `npm run test:playtest`, `node maws_src/tools/sim_day5_park_check.mjs`, and `git diff --check`; all passed.
