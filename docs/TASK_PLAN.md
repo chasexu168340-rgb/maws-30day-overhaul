@@ -4,40 +4,43 @@
 
 ## Current Task
 
-Wave 9：Scene Presentation 多 CLI。修正两阶段 pipeline 的可见窗口和自动关闭等待问题，然后由 Manager 手动续接合并。
+Wave 9：Scene Presentation 多 CLI。Manager 正在手动续接合并实现分支，QA 必须等 staging 集成并 push 后启动。
 
 ## Scope
 
-- 修复 `scripts/Invoke-MawsMultiCliPipeline.ps1`。
-- 更新本 checkpoint。
-- 不改游戏代码、数据、UI、战斗、经济、资产或存档。
+- 合并并验证：`feat/scene-stage-scale`、`feat/dialogue-box-rebuild`、`feat/event-feedback-loop`、`docs/visual-direction-scene-ui`。
+- 延后启动并合并：`qa/wave9-scene-review`。
+- 不新增本轮需求外的游戏内容、敌人、技能、Day 8/9 或经济/战斗改动。
 
 ## Plan
 
-- [x] Wave 9 prompts/spec/wrapper 已提交并推送。
-- [x] Wave 9 pipeline 已启动，A-D worker 启动成功，QA 未提前启动。
-- [x] `scene-stage`、`dialogue-box`、`visual-direction` 已在各自分支提交。
-- [x] `event-feedback` 误提交到主 staging，已 cherry-pick 到 `feat/event-feedback-loop` 并清理主仓库。
-- [x] 修复 `visibleWorkers=true` 时窗口空白：可见窗口不再重定向 stdout/stderr。
-- [x] 修复 worker 自动关闭后 `Wait-Process -Id` 找不到 PID：改用 process object `WaitForExit()`。
-- [ ] 推送 pipeline 修复。
-- [ ] Manager 手动推送/合并 A-D，再延后启动 QA。
+- [x] Scene Stage 已合并并通过 `npm run check:full` / `git diff --check`。
+- [x] Dialogue Box 已合并并通过 `npm run check:full` / `git diff --check`。
+- [x] Event Feedback 已开始合并，`docs/TASK_PLAN.md` 冲突已按 Manager checkpoint 解决。
+- [ ] Event Feedback 合并后跑验证。
+- [ ] Visual Direction 合并后跑 `git diff --check`。
+- [ ] Push integrated staging。
+- [ ] 从最新 staging 启动 QA worker。
+- [ ] 合并 QA 报告并 push。
 
 ## Validation
 
-- 待跑：PowerShell scriptblock parse。
-- 待跑：`git diff --check`。
+- Scene Stage：通过。
+- Dialogue Box：通过。
+- Event Feedback：待跑。
+- Visual Direction：待跑。
+- Final QA：待跑。
 
 ## Result
 
-当前 Wave 9 实现 worker 产物已就绪或已归位；接下来不重跑实现 worker，改由 Manager 手动执行合并链。
+进行中。
 
 ## Risks
 
-- A/B/C 都碰 UI 文件，合并顺序必须保持 A -> B -> C。
-- 本轮发现 AGENTS 默认根目录会诱导 worker 写回主仓库，后续 prompt 需要明确 stay in current worktree。
-- QA 必须等 staging 集成并 push 后才跑。
+- A/B/C 都改 UI，必须靠集成后浏览器验证确认最终效果。
+- 本轮发现 worker 可能受 `AGENTS.md` 默认根目录影响写回主仓库，后续 prompt 要明确 stay in current worktree。
+- QA 不能提前跑，必须等 staging 集成并 push。
 
 ## Next Step
 
-推送 pipeline 修复；随后 Manager 手动合并 A-D，再启动 QA。
+完成 Event Feedback merge commit，继续验证和合并 Visual Direction。

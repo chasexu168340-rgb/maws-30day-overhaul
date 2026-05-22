@@ -804,6 +804,11 @@ function renderModalShell(modal, inner, className = '') {
   return `<div class="${classes}"><section class="maws-modal-shell">${inner}</section></div>`;
 }
 
+function renderModalAction(action) {
+  if (!action || !action.action) return '';
+  return btn(action.label || '继续', action.action, action.params || {}, action.className || 'ghost');
+}
+
 function renderStoryChoiceModal(modal) {
   const bodyLines = modalBodyLines(modal.body);
   const lead = bodyLines[0] || '现在要做一个选择。';
@@ -1045,6 +1050,34 @@ function renderModal(model) {
         ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
       </details>
     `);
+  }
+  if (modal.type === 'settlement') {
+    const resultActions = (modal.actions?.length ? modal.actions : [{ label: '继续行动', action: 'closeModal', className: 'primary' }])
+      .map(renderModalAction)
+      .join('');
+    const cost = summaryChips(modal.cost || [], 'cost');
+    const gain = summaryChips(modal.gain || [], 'gain');
+    const hasSummary = (modal.cost || []).length || (modal.gain || []).length || modal.risk;
+    return renderModalShell(modal, `
+      <small class="maws-result-kicker">${esc(modal.kicker || modal.title || '行动')}</small>
+      <h2>${esc(modal.title || '结果')}</h2>
+      <p class="maws-modal-lead">${esc(modal.lead || lead)}</p>
+      ${hasSummary ? `
+        <div class="maws-result-summary">
+          <div><b>代价</b>${cost || '<small>没有额外代价</small>'}</div>
+          <div><b>获得</b>${gain || '<small>状态已推进</small>'}</div>
+          ${modal.risk ? `<small>${esc(modal.risk)}</small>` : ''}
+        </div>
+      ` : ''}
+      <div class="maws-modal-actions">${resultActions}</div>
+      <details class="maws-fold maws-modal-fold">
+        <summary>结算明细 / 日志</summary>
+        ${restBody ? `<div class="maws-modal-body">${restBody}</div>` : ''}
+        ${objectiveLines}
+        ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
+        ${modal.logText ? `<p class="maws-result-log">${esc(modal.logText)}</p>` : ''}
+      </details>
+    `, 'result-feedback');
   }
   return renderModalShell(modal, `
     <header class="maws-rpg-title">

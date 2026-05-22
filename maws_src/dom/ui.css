@@ -4275,6 +4275,10 @@
   .maws-skill.combat-card footer {
     display: none;
   }
+
+  .maws-result-summary {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Batch 2: main screen noise reduction. */
@@ -4548,6 +4552,44 @@
   font-weight: 900;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.maws-result-kicker {
+  color: rgba(255, 243, 210, 0.72);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.maws-result-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.maws-result-summary > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 243, 210, 0.18);
+  background: rgba(5, 5, 6, 0.18);
+}
+
+.maws-result-summary b {
+  color: var(--maws-paper, #fff3d2);
+}
+
+.maws-result-summary > small,
+.maws-result-log {
+  margin: 0;
+  color: rgba(255, 243, 210, 0.78);
+  overflow-wrap: anywhere;
+}
+
+.maws-result-summary > small {
+  grid-column: 1 / -1;
 }
 
 .maws-modal-fold {
