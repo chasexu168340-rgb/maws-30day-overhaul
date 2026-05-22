@@ -1,44 +1,35 @@
 # TASK_HANDOFF
 
-> 新窗口恢复首选 checkpoint。只记录当前任务、允许范围、验证门槛和下一步。
+> New-window recovery checkpoint. Keep this file focused on the current wave, allowed scope, validation gates, and next runnable work.
 
 ## Current Task
 
-Wave 12：Visual Slice Strike。
+Wave 14: Playable Loop Slice.
+
+## Current Staging Baseline
+
+- Wave 13 first-look QA passed.
+- NPC compact interaction menu is staged: clicking scene people opens a compact menu instead of only showing a toast.
+- Reward deltas are compact and structured.
+- Day 5 combat HUD command/action count target is 4-6, with queue length 1-2.
+- No skill tree runtime implementation exists yet.
 
 ## Goal
 
-让进游戏第一眼像一个可玩的游戏切片：知道看哪里，点击有反馈，战斗画面不被 UI 吃掉，收益反馈是清晰数字。
+Make the next slice feel playable from entry through local action, NPC interaction, reward feedback, and Day 5 combat planning without expanding the game architecture.
 
-## Scope
+## Ready Tasks
 
-- 战斗舞台变大，卡牌变小，但不是只剩两张牌。
-- 主角/NPC 变大、贴地、融入背景，去掉诡异背板。
-- 背景裁剪和焦点重做，高分辨率下不糊、不怪。
-- 事件收益改成结构化数字弹出，不重复长句。
-- 点击 NPC/人物有明显视觉反馈。
-- 本地点行动不能被底栏遮挡。
-- 小事件用小弹窗，大事件才用大弹窗。
+1. `NPC-ACT-001`: connect compact NPC menu actions to real, safe local actions where data already supports it.
+2. `TREE-001`: add the first runtime skill tree slice without changing save key/version or broad progression rules.
+3. `UI-PLAN-001`: tighten the Playable Loop Slice UI plan around current DOM + Phaser ownership boundaries.
+4. `QA-014`: final Wave 14 QA after implementation branches are complete and integrated.
 
-## Branch Plan
+## Worker Order
 
-1. `feat/structured-reward-deltas`
-2. `feat/visual-stage-hud-strike`
-3. `test/wave12-visual-smoke`
-4. `docs/wave12-art-direction-shotlist`
-5. `qa/wave12-visual-review`
-
-## Merge Order
-
-必须按以下顺序合并：
-
-1. structured reward deltas
-2. visual stage/hud strike
-3. visual smoke tests
-4. art direction shotlist
-5. QA visual review
-
-不要先合 UI；UI 需要读取结构化收益。
+1. Implement small gameplay/UI/data slices first.
+2. Keep overlapping UI ownership serialized.
+3. Run QA last, after implementation branches are complete and available in the review base.
 
 ## Read First
 
@@ -46,24 +37,18 @@ Wave 12：Visual Slice Strike。
 2. `docs/TASK_HANDOFF.md`
 3. `docs/FILE_MAP.md`
 4. `docs/TASK_PLAN.md`
-5. `docs/codex_tasks/` 下当前 worker prompt
+5. `docs/EXECUTION_CONTRACT.md`
+6. `docs/VALIDATION.md`
+7. `docs/SPRINT_BOARD.md`
 
 ## Validation
 
-- 不只看 `check:full`，必须人工看截图。
-- 最终至少运行：`npm run check:full`、`npm run test:playtest`、`npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`、`git diff --check`。
-
-## Hard Fail
-
-- 战斗卡牌还占掉半个屏幕。
-- 角色还是小、浮、贴纸感强。
-- 事件收益还是长句黄块。
-- NPC 点击只有 toast。
-- 行动按钮被底栏遮住。
-- 高分辨率看起来像调试面板。
+- Documentation-only refresh: `git diff --check`.
+- Code/data/UI follow-up workers must use the project validation contract.
+- QA must run last; do not start QA against stale base state.
 
 ## Do Not Do
 
-- 不继续 skill tree implementation。
-- 不改战斗公式、经济曲线、敌人数据、主线剧情、存档 key/version 或资产结构。
-- 不让多个 worker 同时修改 `maws_src/dom/ui.js` / `maws_src/dom/ui.css`。
+- Do not modify `maws_src/`, `assets/`, `package.json`, combat formulas, economy curves, enemy data, main story scope, save key/version, or asset structure unless a later worker prompt explicitly allows it.
+- Do not claim the skill tree is implemented at runtime until `TREE-001` lands and is verified.
+- Do not let multiple workers edit the same UI files concurrently.
