@@ -4,41 +4,41 @@
 
 ## Current Task
 
-Wave 10：Core Loop + Combat Tree 多 CLI 集成收尾。
+Wave 11：Flow + Combat + UI 收敛多 CLI。目标是复制任务包、使用 staged pipeline 启动实现/测试/文档 worker，并确保 QA 只在全部分支合并推送后运行。
 
 ## Scope
 
-- 已合并并验证：`feat/starter-wild-kit-v3`、`feat/combat-combo-autoplan-v1`、`feat/reward-ui-juice`、`feat/time-dosage-prototype`、`docs/skill-tree-alt-routes-masterplan`。
-- 已在所有实现分支合并推送后运行 QA：`qa/wave10-review`。
-- 已处理 QA P1：`wild_swing` / `push_away` 注册到 combat skill table，并补 playtest 覆盖。
+- 添加 Wave 11 worker prompts 与启动脚本。
+- 使用现有 `Invoke-MawsMultiCliPipeline.ps1`：实现/测试/文档 worker 先并行，Manager 合并验证后再启动 QA。
+- 本轮 Manager 不直接改 `maws_src/` 运行代码；实现由 worker 分支完成。
 
 ## Plan
 
-- [x] Wave 10 prompts/scripts 提交并推送。
-- [x] 5 个实现 worker 完成并推送。
-- [x] Starter、Combat、Reward UI、Time Dosage、Skill Tree Docs 按顺序合并。
-- [x] Time Dosage 的 `docs/TASK_PLAN.md` 冲突已手动解决。
-- [x] 合并后运行 `check:full`、`test:playtest`、Day 5 sim、`diff check`。
-- [x] QA 在最新 staging 后启动并提交报告。
-- [x] QA P1 已由 Manager hotfix 修复并重新验证。
+- [x] 解压并检查 Wave 11 任务包。
+- [x] 复制 `docs/codex_tasks/WAVE11_*.md`。
+- [x] 替换原始 launcher，避免 QA 提前跑和每窗口 `npm ci`。
+- [x] 添加 `scripts/wave11_flow_pipeline.json`。
+- [ ] 提交并推送 Wave 11 prompts/scripts。
+- [ ] 启动 `scripts/run_wave11_flow_workers.ps1`。
+- [ ] 等实现 worker 完成后按 pipeline 合并、验证、推送，再启动 QA。
 
 ## Validation
 
-- `npm run check:full`：通过。
-- `npm run test:playtest`：通过。
-- `node maws_src/tools/sim_day5_park_check.mjs`：通过。
-- `git diff --check`：通过。
+- `git diff --check`。
+- PowerShell 脚本解析检查。
+- Pipeline 运行时由每个 merge step 执行对应验证。
 
 ## Result
 
-Wave 10 集成完成。开局 6 个野路子/旧招方案已接入；奖励反馈、combo/autoplan、时间投入原型和技能树/邪道路线 masterplan 已落地。QA 发现的 starter wild combat registration 漏口已修。
+进行中。
 
 ## Risks
 
-- Time Dosage 仍是原型倍率，需要后续 playtest 微调疲劳、收益和硬练小伤概率。
-- Reward UI 与 Time Dosage 合并后通过 smoke/playtest，但仍建议人工看一遍移动端结果弹窗密度。
-- Skill Tree / Alt Routes 当前是 masterplan，尚未进入运行代码。
+- `feat/ui-readable-reward-pass` 会改 UI，可能与 flow smoke 断言互相校准。
+- `feat/combat-plan-mode-v1` 与现有 combo/autoplan 逻辑相邻，必须保留 1-2 招窗口节奏。
+- `feat/time-activity-pass-v1` 不能把 Time Dosage 变成刷资源最优解。
+- QA 必须等 staging 集成并 push 后运行，不能提前审旧版本。
 
 ## Next Step
 
-人工进游戏检查 Day 1 新开局、Day 5 E01、奖励弹窗和时间投入弹窗；下一轮再开 skill tree implementation 或 Time Dosage/Reward UI polish。
+提交并推送 Wave 11 任务包，然后启动多 CLI worker。
