@@ -1,0 +1,66 @@
+{
+  "name": "Wave15 Second Stage Proposals",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave15_stage2",
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "visibleWorkers": true,
+  "stages": [
+    {
+      "name": "second-stage-proposals-parallel",
+      "workers": [
+        {
+          "name": "Wave15-NPC-Banter-Proposal",
+          "path": "E:\\maws_cli_parallel_wave15_stage2\\npc-banter-proposal",
+          "branch": "docs/wave15-npc-memory-banter-proposal",
+          "prompt": "docs\\codex_tasks\\WAVE15_NPC_MEMORY_BANTER_PROPOSAL.md"
+        },
+        {
+          "name": "Wave15-Event-Followup-Proposal",
+          "path": "E:\\maws_cli_parallel_wave15_stage2\\event-followup-proposal",
+          "branch": "docs/wave15-event-followup-proposal",
+          "prompt": "docs\\codex_tasks\\WAVE15_EVENT_FOLLOWUP_PROPOSAL.md"
+        },
+        {
+          "name": "Wave15-Alt-Route-Proposal",
+          "path": "E:\\maws_cli_parallel_wave15_stage2\\alt-route-proposal",
+          "branch": "docs/wave15-alt-route-media-rules-proposal",
+          "prompt": "docs\\codex_tasks\\WAVE15_ALT_ROUTE_MEDIA_RULES_PROPOSAL.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave15-NPC-Banter-Proposal",
+          "branch": "docs/wave15-npc-memory-banter-proposal",
+          "validate": [
+            "git diff --check"
+          ]
+        },
+        {
+          "name": "Wave15-Event-Followup-Proposal",
+          "branch": "docs/wave15-event-followup-proposal",
+          "validate": [
+            "git diff --check"
+          ]
+        },
+        {
+          "name": "Wave15-Alt-Route-Proposal",
+          "branch": "docs/wave15-alt-route-media-rules-proposal",
+          "validate": [
+            "git diff --check"
+          ]
+        }
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave15-Proposal-QA",
+    "path": "E:\\maws_cli_parallel_wave15_stage2\\qa",
+    "branch": "qa/wave15-second-stage-proposals",
+    "prompt": "docs\\codex_tasks\\WAVE15_QA_REVIEW.md",
+    "commitMessage": "docs: add wave15 second stage proposal qa"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}

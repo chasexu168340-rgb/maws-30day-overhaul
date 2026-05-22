@@ -1,0 +1,99 @@
+{
+  "name": "Wave15 Addiction Loop Slice",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave15",
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "visibleWorkers": true,
+  "stages": [
+    {
+      "name": "handoff-refresh",
+      "workers": [
+        {
+          "name": "Wave15-Handoff",
+          "path": "E:\\maws_cli_parallel_wave15\\handoff",
+          "branch": "chore/wave15-current-context",
+          "prompt": "docs\\codex_tasks\\WAVE15_HANDOFF_REFRESH.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave15-Handoff",
+          "branch": "chore/wave15-current-context",
+          "validate": [
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "core-addiction-parallel",
+      "workers": [
+        {
+          "name": "Wave15-SkillTreeSpend",
+          "path": "E:\\maws_cli_parallel_wave15\\skill-tree-spend",
+          "branch": "feat/skill-tree-spend-v1",
+          "prompt": "docs\\codex_tasks\\WAVE15_SKILL_TREE_SPEND.md"
+        },
+        {
+          "name": "Wave15-CombatRecipe",
+          "path": "E:\\maws_cli_parallel_wave15\\combat-recipe",
+          "branch": "feat/combat-recipe-v1",
+          "prompt": "docs\\codex_tasks\\WAVE15_COMBAT_RECIPE.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave15-SkillTreeSpend",
+          "branch": "feat/skill-tree-spend-v1",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "git diff --check"
+          ]
+        },
+        {
+          "name": "Wave15-CombatRecipe",
+          "branch": "feat/combat-recipe-v1",
+          "validate": [
+            "npm run check:full",
+            "node maws_src/tools/sim_day5_park_check.mjs",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wave15-loop-smoke",
+      "workers": [
+        {
+          "name": "Wave15-Loop-Smoke",
+          "path": "E:\\maws_cli_parallel_wave15\\tests",
+          "branch": "test/wave15-addiction-loop-smoke",
+          "prompt": "docs\\codex_tasks\\WAVE15_ADDICTION_LOOP_SMOKE.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "Wave15-Loop-Smoke",
+          "branch": "test/wave15-addiction-loop-smoke",
+          "validate": [
+            "npm run build",
+            "npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave15-QA",
+    "path": "E:\\maws_cli_parallel_wave15\\qa",
+    "branch": "qa/wave15-review",
+    "prompt": "docs\\codex_tasks\\WAVE15_QA_REVIEW.md",
+    "commitMessage": "docs: add wave15 qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
