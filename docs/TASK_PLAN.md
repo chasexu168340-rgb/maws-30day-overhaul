@@ -1,33 +1,36 @@
+# TASK_PLAN
+
 > Current task sheet. Keep only this task, result, validation, risks, and next step.
 
 ## Current Task
 
-`WAVE14_UI_TREE_PLAN_TIME_SLICE`: expose the Wave 14 skill tree, combat plan mode, time-investment modal, and NPC interaction affordances in the DOM UI.
+Wave 15 core addiction slice: merge `TREE-SPEND-001` and `COMBAT-RECIPE-001`.
 
 ## Scope
 
-- Allowed: `maws_src/dom/ui.js`, `maws_src/dom/ui.css`, `docs/workers/ui_tree_plan_time_slice.md`, `docs/agent_reports/AGENT_E_UI_TREE_PLAN_TIME_SLICE.md`.
-- Forbidden: data logic, state logic, combat formulas, assets, package scripts, save keys/version.
+- Skill tree spend branch adds Insight costs, prerequisites, purchase state, old-save defaults, and purchase feedback.
+- Combat recipe branch adds plan-mode recipes, human-readable combat feedback, and combat perk consumption.
+- Manager resolves the expected overlap in `maws_src/simulation/state.js`.
+- Do not change UI, assets, package scripts, starter skills, save key/version, or broad combat balance.
 
 ## Current Result
 
-- Added a compact Skill Tree Slice area on the Skills tab for Street Wild, Boxing Basics, and Traditional Reforge.
-- Added combat plan mode controls for `manual`, `safe`, `pressure`, and `exit` using existing `setCombatPlan`.
-- Reduced duration-choice cards to time, stamina, reward multiplier, and one risk line, with long details folded.
-- Tuned NPC interaction menu affordance so real actions read as primary and feedback-only options read as suggestions.
+- `feat/skill-tree-spend-v1` merged and passed `npm run check:full`, `npm run test:playtest`, and `git diff --check`.
+- `feat/combat-recipe-v1` merge produced conflicts in this file and `maws_src/simulation/state.js`.
+- Conflict resolution keeps skill-tree spend state plus combat recipe perk bridge and plan feedback.
 
 ## Validation
 
-- Pass: `npm run check:full`
-- Pass: `npm run test:playtest`
-- Pass: `npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line`
-- Pass: `git diff --check`
+- Pending after conflict resolution:
+  - `npm run check:full`
+  - `node maws_src/tools/sim_day5_park_check.mjs`
+  - `git diff --check`
 
 ## Risks
 
-- Skill tree nodes are presentation-only; no purchase behavior is added in this worker.
-- First duration action is visually promoted into the main action slot so the time-investment modal is reachable without opening the folded action list.
+- This is a focused bridge between spendable nodes and combat recipes; it is not a full skill-tree economy or full automatic combat rewrite.
+- `GameDesigner_CombatAnalysis/` remains untracked and unrelated.
 
 ## Next Step
 
-Commit `feat: add ui tree plan time slice`.
+Resolve conflicts, commit `merge: Wave15-CombatRecipe`, push staging, then continue Wave15 smoke and QA.

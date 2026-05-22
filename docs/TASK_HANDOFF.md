@@ -4,32 +4,35 @@
 
 ## Current Task
 
-Wave 14: Playable Loop Slice.
+Wave 15: Addiction Loop Slice.
 
 ## Current Staging Baseline
 
-- Wave 13 first-look QA passed.
-- NPC compact interaction menu is staged: clicking scene people opens a compact menu instead of only showing a toast.
-- Reward deltas are compact and structured.
-- Day 5 combat HUD command/action count target is 4-6, with queue length 1-2.
-- No skill tree runtime implementation exists yet.
+- Wave 14 QA passed.
+- NPC compact interaction menu has partial real actions for the early slice.
+- Reward chips are compact and structured.
+- Skill tree exists as a runtime/render-model/UI slice, but nodes are not spendable yet.
+- Combat plan mode is visible and clickable.
+- `wave14_loop` smoke covers NPC real actions, reward chips, skill tree display, plan mode, and mobile time-investment overflow.
 
 ## Goal
 
-Make the next slice feel playable from entry through local action, NPC interaction, reward feedback, and Day 5 combat planning without expanding the game architecture.
+Create the first true addiction loop: the player spends Insight, unlocks a small skill-tree node, sees a real combat/training change, uses a readable combat recipe, and wants to try another day.
 
-## Ready Tasks
+## Wave 15 First Stage
 
-1. `NPC-ACT-001`: connect compact NPC menu actions to real, safe local actions where data already supports it.
-2. `TREE-001`: add the first runtime skill tree slice without changing save key/version or broad progression rules.
-3. `UI-PLAN-001`: tighten the Playable Loop Slice UI plan around current DOM + Phaser ownership boundaries.
-4. `QA-014`: final Wave 14 QA after implementation branches are complete and integrated.
+1. `TREE-SPEND-001`: make six skill-tree nodes spendable with costs, prerequisites, unlocked state, and one real small effect.
+2. `COMBAT-RECIPE-001`: turn plan mode into readable tactical recipes with human combat feedback.
+3. `LOOP-SMOKE-015`: verify skill spend, recipe controls, recipe feedback, and mobile overflow.
+4. `QA-015`: final QA after implementation branches are complete and integrated.
 
-## Worker Order
+## Deferred Second Stage
 
-1. Implement small gameplay/UI/data slices first.
-2. Keep overlapping UI ownership serialized.
-3. Run QA last, after implementation branches are complete and available in the review base.
+- NPC memory banter.
+- Event follow-up choices.
+- Alt route media/rules slice.
+
+These should not run in parallel with first-stage `data.js/state.js` work unless implemented as docs-only proposals.
 
 ## Read First
 
@@ -37,18 +40,17 @@ Make the next slice feel playable from entry through local action, NPC interacti
 2. `docs/TASK_HANDOFF.md`
 3. `docs/FILE_MAP.md`
 4. `docs/TASK_PLAN.md`
-5. `docs/EXECUTION_CONTRACT.md`
-6. `docs/VALIDATION.md`
-7. `docs/SPRINT_BOARD.md`
+5. `docs/VALIDATION.md`
+6. current worker prompt under `docs/codex_tasks/`
 
 ## Validation
 
-- Documentation-only refresh: `git diff --check`.
-- Code/data/UI follow-up workers must use the project validation contract.
+- Code/data workers: `npm run check:full`, relevant targeted command, `git diff --check`.
+- Wave15 smoke: `npm run build`, `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`, `git diff --check`.
 - QA must run last; do not start QA against stale base state.
 
 ## Do Not Do
 
-- Do not modify `maws_src/`, `assets/`, `package.json`, combat formulas, economy curves, enemy data, main story scope, save key/version, or asset structure unless a later worker prompt explicitly allows it.
-- Do not claim the skill tree is implemented at runtime until `TREE-001` lands and is verified.
+- Do not implement full 30 days, full skill tree, Day 8/9, more UI panels, broad enemy rewrites, or save key/version changes.
+- Do not give `jab` / `advance` as new starter skills.
 - Do not let multiple workers edit the same UI files concurrently.

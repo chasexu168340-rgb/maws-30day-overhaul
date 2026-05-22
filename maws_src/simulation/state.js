@@ -42,6 +42,47 @@ function normalizeInsightPoints(state) {
   return player.insightPoints;
 }
 
+function skillTreeNodeById(nodeId) {
+  return SKILL_TREE_NODES.find((node) => node.id === nodeId) || null;
+}
+
+function normalizeSkillTree(state) {
+  if (!state || typeof state !== 'object') return { unlocked: {}, purchased: [], perks: skillTreePerks({}) };
+  state.skillTree ||= {};
+  const source = state.skillTree.unlocked;
+  const unlocked = {};
+  if (Array.isArray(source)) {
+    source.forEach((id) => { if (id) unlocked[id] = 1; });
+  } else if (source && typeof source === 'object') {
+    Object.entries(source).forEach(([id, value]) => { if (value) unlocked[id] = 1; });
+  }
+  if (Array.isArray(state.skillTree.purchased)) {
+    state.skillTree.purchased.forEach((id) => { if (id) unlocked[id] = 1; });
+  }
+  state.skillTree.unlocked = unlocked;
+  state.skillTree.purchased = Object.keys(unlocked);
+  state.skillTree.perks = skillTreePerks(unlocked);
+  state.player ||= {};
+  state.player.skillTreePerks = state.skillTree.perks;
+  return state.skillTree;
+}
+
+function skillTreePerks(unlocked = {}) {
+  const effects = SKILL_TREE_NODES
+    .filter((node) => unlocked[node.id])
+    .flatMap((node) => (node.effects || []).map((effect) => ({ nodeId: node.id, ...effect })));
+  return {
+    nodeIds: Object.keys(unlocked),
+    effects,
+    byKey: Object.fromEntries(effects.filter((effect) => effect.key).map((effect) => [effect.key, true])),
+    byType: effects.reduce((out, effect) => {
+      out[effect.type] ||= [];
+      out[effect.type].push(effect);
+      return out;
+    }, {})
+  };
+}
+
 function addInsight(state, amount = 0) {
   const value = Math.max(0, Math.round(Number(amount) || 0));
   if (!value) return 0;
@@ -102,7 +143,8 @@ const COMBAT_PLAN_MODES = Object.freeze([
   { id: 'manual', label: '手动', desc: '玩家自己排本窗口动作。' },
   { id: 'safe', label: '稳守', desc: '优先抱架，再找一次反击或拉开。' },
   { id: 'pressure', label: '压迫', desc: '先推开抢空间，再接一记野路挥拳。' },
-  { id: 'exit', label: '脱离', desc: '先降温，再后撤离开冲突。' }
+  { id: 'exit', label: '脱离', desc: '先降温，再后撤离开冲突。' },
+  { id: 'probe', label: '试探', desc: '先退看一拍，或抱架后推搡试距。' }
 ]);
 const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
@@ -287,6 +329,17 @@ const REFORGED_SKILLS = new Set([
   'tkd_back_kick'
 ]);
 
+const DEFAULT_SKILL_TREE_COMBAT_PERKS = Object.freeze({
+  street_wild_swing_mastery: { skillId: 'wild_swing', hit: 0.025, risk: -0.01, log: '野路挥拳开始收得住，出手更像一拍。' },
+  street_push_away_space: { skillId: 'push_away', hit: 0.02, risk: -0.01, log: '推搡不只是顶人，你知道要抢哪半步。' },
+  boxing_jab_unlock_boost: { skillId: 'jab', hit: 0.02, log: '刺拳先碰距离，命中更稳一点。' },
+  boxing_guard_recovery: { skillId: 'guard', defense: 0.025, log: '抱架后手能回家，防守更完整。' },
+  boxing_straight_line: { skillId: 'straight', hit: 0.02, risk: -0.01, log: '直拳先走线，少一点乱抡。' },
+  traditional_mystic_rewrite: { skillId: 'mystic', hit: 0.02, risk: -0.02, log: '旧招名被拆成距离和重心，没那么玄。' },
+  traditional_guard_rewrite: { skillId: 'guard', defense: 0.02, log: '铁布衫改成少挨一下的抱架。' },
+  traditional_reforge_note: { skillId: 'palm', hit: 0.02, risk: -0.01, log: '拳谱新注让短击更清楚。' }
+});
+
 function bounded(value, fallback = 0, min = 0, max = 100) {
   return clamp(value == null ? fallback : value, min, max);
 }
@@ -440,6 +493,7 @@ export function createNewState(origin = 'worker') {
   Object.keys(SKILLS).forEach((id) => {
     if (state.unlocked[id]) state.skillState[id] = { p: id === 'mystic' ? 5 : 16, use: 0, retrain: 0, zhus: [] };
   });
+  normalizeSkillTree(state);
   updateMawProgress(state);
   recalcVitals(state);
   addLog(state, '第1天，你决定用30天搞清楚：什么是能用的武术。');
@@ -469,8 +523,7 @@ export function migrateSave(input) {
   s.inventory ||= {};
   s.equipment = { hand: null, foot: null, body: null, head: null, accessory: null, ...(s.equipment || {}) };
   s.ownedZhus ||= [];
-  s.skillTree ||= { unlocked: {} };
-  s.skillTree.unlocked ||= {};
+  normalizeSkillTree(s);
   s.log ||= [];
   s.eventLog ||= [];
   s.unlocked ||= {};
@@ -488,6 +541,7 @@ export function migrateSave(input) {
   s.combatMemory.styleWins ||= {};
   s.combatMemory.recent ||= [];
   s.maw = createDefaultMaw(s.maw);
+  normalizeSkillTree(s);
   updateMawProgress(s);
   recalcVitals(s);
   return s;
@@ -664,22 +718,44 @@ function skillUnlocksModel(state) {
   }));
 }
 
+function skillTreePurchaseGateReason(state, node, points = null, purchased = null, nodeById = null) {
+  if (!node) return '节点不存在';
+  const tree = normalizeSkillTree(state);
+  const unlocked = purchased || tree.unlocked || {};
+  const nodes = nodeById || Object.fromEntries(SKILL_TREE_NODES.map((item) => [item.id, item]));
+  if (node.future || node.locked) return '后续版本开放';
+  if (unlocked[node.id]) return '已经点亮';
+  const missingRequires = (node.requires || []).filter((id) => !unlocked[id]);
+  if (missingRequires.length) return `需要先点亮：${missingRequires.map((id) => nodes[id]?.label || id).join('、')}`;
+  const gate = node.purchaseRequires || {};
+  if (gate.skillLearned && !state.skillState?.[gate.skillLearned]) {
+    return gate.reason || `需要先学会：${SKILLS[gate.skillLearned]?.name || gate.skillLearned}`;
+  }
+  if (gate.flag && !state.flags?.[gate.flag]) return gate.reason || '剧情条件还不够';
+  if (gate.minDay && Number(state.day || 1) < Number(gate.minDay)) return gate.reason || `第 ${gate.minDay} 天后开放`;
+  const cost = Number.isFinite(Number(node.cost)) ? Number(node.cost) : 0;
+  const availablePoints = points == null ? normalizeInsightPoints(state) : points;
+  if (cost > availablePoints) return '洞察点不足';
+  return '';
+}
+
 function skillTreeModel(state) {
   const points = Math.max(0, Math.round(Number(state.player?.insightPoints || 0)));
-  const purchased = state.skillTree?.unlocked || {};
+  const purchased = normalizeSkillTree(state).unlocked || {};
   const nodeById = Object.fromEntries(SKILL_TREE_NODES.map((node) => [node.id, node]));
   const nodeModels = SKILL_TREE_NODES.map((node) => {
     const future = Boolean(node.future || node.locked);
     const owned = Boolean(purchased[node.id]);
     const learnedSkill = Boolean(node.skillId && state.skillState?.[node.skillId]);
     const missingRequires = (node.requires || []).filter((id) => !purchased[id]);
+    const purchaseGate = skillTreePurchaseGateReason(state, node, points, purchased, nodeById);
     const cost = Number.isFinite(Number(node.cost)) ? Number(node.cost) : null;
     const affordable = cost == null || points >= cost;
     const lockedReason = future
       ? '后续版本开放'
       : missingRequires.length
         ? `需要先点亮：${missingRequires.map((id) => nodeById[id]?.label || id).join('、')}`
-        : (!affordable ? '洞察点不足' : '');
+        : (purchaseGate || (!affordable ? '洞察点不足' : ''));
     const status = future ? 'future' : (owned ? 'owned' : (lockedReason ? 'locked' : 'available'));
     return {
       ...node,
@@ -687,9 +763,12 @@ function skillTreeModel(state) {
       owned,
       learnedSkill,
       available: status === 'available',
+      canPurchase: status === 'available',
       status,
       locked: status === 'locked' || status === 'future',
-      lockedReason
+      lockedReason,
+      unavailableReason: owned ? '已经点亮' : lockedReason,
+      purchaseAction: status === 'available' ? { type: 'purchaseSkillTreeNode', nodeId: node.id } : null
     };
   });
   const treeMap = new Map();
@@ -1252,6 +1331,97 @@ function learnSkill(state, id, xp = 5) {
   state.unlocked[id] = 1;
   const style = SKILLS[id].style;
   if (style) state.styles[style] = clamp((state.styles[style] || 0) + xp * 0.5, 0, 100);
+}
+
+function applySkillTreePurchaseEffects(state, node) {
+  const applied = [];
+  (node.effects || []).forEach((effect) => {
+    if (effect.type === 'skillXp') {
+      const skillId = effect.skillId || node.skillId;
+      if (!SKILLS[skillId]) return;
+      if (effect.requireLearned && !state.skillState?.[skillId]) return;
+      const skill = state.skillState[skillId] || { p: 0, use: 0, retrain: 0, zhus: [] };
+      const before = Number(skill.p || 0);
+      const value = Math.max(0, Number(effect.value || 0));
+      skill.p = clamp(before + value, 0, 100);
+      state.skillState[skillId] = skill;
+      state.unlocked[skillId] = 1;
+      const style = SKILLS[skillId]?.style;
+      if (style) state.styles[style] = clamp((state.styles[style] || 0) + value * 0.2, 0, 100);
+      applied.push({ ...effect, skillId, delta: Math.round(skill.p - before) });
+      return;
+    }
+    applied.push({ ...effect, delta: 1 });
+  });
+  return applied;
+}
+
+function skillTreeEffectLines(effects = []) {
+  return effects
+    .map((effect) => {
+      if (effect.type === 'skillXp' && effect.delta) {
+        return {
+          group: 'skills',
+          key: effect.skillId,
+          label: SKILLS[effect.skillId]?.name || effect.skillId,
+          delta: effect.delta,
+          kind: 'skill',
+          tone: 'good',
+          text: effect.label || `${SKILLS[effect.skillId]?.name || effect.skillId} 熟练 +${effect.delta}`
+        };
+      }
+      if (['comboRisk', 'afterActionRisk', 'skillRisk'].includes(effect.type)) {
+        return {
+          group: 'skillTree',
+          key: effect.key || `${effect.type}:${effect.skillId || effect.from || effect.after || 'risk'}`,
+          label: effect.label || '风险下降',
+          delta: Math.round(Number(effect.risk || 0) * 100),
+          kind: 'risk',
+          tone: 'good',
+          text: effect.label || '下一场相关动作风险下降'
+        };
+      }
+      return {
+        group: 'skillTree',
+        key: effect.key || `${effect.type}:${effect.nodeId || 'perk'}`,
+        label: effect.label || '技能树效果',
+        delta: 1,
+        kind: 'skill',
+        tone: 'good',
+        text: effect.label || '技能树效果已生效'
+      };
+    })
+    .filter(Boolean);
+}
+
+function purchaseSkillTreeNode(state, nodeId) {
+  normalizeInsightPoints(state);
+  normalizeSkillTree(state);
+  const node = skillTreeNodeById(nodeId);
+  const reason = skillTreePurchaseGateReason(state, node);
+  if (reason) {
+    state.ui.toast = reason;
+    return { ok: false, reason };
+  }
+  const before = snapshotState(state);
+  const cost = Math.max(0, Math.round(Number(node.cost || 0)));
+  state.player.insightPoints = Math.max(0, Math.round(Number(state.player.insightPoints || 0)) - cost);
+  state.skillTree.unlocked[node.id] = 1;
+  state.skillTree.purchased = Object.keys(state.skillTree.unlocked);
+  const appliedEffects = applySkillTreePurchaseEffects(state, node);
+  normalizeSkillTree(state);
+  const effectLines = skillTreeEffectLines(appliedEffects);
+  const lines = settlementLines(before, snapshotState(state)).concat(effectLines);
+  addLog(state, `点亮技能树：${node.treeName || '技能树'} · ${node.label}`);
+  state.ui.modal = {
+    type: 'settlement',
+    title: '技能树点亮',
+    lead: node.rewardText || `点亮 ${node.label}。`,
+    body: [node.rewardText, node.effectText].filter(Boolean).join('\n'),
+    rewardDeltas: rewardDeltasFromSettlement(lines, { ...snapshotState(state), skillState: state.skillState }, { source: 'skillTree' }),
+    lines
+  };
+  return { ok: true, node, appliedEffects };
 }
 
 export function updateMawProgress(state) {
@@ -2007,15 +2177,152 @@ function equipmentEffects(state) {
   return effects;
 }
 
+function combatQueueForPerks(combat = {}) {
+  return (combat.playerQueue?.length ? combat.playerQueue : combat.selected || []).filter(Boolean);
+}
+
+function skillTreeCombatEffects(state, combat = {}) {
+  const effects = {};
+  const perkEffects = normalizeSkillTree(state).perks?.effects || [];
+  const queue = combatQueueForPerks(combat);
+  const addRisk = (value) => {
+    effects.risk = (effects.risk || 0) + Number(value || 0);
+  };
+  perkEffects.forEach((effect) => {
+    if (effect.type === 'comboRisk') {
+      for (let i = 0; i < queue.length - 1; i += 1) {
+        if (queue[i] === effect.from && queue[i + 1] === effect.to) addRisk(effect.risk);
+      }
+    }
+    if (effect.type === 'afterActionRisk') {
+      for (let i = 0; i < queue.length - 1; i += 1) {
+        if (queue[i] === effect.after) addRisk(effect.risk);
+      }
+    }
+    if (effect.type === 'skillRisk' && queue.includes(effect.skillId)) addRisk(effect.risk);
+  });
+  return effects;
+}
+
+function combinedCombatEffects(state, combat = {}) {
+  const effects = equipmentEffects(state);
+  Object.entries(skillTreeCombatEffects(state, combat)).forEach(([key, value]) => {
+    effects[key] = (effects[key] || 0) + value;
+  });
+  return effects;
+}
+
+function skillTreeCombatFeedback(state, actions = []) {
+  const perks = normalizeSkillTree(state).perks || {};
+  const lines = [];
+  if (actions.includes('guard') && perks.byKey?.guard_breathing_stable) {
+    lines.push('技能树反馈：铁布衫改写生效，抱架时呼吸稳定了一拍。');
+  }
+  const perkEffects = perks.effects || [];
+  if (perkEffects.some((effect) => effect.type === 'comboRisk' && actions.join('>').includes(`${effect.from}>${effect.to}`))) {
+    lines.push('技能树反馈：推开后撤的节奏接上，风险被压低一点。');
+  }
+  if (perkEffects.some((effect) => effect.type === 'afterActionRisk' && actions.includes(effect.after))) {
+    lines.push('技能树反馈：抱架回收让下一招更少暴露空档。');
+  }
+  if (perkEffects.some((effect) => effect.type === 'skillRisk' && actions.includes(effect.skillId))) {
+    lines.push('技能树反馈：旧招拆解让这一掌少了一点失控感，但还不算稳定。');
+  }
+  return lines;
+}
+
+function normalizeCombatPerk(raw = {}, node = {}) {
+  if (!raw) return null;
+  if (typeof raw === 'string') return { skillId: node.skillId || '', log: raw };
+  if (Array.isArray(raw)) return raw.map((item) => normalizeCombatPerk(item, node)).filter(Boolean);
+  if (typeof raw !== 'object') return null;
+  const risk = raw.risk != null
+    ? Number(raw.risk)
+    : raw.riskReduce != null
+      ? -Number(raw.riskReduce)
+      : raw.riskReduction != null
+        ? -Number(raw.riskReduction)
+        : 0;
+  return {
+    skillId: raw.skillId || raw.skill || node.skillId || '',
+    hit: Number(raw.hit ?? raw.hitBonus ?? raw.accuracy ?? 0) || 0,
+    risk: Number.isFinite(risk) ? risk : 0,
+    defense: Number(raw.defense ?? raw.def ?? raw.guard ?? 0) || 0,
+    log: raw.log || raw.feedback || raw.text || ''
+  };
+}
+
+function combatPerksFromSkillTreeEffects(node = {}) {
+  const effects = Array.isArray(node.effects) ? node.effects : [];
+  return effects.map((effect) => {
+    if (effect.type === 'perk') {
+      return {
+        skillId: effect.skillId || node.skillId || '',
+        hit: Number(effect.hit || 0) || 0,
+        risk: Number(effect.risk || 0) || 0,
+        defense: Number(effect.defense || 0) || 0,
+        log: effect.log || effect.label || node.rewardText || ''
+      };
+    }
+    if (effect.type === 'skillRisk') {
+      return {
+        skillId: effect.skillId || node.skillId || '',
+        risk: Number(effect.risk || 0) || 0,
+        log: effect.log || effect.label || node.rewardText || ''
+      };
+    }
+    if (effect.type === 'guardFeedback') {
+      return {
+        skillId: effect.skillId || node.skillId || 'guard',
+        defense: 0.01,
+        log: effect.log || effect.label || node.rewardText || '抱架时呼吸更稳了一拍。'
+      };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+function mergeCombatPerk(out, perk) {
+  if (Array.isArray(perk)) {
+    perk.forEach((item) => mergeCombatPerk(out, item));
+    return;
+  }
+  if (!perk) return;
+  const target = perk.skillId ? (out.skills[perk.skillId] ||= {}) : out;
+  ['hit', 'risk', 'defense'].forEach((key) => {
+    if (perk[key]) target[key] = (target[key] || 0) + perk[key];
+  });
+  if (perk.log && perk.skillId && !out.logs[perk.skillId]) out.logs[perk.skillId] = perk.log;
+}
+
+function skillTreeCombatPerks(state) {
+  const out = { skills: {}, logs: {} };
+  const unlocked = state.skillTree?.unlocked || {};
+  SKILL_TREE_NODES.forEach((node) => {
+    if (!unlocked[node.id]) return;
+    const raw = node.combatPerk
+      ?? node.combatEffect
+      ?? node.combatEffects
+      ?? node.perk
+      ?? combatPerksFromSkillTreeEffects(node)
+      ?? DEFAULT_SKILL_TREE_COMBAT_PERKS[node.id];
+    mergeCombatPerk(out, normalizeCombatPerk(raw, node));
+  });
+  return out;
+}
+
 function toCombatInput(state) {
+  normalizeSkillTree(state);
   return {
     ...clone(state.combat),
     day: state.day,
     player: clone(state.player),
+    skillTree: clone(state.skillTree),
     skillState: clone(state.skillState),
     styles: clone(state.styles),
     equipSkills: [...(state.equipSkills || [])],
-    effects: equipmentEffects(state)
+    effects: combinedCombatEffects(state, state.combat),
+    combatPerks: skillTreeCombatPerks(state)
   };
 }
 
@@ -2422,8 +2729,11 @@ export class GameStore {
   }
 
   emit() {
-    if (this.state) updateMawProgress(this.state);
-    recalcVitals(this.state);
+    if (this.state) {
+      normalizeSkillTree(this.state);
+      updateMawProgress(this.state);
+      recalcVitals(this.state);
+    }
     for (const listener of this.listeners) listener(this.state);
   }
 
@@ -2642,6 +2952,7 @@ export class GameStore {
           queue: [...suggestion.queue],
           reason: suggestion.reason,
           source: suggestion.source,
+          feedback: suggestion.feedback || '',
           planSlot: previousCombat.planSlot || null,
           comboSlot: previousCombat.comboSlot || null
         } : null;
@@ -2656,8 +2967,9 @@ export class GameStore {
         mergeCombatResult(s, previousCombat, result.combatState);
         const stepLogs = result.steps.flatMap((step) => Array.isArray(step.log) ? step.log : step.log ? [step.log] : []);
         const feedbackLine = s.combat?.lastWindow?.feedback?.text || '';
-        const planLine = planFill ? `PLAN触发：${planFill.label}（${planFill.mode}）自动填入本窗口建议队列：${planQueueNames(planFill.queue)}。comboSlot=${planFill.comboSlot || 'empty'}，planSlot=${planFill.planSlot || 'empty'}。` : '';
-        if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, planLine, feedbackLine, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
+        const perkFeedback = skillTreeCombatFeedback(s, previousCombat.playerQueue || []);
+        const planLine = planFill ? `PLAN触发：${planFill.label}（${planFill.mode}）自动填入本窗口建议队列：${planQueueNames(planFill.queue)}。${planFill.feedback || ''} comboSlot=${planFill.comboSlot || 'empty'}，planSlot=${planFill.planSlot || 'empty'}。` : '';
+        if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, planLine, feedbackLine, ...perkFeedback, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
         if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 1) {
           finishBattle(s, 'first_wind');
         } else if (s.combat?.objectiveSet === 'park_check' && finalObjectiveList(s.combat).filter((item) => item.done).length >= Number(s.combat.objectivePassCount || 2)) {
@@ -2681,6 +2993,8 @@ export class GameStore {
         rewardDeltas: rewardDeltasFromSettlement(lines, s, { source: 'postReview' }),
         lines
       };
+    } else if (['purchaseSkillTreeNode', 'buySkillTreeNode', 'unlockSkillTreeNode'].includes(action.type)) {
+      purchaseSkillTreeNode(s, action.nodeId || action.id);
     } else if (action.type === 'buyItem') {
       const item = ITEMS[action.itemId];
       if (!item || s.player.money < item.price) s.ui.toast = '钱不够';
@@ -3035,6 +3349,7 @@ function combatPlanningRead(state, combatInput) {
     suggestedQueue: suggestion?.queue || [],
     suggestedQueueNames: suggestion?.queue?.length ? planQueueNames(suggestion.queue) : '',
     suggestedQueueReason: suggestion?.reason || '',
+    suggestedQueueFeedback: suggestion?.feedback || '',
     skillName: SKILLS[plan.skill]?.name || plan.skill,
     nextAction,
     nextActionName: SKILLS[nextAction]?.name || nextAction,
@@ -3160,6 +3475,7 @@ function dailyDirectorModel(state, mainEvent, opportunities = []) {
 
 export function buildRenderModel(state) {
   if (!state) return { boot: true, origins: ORIGINS };
+  normalizeSkillTree(state);
   const p = state.player;
   const stats = derivedStats(state);
   const fit = fitBonus(p);
