@@ -6760,3 +6760,141 @@
     font-size: 11px;
   }
 }
+
+/* Wave 13 NPC click interaction menu: compact scene-local actions. */
+.maws-npc-menu {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  bottom: clamp(72px, 12vh, 116px);
+  display: grid;
+  gap: 8px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px;
+  border: 2px solid rgba(255, 243, 210, 0.72);
+  background: rgba(8, 8, 10, 0.84);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42), 4px 4px 0 rgba(0, 0, 0, 0.86);
+  transform: translateX(-50%);
+  backdrop-filter: blur(4px);
+}
+
+.maws-npc-menu header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.maws-npc-menu header div {
+  min-width: 0;
+}
+
+.maws-npc-menu b,
+.maws-npc-menu span {
+  display: block;
+  min-width: 0;
+}
+
+.maws-npc-menu b {
+  color: var(--maws-gold, #ffd941);
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.maws-npc-menu span {
+  margin-top: 3px;
+  color: rgba(255, 243, 210, 0.74);
+  font-size: 12px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maws-npc-menu p {
+  margin: 0;
+  color: rgba(255, 243, 210, 0.92);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.maws-npc-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.maws-npc-menu-action {
+  flex: 1 1 96px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  white-space: normal;
+}
+
+.maws-npc-menu-action.primary {
+  background: var(--maws-gold, #ffd941);
+  color: #050506;
+}
+
+.maws-npc-menu-action.ghost,
+.maws-npc-menu-action.is-disabled,
+.maws-npc-menu-close {
+  background: rgba(15, 15, 18, 0.9);
+  color: var(--maws-paper, #fff3d2);
+}
+
+.maws-npc-menu-action.is-disabled {
+  border-color: rgba(255, 243, 210, 0.38);
+}
+
+.maws-npc-menu-close {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 5px 8px;
+}
+
+@media (max-width: 760px) {
+  .maws-npc-menu {
+    bottom: 16px;
+    width: min(336px, calc(100% - 16px));
+    padding: 10px;
+  }
+
+  .maws-npc-menu-action {
+    flex-basis: 128px;
+  }
+}
+
+@media (max-width: 430px) {
+  .maws-scene-character:not(.player) {
+    display: grid;
+  }
+
+  .maws-scene-cast {
+    justify-content: space-around;
+    gap: 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .maws-scene-character {
+    min-width: 82px;
+    max-width: 31vw;
+  }
+
+  .maws-npc-menu {
+    left: 8px;
+    right: 8px;
+    bottom: 10px;
+    width: auto;
+    transform: none;
+  }
+
+  .maws-npc-menu-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

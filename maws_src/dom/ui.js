@@ -252,8 +252,8 @@ function sceneCharacterInteraction(character, actions = []) {
     (character.id && action.npc === character.id) ||
     (character.id && action.enemy === character.id)
   ));
-  const action = relatedAction && !relatedAction.disabled
-    ? { action: 'doAction', id: relatedAction.id }
+  const action = character.id
+    ? { action: 'openInteractionMenu', id: character.id }
     : { action: 'toast', text: relatedAction?.disabledReason || relatedAction?.lockReason || `${character.name || '这个人'}现在没有可执行行动` };
   const label = relatedAction
     ? `${character.name || '角色'}：${relatedAction.name || '行动'}`
@@ -266,8 +266,28 @@ function sceneCharacterInteraction(character, actions = []) {
     attrs,
     label,
     actionName: relatedAction?.name || '',
-    actionable: Boolean(relatedAction && !relatedAction.disabled)
+    actionable: Boolean(character.id)
   };
+}
+
+function renderSceneInteractionMenu(menu) {
+  if (!menu) return '';
+  const actionButtons = (menu.actions || []).slice(0, 3).map((item) => btn(
+    esc(item.label || '行动'),
+    item.action || 'toast',
+    { id: item.id, text: item.text },
+    `maws-npc-menu-action ${item.kind === 'primary' ? 'primary' : item.kind === 'disabled' ? 'is-disabled' : 'ghost'}`
+  )).join('');
+  return `
+    <aside class="maws-npc-menu" aria-label="${esc(`${menu.name}互动菜单`)}">
+      <header>
+        <div><b>${esc(menu.name)}</b><span>${esc(menu.role || '场景角色')}</span></div>
+        ${btn('收起', 'closeInteractionMenu', {}, 'tiny maws-npc-menu-close')}
+      </header>
+      <p>${esc(menu.feedback || '')}</p>
+      <div class="maws-npc-menu-actions">${actionButtons}</div>
+    </aside>
+  `;
 }
 
 function renderSceneCharacter(character, actions = []) {
@@ -529,6 +549,7 @@ function renderMap(model) {
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
   const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
+  const interactionMenu = renderSceneInteractionMenu(scene.interactionMenu);
   const cityMap = model.cityMap || {};
   const cityBg = assetPath(cityMap.backgroundKey);
   const cityBgUrl = cityBg ? `/${cityBg}` : '';
@@ -573,6 +594,7 @@ function renderMap(model) {
             </details>
           </div>
           <div class="maws-scene-cast">${characters}</div>
+          ${interactionMenu}
         </div>
         <aside class="maws-action-rail maws-action-rail-main">
           <div class="maws-rail-title"><b>推荐行动</b><span>${esc((model.opportunities || []).length)}条</span></div>
@@ -1343,6 +1365,8 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'openCityMap') store.dispatch({ type: 'openCityMap' });
   else if (action === 'closeCityMap') store.dispatch({ type: 'closeCityMap' });
   else if (action === 'toggleCityMap') store.dispatch({ type: 'toggleCityMap' });
+  else if (action === 'openInteractionMenu') store.dispatch({ type: 'openInteractionMenu', characterId: dataset.id });
+  else if (action === 'closeInteractionMenu') store.dispatch({ type: 'closeInteractionMenu' });
   else if (action === 'openTravel') store.dispatch({ type: 'openTravel', loc: dataset.loc });
   else if (action === 'travel') store.dispatch({ type: 'travel', loc: dataset.loc, mode: dataset.mode });
   else if (action === 'closeModal') store.dispatch({ type: 'closeModal' });
