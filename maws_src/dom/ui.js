@@ -89,6 +89,19 @@ function summaryChips(parts = [], className = '') {
     : '';
 }
 
+function shortSummaryText(parts = [], fallback = '') {
+  return String((parts || []).find(Boolean) || fallback || '').trim();
+}
+
+function actionVisibleSummary(action = {}) {
+  const bits = [
+    Array.isArray(action.durationOptions) && action.durationOptions.length ? '时间可调' : (action.minutes ? `${action.minutes}分钟` : ''),
+    shortSummaryText(action.summary?.cost || [], ''),
+    shortSummaryText(action.summary?.gain || [], action.type === 'battle' ? '推进战斗与复盘' : '')
+  ].filter(Boolean);
+  return bits.slice(0, 3);
+}
+
 const rewardLabelAliases = {
   money: '现金',
   cash: '现金',
@@ -400,6 +413,7 @@ function opportunityButtonLabel(card = {}, currentLoc = '') {
 
 function renderActionCard(action) {
   const hasDuration = Array.isArray(action.durationOptions) && action.durationOptions.length > 0;
+  const visibleSummary = actionVisibleSummary(action);
   const details = `
     <p>${esc(action.desc)}</p>
     ${summaryChips(action.summary?.cost || [], 'cost')}
@@ -412,8 +426,9 @@ function renderActionCard(action) {
       <div class="maws-action-core">
         <strong>${esc(action.icon)} ${esc(action.name)}</strong>
         ${hasDuration ? '<small class="maws-duration-tag">可调时长</small>' : ''}
+        ${visibleSummary.length ? `<div class="maws-action-visible-summary">${visibleSummary.map((part) => `<span>${esc(part)}</span>`).join('')}</div>` : ''}
         <details class="maws-fold maws-action-detail">
-          <summary>行动细节</summary>
+          <summary>长描述 / 完整数值</summary>
           ${details}
         </details>
       </div>
@@ -640,6 +655,9 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
   const params = inCombat
     ? (disabled ? { text: preview.unavailableReason } : { id: skill.id })
     : (!learned ? { text: sourceText } : skill.equipped ? { text: '已经装备' } : { id: skill.id });
+  const useLine = inCombat
+    ? `${esc(skill.type || '招式')} · ${esc(dist)} · ${esc(preview.unavailableReason || skill.unavailableReason || `熟练度 ${round(skill.state?.p)}%`)}`
+    : `${esc(skill.desc || '用于战斗与训练判断。')}`;
   if (inCombat) {
     const cost = `${esc(skill.sp || 0)}/${esc(skill.ap || 1)}`;
     const no = String(skill.displayNo || 1).padStart(2, '0');
@@ -651,6 +669,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
       <article class="maws-skill combat-card type-${esc(skill.style || 'neutral')} ${skill.selected ? 'active' : ''} ${disabled ? 'disabled' : ''}" ${cardAttrs} tabindex="0">
         <span class="maws-combat-card-no">${esc(no)}</span>
         <header><strong>${esc(skill.name)}</strong><small>${skill.selected ? '已入队' : disabled ? '不可用' : esc(skill.type)}</small></header>
+        <p class="maws-combat-card-use">${useLine}</p>
         <dl class="maws-combat-key">
           <div><dt>效果</dt><dd>${esc(damage)} / 架${esc(posture)}</dd></div>
           <div><dt>命</dt><dd>${esc(hit)}</dd></div>
@@ -673,12 +692,13 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
     <article class="maws-skill ${skill.equipped || skill.selected ? 'active' : ''} ${!learned ? 'locked' : ''} ${disabled ? 'disabled' : ''}">
       ${assetIcon(skill.assetKey, '', 'maws-skill-art')}
       <header><strong>${assetIcon(skill.assetKey, skill.icon)} ${esc(skill.name)}</strong><small>${!learned ? '未学会' : skill.equipped ? '已装备' : esc(skill.type)}</small></header>
+      <p class="maws-skill-use">${useLine}</p>
       <div class="maws-skill-brief">
         <span>${esc(learned ? `熟练度 ${round(skill.state?.p)}%` : sourceText)}</span>
         <span>${esc(learned ? (skill.equipped ? '已装备' : '可装备') : '待解锁')}</span>
       </div>
-      <details class="maws-fold maws-skill-fold" open>
-        <summary>${learned ? '来源 / 数值详情' : '解锁详情'}</summary>
+      <details class="maws-fold maws-skill-fold">
+        <summary>${learned ? '长描述 / 完整数值' : '解锁详情 / 完整数值'}</summary>
         <p>${esc(skill.desc)}</p>
         ${renderSkillUnlock(skill, unlock, learned)}
         <dl>
@@ -821,7 +841,7 @@ function renderCombat(model) {
     { target },
     `maws-target-option ${combat.target === target ? 'active' : ''}`
   )).join('');
-  const cards = (model.equipSkills || []).filter((slot) => slot.skill).map((slot, index) => renderSkillCard({
+  const equippedCards = (model.equipSkills || []).filter((slot) => slot.skill).map((slot, index) => ({
     id: slot.id,
     ...slot.skill,
     displayNo: index + 1,
@@ -829,7 +849,14 @@ function renderCombat(model) {
     preview: slot.preview,
     selected: slot.selected,
     desc: slot.skill.desc
-  }, true)).join('');
+  }));
+  const selectedCards = equippedCards.filter((skill) => skill.selected);
+  const standbyCards = equippedCards.filter((skill) => !skill.selected);
+  const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, Math.min(queueLimit, 2)));
+  const windowIds = new Set(windowCards.map((skill) => skill.id));
+  const drawerCards = equippedCards.filter((skill) => !windowIds.has(skill.id));
+  const windowCardHtml = windowCards.map((skill) => renderSkillCard(skill, true)).join('');
+  const drawerCardHtml = drawerCards.map((skill) => renderSkillCard(skill, true)).join('');
   const logs = (combat.log || []).slice(0, 6).map((line) => `<li>${esc(line)}</li>`).join('');
   const feedback = combat.lastWindow?.feedback;
   const feedbackPanel = `
@@ -855,13 +882,20 @@ function renderCombat(model) {
       <details class="maws-combat-log-toggle"><summary>详细战斗记录</summary><ol>${logs}</ol></details>
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
-          <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)}</span><small>${phaseNote}</small></div>
+          <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)} · 本窗口 ${esc(queueIds.length)}/${esc(queueLimit)} 槽</span><small>${phaseNote}</small></div>
           ${objectives}
           ${enemyRead}
           <div class="maws-target-control" role="group" aria-label="攻击目标">${targetControls}</div>
-          <div class="maws-combat-queue"><b>动作队列</b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
+          <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>本窗口动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
-        <div class="maws-card-grid combat">${cards}</div>
+        <div class="maws-combat-window-cards">
+          <b>本窗口行动卡</b>
+          <div class="maws-card-grid combat focus">${windowCardHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
+        </div>
+        <details class="maws-fold maws-tactics-drawer">
+          <summary>更多动作 / 战术抽屉 <span>${esc(drawerCards.length)}张</span></summary>
+          <div class="maws-card-grid combat">${drawerCardHtml || '<p class="maws-empty">没有更多可用动作。</p>'}</div>
+        </details>
         <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
       </div>
     </section>
@@ -976,6 +1010,7 @@ function renderDialogueModal(modal) {
   const settlement = isLast && !choices.length
     ? (modal.settlementLines || []).map(renderSettlementLine).join('')
     : '';
+  const rewardChips = isLast && !choices.length ? collectRewardChips(modal, 4) : [];
   const history = lines.slice(0, index).map((prev) => `
     <li><b>${esc(prev.speaker || modal.title || '对话')}</b><span>${esc(prev.text || '')}</span></li>
   `).join('');
@@ -1003,6 +1038,7 @@ function renderDialogueModal(modal) {
       </div>
     </div>
     ${choiceCards ? `<div class="maws-dialogue-choices">${choiceCards}</div>` : ''}
+    ${renderRewardChips(rewardChips, 'hero dialogue-gain')}
     ${action ? `<div class="maws-modal-actions">${action}</div>` : ''}
     ${history ? `<details class="maws-fold maws-modal-fold maws-dialogue-history"><summary>回看对话</summary><ol>${history}</ol></details>` : ''}
     ${settlement ? `<details class="maws-fold maws-modal-fold"><summary>查看收益 / 结算</summary><ol class="maws-settle-list">${settlement}</ol></details>` : ''}
