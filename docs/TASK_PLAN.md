@@ -4,42 +4,44 @@
 
 ## Current Task
 
-Wave 11：Flow + Combat + UI 收敛多 CLI 集成收尾。
+Wave 12：Visual Slice Strike。
 
 ## Scope
 
-- 已合并并验证：`feat/combat-plan-mode-v1`、`feat/time-activity-pass-v1`、`feat/ui-readable-reward-pass`、`test/wave11-flow-smoke`、`docs/skill-tree-vertical-slice-v1`。
-- 已在所有分支合并推送后运行 QA：`qa/wave11-review`。
-- 本轮没有改初始正式技能赠送，没有把 `jab` / `advance` 放回开局。
+- 本轮目标是让核心画面先立起来：地图/战斗舞台、角色/NPC 站位、背景裁剪、结构化收益、点击反馈、底栏遮挡、小/大弹窗密度。
+- 本轮不继续 skill tree implementation。
+- 不改战斗公式、经济曲线、敌人数据、主线剧情、存档 key/version 或资产目录结构。
+- UI 只允许一个大实现 owner：`feat/visual-stage-hud-strike`。
 
-## Plan
+## Branch Plan
 
-- [x] Wave 11 prompts/scripts 提交并推送。
-- [x] 5 个实现/测试/文档 worker 完成并推送。
-- [x] Combat Plan、Time Activity、UI Readable Reward、Flow Smoke、Skill Tree Slice 按顺序合并。
-- [x] Flow Smoke 首次发现技能 details 默认关闭，已按验收补丁恢复技能 details 默认展开。
-- [x] 合并后运行 `check:full`、`test:playtest`、Day 5 sim、Wave 11 flow smoke、`diff check`。
-- [x] QA 在最新 staging 后启动并提交报告。
-- [x] QA 报告已合回 staging。
+1. `feat/structured-reward-deltas`
+2. `feat/visual-stage-hud-strike`
+3. `test/wave12-visual-smoke`
+4. `docs/wave12-art-direction-shotlist`
+5. `qa/wave12-visual-review`
+
+## Current Plan
+
+- [x] 解压并核对 Wave 12 任务包内容。
+- [ ] 复制 `docs/codex_tasks/*.md` 和 `scripts/*.ps1`。
+- [ ] 提交并推送 Wave 12 worker prompts/scripts。
+- [ ] 启动 `scripts/run_wave12_visual_strike_workers.ps1`。
+- [ ] 按固定顺序合并：structured reward -> visual UI -> smoke -> shotlist -> QA。
+- [ ] 合并后必须人工看截图，不只看 `check:full`。
 
 ## Validation
 
-- `npm run check:full`：通过。
-- `npm run test:playtest`：通过。
-- `node maws_src/tools/sim_day5_park_check.mjs`：通过。
-- `npx playwright test maws_src/tests/wave11_flow.spec.js --browser=chromium --reporter=line`：通过，4/4。
-- `git diff --check`：通过。
-
-## Result
-
-Wave 11 集成完成。战斗主视图收敛到当前 1-2 招窗口，奖励反馈更直接，小弹窗更紧凑，关键行动/技能信息默认可见，Time Activity 增加粗粒度反刷压力，技能树第一片实现方案已写入文档。
+- Prompt/script 提交前：`git diff --check`。
+- Worker 分支验证以各自 prompt 为准。
+- 最终验收：`npm run check:full`、`npm run test:playtest`、`npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`、人工截图检查。
 
 ## Risks
 
-- Combat plan mode 当前是 state/combat foundation，还没有 DOM 可选控件。
-- Time Activity repeat pressure 仍是粗粒度 bucket，后续可以按地点/技能细化。
-- 技能树 vertical slice 仍是文档，不是运行代码。
+- 如果先合 UI，UI 会继续从长句里猜收益；必须先合 `feat/structured-reward-deltas`。
+- 如果多个 worker 修改 `ui.js/ui.css`，会再次产生冲突；本轮只允许视觉大实现分支碰 UI。
+- 如果只看自动测试，可能漏掉高分辨率观感、贴纸感、底栏遮挡和弹窗密度问题。
 
 ## Next Step
 
-人工进游戏检查战斗面板、奖励弹窗、时间投入弹窗和技能页；通过后再开下一轮 skill tree implementation 或 plan-mode UI 控件切片。
+运行 Wave 12 多 CLI worker；新窗口恢复时先读 `docs/TASK_HANDOFF.md`，再读本文件和 `docs/codex_tasks/` 下对应任务 prompt。
