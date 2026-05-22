@@ -4,40 +4,31 @@
 
 ## Current Task
 
-Wave 13：First-Look Vertical Slice Polish。
+Wave 13：Reward Delta Contract v2（AGENT_B_GAMEPLAY_SYSTEMS）。
 
 ## Goal
 
-让 Day 1-Day 5 前 20 分钟的 5 个核心画面像一个能玩的城市武术 RPG：
+让行动、事件、训练、出行、战斗结算继续兼容现有 UI，同时输出字段完整、可被后续 UI 直接读取的结构化 `rewardDeltas`。
 
-1. 出租屋主界面。
-2. 点击 NPC/角色。
-3. 普通事件收益反馈。
-4. 时间投入弹窗。
-5. Day 5 战斗 HUD。
+## Current Result
 
-## Current Plan
-
-- [x] 将 Wave 13 文件化为 worker prompts。
-- [x] 将 pipeline 扩展为 staged worker flow，避免同文件冲突和 QA 提前跑。
-- [x] 按写集收敛执行顺序：Reward -> Time/Shotlist -> Visual Stage -> Combat Command -> NPC Click -> Smoke -> QA。
-- [ ] 提交并推送 Wave 13 prompts/scripts。
-- [ ] 启动 `scripts/run_wave13_first_look_workers.ps1`。
-- [ ] Pipeline 完成后人工看 `test-results/wave13/` 和现有 visual 截图。
+- [x] 将 `rewardDeltas` 统一规范化为 `key/label/value/delta/kind/icon/tone/priority/source`。
+- [x] 将收益类型收敛到契约集合：`gain`、`cost`、`relation`、`skill`、`risk`、`time`、`item`、`money`。
+- [x] 技能解锁 delta 保持短标签：`学会 <技能名>`，不把来源/条件塞进 chip 字段。
+- [x] 事件 notebook 增加结构化风险 delta；物品使用增加结构化 item delta。
+- [x] 行动、训练、出行、战斗继续从结算差值生成结构化 cost/time/reward deltas。
 
 ## Validation
 
-- Prompt/script 提交前：PowerShell parse、JSON parse、`git diff --check`。
-- Pipeline 内：每阶段按 spec 运行 `check:full`、`test:playtest`、Wave 12/Wave 13 visual smoke。
-- 最终：QA 最后运行，且只在所有实现分支合并并推送后启动。
+- `npm run check:full`：通过。
+- `npm run test:playtest`：通过。
+- `git diff --check`：通过。
 
 ## Risks
 
-- `Reward Delta Contract v2` 与 `Time Activity Feel Pass` 都会碰 `state.js/economy.js/events.js`，所以本轮没有强行并行这两个 worker。
-- `Visual Stage`、`Combat Command Bar`、`NPC Click` 都会碰 UI，已强制串行。
-- 本轮仍不进入技能树 implementation。
-- `GameDesigner_CombatAnalysis/` 是未跟踪目录，本轮不触碰。
+- 未修改 DOM UI，本轮只保证结构化字段可用；展示样式仍由后续 UI worker 接入。
+- 未修改经济曲线、剧情内容、战斗公式、数据表和存档 key/version。
 
 ## Next Step
 
-提交并推送 Wave 13 staged pipeline，然后启动 worker。
+后续 UI worker 可直接读取 `modal.rewardDeltas` 和 `eventNotebook.rewardDeltas`，避免从长文案解析收益。

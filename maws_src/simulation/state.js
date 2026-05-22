@@ -602,18 +602,14 @@ function skillIdsFromGain(gain = {}) {
 function skillUnlockSettlementLines(beforeSkillState = {}, state, action, gain = action?.gain || {}) {
   return skillIdsFromGain(gain)
     .filter((id) => !beforeSkillState[id] && state.skillState?.[id])
-    .map((id) => {
-      const unlock = SKILL_UNLOCKS[id] || {};
-      const source = unlock.sourceSummary || actionSourceLabel(unlock.locationId || state.loc, unlock.actionId || action?.id, action);
-      return {
-        group: 'skills',
-        key: id,
-        label: '学会',
-        delta: 1,
-        tone: 'good',
-        text: `学会：${SKILLS[id]?.name || id} / 来源：${source}`
-      };
-    });
+    .map((id) => ({
+      group: 'skills',
+      key: id,
+      label: '学会',
+      delta: 1,
+      tone: 'good',
+      text: `学会 ${SKILLS[id]?.name || id}`
+    }));
 }
 
 function applyStoryFlags(state, flags = {}) {
@@ -832,6 +828,7 @@ function eventNotebookModal(state, item = {}, options = {}) {
     beats: beats.length ? beats : generatedEventBeats(state, item.desc ? item : action || item, kind, locName),
     summary,
     result: note.result || note.outcome || '',
+    rewardDeltas: [riskRewardDelta(item.enemy || item.risk || item.riskLabel ? item : action || {}, options.source || 'event')].filter(Boolean),
     card: options.source === 'opportunity' ? item : null,
     choices: [{
       id: 'resolve',
@@ -1159,7 +1156,10 @@ function useItem(state, id) {
   return {
     title: `${item.name} 使用结算`,
     lead: `${item.name}已经使用。`,
-    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'item' }),
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, {
+      source: 'item',
+      extra: [itemRewardDelta(id, -1, 'item')]
+    }),
     lines
   };
 }
@@ -1189,10 +1189,14 @@ function settlementText(line) {
 
 const REWARD_KIND_BY_KEY = Object.freeze({
   money: 'money',
-  sp: 'sp',
-  hp: 'hp',
-  calm: 'calm',
-  morale: 'morale',
+  sp: 'cost',
+  hp: 'gain',
+  calm: 'gain',
+  morale: 'gain',
+  fame: 'gain',
+  face: 'gain',
+  auth: 'gain',
+  fitXp: 'gain',
   fatigue: 'risk',
   heat: 'risk',
   injury: 'risk',
@@ -1201,14 +1205,11 @@ const REWARD_KIND_BY_KEY = Object.freeze({
 });
 
 const REWARD_ICON_BY_KIND = Object.freeze({
+  gain: '得',
+  cost: '耗',
   money: '钱',
-  sp: '体',
-  hp: '命',
-  calm: '静',
-  morale: '气',
   relation: '人',
   skill: '技',
-  maw: '茂',
   risk: '险',
   item: '物',
   time: '时'
@@ -1218,7 +1219,14 @@ function rewardKind(line = {}) {
   if (line.group === 'skills') return 'skill';
   if (line.group === 'relations') return 'relation';
   if (line.group === 'styles' || line.group === 'stats') return 'skill';
-  return REWARD_KIND_BY_KEY[line.key] || 'maw';
+  if (line.kind) return line.kind;
+  const byKey = REWARD_KIND_BY_KEY[line.key];
+  if (byKey) {
+    if (byKey === 'cost' && Number(line.delta || 0) > 0) return 'gain';
+    if (byKey === 'gain' && Number(line.delta || 0) < 0) return 'cost';
+    return byKey;
+  }
+  return Number(line.delta || 0) < 0 ? 'cost' : 'gain';
 }
 
 function rewardValueFromSnapshot(line = {}, snapshot = {}) {
@@ -1241,43 +1249,106 @@ function rewardDeltaText(delta) {
   return n > 0 ? `+${n}` : String(n);
 }
 
+function rewardTone(kind, delta, fallback = '') {
+  if (fallback) return fallback;
+  if (kind === 'cost' || kind === 'time') return 'bad';
+  if (kind === 'risk') return Number(delta || 0) <= 0 ? 'good' : 'bad';
+  if (kind === 'money') return Number(delta || 0) >= 0 ? 'good' : 'bad';
+  return Number(delta || 0) >= 0 ? 'good' : 'bad';
+}
+
+function rewardPriority(kind, index = 0) {
+  return ({
+    money: 0,
+    item: 5,
+    skill: 10,
+    gain: 20,
+    relation: 30,
+    risk: 40,
+    cost: 80,
+    time: 90
+  }[kind] ?? 50) + index;
+}
+
+function normalizeRewardDelta(delta = {}, source = 'settlement', index = 0) {
+  if (!delta || typeof delta !== 'object') return null;
+  const kind = delta.kind || (Number(delta.delta || 0) < 0 ? 'cost' : 'gain');
+  const label = delta.label || delta.key || '变化';
+  return {
+    key: delta.key || `${kind}:${label}`,
+    label,
+    value: delta.value ?? null,
+    delta: Math.round(Number(delta.delta || 0)),
+    kind,
+    icon: delta.icon || REWARD_ICON_BY_KIND[kind] || '得',
+    tone: rewardTone(kind, delta.delta, delta.tone),
+    priority: Number.isFinite(Number(delta.priority)) ? Number(delta.priority) : rewardPriority(kind, index),
+    source: delta.source || source
+  };
+}
+
 function rewardDeltaFromLine(line = {}, after = {}, source = 'settlement', index = 0) {
   const delta = Math.round(Number(line.delta || 0));
   if (!delta) return null;
   const kind = rewardKind(line);
   const label = rewardLabel(line);
-  return {
+  return normalizeRewardDelta({
     key: `${line.group || 'player'}:${line.key || label}`,
     label,
     value: rewardValueFromSnapshot(line, after),
     delta,
     kind,
-    icon: REWARD_ICON_BY_KIND[kind] || '得',
-    tone: line.tone || (delta > 0 ? 'good' : 'bad'),
-    priority: index + (kind === 'money' ? 0 : kind === 'time' ? 90 : kind === 'skill' ? 10 : 20),
+    tone: line.tone,
     source
-  };
+  }, source, index);
 }
 
 function timeRewardDelta(minutes = 0, source = 'time') {
   const value = Math.round(Number(minutes || 0));
   if (!value) return null;
-  return {
+  return normalizeRewardDelta({
     key: 'time',
     label: '时间',
     value: null,
     delta: -value,
     kind: 'time',
-    icon: REWARD_ICON_BY_KIND.time,
-    tone: 'bad',
-    priority: 95,
     source
-  };
+  }, source, 0);
 }
 
-function rewardDeltasFromSettlement(lines = [], after = {}, { source = 'settlement', minutes = 0 } = {}) {
+function riskRewardDelta(item = {}, source = 'event') {
+  const raw = item.riskLabel ?? item.risk ?? ENEMIES[item.enemy]?.risk ?? (item.enemy ? '中' : '');
+  if (!raw) return null;
+  const riskValue = { 低: 1, 中: 2, 高: 4, 剧情: 5, 终局: 5 }[raw] || Number(raw) || 1;
+  return normalizeRewardDelta({
+    key: 'risk',
+    label: `风险 ${raw}`,
+    value: riskValue,
+    delta: riskValue,
+    kind: 'risk',
+    tone: riskValue >= 3 ? 'bad' : 'neutral',
+    priority: 45,
+    source
+  }, source, 0);
+}
+
+function itemRewardDelta(itemId, delta = 0, source = 'item') {
+  if (!itemId || !delta) return null;
+  return normalizeRewardDelta({
+    key: `item:${itemId}`,
+    label: ITEMS[itemId]?.name || itemId,
+    delta,
+    kind: 'item',
+    tone: delta > 0 ? 'good' : 'bad',
+    priority: 6,
+    source
+  }, source, 0);
+}
+
+function rewardDeltasFromSettlement(lines = [], after = {}, { source = 'settlement', minutes = 0, extra = [] } = {}) {
   return [
     ...lines.map((line, index) => rewardDeltaFromLine(line, after, source, index)).filter(Boolean),
+    ...extra.map((delta, index) => normalizeRewardDelta(delta, source, index)).filter(Boolean),
     timeRewardDelta(minutes, source)
   ]
     .filter(Boolean)
@@ -1465,7 +1536,7 @@ function resolveEventNotebook(state) {
       body: card.result || '你把这件待办处理到可以继续采购和整理装备。',
       lines: [],
       summary: { cost: [], gain: ['商店已打开'], risk: riskText(card) },
-      rewardDeltas: [],
+      rewardDeltas: [riskRewardDelta(card, 'eventNotebook')].filter(Boolean),
       logText: state.log?.[0]?.text || ''
     });
   } else if (card.action) {
