@@ -29,6 +29,29 @@ const COMBO_RULES = Object.freeze([
   { id: "cool_exit", from: "talkdown", to: "retreat", hit: 0, risk: 0.05, spRefund: 4, label: "降温撤离", log: "COMBO！先降温再撤离，冲突热度被压下去。" }
 ]);
 
+const PLAN_MODES = Object.freeze({
+  manual: {
+    id: "manual",
+    label: "手动",
+    queue: []
+  },
+  safe: {
+    id: "safe",
+    label: "稳守",
+    queue: [["guard", "wild_swing"], ["guard", "retreat"]]
+  },
+  pressure: {
+    id: "pressure",
+    label: "压迫",
+    queue: [["push_away", "wild_swing"]]
+  },
+  exit: {
+    id: "exit",
+    label: "脱离",
+    queue: [["talkdown", "retreat"]]
+  }
+});
+
 const SKILLS = Object.freeze({
   wild_swing: { name: "野路挥拳", type: "strike", dist: ["far", "mid", "close"], dmg: 10, post: 8, sp: 6, tp: 1, hit: 0.66, risk: 0.18, style: "street" },
   push_away: { name: "推搡", type: "dirty", dist: ["mid", "close"], dmg: 2, post: 12, sp: 6, tp: 1, hit: 0.74, risk: 0.10, style: "street" },
@@ -241,6 +264,21 @@ export function suggestCombatQueue(state) {
     if (id && !queue.includes(id)) queue.push(id);
   };
 
+  const mode = PLAN_MODES[combatState.planMode] ? combatState.planMode : "manual";
+  const planQueue = suggestedPlanQueue(mode, prefer);
+  planQueue.forEach(add);
+
+  if (queue.length) {
+    return {
+      queue: queue.slice(0, 2),
+      reason: `${mode}_plan`,
+      source: "planMode",
+      planMode: mode,
+      planLabel: PLAN_MODES[mode].label,
+      forced: false
+    };
+  }
+
   if (combatState.player.sp < 18) {
     add(prefer("guard", "retreat", "talkdown"));
   } else if (combatState.enemy.weapon) {
@@ -260,6 +298,8 @@ export function suggestCombatQueue(state) {
     queue: queue.slice(0, 2),
     reason: queue.length ? "safe_default" : "no_usable_equipped_skill",
     source: "equipSkills",
+    planMode: mode,
+    planLabel: PLAN_MODES[mode].label,
     forced: false
   };
 }
@@ -1145,6 +1185,9 @@ function normalizeCombatState(input) {
     lastPlayerActions: Array.isArray(source.lastPlayerActions) ? [...source.lastPlayerActions] : [],
     lastEnemyResponse: source.lastEnemyResponse || source.enemyPlan || null,
     currentEnemyResponse: source.currentEnemyResponse || null,
+    planMode: PLAN_MODES[source.planMode] ? source.planMode : "manual",
+    planSlot: source.planSlot || null,
+    comboSlot: source.comboSlot || null,
     log: Array.isArray(source.log) ? [...source.log] : [],
     finished: Boolean(source.finished || source.ended),
     ended: Boolean(source.ended || source.finished),
@@ -1255,6 +1298,15 @@ function skillMastery(combatState, id) {
 
 function skillRisk(combatState, skill) {
   return clamp((skill.risk || 0) + effect(combatState, "risk") - styleBonus(combatState, skill.style || "", 0.0008), 0, 0.45);
+}
+
+function suggestedPlanQueue(mode, prefer) {
+  const plan = PLAN_MODES[mode] || PLAN_MODES.manual;
+  for (const pattern of plan.queue) {
+    const queue = pattern.map((id) => prefer(id)).filter(Boolean);
+    if (queue.length === pattern.length) return queue;
+  }
+  return [];
 }
 
 function currentComboBonus(combatState, id) {
