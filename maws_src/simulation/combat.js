@@ -30,6 +30,8 @@ const COMBO_RULES = Object.freeze([
 ]);
 
 const SKILLS = Object.freeze({
+  wild_swing: { name: "野路挥拳", type: "strike", dist: ["far", "mid", "close"], dmg: 10, post: 8, sp: 6, tp: 1, hit: 0.66, risk: 0.18, style: "street" },
+  push_away: { name: "推搡", type: "dirty", dist: ["mid", "close"], dmg: 2, post: 12, sp: 6, tp: 1, hit: 0.74, risk: 0.10, style: "street" },
   jab: { name: "刺拳探路", type: "strike", dist: ["mid"], dmg: 10, post: 10, sp: 7, tp: 1, hit: 0.82, risk: 0.10, style: "boxing" },
   straight: { name: "直拳重击", type: "strike", dist: ["mid"], dmg: 20, post: 14, sp: 14, tp: 2, hit: 0.68, risk: 0.22, style: "boxing" },
   guard: { name: "防守抱架", type: "defense", dist: ["mid", "close"], dmg: 0, post: 0, sp: 6, tp: 1, hit: 1, risk: 0.02, style: "boxing" },

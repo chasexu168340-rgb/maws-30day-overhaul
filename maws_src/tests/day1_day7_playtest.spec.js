@@ -172,6 +172,45 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
     main: true,
     objectiveSet: 'park_check'
   });
+  const starterWildPreview = await page.evaluate(async () => {
+    const { previewPlayerAction } = await import('/maws_src/simulation/combat.js');
+    const state = window.MAWS_STORE.state;
+    const combatInput = {
+      ...state.combat,
+      day: state.day,
+      player: state.player,
+      skillState: state.skillState,
+      styles: state.styles,
+      equipSkills: state.equipSkills
+    };
+    return ['push_away', 'wild_swing'].map((id) => {
+      const preview = previewPlayerAction(combatInput, id);
+      return { id, valid: preview.valid, reason: preview.reason, name: preview.name };
+    });
+  });
+  expect(starterWildPreview).toEqual([
+    { id: 'push_away', valid: true, reason: '', name: '推搡' },
+    { id: 'wild_swing', valid: true, reason: '', name: '野路挥拳' }
+  ]);
+  await page.evaluate(() => {
+    window.MAWS_STORE.state.combat.objectivePassCount = 99;
+    window.MAWS_STORE.emit();
+  });
+  const pushCard = page.locator('.maws-skill.combat-card').filter({ hasText: /推搡/ }).first();
+  const wildCard = page.locator('.maws-skill.combat-card').filter({ hasText: /野路挥拳/ }).first();
+  await expect(pushCard.locator('button[data-action="selectSkill"]')).toBeEnabled();
+  await expect(wildCard.locator('button[data-action="selectSkill"]')).toBeEnabled();
+  await pushCard.locator('button[data-action="selectSkill"]').click();
+  await wildCard.locator('button[data-action="selectSkill"]').click();
+  await page.locator('button[data-action="confirmBattle"]').click();
+  const starterWildResolved = await page.evaluate(() => ({
+    activeCombat: Boolean(window.MAWS_STORE.state.combat),
+    windowCount: window.MAWS_STORE.state.combat?.windowCount || 0,
+    log: window.MAWS_STORE.state.combat?.log?.join('\n') || ''
+  }));
+  expect(starterWildResolved.activeCombat).toBe(true);
+  expect(starterWildResolved.windowCount).toBeGreaterThanOrEqual(1);
+  expect(starterWildResolved.log).toMatch(/推搡|野路挥拳|推开后立刻挥击/);
 
   expect(errors).toEqual([]);
 });
