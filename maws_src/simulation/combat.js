@@ -21,6 +21,14 @@ const COMBAT_TUNING = Object.freeze({
   roundLimit: 12
 });
 
+const COMBO_RULES = Object.freeze([
+  { id: "boxing_one_two", from: "jab", to: "straight", hit: 0.06, risk: 0.03, spRefund: 3, label: "1-2节奏", log: "COMBO！刺拳探路接直拳重击，拳路更顺。" },
+  { id: "wild_one_two", from: "push_away", to: "wild_swing", hit: 0.05, risk: 0.02, spRefund: 2, label: "推开挥击", log: "COMBO！推开后立刻挥击，抢到一拍空间。" },
+  { id: "guard_counter", from: "guard", toType: "strike", hit: 0.05, risk: 0.04, spRefund: 2, label: "防反", log: "COMBO！抱架后抓回合反击，出手更稳。" },
+  { id: "pull_and_tag", from: "retreat", toType: "strike", hit: 0.04, risk: 0.03, spRefund: 2, label: "拉开点打", log: "COMBO！后撤拉开后点回一拳，风险下降。" },
+  { id: "cool_exit", from: "talkdown", to: "retreat", hit: 0, risk: 0.05, spRefund: 4, label: "降温撤离", log: "COMBO！先降温再撤离，冲突热度被压下去。" }
+]);
+
 const SKILLS = Object.freeze({
   jab: { name: "刺拳探路", type: "strike", dist: ["mid"], dmg: 10, post: 10, sp: 7, tp: 1, hit: 0.82, risk: 0.10, style: "boxing" },
   straight: { name: "直拳重击", type: "strike", dist: ["mid"], dmg: 20, post: 14, sp: 14, tp: 2, hit: 0.68, risk: 0.22, style: "boxing" },
@@ -216,6 +224,44 @@ export function previewPlayerAction(state, skillId) {
   };
 }
 
+export function suggestCombatQueue(state) {
+  const combatState = normalizeCombatState(state);
+  const equipped = combatState.equipSkills.map(actionId).filter((id) => SKILLS[id]);
+  const learned = (id) => !combatState.hasExplicitSkillState || Boolean(combatState.skillState[id]);
+  const usable = (id) => {
+    const skill = SKILLS[id];
+    return Boolean(skill && learned(id) && skill.sp <= combatState.player.sp && skill.dist.includes(combatState.distance));
+  };
+  const prefer = (...ids) => ids.find((id) => equipped.includes(id) && usable(id));
+  const queue = [];
+
+  const add = (id) => {
+    if (id && !queue.includes(id)) queue.push(id);
+  };
+
+  if (combatState.player.sp < 18) {
+    add(prefer("guard", "retreat", "talkdown"));
+  } else if (combatState.enemy.weapon) {
+    add(prefer("talkdown", "dirtyescape", "retreat", "guard"));
+    add(prefer("retreat", "dirtyescape", "guard"));
+  } else if (combatState.distance === "close") {
+    add(prefer("guard", "jab", "retreat", "palm", "grip"));
+    add(prefer("retreat", "jab", "straight", "palm"));
+  } else {
+    add(prefer("jab", "guard", "frontkick", "karate_front_kick"));
+    add(prefer("straight", "jab", "retreat", "guard"));
+  }
+
+  if (!queue.length) add(equipped.find(usable));
+
+  return {
+    queue: queue.slice(0, 2),
+    reason: queue.length ? "safe_default" : "no_usable_equipped_skill",
+    source: "equipSkills",
+    forced: false
+  };
+}
+
 export function chooseEnemyResponse(context, rng = Math.random) {
   const rawState = context?.combatState || context?.state || context || {};
   const combatState = normalizeCombatState(rawState);
@@ -286,6 +332,11 @@ export function resolveCombatExchange(state, selectedActions, rng = Math.random)
 
   if (resting) {
     const restStep = resolveRest(combatState);
+    const suggestion = suggestCombatQueue(combatState);
+    if (suggestion.queue.length) {
+      restStep.result.suggestedQueue = suggestion.queue;
+      restStep.log.push(`自动策略建议：下次可尝试【${suggestion.queue.map((id) => SKILLS[id]?.name || id).join("】→【")}】。`);
+    }
     pushStep(combatState, steps, restStep);
     if (!isTerminal(combatState)) {
       const enemyResponse = chooseEnemyResponse({ combatState, playerAction: "rest", steps }, rng);
@@ -532,6 +583,7 @@ function resolvePlayerAction(combatState, id, rng) {
   const stats = derivedStats(combatState);
   const fx = [];
   const log = [];
+  const combo = currentComboBonus(combatState, id);
 
   player.sp = clamp(player.sp - skill.sp, 0, player.spMax);
   learnFromUse(combatState, id, skill);
@@ -540,6 +592,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.playerBuff.def = COMBAT_TUNING.guardDef + styleBonus(combatState, "boxing", 0.0008);
     fx.push(makeFx(combatState, "guard", "player", 0, "抱架", id));
     log.push("你收紧【防守抱架】，下一次受伤明显降低。");
+    rememberComboAction(combatState, id);
     return step("player", id, { ok: true, defense: combatState.playerBuff.def, spCost: skill.sp }, log, fx);
   }
 
@@ -548,6 +601,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.playerBuff.counter = (combatState.playerBuff.counter || 0) + 0.04;
     fx.push(makeFx(combatState, "guard", "player", 0, "侧步", id));
     log.push("你侧步离线，降低被命中率，并给下一击制造角度。");
+    rememberComboAction(combatState, id);
     return step("player", id, { ok: true, dodge: combatState.playerBuff.dodge, spCost: skill.sp }, log, fx);
   }
 
@@ -556,6 +610,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.playerBuff.def = 0.16;
     fx.push(makeFx(combatState, "guard", "player", 0, "防摔", id));
     log.push("你沉髋下压，专门防对手抱摔切入。");
+    rememberComboAction(combatState, id);
     return step("player", id, { ok: true, antiGrapple: combatState.playerBuff.anti, spCost: skill.sp }, log, fx);
   }
 
@@ -564,6 +619,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.playerBuff.nextHit = (combatState.playerBuff.nextHit || 0) + 0.04 + Math.max(0, stats.spd - 50) * 0.001;
     fx.push(makeFx(combatState, "guard", "player", 0, "前压", id));
     log.push(`你前压入身，距离变为【${distText(combatState.distance)}】。`);
+    rememberComboAction(combatState, id);
     return step("player", id, { ok: true, distance: combatState.distance, nextHit: combatState.playerBuff.nextHit, spCost: skill.sp }, log, fx);
   }
 
@@ -588,15 +644,19 @@ function resolvePlayerAction(combatState, id, rng) {
       }
     }
 
-    return step("player", id, { ok: true, distance: combatState.distance, ground: combatState.ground, riskWin: combatState.finishReason === "riskwin", spCost: skill.sp }, log, fx);
+    applyComboRefund(combatState, combo, log, fx, id);
+    rememberComboAction(combatState, id);
+    return step("player", id, { ok: true, distance: combatState.distance, ground: combatState.ground, riskWin: combatState.finishReason === "riskwin", spCost: skill.sp, combo: combo?.id || null }, log, fx);
   }
 
   if (id === "talkdown") {
-    const ok = rng() < clamp(playerHitChance(combatState, id) + (stats.jud - 50) * 0.002 + styleBonus(combatState, "street", 0.0012), 0.08, 0.90);
+    const ok = rng() < clamp(playerHitChance(combatState, id) + combo.hit + (stats.jud - 50) * 0.002 + styleBonus(combatState, "street", 0.0012), 0.08, 0.90);
     enemy.morale = clamp(enemy.morale - (ok ? 18 : 6), 0, 100);
     fx.push(makeFx(combatState, "guard", "player", 0, ok ? "降温" : "拖住", id));
     log.push(ok ? "你言语降温成功，对手敌意明显下降。" : "你尝试降温，但对手只是犹豫了一下。");
-    return step("player", id, { ok: true, success: ok, enemyMorale: enemy.morale, spCost: skill.sp }, log, fx);
+    applyComboRefund(combatState, combo, log, fx, id);
+    rememberComboAction(combatState, id);
+    return step("player", id, { ok: true, success: ok, enemyMorale: enemy.morale, spCost: skill.sp, combo: combo?.id || null }, log, fx);
   }
 
   if (id === "escape") {
@@ -610,15 +670,18 @@ function resolvePlayerAction(combatState, id, rng) {
       fx.push(makeFx(combatState, "miss", "player", 0, "脱身失败", id));
       log.push("你尝试脱身失败，仍在地面压力中。");
     }
+    rememberComboAction(combatState, id);
     return step("player", id, { ok: true, success: ok, distance: combatState.distance, ground: combatState.ground, spCost: skill.sp }, log, fx);
   }
 
-  const hit = rng() < playerHitChance(combatState, id);
+  const hit = rng() < clamp(playerHitChance(combatState, id) + combo.hit, 0.08, 0.97);
   if (!hit) {
-    player.posture = clamp(player.posture - Math.round(skillRisk(combatState, skill) * 16), 0, player.postureMax);
+    player.posture = clamp(player.posture - Math.round(Math.max(0, skillRisk(combatState, skill) - combo.risk) * 16), 0, player.postureMax);
     fx.push(makeFx(combatState, "miss", "player", 0, "MISS", id));
     log.push(`你使用【${skill.name}】落空，暴露破绽。`);
-    return step("player", id, { ok: true, hit: false, spCost: skill.sp, playerPosture: player.posture }, log, fx);
+    applyComboRefund(combatState, combo, log, fx, id);
+    rememberComboAction(combatState, id);
+    return step("player", id, { ok: true, hit: false, spCost: skill.sp, playerPosture: player.posture, combo: combo?.id || null }, log, fx);
   }
 
   let damage = calcPlayerDamage(combatState, id, rng);
@@ -643,6 +706,7 @@ function resolvePlayerAction(combatState, id, rng) {
     ? `你使用【${skill.name}】被对手防下，但仍有 ${damage} 点削血，架势-${postureDamage}，对手体力-${COMBAT_TUNING.blockSpDrain}。`
     : `你使用【${skill.name}】命中${targetText(combatState.target)}，造成 ${damage} 伤害，架势-${postureDamage}。`);
   fx.push(makeFx(combatState, "hit", "player", damage, guarded ? "格挡削血" : damage >= 24 ? "重击" : targetText(combatState.target), id));
+  applyComboRefund(combatState, combo, log, fx, id);
 
   applyPlayerHitSpecials(combatState, id, log, fx, rng);
   if (enemy.posture <= 0) {
@@ -660,6 +724,7 @@ function resolvePlayerAction(combatState, id, rng) {
   }
 
   consumeOffensiveBuff(combatState, id);
+  rememberComboAction(combatState, id);
 
   return step("player", id, {
     ok: true,
@@ -672,7 +737,8 @@ function resolvePlayerAction(combatState, id, rng) {
     ground: combatState.ground,
     enemyHp: enemy.hp,
     enemyPosture: enemy.posture,
-    spCost: skill.sp
+    spCost: skill.sp,
+    combo: combo?.id || null
   }, log, fx);
 }
 
@@ -1157,6 +1223,7 @@ function publicCombatState(combatState) {
   delete out.hasExplicitSkillState;
   delete out._comboActor;
   delete out._comboCount;
+  delete out._lastComboAction;
   return out;
 }
 
@@ -1186,6 +1253,33 @@ function skillMastery(combatState, id) {
 
 function skillRisk(combatState, skill) {
   return clamp((skill.risk || 0) + effect(combatState, "risk") - styleBonus(combatState, skill.style || "", 0.0008), 0, 0.45);
+}
+
+function currentComboBonus(combatState, id) {
+  const previous = combatState._lastComboAction;
+  const skill = SKILLS[id];
+  const rule = COMBO_RULES.find((item) => {
+    if (item.from !== previous) return false;
+    if (item.to && item.to !== id) return false;
+    if (item.toType && item.toType !== skill?.type) return false;
+    return true;
+  });
+  if (!rule) return { hit: 0, risk: 0, spRefund: 0, id: null };
+  return rule;
+}
+
+function applyComboRefund(combatState, combo, log, fx, id) {
+  if (!combo?.id) return;
+  const refund = Math.max(0, Math.round(combo.spRefund || 0));
+  if (refund > 0) {
+    combatState.player.sp = clamp(combatState.player.sp + refund, 0, combatState.player.spMax);
+  }
+  log.push(`${combo.log}${refund ? ` 体力返还+${refund}。` : ""}`);
+  fx.push(makeFx(combatState, "guard", "player", 0, combo.label, id, { icon: "COMBO" }));
+}
+
+function rememberComboAction(combatState, id) {
+  combatState._lastComboAction = id;
 }
 
 function styleBonus(combatState, key, scale = 0.001) {
@@ -1359,6 +1453,7 @@ function fxIcon(type, label, damage) {
 function resetCombo(combatState) {
   combatState._comboActor = null;
   combatState._comboCount = 0;
+  combatState._lastComboAction = null;
 }
 
 function normalizeActions(selectedActions) {
@@ -1408,5 +1503,6 @@ export default {
   ENEMY_AI_RULES,
   resolveCombatExchange,
   chooseEnemyResponse,
-  previewPlayerAction
+  previewPlayerAction,
+  suggestCombatQueue
 };
