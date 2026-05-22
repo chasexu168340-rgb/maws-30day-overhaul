@@ -4,31 +4,32 @@
 
 ## Current Task
 
-Wave 15 Addiction Loop Slice setup: refresh checkpoint and launch first-stage worker pipeline.
+Wave15 `COMBAT-RECIPE-001`: turn combat plan mode into tactical recipes with readable feedback and a light skill-tree perk bridge.
 
 ## Scope
 
-- Prepare Wave15 first-stage prompts and pipeline.
-- Refresh `TASK_HANDOFF`, `TASK_PLAN`, and `SPRINT_BOARD` to Wave15.
-- First implementation stage will run `SkillTreeSpend` and `CombatRecipe` in parallel where file ownership is acceptable.
-- Do not manually implement gameplay in this setup step.
+- Modify `maws_src/simulation/combat.js`.
+- Modify `maws_src/simulation/state.js` only for plan-mode/perk bridge.
+- Add worker/report docs for this slice.
+- Do not modify data values, DOM UI/CSS, economy/events, assets, package scripts, save keys, or `INITIAL_SKILLS`.
 
 ## Current Result
 
-- Added Wave15 prompts for handoff, skill-tree spend, combat recipe, loop smoke, QA, and second-stage proposal work.
-- Added `scripts/wave15_addiction_loop_pipeline.json`.
-- Added `scripts/wave15_second_stage_proposals_pipeline.json`.
-- Current checkpoint now points to Wave15 Addiction Loop Slice.
+- Added `safe`, `pressure`, `exit`, and `probe` recipe metadata with window-scoped queue suggestions.
+- Added human feedback for recipe plan fills and recipe actions.
+- Added combat-readable perk hooks for small hit/risk/defense/log effects from unlocked skill-tree nodes.
+- E01 and core combat tuning remain unchanged.
 
 ## Validation
 
-- Pending after this refresh: `git diff --check`.
+- `npm run check:full`: pass.
+- `node maws_src/tools/sim_day5_park_check.mjs`: pass, all origins completed 4/4 park-check objectives.
+- `git diff --check`: pass.
 
 ## Risks
 
-- `SkillTreeSpend` and `CombatRecipe` can run together only because combat recipe is instructed to avoid `data.js` and treat `state.js` as read-mostly/minimal bridge.
-- NPC memory, event follow-ups, and alt route implementation are deferred because they would contend for `data.js/state.js`.
+- The parallel skill-tree spend branch may choose different explicit perk field names; current bridge supports common shapes and has default hooks for existing node ids.
 
 ## Next Step
 
-Commit/push this checkpoint refresh, then start `scripts/wave15_remaining_after_handoff_pipeline.json`.
+Commit with `feat: add combat recipe slice`; Manager pipeline handles push/merge.

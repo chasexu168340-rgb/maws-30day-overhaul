@@ -102,7 +102,8 @@ const COMBAT_PLAN_MODES = Object.freeze([
   { id: 'manual', label: '手动', desc: '玩家自己排本窗口动作。' },
   { id: 'safe', label: '稳守', desc: '优先抱架，再找一次反击或拉开。' },
   { id: 'pressure', label: '压迫', desc: '先推开抢空间，再接一记野路挥拳。' },
-  { id: 'exit', label: '脱离', desc: '先降温，再后撤离开冲突。' }
+  { id: 'exit', label: '脱离', desc: '先降温，再后撤离开冲突。' },
+  { id: 'probe', label: '试探', desc: '先退看一拍，或抱架后推搡试距。' }
 ]);
 const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
@@ -286,6 +287,17 @@ const REFORGED_SKILLS = new Set([
   'tkd_roundhouse',
   'tkd_back_kick'
 ]);
+
+const DEFAULT_SKILL_TREE_COMBAT_PERKS = Object.freeze({
+  street_wild_swing_mastery: { skillId: 'wild_swing', hit: 0.025, risk: -0.01, log: '野路挥拳开始收得住，出手更像一拍。' },
+  street_push_away_space: { skillId: 'push_away', hit: 0.02, risk: -0.01, log: '推搡不只是顶人，你知道要抢哪半步。' },
+  boxing_jab_unlock_boost: { skillId: 'jab', hit: 0.02, log: '刺拳先碰距离，命中更稳一点。' },
+  boxing_guard_recovery: { skillId: 'guard', defense: 0.025, log: '抱架后手能回家，防守更完整。' },
+  boxing_straight_line: { skillId: 'straight', hit: 0.02, risk: -0.01, log: '直拳先走线，少一点乱抡。' },
+  traditional_mystic_rewrite: { skillId: 'mystic', hit: 0.02, risk: -0.02, log: '旧招名被拆成距离和重心，没那么玄。' },
+  traditional_guard_rewrite: { skillId: 'guard', defense: 0.02, log: '铁布衫改成少挨一下的抱架。' },
+  traditional_reforge_note: { skillId: 'palm', hit: 0.02, risk: -0.01, log: '拳谱新注让短击更清楚。' }
+});
 
 function bounded(value, fallback = 0, min = 0, max = 100) {
   return clamp(value == null ? fallback : value, min, max);
@@ -2007,6 +2019,51 @@ function equipmentEffects(state) {
   return effects;
 }
 
+function normalizeCombatPerk(raw = {}, node = {}) {
+  if (!raw) return null;
+  if (typeof raw === 'string') return { skillId: node.skillId || '', log: raw };
+  if (Array.isArray(raw)) return raw.map((item) => normalizeCombatPerk(item, node)).filter(Boolean);
+  if (typeof raw !== 'object') return null;
+  const risk = raw.risk != null
+    ? Number(raw.risk)
+    : raw.riskReduce != null
+      ? -Number(raw.riskReduce)
+      : raw.riskReduction != null
+        ? -Number(raw.riskReduction)
+        : 0;
+  return {
+    skillId: raw.skillId || raw.skill || node.skillId || '',
+    hit: Number(raw.hit ?? raw.hitBonus ?? raw.accuracy ?? 0) || 0,
+    risk: Number.isFinite(risk) ? risk : 0,
+    defense: Number(raw.defense ?? raw.def ?? raw.guard ?? 0) || 0,
+    log: raw.log || raw.feedback || raw.text || ''
+  };
+}
+
+function mergeCombatPerk(out, perk) {
+  if (Array.isArray(perk)) {
+    perk.forEach((item) => mergeCombatPerk(out, item));
+    return;
+  }
+  if (!perk) return;
+  const target = perk.skillId ? (out.skills[perk.skillId] ||= {}) : out;
+  ['hit', 'risk', 'defense'].forEach((key) => {
+    if (perk[key]) target[key] = (target[key] || 0) + perk[key];
+  });
+  if (perk.log && perk.skillId && !out.logs[perk.skillId]) out.logs[perk.skillId] = perk.log;
+}
+
+function skillTreeCombatPerks(state) {
+  const out = { skills: {}, logs: {} };
+  const unlocked = state.skillTree?.unlocked || {};
+  SKILL_TREE_NODES.forEach((node) => {
+    if (!unlocked[node.id]) return;
+    const raw = node.combatPerk ?? node.combatEffect ?? node.combatEffects ?? node.perk ?? DEFAULT_SKILL_TREE_COMBAT_PERKS[node.id];
+    mergeCombatPerk(out, normalizeCombatPerk(raw, node));
+  });
+  return out;
+}
+
 function toCombatInput(state) {
   return {
     ...clone(state.combat),
@@ -2015,7 +2072,8 @@ function toCombatInput(state) {
     skillState: clone(state.skillState),
     styles: clone(state.styles),
     equipSkills: [...(state.equipSkills || [])],
-    effects: equipmentEffects(state)
+    effects: equipmentEffects(state),
+    combatPerks: skillTreeCombatPerks(state)
   };
 }
 
@@ -2642,6 +2700,7 @@ export class GameStore {
           queue: [...suggestion.queue],
           reason: suggestion.reason,
           source: suggestion.source,
+          feedback: suggestion.feedback || '',
           planSlot: previousCombat.planSlot || null,
           comboSlot: previousCombat.comboSlot || null
         } : null;
@@ -2656,7 +2715,7 @@ export class GameStore {
         mergeCombatResult(s, previousCombat, result.combatState);
         const stepLogs = result.steps.flatMap((step) => Array.isArray(step.log) ? step.log : step.log ? [step.log] : []);
         const feedbackLine = s.combat?.lastWindow?.feedback?.text || '';
-        const planLine = planFill ? `PLAN触发：${planFill.label}（${planFill.mode}）自动填入本窗口建议队列：${planQueueNames(planFill.queue)}。comboSlot=${planFill.comboSlot || 'empty'}，planSlot=${planFill.planSlot || 'empty'}。` : '';
+        const planLine = planFill ? `PLAN触发：${planFill.label}（${planFill.mode}）自动填入本窗口建议队列：${planQueueNames(planFill.queue)}。${planFill.feedback || ''} comboSlot=${planFill.comboSlot || 'empty'}，planSlot=${planFill.planSlot || 'empty'}。` : '';
         if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, planLine, feedbackLine, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
         if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 1) {
           finishBattle(s, 'first_wind');
@@ -3035,6 +3094,7 @@ function combatPlanningRead(state, combatInput) {
     suggestedQueue: suggestion?.queue || [],
     suggestedQueueNames: suggestion?.queue?.length ? planQueueNames(suggestion.queue) : '',
     suggestedQueueReason: suggestion?.reason || '',
+    suggestedQueueFeedback: suggestion?.feedback || '',
     skillName: SKILLS[plan.skill]?.name || plan.skill,
     nextAction,
     nextActionName: SKILLS[nextAction]?.name || nextAction,
