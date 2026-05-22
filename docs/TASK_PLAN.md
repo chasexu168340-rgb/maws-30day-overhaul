@@ -24,15 +24,16 @@ Wave 12：Visual Slice Strike。
 ## Current Plan
 
 - [x] 解压并核对 Wave 12 任务包内容。
-- [ ] 复制 `docs/codex_tasks/*.md` 和 `scripts/*.ps1`。
-- [ ] 提交并推送 Wave 12 worker prompts/scripts。
+- [x] 恢复 Wave 12 checkpoint 文件。
+- [x] 将原始 launcher 改为 staged pipeline，避免 QA 提前跑。
+- [ ] 提交并推送 Wave 12 staged pipeline 修正。
 - [ ] 启动 `scripts/run_wave12_visual_strike_workers.ps1`。
 - [ ] 按固定顺序合并：structured reward -> visual UI -> smoke -> shotlist -> QA。
 - [ ] 合并后必须人工看截图，不只看 `check:full`。
 
 ## Validation
 
-- Prompt/script 提交前：`git diff --check`。
+- Prompt/script 提交前：`git diff --check`、PowerShell/JSON 解析检查。
 - Worker 分支验证以各自 prompt 为准。
 - 最终验收：`npm run check:full`、`npm run test:playtest`、`npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`、人工截图检查。
 
@@ -44,4 +45,4 @@ Wave 12：Visual Slice Strike。
 
 ## Next Step
 
-运行 Wave 12 多 CLI worker；新窗口恢复时先读 `docs/TASK_HANDOFF.md`，再读本文件和 `docs/codex_tasks/` 下对应任务 prompt。
+提交 staged pipeline 修正后运行 Wave 12 多 CLI worker。

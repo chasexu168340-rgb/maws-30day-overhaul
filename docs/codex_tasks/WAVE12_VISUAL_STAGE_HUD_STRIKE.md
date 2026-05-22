@@ -2,6 +2,10 @@
 
 你是 AGENT_E_UI_PRESENTATION + AGENT_G_ASSET_WORLD。本轮是唯一 UI 大实现 worker。目标是让主界面、战斗 HUD、人物站位、弹窗密度像一个高分辨率游戏界面。
 
+重要：当前 shell 所在目录就是你的独立 worker worktree。不要切回 `E:\TH比赛照片` 修改文件，不要读取或恢复其他 worktree 的 checkpoint；只在当前 worktree 完成、提交并推送本分支。
+
+本地 skill：开工前读取 `C:\Users\Administrator\.codex\skills\planning-with-files\SKILL.md`、`C:\Users\Administrator\.codex\skills\ui-design\SKILL.md`、`C:\Users\Administrator\.codex\skills\ui-ux-design\SKILL.md`、`C:\Users\Administrator\.codex\skills\frontend\SKILL.md`、`C:\Users\Administrator\.codex\skills\game-design\SKILL.md`，不存在则跳过并继续。
+
 允许修改：maws_src/dom/ui.js、maws_src/dom/ui.css、docs/workers/visual_stage_hud_strike.md、docs/agent_reports/AGENT_E_VISUAL_STAGE_HUD_STRIKE.md。
 
 禁止修改：data.js、state.js、events.js、combat.js、manifest.js、assets、package.json、INITIAL_SKILLS。

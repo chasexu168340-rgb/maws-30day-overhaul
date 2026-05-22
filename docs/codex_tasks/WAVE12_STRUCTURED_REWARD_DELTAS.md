@@ -2,6 +2,10 @@
 
 你是 AGENT_B_GAMEPLAY_SYSTEMS。本轮目标：停止让 UI 从长句废话里解析收益，状态层给 modal 输出结构化 rewardDeltas。
 
+重要：当前 shell 所在目录就是你的独立 worker worktree。不要切回 `E:\TH比赛照片` 修改文件，不要读取或恢复其他 worktree 的 checkpoint；只在当前 worktree 完成、提交并推送本分支。
+
+本地 skill：开工前读取 `C:\Users\Administrator\.codex\skills\planning-with-files\SKILL.md`、`C:\Users\Administrator\.codex\skills\system-designer\SKILL.md`、`C:\Users\Administrator\.codex\skills\game-design\SKILL.md`，不存在则跳过并继续。
+
 允许修改：maws_src/simulation/state.js、maws_src/simulation/economy.js、maws_src/simulation/events.js、docs/workers/structured_reward_deltas.md、docs/agent_reports/AGENT_B_STRUCTURED_REWARD_DELTAS.md。
 
 禁止修改：ui.js、ui.css、data.js、combat.js、assets、package.json、INITIAL_SKILLS、战斗公式。

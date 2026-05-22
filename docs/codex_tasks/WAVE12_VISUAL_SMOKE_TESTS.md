@@ -2,6 +2,10 @@
 
 你是 AGENT_F_TECH_QA_TOOLS。本轮只加视觉几何 smoke，不改业务代码。
 
+重要：当前 shell 所在目录就是你的独立 worker worktree。不要切回 `E:\TH比赛照片` 修改文件，不要读取或恢复其他 worktree 的 checkpoint；只在当前 worktree 完成、提交并推送本分支。
+
+本地 skill：开工前读取 `C:\Users\Administrator\.codex\skills\planning-with-files\SKILL.md`、`C:\Users\Administrator\.codex\skills\playwright\SKILL.md`、`C:\Users\Administrator\.codex\skills\testing-automation\SKILL.md`，不存在则跳过并继续。
+
 允许修改：maws_src/tests/wave12_visual.spec.js、docs/workers/wave12_visual_smoke.md、docs/agent_reports/AGENT_F_WAVE12_VISUAL_TESTS.md。
 
 禁止修改：package.json、data.js、state.js、combat.js、ui.js、ui.css、assets。
