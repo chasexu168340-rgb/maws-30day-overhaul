@@ -659,14 +659,16 @@ export const MAIN_EVENTS = {
     title: '给父亲上香',
     loc: 'home',
     npc: 'father',
-    desc: '出租屋窗台很窄，香灰很轻。陆小闲却觉得自己背了很重的东西：父亲、茂家拳，还有一点把遗训听歪的热血。',
+    shortDesc: '香灰落下，你把父亲的话听歪了一点。',
+    sceneSummary: '出租屋上香。父亲留下的是“不争强好胜”，你听见的却是“要证明茂家拳”。',
+    hook: '今天先把香插正，再承认自己想赢。',
+    desc: '出租屋窗台很窄，香灰很轻。你看着父亲的照片，忽然很想把“别争强”听成“别输”。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '陆小闲', text: '爸，我给你上香了。水果是打折的，但心不是。' },
-      { speaker: '旁白', text: '香烧到一半，你忽然发现小票还压在果盘底下。父亲如果真在看，第一句大概是问你有没有凑满减。' },
+      { speaker: '陆小闲', text: '爸，香我上了。果盘也摆正了。' },
       { speaker: '父亲', text: '习武之人，绝不争强好胜。' },
-      { speaker: '陆小闲', text: '我懂。就是……如果有人不讲理，我总不能站着当摆设吧？' },
-      { speaker: '旁白', text: '你把“不争强好胜”听成了“该出手时要很帅”。误读不大，但已经够30天用了。' }
+      { speaker: '陆小闲', text: '我懂。就是……总不能让人觉得茂家拳没用吧？' },
+      { speaker: '旁白', text: '香灰轻轻一落，你把遗训拐了个弯。' }
     ],
     eventNotebook: {
       reason: '出租屋上香',
@@ -691,13 +693,15 @@ export const MAIN_EVENTS = {
     title: '地铁见义勇为',
     loc: 'metro_station',
     npc: 'fatty',
-    desc: '地铁不是擂台。车门提示音响了三遍，没人真的想当英雄，大家只是把一个没写完的选择题塞进你手里。',
+    shortDesc: '地铁不是擂台，重点是把事收住。',
+    sceneSummary: '早高峰冲突被挤到你面前。你要做的不是赢谁，而是让车厢别变坏。',
+    hook: '今天的目标：控制升级，不抢英雄镜头。',
+    desc: '车门提示音响了三遍。没人真的想看擂台，只想这趟车别出事。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '旁白', text: '早高峰的车厢像一口没换气的锅。有人争执，有人缩手，有人举起手机，像先给结局买了票。' },
       { speaker: '陆小闲', text: '别推人，站稳说。' },
       { speaker: '刘胖子', text: '你先别把“站出来”和“冲上去”写成同一个词。' },
-      { speaker: '旁白', text: '这里没有铃声，没有裁判，也没有漂亮的胜利姿势。赢不是把人打倒，是别让事情升级。' }
+      { speaker: '旁白', text: '这里没有铃声。只有监控、人群，和一件需要收场的事。' }
     ],
     eventNotebook: {
       reason: '地铁站见义勇为',
@@ -715,20 +719,23 @@ export const MAIN_EVENTS = {
     choices: [
       { id: 'day2_metro_control', label: '侧身挡住升级路线', text: '你站到侧面，给被推的人留退路，也把对方的前压路线卡住。动作不大，但人群终于有地方散开。', hint: '偏判断和冷静，少量真实性。', gain: { jud: 2, calm: 1, auth: 1 }, flags: { flag_day2_metro: true, day2_metro_control: true }, log: '你在地铁站先控距离，再控声音。事情没有变成打架，这次算处理得像回事。' },
       { id: 'day2_metro_staff', label: '先喊站务', text: '你没有抢着当主角，而是把站务和周围乘客都拉进来。对方发现自己不是在跟你单挑，火就短了一截。', hint: '偏冷静和判断，避免热度上升。', gain: { calm: 2, jud: 1, auth: 1 }, flags: { flag_day2_metro: true, day2_metro_staff: true }, log: '你先喊站务，把冲突从“谁更狠”拉回“怎么收场”。' },
-      { id: 'day2_metro_loud', label: '嗓门压过去', text: '你吼了一句，车厢安静了半秒。有效，但有效得有点危险；监控和围观群众会替你剪出十二个版本。', hint: '获得少量名声，但热度上升。', gain: { fame: 3, heat: 1, jud: 1 }, flags: { flag_day2_metro: true, day2_metro_loud: true }, log: '你用嗓门把场面压住了。赢了三秒钟，也把自己送进了围观群众的素材库。' }
+      { id: 'day2_metro_loud', label: '嗓门压过去', text: '你吼了一句，车厢安静了半秒。有效，但有效得有点危险；监控和围观群众会替你剪出十二个版本。', hint: '获得一点名声，但热度上升。', gain: { fame: 1, heat: 1, jud: 1 }, flags: { flag_day2_metro: true, day2_metro_loud: true }, log: '你用嗓门把场面压住了。赢了三秒钟，也把自己送进了围观群众的素材库。' }
     ]
   },
   3: {
     title: '便利店货架事件',
     loc: 'store',
     npc: 'xiaoman',
-    desc: '便利店的过道很窄，货架挡视线，熟人挡面子。你看见对方肩膀一沉，以为是起手，三秒后发现他只是想绕开泡面货架。',
+    shortDesc: '你把泡面货架前的停顿看成了胜利。',
+    sceneSummary: '便利店过道太窄，你误把一个普通动作读成威胁。小满看见了，也看穿了。',
+    hook: '今天要分清保护和抢戏。',
+    desc: '便利店的过道很窄。对方肩膀一沉，你以为是起手，三秒后发现他只是想绕开泡面货架。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '小满', text: '他只是想拿泡面。你刚才那个架势，像要替酸辣牛肉面出头。' },
       { speaker: '陆小闲', text: '我以为他要冲你来。' },
+      { speaker: '小满', text: '他只是想拿泡面。你刚才像要替酸辣牛肉面出头。' },
       { speaker: '小满', text: '我知道。所以我才没笑太大声。' },
-      { speaker: '旁白', text: '货架没倒，面子倒得很整齐。你忽然明白，低风险场景也能被自以为是抬成高风险。' }
+      { speaker: '旁白', text: '货架没倒，面子倒得很整齐。' }
     ],
     eventNotebook: {
       reason: '便利店货架误判',
@@ -744,7 +751,7 @@ export const MAIN_EVENTS = {
     },
     maw: { misread: 2 },
     choices: [
-      { id: 'day3_store_ask_first', label: '先问一句', text: '你把手放低，先问对方是不是要过去。小满退到收银台后，泡面也保住了自己的清白。', hint: '关系提升，获得少量冷静和真实性。', gain: { calm: 2, auth: 1, rel_xiaoman: 2 }, flags: { flag_day3_store_shelf: true, day3_store_ask_first: true }, log: '你先问清楚，再让小满后退。便利店还像便利店，小满看你的眼神也没那么想报警。' },
+      { id: 'day3_store_ask_first', label: '先问一句', text: '你把手放低，先问对方是不是要过去。小满退到收银台后，泡面也保住了自己的清白。', hint: '关系提升，获得一点冷静和真实性。', gain: { calm: 1, auth: 1, rel_xiaoman: 1 }, flags: { flag_day3_store_shelf: true, day3_store_ask_first: true }, log: '你先问清楚，再让小满后退。便利店还像便利店，小满看你的眼神也没那么想报警。' },
       { id: 'day3_store_shelf_between', label: '挡住货架边线', text: '你没有抢着出手，只把自己放在货架外侧，给小满和对方都留出能走的路。', hint: '偏判断，关系小幅提升。', gain: { jud: 1, auth: 1, rel_xiaoman: 1 }, flags: { flag_day3_store_shelf: true, day3_store_shelf_between: true }, log: '你用位置而不是招式处理了便利店过道。没有赢谁，但事情没有乱起来。' },
       { id: 'day3_store_show_form', label: '摆出祖传架势', text: '你把架势摆满，对方愣住，薯片也愣住。三秒后，小满替你把“胜利”翻译成“别挡着补货”。', hint: '误判胜利发酵，热度上升。', gain: { heat: 1, rel_xiaoman: -1 }, flags: { flag_day3_store_shelf: true, day3_store_show_form: true }, log: '你误把愣住当成震慑。货架没倒，面子倒得很整齐，小满决定晚点再跟你算这笔现实账。' }
     ]
@@ -753,13 +760,16 @@ export const MAIN_EVENTS = {
     title: '工棚里的第一拳',
     loc: 'worksite',
     npc: 'fatty',
-    desc: '工棚门口的铁皮被风吹得发响。有人拿一句玩笑试你的脾气，你差点把“第一拳”理解成第一时间动手。',
+    shortDesc: '有人看见你会拳，你也看见手腕在疼。',
+    sceneSummary: '工棚玩笑点到茂家拳，你被“被看见”点燃，又被手腕的疼拉回现实。',
+    hook: '今天的目标：别把兴奋打成事故。',
+    desc: '工棚门口的铁皮被风吹得发响。有人拿一句玩笑试你的脾气，你的手腕先替你疼了一下。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '刘胖子', text: '临工点讲究一个字：别添乱。你要是真想练拳，先练别把饭碗打翻。' },
-      { speaker: '工友', text: '听说你会祖传拳？那砖头能不能祖传给我少搬两趟？' },
+      { speaker: '工友', text: '听说你会祖传拳？那砖头能不能少搬两趟？' },
       { speaker: '陆小闲', text: '我就是来干活的。' },
-      { speaker: '旁白', text: '拳头在袖口里握了一下，又松开。今天第一拳没有打出去，但你第一次发现，忍住也会让手心出汗。' }
+      { speaker: '刘胖子', text: '手腕疼就别装没事。饭碗比面子贵。' },
+      { speaker: '旁白', text: '你被看见了，也被疼痛按住了。' }
     ],
     eventNotebook: {
       reason: '工棚里的第一拳',
@@ -775,16 +785,19 @@ export const MAIN_EVENTS = {
     },
     maw: { fatherMemory: 1, misread: 1 },
     choices: [
-      { id: 'day4_worksite_swallow_joke', label: '把玩笑咽下去', text: '你笑了一下，接过手套。那笑不算好看，但至少没有把工棚推成擂台。', hint: '偏冷静和父亲记忆，误判轻微沉淀。', gain: { calm: 2, jud: 1 }, flags: { flag_day4_worksite_first_punch: true, day4_worksite_swallow_joke: true }, log: '你在工棚里忍住了第一拳。手心很热，早晨没有变成事故。' },
-      { id: 'day4_worksite_step_between', label: '站到工具架外侧', text: '你往旁边挪半步，先把工具架和人隔开。动作小得没人鼓掌，但冲突少了一个能砸响的理由。', hint: '偏判断和冷静，少量真实性。', gain: { jud: 2, calm: 1, auth: 1 }, flags: { flag_day4_worksite_first_punch: true, day4_worksite_step_between: true }, log: '你用站位处理了工棚里的火气。第一拳没有出现，第一课倒是出现了。' },
-      { id: 'day4_worksite_show_knuckle', label: '攥拳吓回去', text: '你把拳头攥出来，对方安静了半秒。有效，但刘胖子看你的眼神像在估算医药费和误工费。', hint: '误判加深，获得一点名声但热度上升。', gain: { fame: 2, heat: 1 }, flags: { flag_day4_worksite_first_punch: true, day4_worksite_show_knuckle: true }, log: '你在工棚里用拳头换来半秒安静。那半秒很像胜利，也很像误会。' }
+      { id: 'day4_worksite_swallow_joke', label: '把玩笑咽下去', text: '你笑了一下，接过手套。那笑不算好看，但至少没有把工棚推成擂台。', hint: '偏冷静和父亲记忆，误判轻微沉淀。', gain: { calm: 1, jud: 1 }, flags: { flag_day4_worksite_first_punch: true, day4_worksite_swallow_joke: true }, log: '你在工棚里忍住了第一拳。手心很热，早晨没有变成事故。' },
+      { id: 'day4_worksite_step_between', label: '站到工具架外侧', text: '你往旁边挪半步，先把工具架和人隔开。动作小得没人鼓掌，但冲突少了一个能砸响的理由。', hint: '偏判断和冷静，少量真实性。', gain: { jud: 1, calm: 1, auth: 1 }, flags: { flag_day4_worksite_first_punch: true, day4_worksite_step_between: true }, log: '你用站位处理了工棚里的火气。第一拳没有出现，第一课倒是出现了。' },
+      { id: 'day4_worksite_show_knuckle', label: '攥拳吓回去', text: '你把拳头攥出来，对方安静了半秒。有效，但刘胖子看你的眼神像在估算医药费和误工费。', hint: '误判加深，获得一点名声但热度上升。', gain: { fame: 1, heat: 1 }, flags: { flag_day4_worksite_first_punch: true, day4_worksite_show_knuckle: true }, log: '你在工棚里用拳头换来半秒安静。那半秒很像胜利，也很像误会。' }
     ]
   },
   5: {
     title: '公园第一次验货',
     loc: 'park',
     enemy: 'E01',
-    desc: '低风险切磋，测试拳距和抱架。对方不邪门，只是基础比嘴硬可靠。',
+    shortDesc: '公园验货，不是 KO，是看动作会不会散。',
+    sceneSummary: '低风险切磋只验拳距、抱架和回收。对方不邪门，只是基础比嘴硬可靠。',
+    hook: '今天别追 KO，先确认自己哪里漏风。',
+    desc: '公园地砖有点潮。对方戴着旧拳套，站距比话更实在。',
     kind: 'battle',
     eventNotebook: {
       reason: '第一次实战验货',
@@ -804,13 +817,16 @@ export const MAIN_EVENTS = {
     title: '旧城区夜行',
     loc: 'metro_station',
     npc: 'fatty',
-    desc: '夜里从地铁口出来，旧城区的路灯像没睡醒。刘胖子说只是抄近路，你却把每个转角都看成了剧情入口。',
+    shortDesc: '旧城区夜行，你在路灯下撞见父亲的痕迹。',
+    sceneSummary: '夜路放大脚步声，也放大父亲留下的旧影子。你要学会看出口，而不是给影子配招。',
+    hook: '今天的目标：沿着父亲的痕迹，少误读一点夜色。',
+    desc: '夜里从地铁口出来，旧城区的路灯像没睡醒。你在一家关门的旧铺前，看见父亲名字的旧贴纸。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '刘胖子', text: '别一直盯着人看。你越像找事，事越觉得你亲切。' },
+      { speaker: '陆小闲', text: '这张贴纸……我爸以前来过？' },
+      { speaker: '刘胖子', text: '旧城区谁没来过。别盯人，先看路。' },
       { speaker: '陆小闲', text: '那边那两个人是不是在跟着我们？' },
-      { speaker: '刘胖子', text: '也可能只是跟我们一样穷，舍不得打车。' },
-      { speaker: '旁白', text: '夜路会放大很多东西：脚步声、路灯影子，以及你脑子里那部还没开拍的武侠片。' }
+      { speaker: '旁白', text: '夜色把父亲的痕迹和你的疑心揉在一起。' }
     ],
     eventNotebook: {
       reason: '旧城区夜行',
@@ -826,8 +842,8 @@ export const MAIN_EVENTS = {
     },
     maw: { misread: 2 },
     choices: [
-      { id: 'day6_oldtown_lit_route', label: '走亮一点的路', text: '你放弃抄最短的巷子，绕到便利店和路灯更多的街边。时间多花了一点，心跳少编了几段剧情。', hint: '偏冷静和判断。', gain: { calm: 2, jud: 1 }, flags: { flag_day6_oldtown_nightwalk: true, day6_oldtown_lit_route: true }, log: '你在旧城区夜行时选择走亮路。没有奇遇，只有一次很实用的没出事。' },
-      { id: 'day6_oldtown_read_exits', label: '先记出口', text: '你每过一个路口先看哪里能退，哪里有人，哪里有监控。祖传步法忽然从“飘逸”变成“别把自己堵死”。', hint: '偏判断，少量街头真实性。', gain: { jud: 2, auth: 1 }, flags: { flag_day6_oldtown_nightwalk: true, day6_oldtown_read_exits: true }, log: '你把旧城区夜路当成风险地图，而不是英雄舞台。出口比招名更可靠。' },
+      { id: 'day6_oldtown_lit_route', label: '走亮一点的路', text: '你放弃抄最短的巷子，绕到便利店和路灯更多的街边。时间多花了一点，心跳少编了几段剧情。', hint: '偏冷静和判断。', gain: { calm: 1, jud: 1 }, flags: { flag_day6_oldtown_nightwalk: true, day6_oldtown_lit_route: true }, log: '你在旧城区夜行时选择走亮路。没有奇遇，只有一次很实用的没出事。' },
+      { id: 'day6_oldtown_read_exits', label: '先记出口', text: '你每过一个路口先看哪里能退，哪里有人，哪里有监控。祖传步法忽然从“飘逸”变成“别把自己堵死”。', hint: '偏判断，少量街头真实性。', gain: { jud: 1, auth: 1 }, flags: { flag_day6_oldtown_nightwalk: true, day6_oldtown_read_exits: true }, log: '你把旧城区夜路当成风险地图，而不是英雄舞台。出口比招名更可靠。' },
       { id: 'day6_oldtown_stare_back', label: '回头盯住对方', text: '你回头盯了两秒，对方也盯了两秒。刘胖子把你拉走，说你这叫给空气递挑战书。', hint: '误判发酵，热度小幅上升。', gain: { heat: 1, jud: 1 }, flags: { flag_day6_oldtown_nightwalk: true, day6_oldtown_stare_back: true }, log: '你在旧城区夜路上把影子看成对手。没有开打，但误判又长出一点边。' }
     ]
   },
@@ -835,13 +851,15 @@ export const MAIN_EVENTS = {
     title: '镜子里的人',
     loc: 'home',
     npc: 'father',
-    desc: '出租屋的镜子有裂纹。你对着它练茂家拳，动作越摆越满，镜子里的人却越像一个急着证明自己的陌生人。',
+    shortDesc: '镜子不夸你，只把急着证明的人照出来。',
+    sceneSummary: '七天之后，你对着裂镜慢练。真正刺眼的不是动作难看，是你还在把保护和证明混在一起。',
+    hook: '今天的目标：看清自己为什么这么急。',
+    desc: '出租屋的镜子有裂纹。动作越摆越满，镜子里的人越像一个急着证明自己的陌生人。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '陆小闲', text: '开山拳，起手要沉，眼神要……像一点。' },
-      { speaker: '旁白', text: '镜子没有鼓掌。它甚至没有完整地映出你，只把你的拳头和皱着的眉头分成了两块。' },
       { speaker: '父亲', text: '真要保护人，先看清自己。' },
-      { speaker: '陆小闲', text: '爸，我现在看起来像会保护人，还是像会惹事？' }
+      { speaker: '陆小闲', text: '爸，我现在像会保护人，还是像会惹事？' },
+      { speaker: '旁白', text: '镜子没有回答，只把你的拳头和皱着的眉头分成两块。' }
     ],
     eventNotebook: {
       reason: '镜子里的自检',
@@ -857,8 +875,8 @@ export const MAIN_EVENTS = {
     },
     maw: { fatherMemory: 2, misread: 1 },
     choices: [
-      { id: 'day7_mirror_lower_fist', label: '把拳头放低', text: '你收住最后一下，把下巴也收回来。动作少了点气势，但镜子里的人终于不那么像要冲出去。', hint: '偏冷静和父亲记忆。', gain: { calm: 2, jud: 1 }, flags: { flag_day7_mirror_person: true, day7_mirror_lower_fist: true }, log: '你在镜子前把拳头放低。父亲的话没有变轻，只是你第一次愿意照着它检查自己。' },
-      { id: 'day7_mirror_repeat_slow', label: '慢慢重练一遍', text: '你把动作拆慢，看到肩膀先紧、脚先乱、眼神先急。难看，但难看得有用。', hint: '偏判断和真实性，轻量父亲记忆。', gain: { jud: 2, auth: 1 }, flags: { flag_day7_mirror_person: true, day7_mirror_repeat_slow: true }, log: '你在镜子前慢练一遍。招名还在，但你开始看见招名下面的毛病。' },
+      { id: 'day7_mirror_lower_fist', label: '把拳头放低', text: '你收住最后一下，把下巴也收回来。动作少了点气势，但镜子里的人终于不那么像要冲出去。', hint: '偏冷静和父亲记忆。', gain: { calm: 1, jud: 1 }, flags: { flag_day7_mirror_person: true, day7_mirror_lower_fist: true }, log: '你在镜子前把拳头放低。父亲的话没有变轻，只是你第一次愿意照着它检查自己。' },
+      { id: 'day7_mirror_repeat_slow', label: '慢慢重练一遍', text: '你把动作拆慢，看到肩膀先紧、脚先乱、眼神先急。难看，但难看得有用。', hint: '偏判断和真实性，轻量父亲记忆。', gain: { jud: 1, auth: 1 }, flags: { flag_day7_mirror_person: true, day7_mirror_repeat_slow: true }, log: '你在镜子前慢练一遍。招名还在，但你开始看见招名下面的毛病。' },
       { id: 'day7_mirror_full_pose', label: '把架势摆满', text: '你把最后一个定势摆得很满。镜子里的你确实像会武功，也确实像还没听懂父亲那句话。', hint: '误判继续沉淀，少量信念。', gain: { calm: 1 }, flags: { flag_day7_mirror_person: true, day7_mirror_full_pose: true }, log: '你在镜子前把架势摆满。那一刻很像答案，但镜子没有替你点头。' }
     ]
   },
