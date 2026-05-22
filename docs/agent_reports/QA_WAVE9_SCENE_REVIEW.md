@@ -1,34 +1,60 @@
-# QA Wave 9 Scene Review
+# QA_WAVE9_SCENE_REVIEW
+
+QA role: AGENT_F_TECH_QA_TOOLS
+
+Reviewed integrated Wave 9 runtime on `origin/staging/reforge-unlocks-v1` at `b68cf3a` (`merge: visual direction scene ui`). This report branch was then synced with current staging to resolve the duplicate QA-report add/add conflict.
 
 ## Result
 
-Conditional pass. Integrated staging is playable and passes required validation. The only finding is a scope/documentation warning: `feat/event-feedback-loop` modified `docs/TASK_PLAN.md`, and QA was not allowed to repair that file.
+Conditional pass.
 
-## Checklist
+The integrated Wave 9 scene/UI work passes required validation and meets the core functional goals: merged branch ancestry is present, no asset or combat/data boundary drift was found, RPG-style dialogue is visible, scene characters provide click feedback, event resolution now has a result modal, and 390x844 does not horizontally overflow.
 
-1. 越界改文件: warning. `feat/event-feedback-loop` touched `docs/TASK_PLAN.md`; target runtime files otherwise stayed in expected UI/state scope.
-2. 新增或删除资产: pass. No `assets/` additions/deletions and no manifest diff.
-3. 改了 `INITIAL_SKILLS`: pass. `data.js` unchanged; initial skills remain `mystic`, `guard`, `retreat`, `talkdown`.
-4. 改了战斗公式: pass. No `combat.js` diff.
-5. 人物比例明显改善: pass. Desktop player/NPC standees are larger and scene-anchored; mobile avoids squeezing hidden NPCs into the viewport.
-6. 去掉突兀红黄灰背板: pass. Hard character backplate treatment is replaced by shadow/rim/stage styling; red/gold remain as semantic accents.
-7. NPC 或场景角色可点击或给反馈: pass. Scene figures receive `data-action`; unmatched characters show toast feedback.
-8. 对话框更像 RPG 对话框: pass. Mainline opened `dialogue` modal with `.maws-dialogue-box`.
-9. 事件 resolve 后有结果反馈: pass. Simple action resolution produced `settlement` result modal with result summary.
-10. 390x844 不横向溢出: pass. Automated smoke passed; manual map/skills samples had no horizontal overflow.
-11. `npm run check:full` 通过: pass.
+## Verified Branch Integration
 
-## Commands
+`origin/staging/reforge-unlocks-v1` contains all required implementation branches:
 
-- `git fetch origin --prune`: completed; local staging aligned with `origin/staging/reforge-unlocks-v1`.
+- `feat/scene-stage-scale`
+- `feat/dialogue-box-rebuild`
+- `feat/event-feedback-loop`
+- `docs/visual-direction-scene-ui`
+
+QA reviewed final integrated staging, not isolated worker branches.
+
+## Boundary Review
+
+- Changed runtime files in final Wave 9 integrated diff: `maws_src/dom/ui.css`, `maws_src/dom/ui.js`, `maws_src/simulation/state.js`.
+- Added/updated Wave 9 documentation and reports.
+- `feat/event-feedback-loop` also touched `docs/TASK_PLAN.md`; this is a documentation-scope warning, not a runtime risk.
+- No `assets/` changes.
+- No `maws_src/assets/manifest.js` changes.
+- No `maws_src/content/data.js` changes; `INITIAL_SKILLS` unchanged.
+- No `maws_src/simulation/combat.js` changes; combat formulas unchanged.
+
+## Functional Review
+
+- 人物比例: improved. Scene characters now read as larger staged figures.
+- 红黄灰背板: partially improved. The crude gray backing issue is reduced, but strong red/yellow/black panel treatment remains prominent.
+- NPC/scene click feedback: present. Scene character click produced toast feedback.
+- RPG dialogue box: improved and visibly RPG-like with portrait/nameplate/current-line focus.
+- Event result feedback: present. `metro_observe` produced `.maws-modal.result-feedback` with a concrete lead line.
+- 390x844 overflow: passed. Manual metric check reported `bodyScrollWidth=390`, `docScrollWidth=390`.
+- Skills page: opened in browser smoke and manual check.
+
+## Validation
+
 - `npm run check:full`: passed.
+  - `npm run build`: passed.
+  - asset verification: passed, 95 manifest entries.
+  - Playwright Chromium smoke: 4 passed.
 - `git diff --check`: passed.
 - Browser quick check: passed for map page, mainline dialogue, event feedback, skills page.
 
-## Notes For Manager
+## Findings
 
-- I did not modify `maws_src/`, `assets/`, `package.json`, `docs/TASK_HANDOFF.md`, or `docs/TASK_PLAN.md`.
-- I only added:
-  - `docs/workers/qa_wave9_scene.md`
-  - `docs/agent_reports/QA_WAVE9_SCENE_REVIEW.md`
-- Existing untracked `GameDesigner_CombatAnalysis/` was ignored.
+- Medium: Visual backing is not fully resolved. The UI still leans heavily on red/yellow/black slabs and angled panels. This is acceptable for this QA pass if the goal was improvement, but not if the acceptance bar is complete removal of the abrupt red/yellow backing style.
+- Low: Event result feedback is functional, but its summary chips are visually crowded on desktop. No overflow was observed.
+
+## Recommendation
+
+Merge the QA report branch after Manager review. Open a focused follow-up visual polish branch for the remaining red/yellow panel dominance and result-modal readability.
