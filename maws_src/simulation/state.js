@@ -55,6 +55,7 @@ const TRAINING_TEMPLATE_LABELS = {
 };
 
 const COMBAT_QUEUE_LIMIT = 2;
+const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 
 export function fmtTime(totalMinutes) {
   const m = Math.floor(totalMinutes % 1440);
@@ -380,11 +381,11 @@ export function createNewState(origin = 'worker') {
     combatMemory: { fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recent: [] },
     maw: createDefaultMaw(),
     unlocked: Object.fromEntries(INITIAL_SKILLS.filter((id) => SKILLS[id]).map((id) => [id, 1])),
-    equipSkills: ['mystic', 'guard', 'retreat', 'talkdown', null, null],
+    equipSkills: [...STARTER_EQUIP_SKILLS],
     skillState: {}
   };
   Object.keys(SKILLS).forEach((id) => {
-    if (state.unlocked[id]) state.skillState[id] = { p: id === 'mystic' ? 5 : 18, use: 0, retrain: 0, zhus: [] };
+    if (state.unlocked[id]) state.skillState[id] = { p: id === 'mystic' ? 5 : 16, use: 0, retrain: 0, zhus: [] };
   });
   updateMawProgress(state);
   recalcVitals(state);
@@ -415,7 +416,7 @@ export function migrateSave(input) {
   s.log ||= [];
   s.eventLog ||= [];
   s.unlocked ||= {};
-  s.equipSkills ||= ['jab', 'straight', 'guard', 'dodge', 'advance', 'retreat'];
+  s.equipSkills ||= [...STARTER_EQUIP_SKILLS];
   while (s.equipSkills.length < 6) s.equipSkills.push(null);
   s.skillState ||= {};
   Object.keys(s.unlocked).forEach((id) => {
@@ -2279,13 +2280,13 @@ function recoveryHint(plan) {
 
 function counterSkillsForPlan(plan) {
   if (Array.isArray(plan?.counterSkills) && plan.counterSkills.length) return plan.counterSkills;
-  if (plan?.intent === 'clinch') return ['sprawl', 'frontkick', 'karate_front_kick', 'retreat', 'sanda_catch_throw'];
-  if (plan?.intent === 'pressure') return ['jab', 'guard', 'frontkick', 'karate_front_kick', 'tkd_roundhouse', 'retreat'];
-  if (plan?.intent === 'counter') return ['jab', 'dodge', 'guard', 'sanda_whip_kick'];
+  if (plan?.intent === 'clinch') return ['push_away', 'sprawl', 'frontkick', 'karate_front_kick', 'retreat', 'sanda_catch_throw'];
+  if (plan?.intent === 'pressure') return ['guard', 'push_away', 'jab', 'frontkick', 'karate_front_kick', 'tkd_roundhouse', 'retreat'];
+  if (plan?.intent === 'counter') return ['wild_swing', 'jab', 'dodge', 'guard', 'sanda_whip_kick'];
   if (plan?.intent === 'weapon') return ['dirtyescape', 'talkdown', 'retreat', 'guard'];
   if (plan?.intent === 'ground') return ['escape', 'sidecontrol', 'sprawl'];
   if (plan?.intent === 'disengage') return ['advance', 'lowkick', 'sanda_whip_kick'];
-  return ['guard', 'jab', 'dodge'];
+  return ['guard', 'wild_swing', 'push_away'];
 }
 
 function queueAdvice(queue, plan) {
