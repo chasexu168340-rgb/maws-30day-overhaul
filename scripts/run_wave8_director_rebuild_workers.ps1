@@ -85,6 +85,8 @@ foreach ($worker in $workers) {
     Invoke-Git @("worktree", "add", "-B", $worker.Branch, $worker.Path, $BaseBranch)
   }
 
+  Invoke-Git @("-C", $worker.Path, "config", "core.autocrlf", "false")
+
   if (!(Test-Path -LiteralPath $worker.Prompt)) {
     throw "Prompt not found: $($worker.Prompt)"
   }
