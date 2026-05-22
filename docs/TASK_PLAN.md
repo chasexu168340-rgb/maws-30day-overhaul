@@ -4,40 +4,42 @@
 
 ## Current Task
 
-修复 Wave 8 合并后“UI 看起来没变化”的问题：让 Director Rebuild 在地图首屏有明显视觉差异，而不是继续像旧三栏信息墙。
+把 `maws_30day_overhaul_v3` 变成正确的进入游戏端口入口，避免玩家双击 HTML 后被 `file://` 模块/CORS 拦截。
 
 ## Scope
 
-- 只改 DOM UI：`maws_src/dom/ui.js`、`maws_src/dom/ui.css`。
-- 同步更新本 checkpoint。
-- 不改数据、事件、战斗、经济、资产、存档 key/version。
+- 新增本地静态 server：`scripts/serve_maws.mjs`。
+- 新增双击入口：`maws_30day_overhaul_v3.cmd`。
+- 在 `package.json` 增加 `serve:game`。
+- 不改游戏逻辑、UI、数据、战斗、经济、资产或存档。
 
 ## Plan
 
-- [x] 验证 staging 已在 Wave 8 merge 头。
-- [x] 用真实浏览器确认 Wave 8 类名已加载，但视觉仍像旧布局。
-- [x] 将地图页调整为场景全屏 + 今日主线浮层 + 推荐/当前行动浮层。
-- [x] 将行动和推荐的长说明放入折叠详情。
-- [x] 运行验证并截图确认。
+- [x] 确认 HTML 直接打开会被 `type="module"` 的 `file://` CORS 拦截。
+- [x] 固定本地入口端口为 `5174`。
+- [x] 入口自动打开 `http://127.0.0.1:5174/maws_30day_overhaul_v3.html`。
+- [x] 如果 5174 已经是 MAWS server，则直接打开；如果被其他 app 占用，则明确报错。
+- [x] 验证 server 启动和游戏初始化。
 
 ## Validation
 
-- [x] `npm run check:full`：通过；build、资产验证、4 个 Chromium smoke 通过。
-- [x] `npx playwright test maws_src/tests/director_loop.spec.js --browser=chromium --reporter=line`：通过，3/3。
+- [x] `node --check scripts/serve_maws.mjs`：通过。
+- [x] `npm run build`：通过。
+- [x] `node scripts/serve_maws.mjs --port 5174`：已启动本地 MAWS server。
+- [x] 浏览器验证 `MAWS_GAME` / `MAWS_STORE` 初始化：通过，HTTP 200，canvas 1 个，无 console error。
 - [x] `git diff --check`：通过。
-- [x] Playwright 截图：`test-results/wave8b-ui-desktop.png`、`test-results/wave8b-ui-mobile.png`。
 
 ## Result
 
-- 地图页默认视觉改为场景优先，今日主线和推荐行动成为左右浮层。
-- 推荐行动和当前地点行动的长说明、触发原因、成本收益进入折叠详情。
-- 桌面 1365x768 下浮层不再占用三栏布局；手机 390x844 下回到纵向流且无横向溢出。
+- 新增 `maws_30day_overhaul_v3.cmd`，双击即可启动 5174 端口并进入游戏。
+- 新增 `npm run serve:game`，用于命令行启动同一个入口。
+- `5174` 端口现在返回的是 MAWS 页面，不是 5173 的 Phaser demo。
 
 ## Risks
 
-- 本轮是视觉层强制降噪，不改变 Director 数据模型。
-- 仍需人工 playtest 判断左右浮层的信息量是否还要继续压缩。
+- 需要本机已安装 Node.js；当前环境已有 Node。
+- 直接双击 `.html` 仍不适合作为入口，应双击 `.cmd` 或运行 `npm run serve:game`。
 
 ## Next Step
 
-提交并推送到 `staging/reforge-unlocks-v1`；下一轮做人工 Day 1-Day 7 体验判断。
+提交并推送。
