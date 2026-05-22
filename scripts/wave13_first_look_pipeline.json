@@ -2,7 +2,8 @@
   "name": "wave13-first-look-vertical-slice-polish",
   "baseBranch": "staging/reforge-unlocks-v1",
   "workerRoot": "E:\\maws_cli_parallel_wave13",
-  "reasoning": "medium",
+  "model": "gpt-5.5",
+  "reasoning": "high",
   "visibleWorkers": true,
   "stages": [
     {

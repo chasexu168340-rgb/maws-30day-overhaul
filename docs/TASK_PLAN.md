@@ -4,31 +4,33 @@
 
 ## Current Task
 
-Wave 13：Time Activity Feel Pass（AGENT_B_GAMEPLAY_SYSTEMS）。
-
-## Goal
-
-让 30/60/90/120 分钟投入成为“安排一段时间”的玩法，不继续膨胀倍率；微行动保持恢复、消息、自省或轻量线索定位，不成为刷资源最优路线。
+Wave 13：First-Look Vertical Slice Polish。
 
 ## Current Result
 
-- [x] 调整 `TIME_DOSAGE_OPTIONS`：短练低消耗、标准稳、深练有机会成本、硬练高疲劳/高小伤风险。
-- [x] `state.js` 记录 `daily.timeCommitted` 和 `daily.schedulePressure`，深练/硬练结算会提示错过机会。
-- [x] 微行动加入当日限刷：重复或过量后只保留恢复/自省价值。
-- [x] `events.js` 读取日程压力，压低硬战机会并把机会卡收窄到 1 张。
-- [x] 输出 worker 报告和 agent report。
+- Wave 13 staged pipeline 已创建并推送。
+- 已完成并合入 staging：
+  - `feat/reward-delta-contract-v2`
+  - `feat/time-activity-feel-pass`
+  - `docs/wave13-first-look-shotlist`
+- 已完成但尚未合入 staging：
+  - `feat/visual-stage-hard-pass`
+- 已将通用 CLI worker 启动器和 repo pipeline 默认改为 `gpt-5.5` + `high`。
 
 ## Validation
 
-- `npm run check:full`：通过。
-- `npm run test:playtest`：通过。
+- CLI launcher PowerShell parse：通过。
+- Repo pipeline PowerShell parse：通过。
+- Pipeline JSON parse/model check：通过。
 - `git diff --check`：通过。
 
 ## Risks
 
-- 未修改 UI、combat、assets、package、存档 key/version。
-- 未大改经济曲线；深练/硬练仍需后续 playtest 观察实际选择率。
+- 本轮 pipeline 曾被用户手动中断；不要从头重跑已完成阶段，否则可能重置已完成 worker worktree。
+- 后续应先合 `feat/visual-stage-hard-pass`，再启动 Combat Command、NPC Click、First-Look Smoke、QA。
+- `GameDesigner_CombatAnalysis/` 是未跟踪目录，本轮不触碰。
+- 本轮仍不进入技能树 implementation。
 
 ## Next Step
 
-后续建议人工 playtest Day 9 后拳馆训练：连续深练/硬练后机会卡是否自然转向恢复、对话或补给。
+提交并推送 `gpt-5.5` + `high` worker 默认配置；之后继续收口 Wave 13 剩余阶段。

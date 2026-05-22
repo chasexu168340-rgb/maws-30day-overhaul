@@ -83,6 +83,9 @@ function Start-CodexWorker {
     [object]$Worker,
 
     [Parameter(Mandatory = $true)]
+    [string]$Model,
+
+    [Parameter(Mandatory = $true)]
     [string]$Reasoning,
 
     [bool]$Visible = $false
@@ -98,6 +101,7 @@ function Start-CodexWorker {
     "-Worktree", $Worker.Path,
     "-Prompt", $Worker.Prompt,
     "-Title", $Worker.Name,
+    "-Model", $Model,
     "-Reasoning", $Reasoning
   )
 
@@ -216,6 +220,9 @@ function Invoke-WorkerStage {
     [Parameter(Mandatory = $true)]
     [string]$Reasoning,
 
+    [Parameter(Mandatory = $true)]
+    [string]$Model,
+
     [bool]$VisibleWorkers = $false
   )
 
@@ -233,7 +240,7 @@ function Invoke-WorkerStage {
 
   $processes = @()
   foreach ($worker in $workers) {
-    $processes += Start-CodexWorker $worker $Reasoning $VisibleWorkers
+    $processes += Start-CodexWorker $worker $Model $Reasoning $VisibleWorkers
   }
 
   if ($processes.Count) {
@@ -274,7 +281,8 @@ if (!(Test-Path -LiteralPath $specPath)) {
 $pipeline = Get-Content -Raw -LiteralPath $specPath | ConvertFrom-Json
 $baseBranch = $pipeline.baseBranch
 $workerRoot = $pipeline.workerRoot
-$reasoning = if ($pipeline.reasoning) { $pipeline.reasoning } else { "medium" }
+$model = if ($pipeline.model) { $pipeline.model } else { "gpt-5.5" }
+$reasoning = if ($pipeline.reasoning) { $pipeline.reasoning } else { "high" }
 $visibleWorkers = [bool]$pipeline.visibleWorkers
 $repoNodeModules = Join-Path $RepoRoot "node_modules"
 $script:LogRoot = Join-Path $workerRoot "_logs"
@@ -301,7 +309,7 @@ $workerStages = if ($pipeline.stages) {
 }
 
 foreach ($stage in $workerStages) {
-  Invoke-WorkerStage $stage $baseBranch $repoNodeModules $reasoning $visibleWorkers
+  Invoke-WorkerStage $stage $baseBranch $repoNodeModules $reasoning $model $visibleWorkers
 }
 
 $qa = $pipeline.qaWorker
@@ -310,7 +318,7 @@ Invoke-Git $qa.Path @("fetch", "origin")
 Invoke-Git $qa.Path @("reset", "--hard", "origin/$baseBranch")
 Invoke-Git $qa.Path @("checkout", "-B", $qa.Branch)
 
-$qaProcess = Start-CodexWorker $qa $reasoning $visibleWorkers
+$qaProcess = Start-CodexWorker $qa $model $reasoning $visibleWorkers
 Wait-WorkerGroup @($qaProcess) "QA worker"
 AutoCommitQaIfNeeded $qa
 Push-CleanWorkerBranch $qa
