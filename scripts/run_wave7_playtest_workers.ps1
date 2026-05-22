@@ -7,6 +7,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Invoke-Git {
+  param([Parameter(Mandatory = $true)][string[]]$Args)
+
+  git -c http.version=HTTP/1.1 @Args
+  if ($LASTEXITCODE -ne 0) {
+    throw "git $($Args -join ' ') failed with exit code $LASTEXITCODE"
+  }
+}
+
 function Quote-Argument {
   param([Parameter(Mandatory = $true)][string]$Value)
 
@@ -32,9 +41,9 @@ if (!(Test-Path -LiteralPath $repoNodeModules)) {
 
 Set-Location $RepoRoot
 
-git fetch origin
-git switch $BaseBranch
-git pull --ff-only
+Invoke-Git @("fetch", "origin")
+Invoke-Git @("switch", $BaseBranch)
+Invoke-Git @("pull", "--ff-only")
 
 New-Item -ItemType Directory -Force -Path $WorkerRoot | Out-Null
 
@@ -67,7 +76,7 @@ $workers = @(
 
 foreach ($worker in $workers) {
   if (!(Test-Path -LiteralPath $worker.Path)) {
-    git worktree add -B $worker.Branch $worker.Path $BaseBranch
+    Invoke-Git @("worktree", "add", "-B", $worker.Branch, $worker.Path, $BaseBranch)
   }
 
   if (!(Test-Path -LiteralPath $worker.Prompt)) {
