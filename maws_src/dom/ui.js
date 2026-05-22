@@ -284,12 +284,21 @@ function opportunityButtonLabel(card = {}, currentLoc = '') {
 }
 
 function renderActionCard(action) {
+  const details = `
+    <p>${esc(action.desc)}</p>
+    ${summaryChips(action.summary?.cost || [], 'cost')}
+    ${summaryChips(action.summary?.gain || [], 'gain')}
+    ${action.summary?.risk ? `<small class="maws-risk-note">${esc(action.summary.risk)}</small>` : ''}
+  `;
   return `
     <article class="maws-action ${action.disabled ? 'disabled' : ''}">
-      <div><strong>${esc(action.icon)} ${esc(action.name)}</strong><p>${esc(action.desc)}</p></div>
-      ${summaryChips(action.summary?.cost || [], 'cost')}
-      ${summaryChips(action.summary?.gain || [], 'gain')}
-      ${action.summary?.risk ? `<small class="maws-risk-note">${esc(action.summary.risk)}</small>` : ''}
+      <div class="maws-action-core">
+        <strong>${esc(action.icon)} ${esc(action.name)}</strong>
+        <details class="maws-fold maws-action-detail">
+          <summary>行动细节</summary>
+          ${details}
+        </details>
+      </div>
       ${btn(action.type === 'battle' ? '开打' : '行动', 'doAction', { id: action.id }, action.disabled ? 'disabled' : 'primary')}
     </article>
   `;
@@ -302,8 +311,11 @@ function renderOpportunityCard(card, currentLoc) {
   return `
     <article class="maws-task-card maws-recommend-card">
       <header><b>${esc(card.title)}</b><span>${esc(locName)}</span></header>
-      <div class="maws-card-meta"><span>地点 ${esc(locName)}</span><span>风险 ${esc(opportunityRiskText(card))}</span></div>
-      ${reason ? `<small>触发：${esc(reason)}</small>` : ''}
+      <p>${esc(locName)} · ${esc(opportunityRiskText(card))}</p>
+      <details class="maws-fold maws-choice-fold maws-recommend-detail">
+        <summary>为什么推荐</summary>
+        <small>${reason ? `触发：${esc(reason)}` : '当前节奏适合这件事。'}</small>
+      </details>
       ${btn(opportunityButtonLabel(card, currentLoc), 'takeOpportunity', { id: card.id }, buttonClass)}
     </article>
   `;
@@ -315,26 +327,25 @@ function renderTodayBoard(model) {
     ? `伤病 ${model.player.injuries.length}`
     : '身体可用';
   const mainCard = main ? `
-    <article class="maws-task-card main">
+    <article class="maws-task-card main maws-director-card">
       <header><b>今日主线</b><span>${esc(main.locName)}${main.enemyName ? ` · ${esc(main.enemyName)}` : ''}</span></header>
       <strong>${esc(main.title)}</strong>
       <p>${esc(main.desc)}</p>
       ${btn(main.currentLoc ? '处理主线' : `前往${esc(main.locName)}`, 'startMainEvent', {}, 'primary')}
     </article>
   ` : `
-    <article class="maws-task-card done">
+    <article class="maws-task-card done maws-director-card">
       <header><b>今日主线</b><span>已收口</span></header>
       <p>没有新的主线节点。把训练、恢复和装备补上，别空耗一天。</p>
     </article>
   `;
   return `
     <section class="maws-today-stack">
-      <article class="maws-task-card maws-today-card">
-        <header><b>${esc(model.dayText)}</b><span>${esc(model.locationScene?.timeText || '')}</span></header>
-        <strong>${esc(model.loc?.name || '')}</strong>
-        <div class="maws-card-meta"><span>${esc(model.locationScene?.openText || '')}</span><span>${esc(injuries)}</span></div>
-      </article>
       ${mainCard}
+      <details class="maws-fold maws-today-status">
+        <summary>今天状态 <span>${esc(model.loc?.name || '')}</span></summary>
+        <div class="maws-card-meta"><span>${esc(model.dayText)}</span><span>${esc(model.locationScene?.timeText || '')}</span><span>${esc(model.locationScene?.openText || '')}</span><span>${esc(injuries)}</span></div>
+      </details>
     </section>
   `;
 }
