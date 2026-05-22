@@ -18,5 +18,6 @@ $workers = @(
 )
 foreach ($w in $workers) {
   if (!(Test-Path $w.Path)) { git worktree add -B $w.Branch $w.Path $BaseBranch }
-  Start-Process pwsh -ArgumentList @("-NoExit","-ExecutionPolicy","Bypass","-Command","chcp 65001 > `$null; cd `"$($w.Path)`"; if (!(Test-Path node_modules)) { npm ci }; codex exec < `"$($w.Prompt)`"")
+  $command = "chcp 65001 > `$null; Set-Location -LiteralPath `"$($w.Path)`"; if (!(Test-Path -LiteralPath 'node_modules')) { npm ci }; Get-Content -LiteralPath `"$($w.Prompt)`" -Raw | codex exec"
+  Start-Process pwsh -ArgumentList @("-NoExit","-ExecutionPolicy","Bypass","-Command",$command)
 }
