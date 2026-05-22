@@ -1,0 +1,94 @@
+{
+  "name": "wave11-flow-combat-ui",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave11",
+  "reasoning": "medium",
+  "visibleWorkers": true,
+  "implementationWorkers": [
+    {
+      "name": "Wave11-UI-Readable-Reward",
+      "path": "E:\\maws_cli_parallel_wave11\\ui-readable",
+      "branch": "feat/ui-readable-reward-pass",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE11_UI_READABLE_REWARD_PASS.md"
+    },
+    {
+      "name": "Wave11-Combat-Plan",
+      "path": "E:\\maws_cli_parallel_wave11\\combat-plan",
+      "branch": "feat/combat-plan-mode-v1",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE11_COMBAT_PLAN_MODE.md"
+    },
+    {
+      "name": "Wave11-Time-Activity",
+      "path": "E:\\maws_cli_parallel_wave11\\time-activity",
+      "branch": "feat/time-activity-pass-v1",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE11_TIME_ACTIVITY_PASS.md"
+    },
+    {
+      "name": "Wave11-Flow-Smoke",
+      "path": "E:\\maws_cli_parallel_wave11\\flow-tests",
+      "branch": "test/wave11-flow-smoke",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE11_FLOW_SMOKE_TESTS.md"
+    },
+    {
+      "name": "Wave11-Skill-Tree-Slice",
+      "path": "E:\\maws_cli_parallel_wave11\\skill-tree-slice",
+      "branch": "docs/skill-tree-vertical-slice-v1",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE11_SKILL_TREE_VERTICAL_SLICE.md"
+    }
+  ],
+  "mergeOrder": [
+    {
+      "name": "combat plan mode v1",
+      "branch": "feat/combat-plan-mode-v1",
+      "validate": [
+        "npm run check:full",
+        "node maws_src/tools/sim_day5_park_check.mjs",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "time activity pass v1",
+      "branch": "feat/time-activity-pass-v1",
+      "validate": [
+        "npm run check:full",
+        "npm run test:playtest",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "ui readable reward pass",
+      "branch": "feat/ui-readable-reward-pass",
+      "validate": [
+        "npm run check:full",
+        "npm run test:playtest",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "wave11 flow smoke",
+      "branch": "test/wave11-flow-smoke",
+      "validate": [
+        "npm run build",
+        "npx playwright test maws_src/tests/wave11_flow.spec.js --browser=chromium --reporter=line",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "skill tree vertical slice v1",
+      "branch": "docs/skill-tree-vertical-slice-v1",
+      "validate": [
+        "git diff --check"
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave11-QA",
+    "path": "E:\\maws_cli_parallel_wave11\\qa-wave11",
+    "branch": "qa/wave11-review",
+    "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE11_QA_REVIEW.md",
+    "commitMessage": "docs: add wave11 qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
