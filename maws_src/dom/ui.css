@@ -4250,3 +4250,200 @@
     font-size: 11px;
   }
 }
+
+/* Wave 8: director HUD + folded detail shell. */
+.maws-fold {
+  min-width: 0;
+  border: 2px solid rgba(255, 243, 210, 0.28);
+  background: rgba(5, 5, 6, 0.32);
+  color: var(--maws-paper, #fff3d2);
+  overflow-wrap: anywhere;
+}
+
+.maws-fold summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  color: var(--maws-gold, #ffd941);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.maws-fold summary span {
+  flex: 0 0 auto;
+  color: rgba(255, 243, 210, 0.72);
+  font-size: 11px;
+}
+
+.maws-fold[open] summary {
+  border-bottom: 1px solid rgba(255, 243, 210, 0.24);
+}
+
+.maws-loc-fold,
+.maws-action-fold {
+  align-self: start;
+}
+
+.maws-loc-fold .maws-locs,
+.maws-action-fold .maws-actions {
+  padding: 10px;
+}
+
+.maws-action-fold .maws-action {
+  grid-template-columns: 1fr;
+}
+
+.maws-scene-desc {
+  margin-top: 8px;
+  border: 0;
+  background: transparent;
+}
+
+.maws-scene-desc summary {
+  display: inline-flex;
+  padding: 0;
+  color: var(--maws-gold, #ffd941);
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.maws-scene-desc p {
+  margin: 8px 0 0;
+}
+
+.maws-skill-brief {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px;
+  border-left: 4px solid var(--maws-gold, #ffd941);
+  background: rgba(255, 243, 210, 0.08);
+}
+
+.maws-skill-brief span {
+  min-width: 0;
+  color: rgba(255, 243, 210, 0.86);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.maws-skill-fold {
+  background: rgba(5, 5, 6, 0.2);
+}
+
+.maws-skill-fold > p,
+.maws-skill-fold > .maws-skill-unlock,
+.maws-skill-fold > dl {
+  margin: 8px;
+}
+
+.maws-skill-fold > dl {
+  width: calc(100% - 16px);
+}
+
+.maws-modal-shell {
+  display: grid;
+  gap: 12px;
+}
+
+.maws-modal-lead {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 5px solid var(--maws-gold, #ffd941);
+  background: rgba(255, 243, 210, 0.08);
+  color: var(--maws-paper, #fff3d2);
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.maws-modal-fold {
+  background: rgba(255, 243, 210, 0.06);
+}
+
+.maws-modal-fold > .maws-modal-body,
+.maws-modal-fold > .maws-diary-pages,
+.maws-modal-fold > .maws-event-beats,
+.maws-modal-fold > .maws-event-summary,
+.maws-modal-fold > .maws-summary-chips,
+.maws-modal-fold > .maws-settle-list,
+.maws-modal-fold > .maws-final-objectives,
+.maws-modal-fold > .maws-diary-closing {
+  margin: 10px;
+}
+
+.maws-choice-fold {
+  border-color: rgba(5, 5, 6, 0.26);
+  background: rgba(5, 5, 6, 0.06);
+  color: #40331f;
+}
+
+.maws-choice-fold summary {
+  color: #5a2b16;
+}
+
+.maws-choice-fold .maws-summary-chips,
+.maws-choice-fold small {
+  margin: 8px;
+}
+
+.maws-training .maws-training-choices {
+  order: 5;
+}
+
+.maws-training .maws-modal-fold {
+  order: 6;
+}
+
+.maws-training .maws-modal-actions {
+  order: 7;
+}
+
+.maws-battle-learned {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 11px;
+  border: 2px solid rgba(255, 217, 65, 0.48);
+  background: rgba(255, 217, 65, 0.08);
+}
+
+.maws-battle-learned > b {
+  color: var(--maws-gold, #ffd941);
+}
+
+.maws-battle-learned p {
+  margin: 0;
+  color: rgba(255, 243, 210, 0.78);
+}
+
+@media (max-width: 760px) {
+  .maws-fold summary {
+    align-items: flex-start;
+    padding: 8px;
+  }
+
+  .maws-modal-lead {
+    padding: 10px 11px;
+    font-size: 14px;
+  }
+
+  .maws-skill-fold > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .maws-skill-fold > dl {
+    grid-template-columns: 1fr;
+  }
+}
