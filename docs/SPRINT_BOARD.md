@@ -1,36 +1,36 @@
 # SPRINT_BOARD
 
-> 当前重铸接续看板。只保留下一批任务，不记录旧 Batch 历史。
+> Current sprint board. Keep only the active Wave 14 handoff state and next ready tasks.
 
-## In Progress
+## Current Target
 
-- 待启动：`AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS`
+Wave 14: Playable Loop Slice.
 
-## Next
+## Staging Baseline
 
-1. `AGENT_B_SKILL_UNLOCKS_DATA_AFTER_HARNESS`
-   - 新增 `SKILL_UNLOCKS` 数据。
-   - `state.js` 输出 `model.skillUnlocks`。
-   - 行动结算识别本次新学会技能，并追加结算提示。
-2. `AGENT_E_UI_PRESENTATION`
-   - 技能页来源读取 `model.skillUnlocks`。
-3. `AGENT_C_COMBAT_FEEL`
-   - 四技能开局战斗手感。
-4. `AGENT_D_NARRATIVE_CONTENT`
-   - Day 1-Day 9 垂直切片文案。
-5. `AGENT_G_ASSET_WORLD`
-   - 地铁站视觉闭环。
+- Wave 13 first-look QA passed.
+- NPC compact interaction menu is staged.
+- Reward deltas are compact and structured.
+- Day 5 combat HUD target: 4-6 command/action count, queue length 1-2.
+- No skill tree runtime implementation yet.
 
-## Done
+## Ready Tasks
 
-- `AGENT_A_HARNESS_DELTA`：清理接力系统、归档旧 CURRENT_*、补验证合同和 handoff。
-- Playwright 真实浏览器 smoke 已接入。
-- 地点锁已接入。
-- 地铁站已接入。
-- 初始技能已缩减。
-- 大类 Agent 路由已接入。
+1. `NPC-ACT-001`
+   - Wire compact NPC menu choices to existing safe local actions where current data already supports it.
+   - Preserve compact menu behavior and avoid broad data or economy changes.
+2. `TREE-001`
+   - Implement the first runtime skill tree slice.
+   - Do not change save key/version unless explicitly authorized by a later prompt.
+3. `UI-PLAN-001`
+   - Produce the Playable Loop Slice UI plan around the existing DOM + Phaser boundary.
+   - Serialize ownership of shared UI files.
+4. `QA-014`
+   - Run final Wave 14 QA only after implementation work is complete and integrated.
+   - QA must be last; do not test stale base state as the final result.
 
 ## Blocked / Notes
 
-- 不要在 Harness Delta 前启动 `SKILL_UNLOCKS`，避免旧 Batch 历史污染系统任务。
-- 不要同时开 5 个 worker；先完成 Harness Delta 和 Skill Unlocks 数据化。
+- Do not start QA before implementation branches are ready in the review base.
+- Do not claim skill tree runtime completion before `TREE-001` lands and passes validation.
+- Keep worker scopes small; avoid concurrent edits to the same UI files.
