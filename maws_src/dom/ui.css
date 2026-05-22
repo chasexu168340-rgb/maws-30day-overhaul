@@ -5849,6 +5849,419 @@
   }
 }
 
+/* Wave 13 Combat Command Bar 2.0: small commands, stage-first battle HUD. */
+.maws-combat-ui {
+  --batch15-dock-max: min(166px, 19vh);
+}
+
+.maws-combat-dock {
+  left: clamp(12px, 1.7vw, 22px);
+  right: clamp(12px, 1.7vw, 22px);
+  bottom: max(10px, env(safe-area-inset-bottom));
+  grid-template-columns: minmax(220px, 0.78fr) minmax(520px, 2.25fr) minmax(218px, 0.82fr);
+  grid-template-areas:
+    "planner window side"
+    "planner drawer side";
+  align-items: stretch;
+  max-height: var(--batch15-dock-max);
+  padding: 7px;
+  gap: 7px;
+  overflow: visible;
+}
+
+.maws-combat-planner {
+  align-content: end;
+  gap: 5px;
+  max-height: calc(var(--batch15-dock-max) - 14px);
+  overflow: auto;
+}
+
+.maws-combat-phase {
+  padding: 5px 7px;
+}
+
+.maws-combat-phase small {
+  display: none;
+}
+
+.maws-objective-strip {
+  display: none;
+}
+
+.maws-combat-read {
+  max-height: 48px;
+  padding: 5px 7px;
+  overflow: hidden;
+}
+
+.maws-combat-read span,
+.maws-combat-read small,
+.maws-combat-read p,
+.maws-combat-read ol {
+  display: none;
+}
+
+.maws-target-control {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.maws-target-control button {
+  min-height: 30px;
+  padding: 4px 5px;
+  font-size: 12px;
+}
+
+.maws-combat-queue {
+  max-height: 76px;
+  padding: 6px 7px;
+  overflow: hidden;
+}
+
+.maws-combat-queue small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.maws-queue-slots {
+  gap: 5px;
+}
+
+.maws-queue-slot {
+  min-height: 28px;
+  padding: 4px 5px;
+  font-size: 11px;
+}
+
+.maws-combat-window-cards {
+  min-height: 0;
+  align-content: stretch;
+}
+
+.maws-combat-window-cards > b {
+  display: flex;
+  align-items: center;
+  min-height: 18px;
+}
+
+.maws-card-grid.combat.focus {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(96px, 1fr));
+  align-items: stretch;
+  gap: 6px;
+  min-height: 0;
+  max-height: 116px;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.maws-card-grid.combat.focus .maws-skill.combat-card,
+.maws-skill.combat-card,
+.maws-combat-command-chip {
+  min-width: 0;
+  min-height: 96px;
+  height: 96px;
+  max-height: 96px;
+  padding: 6px;
+}
+
+.maws-combat-command-chip {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 5px;
+  border-width: 3px;
+  background:
+    linear-gradient(145deg, rgba(255, 217, 65, 0.12), transparent 42%),
+    rgba(13, 13, 17, 0.92);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.86);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% calc(100% - 8px), 7px 100%);
+  text-align: left;
+  white-space: normal;
+}
+
+.maws-combat-command-chip strong,
+.maws-combat-command-chip small {
+  display: block;
+  min-width: 0;
+}
+
+.maws-combat-command-chip strong {
+  font-size: 14px;
+  line-height: 1.05;
+}
+
+.maws-combat-command-chip small {
+  color: rgba(255, 243, 210, 0.72);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.maws-combat-command-chip.active {
+  border-color: var(--maws-gold, #ffd941);
+  box-shadow: inset 0 0 0 2px rgba(255, 217, 65, 0.2), 3px 3px 0 rgba(0, 0, 0, 0.86);
+}
+
+.maws-skill.combat-card header {
+  min-height: 27px;
+}
+
+.maws-skill.combat-card header strong {
+  font-size: 12px;
+}
+
+.maws-skill.combat-card small,
+.maws-combat-card-use {
+  font-size: 10px;
+}
+
+.maws-skill dl.maws-combat-key {
+  gap: 3px;
+  padding-right: 40px;
+}
+
+.maws-skill dl.maws-combat-key div {
+  padding: 3px;
+}
+
+.maws-skill dl.maws-combat-key dt {
+  font-size: 9px;
+}
+
+.maws-skill dl.maws-combat-key dd {
+  font-size: 11px;
+}
+
+.maws-skill.combat-card footer {
+  right: 5px;
+  top: 36px;
+}
+
+.maws-skill.combat-card footer button {
+  min-height: 24px;
+}
+
+.maws-skill.combat-card.active .maws-skill-detail {
+  display: none;
+}
+
+.maws-skill.combat-card:hover .maws-skill-detail,
+.maws-skill.combat-card:focus-within .maws-skill-detail,
+.maws-skill.combat-card.active:hover .maws-skill-detail,
+.maws-skill.combat-card.active:focus-within .maws-skill-detail {
+  display: block;
+}
+
+.maws-tactics-drawer {
+  min-height: 0;
+}
+
+.maws-tactics-drawer summary {
+  min-height: 24px;
+  padding: 4px 7px;
+}
+
+.maws-tactics-drawer .maws-card-grid.combat {
+  margin: 6px;
+  max-height: 86px;
+}
+
+.maws-combat-side-panel {
+  grid-area: side;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 7px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.maws-combat-side-log {
+  position: static;
+  display: block;
+  max-width: none;
+  min-width: 0;
+  min-height: 0;
+  padding: 6px 7px;
+  border: 1px solid rgba(255, 243, 210, 0.34);
+  background: rgba(8, 8, 10, 0.74);
+  color: var(--maws-paper, #fff3d2);
+  overflow: hidden;
+}
+
+.maws-combat-side-log b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--maws-gold, #ffd941);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.maws-combat-side-log ol {
+  display: grid;
+  gap: 3px;
+  max-height: 58px;
+  margin: 0;
+  padding: 0 4px 0 0;
+  overflow: auto;
+  list-style: none;
+  scrollbar-color: rgba(255, 217, 65, 0.62) rgba(5, 5, 6, 0.72);
+  scrollbar-width: thin;
+}
+
+.maws-combat-side-log ol::-webkit-scrollbar {
+  width: 7px;
+}
+
+.maws-combat-side-log ol::-webkit-scrollbar-track {
+  background: rgba(5, 5, 6, 0.72);
+}
+
+.maws-combat-side-log ol::-webkit-scrollbar-thumb {
+  background: rgba(255, 217, 65, 0.62);
+}
+
+.maws-combat-side-log li {
+  color: rgba(255, 243, 210, 0.86);
+  font-size: 11px;
+  line-height: 1.22;
+}
+
+.maws-combat-actions {
+  grid-area: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.maws-combat-actions button {
+  min-height: 34px;
+}
+
+.maws-combat-actions button[data-action="confirmBattle"] {
+  min-height: 42px;
+  font-size: 14px;
+}
+
+@media (max-width: 1120px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(190px, 24vh);
+  }
+
+  .maws-combat-dock {
+    grid-template-columns: minmax(190px, 0.86fr) minmax(0, 1.7fr) minmax(170px, 0.7fr);
+  }
+
+  .maws-card-grid.combat.focus {
+    grid-template-columns: repeat(4, minmax(106px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(246px, 31vh);
+  }
+
+  .maws-combat-dock {
+    left: 8px;
+    right: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(112px, 0.42fr);
+    grid-template-areas:
+      "planner side"
+      "window window"
+      "drawer drawer";
+    max-height: var(--batch15-dock-max);
+    overflow: visible;
+  }
+
+  .maws-combat-planner {
+    max-height: 92px;
+  }
+
+  .maws-combat-read,
+  .maws-combat-phase small,
+  .maws-combat-queue small {
+    display: none;
+  }
+
+  .maws-combat-queue {
+    max-height: 42px;
+  }
+
+  .maws-combat-side-log {
+    display: none;
+  }
+
+  .maws-combat-actions button {
+    min-height: 32px;
+    padding: 5px 7px;
+    font-size: 12px;
+  }
+
+  .maws-card-grid.combat.focus {
+    display: flex;
+    max-height: 98px;
+    overflow-x: auto;
+  }
+
+  .maws-card-grid.combat.focus .maws-skill.combat-card,
+  .maws-skill.combat-card,
+  .maws-combat-command-chip {
+    flex: 0 0 132px;
+    min-width: 132px;
+    min-height: 90px;
+    height: 90px;
+    max-height: 90px;
+  }
+
+  .maws-skill.combat-card footer {
+    display: none;
+  }
+
+  .maws-skill-detail,
+  .maws-skill.combat-card .maws-skill-detail {
+    bottom: calc(var(--batch15-dock-max) + 14px);
+  }
+}
+
+@media (max-width: 430px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(230px, 29vh);
+  }
+
+  .maws-combat-dock {
+    max-height: var(--batch15-dock-max);
+  }
+
+  .maws-card-grid.combat.focus .maws-skill.combat-card,
+  .maws-skill.combat-card,
+  .maws-combat-command-chip {
+    flex-basis: 126px;
+    min-width: 126px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .maws-combat-ui {
+    --batch15-dock-max: min(158px, 21vh);
+  }
+
+  .maws-card-grid.combat.focus .maws-skill.combat-card,
+  .maws-skill.combat-card,
+  .maws-combat-command-chip {
+    min-height: 90px;
+    height: 90px;
+    max-height: 90px;
+  }
+
+  .maws-combat-side-log ol {
+    max-height: 48px;
+  }
+}
+
 /* Wave 13 Visual Stage hard pass: make the home screen read as a scene first. */
 .maws-hud.maws-hud-compact {
   left: 14px;

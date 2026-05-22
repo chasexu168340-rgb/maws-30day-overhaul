@@ -4,35 +4,28 @@
 
 ## Current Task
 
-Wave 13：First-Look Vertical Slice Polish。
+Wave 13 Combat Command Bar 2.0：把 Day 5 战斗 HUD 从大卡牌桌改成战斗指令栏。
 
 ## Current Result
 
-- Wave 13 staged pipeline 已创建并推送。
-- 已完成并合入 staging：
-  - `feat/reward-delta-contract-v2`
-  - `feat/time-activity-feel-pass`
-  - `docs/wave13-first-look-shotlist`
-  - `feat/visual-stage-hard-pass`
-- 已完成但尚未合入 staging：
-  - 无
-- 已将通用 CLI worker 启动器和 repo pipeline 默认改为 `gpt-5.5` + `high`。
-- 已新增 `scripts/wave13_remaining_after_visual_pipeline.json`，用于从 Combat Command Bar 继续，不重跑已完成阶段。
+- 已改 `maws_src/dom/ui.js`：主指令区最多展示 6 个小指令卡；少于 4 个技能时补足抱架、清队、攻身、读招小指令按钮。
+- 已改 `maws_src/dom/ui.js`：右下加入复盘日志和执行区，保留 `confirmBattle` 按钮；左下保留目标/部位和 1-2 招队列槽。
+- 已改 `maws_src/dom/ui.css`：压低底部 HUD 高度，技能详情只在 hover/focus 打开，不因已选技能常驻撑大主栏。
+- 已写入 `docs/workers/combat_command_bar_2.md` 和 `docs/agent_reports/AGENT_C_COMBAT_COMMAND_BAR_2.md`。
+- 1536x864 Day 5 战斗截图观感：舞台/角色占主视觉，底部 6 个小指令入口；左下目标/队列、右下复盘/执行均在视口内。
 
 ## Validation
 
-- CLI launcher PowerShell parse：通过。
-- Repo pipeline PowerShell parse：通过。
-- Pipeline JSON parse/model check：通过。
-- `git diff --check`：通过。
+- Pass: `npm run check:full`
+- Pass: `npm run test:playtest`
+- Pass: `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`
+- Pass: `git diff --check`
 
 ## Risks
 
-- 本轮 pipeline 曾被用户手动中断；不要从头重跑已完成阶段，否则可能重置已完成 worker worktree。
-- 后续应启动 `scripts/wave13_remaining_after_visual_pipeline.json`，继续 Combat Command、NPC Click、First-Look Smoke、QA。
-- `GameDesigner_CombatAnalysis/` 是未跟踪目录，本轮不触碰。
-- 本轮仍不进入技能树 implementation。
+- 本轮不改战斗公式、数据、资产、存档结构和入口 HTML。
+- 视觉目标以 `test-results/wave12/desktop-combat.png` 的 1536x864 Day 5 战斗截图为准；截图由最终 Wave 12 visual 测试生成。
 
 ## Next Step
 
-提交并推送 resume spec；之后继续收口 Wave 13 剩余阶段。
+提交并推送 `feat/combat-command-bar-2`。
