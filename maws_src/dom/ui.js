@@ -697,7 +697,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
         <span>${esc(learned ? `熟练度 ${round(skill.state?.p)}%` : sourceText)}</span>
         <span>${esc(learned ? (skill.equipped ? '已装备' : '可装备') : '待解锁')}</span>
       </div>
-      <details class="maws-fold maws-skill-fold">
+      <details class="maws-fold maws-skill-fold" open>
         <summary>${learned ? '长描述 / 完整数值' : '解锁详情 / 完整数值'}</summary>
         <p>${esc(skill.desc)}</p>
         ${renderSkillUnlock(skill, unlock, learned)}
