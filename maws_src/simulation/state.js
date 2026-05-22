@@ -769,6 +769,7 @@ function eventNotebookModal(state, item = {}, options = {}) {
     actionId: options.actionId || item.action || action?.id || '',
     title,
     kicker: options.source === 'opportunity' ? '待办现场' : '行动现场',
+    locId,
     locName,
     risk: riskText(item.enemy || item.risk || item.riskLabel ? item : action || {}),
     reason: item.reason || note.reason || '',
@@ -1051,6 +1052,63 @@ function eventSettlementBody(action, context = null) {
   return '';
 }
 
+function settlementText(line) {
+  if (!line || typeof line !== 'object') return String(line || '');
+  return line.text || [line.label, line.delta ? `${Number(line.delta) > 0 ? '+' : ''}${line.delta}` : ''].filter(Boolean).join(' ');
+}
+
+function resultLead(title = '行动', body = '', lines = []) {
+  const firstBodyLine = textList(body)[0];
+  if (firstBodyLine) return firstBodyLine;
+  const firstChange = lines.map(settlementText).find(Boolean);
+  if (firstChange) return `${title}完成了，最明显的变化是：${firstChange}`;
+  return `${title}已经处理完，可以决定下一步。`;
+}
+
+function resultActions(state, recommendLoc = '') {
+  const actions = [
+    { label: '继续行动', action: 'closeModal', className: 'primary' },
+    { label: '查看日志', action: 'setTab', params: { tab: 'log' }, className: 'ghost' }
+  ];
+  if (recommendLoc && LOCS[recommendLoc] && recommendLoc !== state.loc && isLocationUnlocked(state, recommendLoc)) {
+    actions.push({
+      label: `去${LOCS[recommendLoc].name}`,
+      action: 'openTravel',
+      params: { loc: recommendLoc },
+      className: 'dark'
+    });
+  }
+  return actions;
+}
+
+function resultFeedbackModal(state, { title = '行动', body = '', lines = [], summary = null, logText = '', recommendLoc = '' } = {}) {
+  return {
+    type: 'settlement',
+    title: '结果',
+    kicker: title,
+    body,
+    lead: resultLead(title, body, lines),
+    cost: summary?.cost || [],
+    gain: summary?.gain || [],
+    risk: summary?.risk || '',
+    lines,
+    logText: logText || state.log?.[0]?.text || '',
+    actions: resultActions(state, recommendLoc)
+  };
+}
+
+function actionResultModal(state, action, lines, options = {}) {
+  const context = options.eventContext || {};
+  return resultFeedbackModal(state, {
+    title: context.title || action?.name || '行动',
+    body: eventSettlementBody(action, context),
+    lines,
+    summary: actionSummary(action),
+    logText: state.log?.[0]?.text || '',
+    recommendLoc: context.locId || action?.loc || ''
+  });
+}
+
 function executeAction(state, action, options = {}) {
   const allowNotebook = options.allowNotebook !== false;
   if (!action) {
@@ -1099,12 +1157,7 @@ function executeAction(state, action, options = {}) {
     applyGain(state, action.gain || {});
     const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
     addLog(state, `完成行动：${action.name}`);
-    state.ui.modal = {
-      type: 'settlement',
-      title: `${action.name} 结算`,
-      body: eventSettlementBody(action, options.eventContext),
-      lines
-    };
+    state.ui.modal = actionResultModal(state, action, lines, options);
   }
 }
 
@@ -1143,8 +1196,14 @@ function resolveEventNotebook(state) {
   } else if (card.shop) {
     markOpportunityCooldown(state, card);
     state.ui.tab = 'shop';
-    state.ui.modal = null;
     addLog(state, `处理待办：${card.title}`);
+    state.ui.modal = resultFeedbackModal(state, {
+      title: card.title || '待办',
+      body: card.result || '你把这件待办处理到可以继续采购和整理装备。',
+      lines: [],
+      summary: { cost: [], gain: ['商店已打开'], risk: riskText(card) },
+      logText: state.log?.[0]?.text || ''
+    });
   } else if (card.action) {
     markOpportunityCooldown(state, card);
     const action = findAction(state, card.action) || actionById(card.action);
