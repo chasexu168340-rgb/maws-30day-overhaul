@@ -8,7 +8,7 @@ Integrated target reviewed: `origin/staging/reforge-unlocks-v1` at `b68cf3a` (`m
 
 ## Merge Gate
 
-- Confirmed latest local QA branch is already up to date with `origin/staging/reforge-unlocks-v1`.
+- Synced this QA branch with current `origin/staging/reforge-unlocks-v1` to resolve the duplicate QA-report add/add conflict.
 - Confirmed staging contains:
   - `origin/feat/scene-stage-scale`
   - `origin/feat/dialogue-box-rebuild`
@@ -18,12 +18,13 @@ Integrated target reviewed: `origin/staging/reforge-unlocks-v1` at `b68cf3a` (`m
 
 ## Scope Check
 
-- Integrated Wave 9 diff from `114240b..HEAD` changes:
+- Integrated Wave 9 diff from `114240b..b68cf3a` changes:
   - `maws_src/dom/ui.css`
   - `maws_src/dom/ui.js`
   - `maws_src/simulation/state.js`
   - Wave 9 worker/report/docs files
   - `docs/TASK_PLAN.md` from Manager integration
+- `docs/TASK_PLAN.md` was touched by Manager/event-feedback integration; QA did not modify it.
 - No `assets/` file diff.
 - No `maws_src/assets/manifest.js` diff.
 - No `maws_src/content/data.js` diff, so `INITIAL_SKILLS` was not changed in this wave.
@@ -65,15 +66,22 @@ Screenshots captured under ignored test output:
 ## Validation
 
 - `npm run check:full`: passed.
-  - build passed.
-  - asset verification passed: 95 manifest entries.
-  - Chromium smoke passed: 4 tests.
+  - Build checked 23 JavaScript files.
+  - Asset verification passed: 95 manifest entries across 9 required groups.
+  - Playwright Chromium smoke passed: 4/4.
+  - Includes responsive smoke at 390x844, 900x700, 1365x768.
 - `git diff --check`: passed.
+- Manual browser quick check: passed for map page, mainline dialogue, event feedback, and skills page.
 
 ## Findings
 
 - Medium: The requested removal of abrupt red/yellow/gray backing is only partially achieved. The result no longer looks like plain gray placeholder blocks, but the final presentation still has very aggressive red/yellow panel strips in HUD, action cards, dialogue accents, and result modals. Recommend a follow-up visual polish branch if the target is a less posterized scene UI.
 - Low: The event result modal is functional, but the desktop screenshot shows dense gain/cost chips packed into a horizontal summary band. It passed overflow checks, but readability could use a later polish pass.
+
+## Risks
+
+- Scene NPC click routing is intentionally limited to existing location actions. Characters without matching actions still give toast feedback, not a dedicated dialogue branch.
+- Mobile hides supporting scene characters at narrow width; this matches the visual direction but means the 390x844 check cannot visually confirm multi-NPC proportions.
 
 ## Recommendation
 

@@ -2,7 +2,7 @@
 
 QA role: AGENT_F_TECH_QA_TOOLS
 
-Reviewed integrated staging result: `origin/staging/reforge-unlocks-v1` at `b68cf3a`.
+Reviewed integrated Wave 9 runtime on `origin/staging/reforge-unlocks-v1` at `b68cf3a` (`merge: visual direction scene ui`). This report branch was then synced with current staging to resolve the duplicate QA-report add/add conflict.
 
 ## Result
 
@@ -19,12 +19,13 @@ The integrated Wave 9 scene/UI work passes required validation and meets the cor
 - `feat/event-feedback-loop`
 - `docs/visual-direction-scene-ui`
 
-QA was run after syncing the local QA branch to latest staging.
+QA reviewed final integrated staging, not isolated worker branches.
 
 ## Boundary Review
 
 - Changed runtime files in final Wave 9 integrated diff: `maws_src/dom/ui.css`, `maws_src/dom/ui.js`, `maws_src/simulation/state.js`.
 - Added/updated Wave 9 documentation and reports.
+- `feat/event-feedback-loop` also touched `docs/TASK_PLAN.md`; this is a documentation-scope warning, not a runtime risk.
 - No `assets/` changes.
 - No `maws_src/assets/manifest.js` changes.
 - No `maws_src/content/data.js` changes; `INITIAL_SKILLS` unchanged.
@@ -47,6 +48,7 @@ QA was run after syncing the local QA branch to latest staging.
   - asset verification: passed, 95 manifest entries.
   - Playwright Chromium smoke: 4 passed.
 - `git diff --check`: passed.
+- Browser quick check: passed for map page, mainline dialogue, event feedback, skills page.
 
 ## Findings
 
