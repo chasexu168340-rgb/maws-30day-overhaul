@@ -4,7 +4,7 @@
   "workerRoot": "E:\\maws_cli_parallel_wave14",
   "model": "gpt-5.5",
   "reasoning": "high",
-  "visibleWorkers": false,
+  "visibleWorkers": true,
   "stages": [
     {
       "name": "handoff-refresh",
