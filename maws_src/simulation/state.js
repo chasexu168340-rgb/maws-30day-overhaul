@@ -359,7 +359,7 @@ export function createNewState(origin = 'worker') {
     seed: 123456,
     flags: {},
     daily: { talked: {}, actions: 0, mainDone: false, sideSeed: 1 },
-    ui: { tab: 'map', toast: '第1天，先把能打中人的东西练出来。', modal: null, selectedTravel: null, cityMapOpen: false },
+    ui: { tab: 'map', toast: '第1天，先把能打中人的东西练出来。', modal: null, selectedTravel: null, cityMapOpen: false, interactionMenu: null },
     player: {
       name: '陆小闲',
       stats: { ...o.stats },
@@ -410,8 +410,9 @@ export function migrateSave(input) {
   s.flags ||= {};
   s.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: s.day || 1 };
   s.daily.talked ||= {};
-  s.ui ||= { tab: s.tab || 'map', toast: null, modal: null, selectedTravel: null, cityMapOpen: false };
+  s.ui ||= { tab: s.tab || 'map', toast: null, modal: null, selectedTravel: null, cityMapOpen: false, interactionMenu: null };
   s.ui.cityMapOpen = Boolean(s.ui.cityMapOpen);
+  s.ui.interactionMenu = null;
   s.player ||= {};
   s.player.fitXp ||= 0;
   s.player.face ||= 45;
@@ -2292,23 +2293,35 @@ export class GameStore {
       s.ui.tab = action.tab;
       s.ui.modal = null;
       s.ui.cityMapOpen = false;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'openCityMap') {
       s.ui.tab = 'map';
       s.ui.modal = null;
       s.ui.selectedTravel = null;
       s.ui.cityMapOpen = true;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'toggleCityMap') {
       s.ui.tab = 'map';
       s.ui.modal = null;
       s.ui.selectedTravel = null;
       s.ui.cityMapOpen = !s.ui.cityMapOpen;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'closeCityMap') {
       s.ui.cityMapOpen = false;
+    } else if (action.type === 'openInteractionMenu') {
+      s.ui.tab = 'map';
+      s.ui.cityMapOpen = false;
+      s.ui.selectedTravel = null;
+      s.ui.interactionMenu = { characterId: action.characterId };
+    } else if (action.type === 'closeInteractionMenu') {
+      s.ui.interactionMenu = null;
     } else if (action.type === 'toast') {
       s.ui.toast = action.text;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'closeModal') {
       s.ui.modal = null;
       s.ui.selectedTravel = null;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'advanceDialogue') {
       if (s.ui.modal?.type === 'dialogue') {
         const maxIndex = Math.max(0, (s.ui.modal.lines || []).length - 1);
@@ -2317,6 +2330,7 @@ export class GameStore {
     } else if (action.type === 'completeDialogue') {
       completeDialogue(s);
     } else if (action.type === 'openTravel') {
+      s.ui.interactionMenu = null;
       if (!isLocationUnlocked(s, action.loc)) {
         s.ui.toast = locationLockReason(s, action.loc);
         s.ui.cityMapOpen = false;
@@ -2326,6 +2340,7 @@ export class GameStore {
         s.ui.cityMapOpen = false;
       }
     } else if (action.type === 'travel') {
+      s.ui.interactionMenu = null;
       const allowLocked = Boolean(s.ui.modal?.allowLocked && s.ui.modal?.loc === action.loc);
       const q = travelQuote(s, action.loc, action.mode);
       if (!allowLocked && !isLocationUnlocked(s, action.loc)) s.ui.toast = locationLockReason(s, action.loc);
@@ -2352,9 +2367,11 @@ export class GameStore {
         s.ui.cityMapOpen = false;
       }
     } else if (action.type === 'doAction') {
+      s.ui.interactionMenu = null;
       const a = findAction(s, action.actionId);
       executeAction(s, a);
     } else if (action.type === 'chooseDuration') {
+      s.ui.interactionMenu = null;
       const a = findAction(s, action.actionId);
       executeAction(s, a, { dosageId: action.durationId });
     } else if (action.type === 'startMainEvent') {
@@ -2711,6 +2728,66 @@ function sceneCharacters(state, mainEvent) {
   return cast.slice(0, 3);
 }
 
+function characterFallbackLine(character = {}) {
+  if (character.id === 'fatty') return '他冲你比了个别瞎练的手势。';
+  if (character.side === 'player') return '你整理了一下呼吸，提醒自己别把训练练成表演。';
+  if (ENEMIES[character.id]) return '对方没急着动，你先把距离和退路看清楚。';
+  if (NPCS[character.id]) return `${character.name || '对方'}看了你一眼，意思是先把今天的事做扎实。`;
+  return `${character.name || '这个人'}现在没有可执行行动。`;
+}
+
+function menuActionLabel(action = {}) {
+  if (action.type === 'dialog') return '聊几句';
+  if (action.type === 'battle') return '处理这局';
+  if (action.type === 'shop') return '看看补给';
+  return action.name || '行动';
+}
+
+function sceneInteractionMenuModel(state, characters = [], actions = []) {
+  const characterId = state.ui?.interactionMenu?.characterId;
+  if (!characterId) return null;
+  const character = characters.find((item) => item.id === characterId);
+  if (!character) return null;
+  const relatedActions = actions.filter((action) => (
+    (character.id && action.npc === character.id) ||
+    (character.id && action.enemy === character.id)
+  ));
+  const menuActions = relatedActions.slice(0, 2).map((action) => {
+    const unavailable = action.disabledReason || action.lockReason || action.unavailableReason || '现在条件不够';
+    return action.disabled
+      ? { label: menuActionLabel(action), action: 'toast', text: unavailable, kind: 'disabled' }
+      : { label: menuActionLabel(action), action: 'doAction', id: action.id, kind: 'primary' };
+  });
+  const hasExecutable = menuActions.some((item) => item.action === 'doAction');
+  if (NPCS[character.id]) {
+    if (!menuActions.some((item) => item.label === '聊几句')) {
+      menuActions.push({ label: '聊几句', action: 'toast', text: npcLine(character.id), kind: hasExecutable ? 'ghost' : 'primary' });
+    }
+    if (character.id === 'fatty') {
+      menuActions.push({ label: '一起复盘', action: 'toast', text: '刘胖子把你的动作拆成三句：别追手，脚下别死，真不行就走。', kind: 'ghost' });
+      menuActions.push({ label: '问问今天建议', action: 'toast', text: npcLine(character.id), kind: 'ghost' });
+    } else {
+      menuActions.push({ label: '问问建议', action: 'toast', text: npcLine(character.id), kind: 'ghost' });
+    }
+  } else if (ENEMIES[character.id]) {
+    menuActions.push({ label: '先观察', action: 'toast', text: characterFallbackLine(character), kind: hasExecutable ? 'ghost' : 'primary' });
+  } else if (character.side === 'player') {
+    menuActions.push({ label: '整理状态', action: 'toast', text: characterFallbackLine(character), kind: 'primary' });
+  }
+  const fallback = characterFallbackLine(character);
+  if (!menuActions.length) {
+    menuActions.push({ label: '记下', action: 'toast', text: fallback, kind: 'primary' });
+  }
+  return {
+    id: character.id,
+    name: character.name || '角色',
+    role: character.role || '场景角色',
+    feedback: hasExecutable ? `${character.name || '对方'}等你开口。` : fallback,
+    executableCount: menuActions.filter((item) => item.action === 'doAction').length,
+    actions: menuActions.slice(0, 3)
+  };
+}
+
 function seededCombatRng(state, combat, queue) {
   let seed = Number(state.seed || 1)
     + Number(combat?.eventSeq || 0) * 97
@@ -2954,6 +3031,10 @@ export function buildRenderModel(state) {
       summary: actionSummary(action)
     };
   });
+  const sceneCast = sceneCharacters(state, mainEvent);
+  const interactionMenu = state.ui.modal || state.ui.cityMapOpen
+    ? null
+    : sceneInteractionMenuModel(state, sceneCast, actions);
   const equipmentSlots = EQUIPMENT_SLOTS.map((slot) => {
     const itemId = state.equipment?.[slot.id] || null;
     const item = itemId ? ITEMS[itemId] : null;
@@ -3009,7 +3090,8 @@ export function buildRenderModel(state) {
       timeOfDay,
       timeText: timeOfDay === 'night' ? '夜景' : '日间',
       openText: locationOpenText(LOCS[state.loc]),
-      characters: sceneCharacters(state, mainEvent)
+      characters: sceneCast,
+      interactionMenu
     },
     resources: [
       ['现金', p.money, '￥'],
