@@ -254,7 +254,12 @@ export const SKILL_TREE_NODES = [
     cost: 1,
     requires: [],
     unlockText: '把急眼挥拳改成能收得住的一拍。',
-    effectText: '被动节点：后续 UI 可把它解释为野路挥拳熟练向掌握推进；本切片不改战斗公式。'
+    effectText: '野路挥拳命中小幅提升；不是新招，只是更少把重心扔空。',
+    rewardText: '野路挥拳更稳了一点。',
+    effects: [
+      { type: 'skillXp', skillId: 'wild_swing', value: 6, label: '野路挥拳熟练 +6' },
+      { type: 'perk', key: 'wild_swing_hit_small', skillId: 'wild_swing', hit: 0.02, label: 'wild_swing 命中小幅提升' }
+    ]
   },
   {
     id: 'street_push_away_space',
@@ -266,7 +271,12 @@ export const SKILL_TREE_NODES = [
     cost: 1,
     requires: ['street_wild_swing_mastery'],
     unlockText: '先把人顶开一点，再决定打、退还是降温。',
-    effectText: '功能节点：标记 push_away 的技能树入口，供 UI 后续接购买和说明。'
+    effectText: 'push_away 后接 retreat 时，下一拍风险小幅下降。',
+    rewardText: '推开后撤的节奏更清楚。',
+    effects: [
+      { type: 'skillXp', skillId: 'push_away', value: 4, label: '推搡熟练 +4' },
+      { type: 'comboRisk', from: 'push_away', to: 'retreat', risk: -0.02, label: 'push_away -> retreat 风险 -2%' }
+    ]
   },
   {
     id: 'street_queue_slot_future',
@@ -291,8 +301,14 @@ export const SKILL_TREE_NODES = [
     cost: 1,
     requires: [],
     sourceSkill: 'jab',
+    purchaseRequires: { skillLearned: 'jab', reason: '先在拳馆完成沙包连击，学会刺拳后再点。' },
     unlockText: '用刺拳先碰距离，不再一开场就把重心借出去。',
-    effectText: '解锁/强化节点：若 jab 未学会，UI 可显示为解锁目标；已学会后显示为基础强化。'
+    effectText: '完成拳馆刺拳训练后可点；jab 初始熟练度小幅提升，但不会开局赠送。',
+    rewardText: '刺拳距离感被写进技能树。',
+    effects: [
+      { type: 'skillXp', skillId: 'jab', value: 6, requireLearned: true, label: '刺拳熟练 +6' },
+      { type: 'perk', key: 'jab_entry_boost', skillId: 'jab', hit: 0.01, label: 'jab 入门稳定性 +1%' }
+    ]
   },
   {
     id: 'boxing_guard_recovery',
@@ -304,7 +320,12 @@ export const SKILL_TREE_NODES = [
     cost: 1,
     requires: ['boxing_jab_unlock_boost'],
     unlockText: '打完之后手要回来，脸不是公共靶位。',
-    effectText: '被动节点：记录拳击基础对 guard 的重写入口；本切片只提供数据。'
+    effectText: 'guard 后下一招风险小幅下降，鼓励先护住再动。',
+    rewardText: '抱架之后的回收更稳。',
+    effects: [
+      { type: 'skillXp', skillId: 'guard', value: 4, label: '防守抱架熟练 +4' },
+      { type: 'afterActionRisk', after: 'guard', risk: -0.015, label: 'guard 后下一招风险 -1.5%' }
+    ]
   },
   {
     id: 'boxing_straight_line',
@@ -328,7 +349,12 @@ export const SKILL_TREE_NODES = [
     cost: 1,
     requires: [],
     unlockText: '把“玄”先拆成站距、重心和收手。',
-    effectText: '重写节点：标记 mystic 从旧招名进入可复盘动作。'
+    effectText: 'mystic 风险降低一点，但仍然是不稳定旧招。',
+    rewardText: '混元一气掌少了一点失控感。',
+    effects: [
+      { type: 'skillXp', skillId: 'mystic', value: 3, label: '混元一气掌熟练 +3' },
+      { type: 'skillRisk', skillId: 'mystic', risk: -0.015, label: 'mystic 风险 -1.5%' }
+    ]
   },
   {
     id: 'traditional_guard_rewrite',
@@ -340,7 +366,11 @@ export const SKILL_TREE_NODES = [
     cost: 1,
     requires: ['traditional_mystic_rewrite'],
     unlockText: '抗压不是硬挨，是用抱架和体能少挨一下。',
-    effectText: '重写节点：把传统防护叙事接到 guard 的现实版本。'
+    effectText: 'guard 获得“呼吸稳定”反馈，提醒铁布衫改写成现实防护。',
+    rewardText: '铁布衫被改写成抱架和呼吸。',
+    effects: [
+      { type: 'guardFeedback', key: 'guard_breathing_stable', label: 'guard 触发呼吸稳定反馈' }
+    ]
   },
   {
     id: 'traditional_reforge_note',

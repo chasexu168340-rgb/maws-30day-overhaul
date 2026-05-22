@@ -4,31 +4,33 @@
 
 ## Current Task
 
-Wave 15 Addiction Loop Slice setup: refresh checkpoint and launch first-stage worker pipeline.
+Wave 15 `TREE-SPEND-001`: make the first six skill-tree nodes spendable from state/data.
 
 ## Scope
 
-- Prepare Wave15 first-stage prompts and pipeline.
-- Refresh `TASK_HANDOFF`, `TASK_PLAN`, and `SPRINT_BOARD` to Wave15.
-- First implementation stage will run `SkillTreeSpend` and `CombatRecipe` in parallel where file ownership is acceptable.
-- Do not manually implement gameplay in this setup step.
+- Implement Insight point cost, prerequisite checks, purchase state, old-save defaults, and settlement/rewardDeltas.
+- Touch only `maws_src/content/data.js`, `maws_src/simulation/state.js`, and this task/report documentation.
+- Do not modify DOM UI, combat formulas, events, assets, package scripts, save key/version, or starter skill constants.
 
 ## Current Result
 
-- Added Wave15 prompts for handoff, skill-tree spend, combat recipe, loop smoke, QA, and second-stage proposal work.
-- Added `scripts/wave15_addiction_loop_pipeline.json`.
-- Added `scripts/wave15_second_stage_proposals_pipeline.json`.
-- Current checkpoint now points to Wave15 Addiction Loop Slice.
+- Added spendable metadata and structured effects for the six requested nodes.
+- Added state action aliases `purchaseSkillTreeNode`, `buySkillTreeNode`, and `unlockSkillTreeNode`.
+- Added `skillTree.unlocked`, `skillTree.purchased`, `skillTree.perks`, and `player.skillTreePerks` normalization for old saves.
+- Added settlement modal/rewardDeltas on purchase and light combat bridge via existing `effects.risk`.
 
 ## Validation
 
-- Pending after this refresh: `git diff --check`.
+- `npm run check:full`: passed.
+- `npm run test:playtest`: passed.
+- Direct state check for `purchaseSkillTreeNode` and old-save normalization: passed.
+- `git diff --check`: passed.
 
 ## Risks
 
-- `SkillTreeSpend` and `CombatRecipe` can run together only because combat recipe is instructed to avoid `data.js` and treat `state.js` as read-mostly/minimal bridge.
-- NPC memory, event follow-ups, and alt route implementation are deferred because they would contend for `data.js/state.js`.
+- UI buttons still dispatch `toast` because `maws_src/dom/ui.js` is forbidden in this worker. The render model exposes `canPurchase` and `purchaseAction` for a UI worker to wire.
+- Per-skill hit boosts are currently expressed as structured perks plus small mastery gains; full hit-formula consumption belongs to the combat worker because `combat.js` is forbidden.
 
 ## Next Step
 
-Commit/push this checkpoint refresh, then start `scripts/wave15_remaining_after_handoff_pipeline.json`.
+Commit with `feat: add skill tree spend slice`; next UI worker should wire available skill-tree nodes to `purchaseSkillTreeNode`.
