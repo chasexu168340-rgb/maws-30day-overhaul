@@ -18,9 +18,21 @@ function Invoke-Git {
     [string[]]$Args
   )
 
-  git -C $Cwd -c http.version=HTTP/1.1 @Args
-  if ($LASTEXITCODE -ne 0) {
-    throw "git -C $Cwd $($Args -join ' ') failed with exit code $LASTEXITCODE"
+  $attempts = 4
+  for ($attempt = 1; $attempt -le $attempts; $attempt++) {
+    git -C $Cwd -c http.version=HTTP/1.1 -c http.postBuffer=1048576000 @Args
+    if ($LASTEXITCODE -eq 0) {
+      return
+    }
+
+    $exitCode = $LASTEXITCODE
+    if ($attempt -ge $attempts) {
+      throw "git -C $Cwd $($Args -join ' ') failed with exit code $exitCode after $attempts attempts"
+    }
+
+    $delay = 5 * $attempt
+    Write-Warning "git -C $Cwd $($Args -join ' ') failed with exit code $exitCode; retrying in $delay seconds ($attempt/$attempts)."
+    Start-Sleep -Seconds $delay
   }
 }
 
