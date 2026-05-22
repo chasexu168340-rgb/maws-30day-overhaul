@@ -96,7 +96,11 @@ function Start-CodexWorker {
   $safeName = ($Worker.Name -replace '[^A-Za-z0-9_.-]', '_')
   $stdout = Join-Path $script:LogRoot "$safeName.out.log"
   $stderr = Join-Path $script:LogRoot "$safeName.err.log"
-  Start-Process pwsh -ArgumentList $args -WindowStyle $windowStyle -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+  if ($Visible) {
+    Start-Process pwsh -ArgumentList $args -WindowStyle $windowStyle -PassThru
+  } else {
+    Start-Process pwsh -ArgumentList $args -WindowStyle $windowStyle -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+  }
 }
 
 function Wait-WorkerGroup {
@@ -109,8 +113,9 @@ function Wait-WorkerGroup {
 
   Write-Host "Waiting for $Label to finish..."
   foreach ($process in $Processes) {
-    Wait-Process -Id $process.Id
-    $process.Refresh()
+    if (!$process.HasExited) {
+      $process.WaitForExit()
+    }
     if ($process.ExitCode -ne 0) {
       throw "$Label process $($process.Id) failed with exit code $($process.ExitCode)"
     }
