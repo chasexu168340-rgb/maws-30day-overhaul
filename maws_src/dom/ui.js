@@ -523,6 +523,9 @@ function renderMap(model) {
   const recommendations = renderRecommendations(model);
   const todayBoard = renderTodayBoard(model);
   const scene = model.locationScene || {};
+  const mainTitle = model.mainEvent?.title || '暂无主线节点';
+  const mainPlace = model.mainEvent?.locName || model.loc?.name || '当前地点';
+  const recommendTitle = model.opportunities?.[0]?.title || currentActions[0]?.name || '训练 / 恢复 / 装备';
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
   const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
@@ -559,6 +562,11 @@ function renderMap(model) {
           <div class="maws-scene-info">
             <span>${esc(scene.timeText || '')} · ${esc(scene.openText || '')}</span>
             <h2>${esc(model.loc?.name)}</h2>
+            <div class="maws-scene-meta" aria-label="当前推进信息">
+              <b>主线：${esc(mainTitle)}</b>
+              <b>地点：${esc(mainPlace)}</b>
+              <b>推荐：${esc(recommendTitle)}</b>
+            </div>
             <details class="maws-scene-desc">
               <summary>地点详情</summary>
               <p>${esc(model.loc?.desc)}</p>
