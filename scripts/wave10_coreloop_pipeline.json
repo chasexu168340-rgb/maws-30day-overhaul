@@ -2,7 +2,8 @@
   "name": "wave10-coreloop-combat-tree",
   "baseBranch": "staging/reforge-unlocks-v1",
   "workerRoot": "E:\\maws_cli_parallel_wave10",
-  "reasoning": "medium",
+  "model": "gpt-5.5",
+  "reasoning": "high",
   "visibleWorkers": true,
   "implementationWorkers": [
     {

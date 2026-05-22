@@ -65,6 +65,7 @@ const COMBAT_PLAN_MODES = Object.freeze([
 ]);
 const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
+const MICRO_ACTION_IDS = new Set(['idle_blank', 'read_notes', 'scroll_short_video', 'message_friend', 'simple_stretch']);
 
 export function fmtTime(totalMinutes) {
   const m = Math.floor(totalMinutes % 1440);
@@ -358,7 +359,7 @@ export function createNewState(origin = 'worker') {
     seed: 123456,
     flags: {},
     daily: { talked: {}, actions: 0, mainDone: false, sideSeed: 1 },
-    ui: { tab: 'map', toast: '第1天，先把能打中人的东西练出来。', modal: null, selectedTravel: null, cityMapOpen: false },
+    ui: { tab: 'map', toast: '第1天，先把能打中人的东西练出来。', modal: null, selectedTravel: null, cityMapOpen: false, interactionMenu: null },
     player: {
       name: '陆小闲',
       stats: { ...o.stats },
@@ -409,8 +410,9 @@ export function migrateSave(input) {
   s.flags ||= {};
   s.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: s.day || 1 };
   s.daily.talked ||= {};
-  s.ui ||= { tab: s.tab || 'map', toast: null, modal: null, selectedTravel: null, cityMapOpen: false };
+  s.ui ||= { tab: s.tab || 'map', toast: null, modal: null, selectedTravel: null, cityMapOpen: false, interactionMenu: null };
   s.ui.cityMapOpen = Boolean(s.ui.cityMapOpen);
+  s.ui.interactionMenu = null;
   s.player ||= {};
   s.player.fitXp ||= 0;
   s.player.face ||= 45;
@@ -602,18 +604,14 @@ function skillIdsFromGain(gain = {}) {
 function skillUnlockSettlementLines(beforeSkillState = {}, state, action, gain = action?.gain || {}) {
   return skillIdsFromGain(gain)
     .filter((id) => !beforeSkillState[id] && state.skillState?.[id])
-    .map((id) => {
-      const unlock = SKILL_UNLOCKS[id] || {};
-      const source = unlock.sourceSummary || actionSourceLabel(unlock.locationId || state.loc, unlock.actionId || action?.id, action);
-      return {
-        group: 'skills',
-        key: id,
-        label: '学会',
-        delta: 1,
-        tone: 'good',
-        text: `学会：${SKILLS[id]?.name || id} / 来源：${source}`
-      };
-    });
+    .map((id) => ({
+      group: 'skills',
+      key: id,
+      label: '学会',
+      delta: 1,
+      tone: 'good',
+      text: `学会 ${SKILLS[id]?.name || id}`
+    }));
 }
 
 function applyStoryFlags(state, flags = {}) {
@@ -832,6 +830,7 @@ function eventNotebookModal(state, item = {}, options = {}) {
     beats: beats.length ? beats : generatedEventBeats(state, item.desc ? item : action || item, kind, locName),
     summary,
     result: note.result || note.outcome || '',
+    rewardDeltas: [riskRewardDelta(item.enemy || item.risk || item.riskLabel ? item : action || {}, options.source || 'event')].filter(Boolean),
     card: options.source === 'opportunity' ? item : null,
     choices: [{
       id: 'resolve',
@@ -928,6 +927,31 @@ function scaledGain(gain = {}, multiplier = 1, option = {}) {
   return out;
 }
 
+function applyMicroActionPressure(state, action, gain = {}) {
+  if (!MICRO_ACTION_IDS.has(action?.id)) return { gain, note: '' };
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  state.daily.microActions ||= {};
+  const total = Object.values(state.daily.microActions).reduce((sum, value) => sum + Number(value || 0), 0);
+  const same = Number(state.daily.microActions[action.id] || 0);
+  state.daily.microActions[action.id] = same + 1;
+  if (same <= 0 && total < 2) return { gain, note: '' };
+
+  const adjusted = {};
+  Object.entries(gain || {}).forEach(([key, value]) => {
+    if (typeof value !== 'number') {
+      adjusted[key] = value;
+      return;
+    }
+    if (value < 0 || key === 'calm') adjusted[key] = value;
+  });
+  return {
+    gain: adjusted,
+    note: same > 0
+      ? '同一个微行动重复做，今天只保留恢复和自省价值，不再刷额外收益。'
+      : '微行动已经够多了，继续做只算收尾，不再把它变成资源路线。'
+  };
+}
+
 function positiveGainMultiplier(gain = {}, multiplier = 1) {
   const out = {};
   Object.entries(gain || {}).forEach(([key, value]) => {
@@ -980,7 +1004,21 @@ function applyTrainingRepeatPressure(state, action, gain = {}) {
 function advanceTime(state, minutes) {
   state.time += minutes;
   state.daily.actions += 1;
+  state.daily.timeCommitted = Number(state.daily.timeCommitted || 0) + Math.max(0, Number(minutes || 0));
   if (state.time >= 1500) sleep(state, true);
+}
+
+function applyDosageSchedulePressure(state, dosage = null) {
+  const pressure = Number(dosage?.opportunityPressure || 0);
+  if (!pressure) return '';
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  state.daily.schedulePressure = Number(state.daily.schedulePressure || 0) + pressure;
+  state.daily.opportunityCooldowns ||= {};
+  if (pressure >= 1) state.daily.opportunityCooldowns.deep_practice_window = true;
+  if (pressure >= 2) state.daily.opportunityCooldowns.hard_practice_window = true;
+  return pressure >= 2
+    ? '硬练占掉了今天很大一段余裕：机会卡会收窄，身体风险也会更早显出来。'
+    : '深练占掉了一段机会窗口：收益更集中，但今天能顺手处理的事会变少。';
 }
 
 function actionRoll(state, salt = 0) {
@@ -1159,7 +1197,10 @@ function useItem(state, id) {
   return {
     title: `${item.name} 使用结算`,
     lead: `${item.name}已经使用。`,
-    rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'item' }),
+    rewardDeltas: rewardDeltasFromSettlement(lines, state, {
+      source: 'item',
+      extra: [itemRewardDelta(id, -1, 'item')]
+    }),
     lines
   };
 }
@@ -1189,10 +1230,14 @@ function settlementText(line) {
 
 const REWARD_KIND_BY_KEY = Object.freeze({
   money: 'money',
-  sp: 'sp',
-  hp: 'hp',
-  calm: 'calm',
-  morale: 'morale',
+  sp: 'cost',
+  hp: 'gain',
+  calm: 'gain',
+  morale: 'gain',
+  fame: 'gain',
+  face: 'gain',
+  auth: 'gain',
+  fitXp: 'gain',
   fatigue: 'risk',
   heat: 'risk',
   injury: 'risk',
@@ -1201,14 +1246,11 @@ const REWARD_KIND_BY_KEY = Object.freeze({
 });
 
 const REWARD_ICON_BY_KIND = Object.freeze({
+  gain: '得',
+  cost: '耗',
   money: '钱',
-  sp: '体',
-  hp: '命',
-  calm: '静',
-  morale: '气',
   relation: '人',
   skill: '技',
-  maw: '茂',
   risk: '险',
   item: '物',
   time: '时'
@@ -1218,7 +1260,14 @@ function rewardKind(line = {}) {
   if (line.group === 'skills') return 'skill';
   if (line.group === 'relations') return 'relation';
   if (line.group === 'styles' || line.group === 'stats') return 'skill';
-  return REWARD_KIND_BY_KEY[line.key] || 'maw';
+  if (line.kind) return line.kind;
+  const byKey = REWARD_KIND_BY_KEY[line.key];
+  if (byKey) {
+    if (byKey === 'cost' && Number(line.delta || 0) > 0) return 'gain';
+    if (byKey === 'gain' && Number(line.delta || 0) < 0) return 'cost';
+    return byKey;
+  }
+  return Number(line.delta || 0) < 0 ? 'cost' : 'gain';
 }
 
 function rewardValueFromSnapshot(line = {}, snapshot = {}) {
@@ -1241,43 +1290,106 @@ function rewardDeltaText(delta) {
   return n > 0 ? `+${n}` : String(n);
 }
 
+function rewardTone(kind, delta, fallback = '') {
+  if (fallback) return fallback;
+  if (kind === 'cost' || kind === 'time') return 'bad';
+  if (kind === 'risk') return Number(delta || 0) <= 0 ? 'good' : 'bad';
+  if (kind === 'money') return Number(delta || 0) >= 0 ? 'good' : 'bad';
+  return Number(delta || 0) >= 0 ? 'good' : 'bad';
+}
+
+function rewardPriority(kind, index = 0) {
+  return ({
+    money: 0,
+    item: 5,
+    skill: 10,
+    gain: 20,
+    relation: 30,
+    risk: 40,
+    cost: 80,
+    time: 90
+  }[kind] ?? 50) + index;
+}
+
+function normalizeRewardDelta(delta = {}, source = 'settlement', index = 0) {
+  if (!delta || typeof delta !== 'object') return null;
+  const kind = delta.kind || (Number(delta.delta || 0) < 0 ? 'cost' : 'gain');
+  const label = delta.label || delta.key || '变化';
+  return {
+    key: delta.key || `${kind}:${label}`,
+    label,
+    value: delta.value ?? null,
+    delta: Math.round(Number(delta.delta || 0)),
+    kind,
+    icon: delta.icon || REWARD_ICON_BY_KIND[kind] || '得',
+    tone: rewardTone(kind, delta.delta, delta.tone),
+    priority: Number.isFinite(Number(delta.priority)) ? Number(delta.priority) : rewardPriority(kind, index),
+    source: delta.source || source
+  };
+}
+
 function rewardDeltaFromLine(line = {}, after = {}, source = 'settlement', index = 0) {
   const delta = Math.round(Number(line.delta || 0));
   if (!delta) return null;
   const kind = rewardKind(line);
   const label = rewardLabel(line);
-  return {
+  return normalizeRewardDelta({
     key: `${line.group || 'player'}:${line.key || label}`,
     label,
     value: rewardValueFromSnapshot(line, after),
     delta,
     kind,
-    icon: REWARD_ICON_BY_KIND[kind] || '得',
-    tone: line.tone || (delta > 0 ? 'good' : 'bad'),
-    priority: index + (kind === 'money' ? 0 : kind === 'time' ? 90 : kind === 'skill' ? 10 : 20),
+    tone: line.tone,
     source
-  };
+  }, source, index);
 }
 
 function timeRewardDelta(minutes = 0, source = 'time') {
   const value = Math.round(Number(minutes || 0));
   if (!value) return null;
-  return {
+  return normalizeRewardDelta({
     key: 'time',
     label: '时间',
     value: null,
     delta: -value,
     kind: 'time',
-    icon: REWARD_ICON_BY_KIND.time,
-    tone: 'bad',
-    priority: 95,
     source
-  };
+  }, source, 0);
 }
 
-function rewardDeltasFromSettlement(lines = [], after = {}, { source = 'settlement', minutes = 0 } = {}) {
+function riskRewardDelta(item = {}, source = 'event') {
+  const raw = item.riskLabel ?? item.risk ?? ENEMIES[item.enemy]?.risk ?? (item.enemy ? '中' : '');
+  if (!raw) return null;
+  const riskValue = { 低: 1, 中: 2, 高: 4, 剧情: 5, 终局: 5 }[raw] || Number(raw) || 1;
+  return normalizeRewardDelta({
+    key: 'risk',
+    label: `风险 ${raw}`,
+    value: riskValue,
+    delta: riskValue,
+    kind: 'risk',
+    tone: riskValue >= 3 ? 'bad' : 'neutral',
+    priority: 45,
+    source
+  }, source, 0);
+}
+
+function itemRewardDelta(itemId, delta = 0, source = 'item') {
+  if (!itemId || !delta) return null;
+  return normalizeRewardDelta({
+    key: `item:${itemId}`,
+    label: ITEMS[itemId]?.name || itemId,
+    delta,
+    kind: 'item',
+    tone: delta > 0 ? 'good' : 'bad',
+    priority: 6,
+    source
+  }, source, 0);
+}
+
+function rewardDeltasFromSettlement(lines = [], after = {}, { source = 'settlement', minutes = 0, extra = [] } = {}) {
   return [
     ...lines.map((line, index) => rewardDeltaFromLine(line, after, source, index)).filter(Boolean),
+    ...extra.map((delta, index) => normalizeRewardDelta(delta, source, index)).filter(Boolean),
     timeRewardDelta(minutes, source)
   ]
     .filter(Boolean)
@@ -1410,9 +1522,11 @@ function executeAction(state, action, options = {}) {
   } else {
     const beforeSkillState = clone(state.skillState || {});
     const baseGain = dosage ? scaledGain(action.gain || {}, Number(dosage.multiplier || 1), dosage) : (action.gain || {});
-    const repeat = applyTrainingRepeatPressure(state, action, baseGain);
+    const micro = applyMicroActionPressure(state, action, baseGain);
+    const repeat = applyTrainingRepeatPressure(state, action, micro.gain);
     applyGain(state, repeat.gain);
     const idleEvent = action.type === 'idle' ? maybeIdleEvent(state) : null;
+    const scheduleNote = applyDosageSchedulePressure(state, dosage);
     if (dosage?.injuryRisk && actionRoll(state, 59) < dosage.injuryRisk) {
       addMinorInjury(state);
       state.player.fatigue = clamp((state.player.fatigue || 0) + 4, 0, 100);
@@ -1420,7 +1534,7 @@ function executeAction(state, action, options = {}) {
     const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
     addLog(state, `完成行动：${action.name}${dosage ? ` · ${dosage.name}` : ''}`);
     const idleBody = idleEvent ? `${idleEvent.title}：${idleEvent.text}` : '';
-    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, repeat.note, idleBody].filter(Boolean).join('\n') } });
+    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, micro.note, repeat.note, scheduleNote, idleBody].filter(Boolean).join('\n') } });
   }
 }
 
@@ -1465,7 +1579,7 @@ function resolveEventNotebook(state) {
       body: card.result || '你把这件待办处理到可以继续采购和整理装备。',
       lines: [],
       summary: { cost: [], gain: ['商店已打开'], risk: riskText(card) },
-      rewardDeltas: [],
+      rewardDeltas: [riskRewardDelta(card, 'eventNotebook')].filter(Boolean),
       logText: state.log?.[0]?.text || ''
     });
   } else if (card.action) {
@@ -1649,6 +1763,7 @@ function finishTrainingMini(state, gradeId, result = {}) {
   if (moneyCost) state.player.money -= moneyCost;
   advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
   applyGain(state, gain);
+  const scheduleNote = applyDosageSchedulePressure(state, dosage);
   if (dosage?.injuryRisk && actionRoll(state, 71) < dosage.injuryRisk) {
     addMinorInjury(state);
     state.player.fatigue = clamp((state.player.fatigue || 0) + 4, 0, 100);
@@ -1658,7 +1773,7 @@ function finishTrainingMini(state, gradeId, result = {}) {
   state.ui.modal = {
     type: 'settlement',
     title: `${action.name} · ${grade.label}`,
-    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result), repeat.note].filter(Boolean).join('\n'),
+    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result), repeat.note, scheduleNote].filter(Boolean).join('\n'),
     lead: oneSentence(trainingResultBody(grade, result), `${action.name}完成。`),
     rewardDeltas: rewardDeltasFromSettlement(lines, state, {
       source: 'training',
@@ -2178,23 +2293,35 @@ export class GameStore {
       s.ui.tab = action.tab;
       s.ui.modal = null;
       s.ui.cityMapOpen = false;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'openCityMap') {
       s.ui.tab = 'map';
       s.ui.modal = null;
       s.ui.selectedTravel = null;
       s.ui.cityMapOpen = true;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'toggleCityMap') {
       s.ui.tab = 'map';
       s.ui.modal = null;
       s.ui.selectedTravel = null;
       s.ui.cityMapOpen = !s.ui.cityMapOpen;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'closeCityMap') {
       s.ui.cityMapOpen = false;
+    } else if (action.type === 'openInteractionMenu') {
+      s.ui.tab = 'map';
+      s.ui.cityMapOpen = false;
+      s.ui.selectedTravel = null;
+      s.ui.interactionMenu = { characterId: action.characterId };
+    } else if (action.type === 'closeInteractionMenu') {
+      s.ui.interactionMenu = null;
     } else if (action.type === 'toast') {
       s.ui.toast = action.text;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'closeModal') {
       s.ui.modal = null;
       s.ui.selectedTravel = null;
+      s.ui.interactionMenu = null;
     } else if (action.type === 'advanceDialogue') {
       if (s.ui.modal?.type === 'dialogue') {
         const maxIndex = Math.max(0, (s.ui.modal.lines || []).length - 1);
@@ -2203,6 +2330,7 @@ export class GameStore {
     } else if (action.type === 'completeDialogue') {
       completeDialogue(s);
     } else if (action.type === 'openTravel') {
+      s.ui.interactionMenu = null;
       if (!isLocationUnlocked(s, action.loc)) {
         s.ui.toast = locationLockReason(s, action.loc);
         s.ui.cityMapOpen = false;
@@ -2212,6 +2340,7 @@ export class GameStore {
         s.ui.cityMapOpen = false;
       }
     } else if (action.type === 'travel') {
+      s.ui.interactionMenu = null;
       const allowLocked = Boolean(s.ui.modal?.allowLocked && s.ui.modal?.loc === action.loc);
       const q = travelQuote(s, action.loc, action.mode);
       if (!allowLocked && !isLocationUnlocked(s, action.loc)) s.ui.toast = locationLockReason(s, action.loc);
@@ -2238,9 +2367,11 @@ export class GameStore {
         s.ui.cityMapOpen = false;
       }
     } else if (action.type === 'doAction') {
+      s.ui.interactionMenu = null;
       const a = findAction(s, action.actionId);
       executeAction(s, a);
     } else if (action.type === 'chooseDuration') {
+      s.ui.interactionMenu = null;
       const a = findAction(s, action.actionId);
       executeAction(s, a, { dosageId: action.durationId });
     } else if (action.type === 'startMainEvent') {
@@ -2597,6 +2728,66 @@ function sceneCharacters(state, mainEvent) {
   return cast.slice(0, 3);
 }
 
+function characterFallbackLine(character = {}) {
+  if (character.id === 'fatty') return '他冲你比了个别瞎练的手势。';
+  if (character.side === 'player') return '你整理了一下呼吸，提醒自己别把训练练成表演。';
+  if (ENEMIES[character.id]) return '对方没急着动，你先把距离和退路看清楚。';
+  if (NPCS[character.id]) return `${character.name || '对方'}看了你一眼，意思是先把今天的事做扎实。`;
+  return `${character.name || '这个人'}现在没有可执行行动。`;
+}
+
+function menuActionLabel(action = {}) {
+  if (action.type === 'dialog') return '聊几句';
+  if (action.type === 'battle') return '处理这局';
+  if (action.type === 'shop') return '看看补给';
+  return action.name || '行动';
+}
+
+function sceneInteractionMenuModel(state, characters = [], actions = []) {
+  const characterId = state.ui?.interactionMenu?.characterId;
+  if (!characterId) return null;
+  const character = characters.find((item) => item.id === characterId);
+  if (!character) return null;
+  const relatedActions = actions.filter((action) => (
+    (character.id && action.npc === character.id) ||
+    (character.id && action.enemy === character.id)
+  ));
+  const menuActions = relatedActions.slice(0, 2).map((action) => {
+    const unavailable = action.disabledReason || action.lockReason || action.unavailableReason || '现在条件不够';
+    return action.disabled
+      ? { label: menuActionLabel(action), action: 'toast', text: unavailable, kind: 'disabled' }
+      : { label: menuActionLabel(action), action: 'doAction', id: action.id, kind: 'primary' };
+  });
+  const hasExecutable = menuActions.some((item) => item.action === 'doAction');
+  if (NPCS[character.id]) {
+    if (!menuActions.some((item) => item.label === '聊几句')) {
+      menuActions.push({ label: '聊几句', action: 'toast', text: npcLine(character.id), kind: hasExecutable ? 'ghost' : 'primary' });
+    }
+    if (character.id === 'fatty') {
+      menuActions.push({ label: '一起复盘', action: 'toast', text: '刘胖子把你的动作拆成三句：别追手，脚下别死，真不行就走。', kind: 'ghost' });
+      menuActions.push({ label: '问问今天建议', action: 'toast', text: npcLine(character.id), kind: 'ghost' });
+    } else {
+      menuActions.push({ label: '问问建议', action: 'toast', text: npcLine(character.id), kind: 'ghost' });
+    }
+  } else if (ENEMIES[character.id]) {
+    menuActions.push({ label: '先观察', action: 'toast', text: characterFallbackLine(character), kind: hasExecutable ? 'ghost' : 'primary' });
+  } else if (character.side === 'player') {
+    menuActions.push({ label: '整理状态', action: 'toast', text: characterFallbackLine(character), kind: 'primary' });
+  }
+  const fallback = characterFallbackLine(character);
+  if (!menuActions.length) {
+    menuActions.push({ label: '记下', action: 'toast', text: fallback, kind: 'primary' });
+  }
+  return {
+    id: character.id,
+    name: character.name || '角色',
+    role: character.role || '场景角色',
+    feedback: hasExecutable ? `${character.name || '对方'}等你开口。` : fallback,
+    executableCount: menuActions.filter((item) => item.action === 'doAction').length,
+    actions: menuActions.slice(0, 3)
+  };
+}
+
 function seededCombatRng(state, combat, queue) {
   let seed = Number(state.seed || 1)
     + Number(combat?.eventSeq || 0) * 97
@@ -2840,6 +3031,10 @@ export function buildRenderModel(state) {
       summary: actionSummary(action)
     };
   });
+  const sceneCast = sceneCharacters(state, mainEvent);
+  const interactionMenu = state.ui.modal || state.ui.cityMapOpen
+    ? null
+    : sceneInteractionMenuModel(state, sceneCast, actions);
   const equipmentSlots = EQUIPMENT_SLOTS.map((slot) => {
     const itemId = state.equipment?.[slot.id] || null;
     const item = itemId ? ITEMS[itemId] : null;
@@ -2895,7 +3090,8 @@ export function buildRenderModel(state) {
       timeOfDay,
       timeText: timeOfDay === 'night' ? '夜景' : '日间',
       openText: locationOpenText(LOCS[state.loc]),
-      characters: sceneCharacters(state, mainEvent)
+      characters: sceneCast,
+      interactionMenu
     },
     resources: [
       ['现金', p.money, '￥'],

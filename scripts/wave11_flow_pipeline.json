@@ -2,7 +2,8 @@
   "name": "wave11-flow-combat-ui",
   "baseBranch": "staging/reforge-unlocks-v1",
   "workerRoot": "E:\\maws_cli_parallel_wave11",
-  "reasoning": "medium",
+  "model": "gpt-5.5",
+  "reasoning": "high",
   "visibleWorkers": true,
   "implementationWorkers": [
     {

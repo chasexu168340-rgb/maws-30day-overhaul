@@ -252,8 +252,8 @@ function sceneCharacterInteraction(character, actions = []) {
     (character.id && action.npc === character.id) ||
     (character.id && action.enemy === character.id)
   ));
-  const action = relatedAction && !relatedAction.disabled
-    ? { action: 'doAction', id: relatedAction.id }
+  const action = character.id
+    ? { action: 'openInteractionMenu', id: character.id }
     : { action: 'toast', text: relatedAction?.disabledReason || relatedAction?.lockReason || `${character.name || '这个人'}现在没有可执行行动` };
   const label = relatedAction
     ? `${character.name || '角色'}：${relatedAction.name || '行动'}`
@@ -266,8 +266,28 @@ function sceneCharacterInteraction(character, actions = []) {
     attrs,
     label,
     actionName: relatedAction?.name || '',
-    actionable: Boolean(relatedAction && !relatedAction.disabled)
+    actionable: Boolean(character.id)
   };
+}
+
+function renderSceneInteractionMenu(menu) {
+  if (!menu) return '';
+  const actionButtons = (menu.actions || []).slice(0, 3).map((item) => btn(
+    esc(item.label || '行动'),
+    item.action || 'toast',
+    { id: item.id, text: item.text },
+    `maws-npc-menu-action ${item.kind === 'primary' ? 'primary' : item.kind === 'disabled' ? 'is-disabled' : 'ghost'}`
+  )).join('');
+  return `
+    <aside class="maws-npc-menu" aria-label="${esc(`${menu.name}互动菜单`)}">
+      <header>
+        <div><b>${esc(menu.name)}</b><span>${esc(menu.role || '场景角色')}</span></div>
+        ${btn('收起', 'closeInteractionMenu', {}, 'tiny maws-npc-menu-close')}
+      </header>
+      <p>${esc(menu.feedback || '')}</p>
+      <div class="maws-npc-menu-actions">${actionButtons}</div>
+    </aside>
+  `;
 }
 
 function renderSceneCharacter(character, actions = []) {
@@ -523,9 +543,13 @@ function renderMap(model) {
   const recommendations = renderRecommendations(model);
   const todayBoard = renderTodayBoard(model);
   const scene = model.locationScene || {};
+  const mainTitle = model.mainEvent?.title || '暂无主线节点';
+  const mainPlace = model.mainEvent?.locName || model.loc?.name || '当前地点';
+  const recommendTitle = model.opportunities?.[0]?.title || currentActions[0]?.name || '训练 / 恢复 / 装备';
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
   const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
+  const interactionMenu = renderSceneInteractionMenu(scene.interactionMenu);
   const cityMap = model.cityMap || {};
   const cityBg = assetPath(cityMap.backgroundKey);
   const cityBgUrl = cityBg ? `/${cityBg}` : '';
@@ -559,12 +583,18 @@ function renderMap(model) {
           <div class="maws-scene-info">
             <span>${esc(scene.timeText || '')} · ${esc(scene.openText || '')}</span>
             <h2>${esc(model.loc?.name)}</h2>
+            <div class="maws-scene-meta" aria-label="当前推进信息">
+              <b>主线：${esc(mainTitle)}</b>
+              <b>地点：${esc(mainPlace)}</b>
+              <b>推荐：${esc(recommendTitle)}</b>
+            </div>
             <details class="maws-scene-desc">
               <summary>地点详情</summary>
               <p>${esc(model.loc?.desc)}</p>
             </details>
           </div>
           <div class="maws-scene-cast">${characters}</div>
+          ${interactionMenu}
         </div>
         <aside class="maws-action-rail maws-action-rail-main">
           <div class="maws-rail-title"><b>推荐行动</b><span>${esc((model.opportunities || []).length)}条</span></div>
@@ -873,13 +903,20 @@ function renderCombat(model) {
   }));
   const selectedCards = equippedCards.filter((skill) => skill.selected);
   const standbyCards = equippedCards.filter((skill) => !skill.selected);
-  const visibleCardLimit = Math.max(queueLimit, Math.min(4, equippedCards.length || queueLimit));
+  const visibleCardLimit = Math.max(4, Math.min(6, equippedCards.length || 4));
   const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, visibleCardLimit));
   const windowIds = new Set(windowCards.map((skill) => skill.id));
   const drawerCards = equippedCards.filter((skill) => !windowIds.has(skill.id));
   const windowCardHtml = windowCards.map((skill) => renderSkillCard(skill, true)).join('');
   const drawerCardHtml = drawerCards.map((skill) => renderSkillCard(skill, true)).join('');
-  const logs = (combat.log || []).slice(0, 6).map((line) => `<li>${esc(line)}</li>`).join('');
+  const commandFillers = [
+    btn('<strong>抱架</strong><small>空队列交换</small>', 'confirmBattle', {}, `maws-combat-command-chip ${combat.phase === 'auto' ? 'disabled' : 'primary'}`),
+    btn('<strong>清队</strong><small>重排 1-2 招</small>', 'clearSkills', {}, 'maws-combat-command-chip'),
+    btn('<strong>攻身</strong><small>稳妥目标</small>', 'setTarget', { target: 'body' }, `maws-combat-command-chip ${combat.target === 'body' ? 'active' : ''}`),
+    btn('<strong>读招</strong><small>悬停看详情</small>', 'toast', { text: '悬停或聚焦指令卡查看完整数值与描述。' }, 'maws-combat-command-chip')
+  ].slice(0, Math.max(0, 4 - windowCards.length)).join('');
+  const windowCommandHtml = windowCardHtml + commandFillers;
+  const logs = (combat.log || []).slice(0, 7).map((line) => `<li>${esc(line)}</li>`).join('');
   const feedback = combat.lastWindow?.feedback;
   const feedbackPanel = `
     <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
@@ -901,7 +938,6 @@ function renderCombat(model) {
         <div>${meter(combat.enemy?.name || '对手', combat.enemy?.hp, combat.enemy?.hpMax)}${meter('体力', combat.enemy?.sp, combat.enemy?.spMax)}${meter('架势', combat.enemy?.posture, combat.enemy?.postureMax)}</div>
       </div>
       ${feedbackPanel}
-      <details class="maws-combat-log-toggle"><summary>详细战斗记录</summary><ol>${logs}</ol></details>
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
           <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)} · 本窗口 ${esc(queueIds.length)}/${esc(queueLimit)} 槽</span><small>${phaseNote}</small></div>
@@ -911,14 +947,20 @@ function renderCombat(model) {
           <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>本窗口动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
         <div class="maws-combat-window-cards">
-          <b>行动卡 · 本窗口最多 ${esc(queueLimit)} 招</b>
-          <div class="maws-card-grid combat focus">${windowCardHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
+          <b>指令栏 · 选 ${esc(queueLimit)} 招入队</b>
+          <div class="maws-card-grid combat focus">${windowCommandHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
         </div>
         <details class="maws-fold maws-tactics-drawer" ${drawerCards.length ? 'open' : ''}>
           <summary>更多动作 / 战术抽屉 <span>${esc(drawerCards.length)}张</span></summary>
           <div class="maws-card-grid combat">${drawerCardHtml || '<p class="maws-empty">没有更多可用动作。</p>'}</div>
         </details>
-        <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
+        <aside class="maws-combat-side-panel">
+          <div class="maws-combat-side-log maws-combat-log-toggle">
+            <b>复盘</b>
+            <ol>${logs || '<li>等待第一轮交换。</li>'}</ol>
+          </div>
+          <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
+        </aside>
       </div>
     </section>
   `;
@@ -1323,6 +1365,8 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'openCityMap') store.dispatch({ type: 'openCityMap' });
   else if (action === 'closeCityMap') store.dispatch({ type: 'closeCityMap' });
   else if (action === 'toggleCityMap') store.dispatch({ type: 'toggleCityMap' });
+  else if (action === 'openInteractionMenu') store.dispatch({ type: 'openInteractionMenu', characterId: dataset.id });
+  else if (action === 'closeInteractionMenu') store.dispatch({ type: 'closeInteractionMenu' });
   else if (action === 'openTravel') store.dispatch({ type: 'openTravel', loc: dataset.loc });
   else if (action === 'travel') store.dispatch({ type: 'travel', loc: dataset.loc, mode: dataset.mode });
   else if (action === 'closeModal') store.dispatch({ type: 'closeModal' });

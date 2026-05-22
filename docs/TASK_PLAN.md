@@ -4,36 +4,28 @@
 
 ## Current Task
 
-Wave 12：Visual Slice Strike。
+Wave 13 NPC Click Interaction Menu：点击场景人物后出现 compact interaction menu，而不是只有 toast。
 
-## Result
+## Current Result
 
-- 已按 staged pipeline 完成并合并：`feat/structured-reward-deltas` -> `feat/visual-stage-hud-strike` -> `test/wave12-visual-smoke` -> `docs/wave12-art-direction-shotlist` -> `qa/wave12-visual-review`。
-- QA 在实现分支全部合并并推送后才启动，避免了提前审老版本。
-- Manager follow-up 已修复 QA P1/P2：
-  - reward chips 结构化优先，不再把 `settlementLines` / 长对话句重复解析成 chip。
-  - 弹窗内已有 hero chips 时不再额外叠一层 reward stack。
-  - 战斗 HUD 可见 4 张小行动卡，队列仍限制本窗口 1-2 招。
-  - Wave 12 visual smoke 增加结构化 reward chip 去重/短文本断言，以及可见战斗卡数量断言。
-- 已推送 `staging/reforge-unlocks-v1`。
+- 已改 `maws_src/simulation/state.js`：新增临时 `ui.interactionMenu` 状态，并从当前场景角色 + 当前地点行动生成菜单模型。
+- 已改 `maws_src/dom/ui.js`：场景角色点击改为打开菜单；菜单展示姓名、身份、反馈文案和 1-3 个行动。
+- 已改 `maws_src/dom/ui.css`：新增 compact menu 样式；手机端保留 NPC 可见可点，避免横向溢出。
+- 已写入 `docs/workers/npc_click_interaction_menu.md` 和 `docs/agent_reports/AGENT_B_NPC_CLICK_INTERACTION_MENU.md`。
 
 ## Validation
 
-- `npm run check:full`：通过。
-- `npm run test:playtest`：通过。
-- `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`：通过。
-- `git diff --check`：通过。
-- 人工查看截图：
-  - `test-results/wave12/desktop-combat.png`
-  - `test-results/wave12/desktop-map-modal.png`
-  - `test-results/wave12/mobile-main-cta.png`
+- Pass: `npm run check:full`
+- Pass: `npm run test:playtest`
+- Pass: `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`
+- Pass: targeted Chromium smoke clicking Liu Fatty at `1536x864` and `390x844`：菜单出现、3 个动作、无 runtime error、无横向溢出。
+- Pass: `git diff --check`
 
 ## Risks
 
-- `GameDesigner_CombatAnalysis/` 仍是未跟踪目录，本轮未触碰。
-- QA 报告保留了原始 findings；本文件记录 manager follow-up 已修复 P1/P2。P3 是 manager/pipeline setup scope，不属于 worker 越界。
-- 视觉截图已明显改善，但高分辨率最终美术质量仍需后续人工 playtest 继续看第一眼观感。
+- 本轮不改 `data.js`、战斗公式、经济曲线、事件系统、资产、入口 HTML、存档 key/version。
+- 没有现成可执行行动的 NPC 先使用 toast-backed 反馈按钮；后续可以通过正常 `ACTIONS` 数据接入真实行动。
 
 ## Next Step
 
-人工进 `maws_30day_overhaul_v3.html` 看 Wave 12 最终画面；如果 5 个视觉硬门槛通过，再开下一轮，不要直接跳技能树 implementation。
+提交并推送 `feat/npc-click-interaction-menu`。

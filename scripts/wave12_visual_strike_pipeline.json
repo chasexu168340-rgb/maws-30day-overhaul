@@ -2,7 +2,8 @@
   "name": "wave12-visual-slice-strike",
   "baseBranch": "staging/reforge-unlocks-v1",
   "workerRoot": "E:\\maws_cli_parallel_wave12",
-  "reasoning": "medium",
+  "model": "gpt-5.5",
+  "reasoning": "high",
   "visibleWorkers": true,
   "implementationWorkers": [
     {

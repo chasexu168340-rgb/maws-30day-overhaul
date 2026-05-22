@@ -83,6 +83,9 @@ function Start-CodexWorker {
     [object]$Worker,
 
     [Parameter(Mandatory = $true)]
+    [string]$Model,
+
+    [Parameter(Mandatory = $true)]
     [string]$Reasoning,
 
     [bool]$Visible = $false
@@ -98,6 +101,7 @@ function Start-CodexWorker {
     "-Worktree", $Worker.Path,
     "-Prompt", $Worker.Prompt,
     "-Title", $Worker.Name,
+    "-Model", $Model,
     "-Reasoning", $Reasoning
   )
 
@@ -202,6 +206,65 @@ function AutoCommitQaIfNeeded {
   }
 }
 
+function Invoke-WorkerStage {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Stage,
+
+    [Parameter(Mandatory = $true)]
+    [string]$BaseBranch,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RepoNodeModules,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Reasoning,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Model,
+
+    [bool]$VisibleWorkers = $false
+  )
+
+  $stageName = if ($Stage.name) { $Stage.name } else { "implementation" }
+  Write-Host "== Stage: $stageName =="
+
+  Invoke-Git $RepoRoot @("fetch", "origin")
+  Invoke-Git $RepoRoot @("switch", $BaseBranch)
+  Invoke-Git $RepoRoot @("pull", "--ff-only")
+
+  $workers = @($Stage.workers)
+  foreach ($worker in $workers) {
+    Prepare-Worker $worker $BaseBranch $RepoNodeModules
+  }
+
+  $processes = @()
+  foreach ($worker in $workers) {
+    $processes += Start-CodexWorker $worker $Model $Reasoning $VisibleWorkers
+  }
+
+  if ($processes.Count) {
+    Wait-WorkerGroup $processes "$stageName workers"
+  }
+
+  foreach ($worker in $workers) {
+    Push-CleanWorkerBranch $worker
+  }
+
+  Invoke-Git $RepoRoot @("fetch", "origin")
+  Invoke-Git $RepoRoot @("switch", $BaseBranch)
+  Invoke-Git $RepoRoot @("pull", "--ff-only")
+
+  foreach ($merge in @($Stage.mergeOrder)) {
+    Write-Host "== Merge $($merge.branch) =="
+    Invoke-Git $RepoRoot @("merge", "--no-ff", "origin/$($merge.branch)", "-m", "merge: $($merge.name)")
+    foreach ($command in @($merge.validate)) {
+      Invoke-CheckedCommand $RepoRoot $command
+    }
+    Invoke-Git $RepoRoot @("push")
+  }
+}
+
 if (!(Test-Path -LiteralPath $RepoRoot)) {
   throw "Repo root not found: $RepoRoot"
 }
@@ -218,7 +281,8 @@ if (!(Test-Path -LiteralPath $specPath)) {
 $pipeline = Get-Content -Raw -LiteralPath $specPath | ConvertFrom-Json
 $baseBranch = $pipeline.baseBranch
 $workerRoot = $pipeline.workerRoot
-$reasoning = if ($pipeline.reasoning) { $pipeline.reasoning } else { "medium" }
+$model = if ($pipeline.model) { $pipeline.model } else { "gpt-5.5" }
+$reasoning = if ($pipeline.reasoning) { $pipeline.reasoning } else { "high" }
 $visibleWorkers = [bool]$pipeline.visibleWorkers
 $repoNodeModules = Join-Path $RepoRoot "node_modules"
 $script:LogRoot = Join-Path $workerRoot "_logs"
@@ -234,33 +298,18 @@ Invoke-Git $RepoRoot @("fetch", "origin")
 Invoke-Git $RepoRoot @("switch", $baseBranch)
 Invoke-Git $RepoRoot @("pull", "--ff-only")
 
-$implWorkers = @($pipeline.implementationWorkers)
-foreach ($worker in $implWorkers) {
-  Prepare-Worker $worker $baseBranch $repoNodeModules
+$workerStages = if ($pipeline.stages) {
+  @($pipeline.stages)
+} else {
+  @([pscustomobject]@{
+    name = "implementation"
+    workers = @($pipeline.implementationWorkers)
+    mergeOrder = @($pipeline.mergeOrder)
+  })
 }
 
-$implProcesses = @()
-foreach ($worker in $implWorkers) {
-  $implProcesses += Start-CodexWorker $worker $reasoning $visibleWorkers
-}
-
-Wait-WorkerGroup $implProcesses "implementation workers"
-
-foreach ($worker in $implWorkers) {
-  Push-CleanWorkerBranch $worker
-}
-
-Invoke-Git $RepoRoot @("fetch", "origin")
-Invoke-Git $RepoRoot @("switch", $baseBranch)
-Invoke-Git $RepoRoot @("pull", "--ff-only")
-
-foreach ($merge in @($pipeline.mergeOrder)) {
-  Write-Host "== Merge $($merge.branch) =="
-  Invoke-Git $RepoRoot @("merge", "--no-ff", "origin/$($merge.branch)", "-m", "merge: $($merge.name)")
-  foreach ($command in @($merge.validate)) {
-    Invoke-CheckedCommand $RepoRoot $command
-  }
-  Invoke-Git $RepoRoot @("push")
+foreach ($stage in $workerStages) {
+  Invoke-WorkerStage $stage $baseBranch $repoNodeModules $reasoning $model $visibleWorkers
 }
 
 $qa = $pipeline.qaWorker
@@ -269,7 +318,7 @@ Invoke-Git $qa.Path @("fetch", "origin")
 Invoke-Git $qa.Path @("reset", "--hard", "origin/$baseBranch")
 Invoke-Git $qa.Path @("checkout", "-B", $qa.Branch)
 
-$qaProcess = Start-CodexWorker $qa $reasoning $visibleWorkers
+$qaProcess = Start-CodexWorker $qa $model $reasoning $visibleWorkers
 Wait-WorkerGroup @($qaProcess) "QA worker"
 AutoCommitQaIfNeeded $qa
 Push-CleanWorkerBranch $qa

@@ -171,10 +171,10 @@ export const TRAVEL_TUNING = {
 };
 
 export const TIME_DOSAGE_OPTIONS = {
-  short: { name: '短练 30m', minutes: 30, multiplier: 0.68, spMultiplier: 0.48, fatigueMultiplier: 0.38, costMultiplier: 0.55, note: '低收益低消耗，适合塞进碎片时间，不会因为少练半小时就感觉亏。' },
-  standard: { name: '标准 60m', minutes: 60, multiplier: 1, spMultiplier: 1, fatigueMultiplier: 1, costMultiplier: 1, note: '默认收益，节奏最稳。' },
-  deep: { name: '深练 90m', minutes: 90, multiplier: 1.22, spMultiplier: 1.42, fatigueMultiplier: 1.75, costMultiplier: 1.15, note: '有效但开始压身体，适合状态好时补一门短板。' },
-  hard: { name: '硬练 120m', minutes: 120, multiplier: 1.32, spMultiplier: 1.9, fatigueMultiplier: 2.75, costMultiplier: 1.25, injuryRisk: 0.28, note: '收益明显递减，疲劳和小伤风险很高，不该当成日常默认项。' }
+  short: { name: '短练 30m', minutes: 30, multiplier: 0.7, spMultiplier: 0.46, fatigueMultiplier: 0.34, costMultiplier: 0.55, opportunityPressure: 0, note: '低收益低消耗，适合塞进碎片时间；今天还留得下别的安排。' },
+  standard: { name: '标准 60m', minutes: 60, multiplier: 1, spMultiplier: 1, fatigueMultiplier: 1, costMultiplier: 1, opportunityPressure: 0, note: '默认推荐，收益和身体压力最稳，不惩罚正常安排。' },
+  deep: { name: '深练 90m', minutes: 90, multiplier: 1.18, spMultiplier: 1.42, fatigueMultiplier: 1.75, costMultiplier: 1.15, opportunityPressure: 1, note: '收益更清楚，但会占掉一段机会窗口；适合状态好时补短板。' },
+  hard: { name: '硬练 120m', minutes: 120, multiplier: 1.25, spMultiplier: 1.95, fatigueMultiplier: 2.9, costMultiplier: 1.25, opportunityPressure: 2, injuryRisk: 0.34, note: '硬顶强度，收益递减且明显挤掉今天别的机会；小伤风险很高。' }
 };
 
 export const IDLE_EVENTS = [

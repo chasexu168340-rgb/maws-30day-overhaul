@@ -1,0 +1,88 @@
+{
+  "name": "wave13-first-look-remaining-after-visual",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave13",
+  "model": "gpt-5.5",
+  "reasoning": "high",
+  "visibleWorkers": true,
+  "stages": [
+    {
+      "name": "combat-command-bar",
+      "workers": [
+        {
+          "name": "Wave13-Combat-Command-Bar-2",
+          "path": "E:\\maws_cli_parallel_wave13\\combat-command-bar-2",
+          "branch": "feat/combat-command-bar-2",
+          "prompt": "docs\\codex_tasks\\WAVE13_COMBAT_COMMAND_BAR_2.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 combat command bar 2",
+          "branch": "feat/combat-command-bar-2",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "npc-click-interaction",
+      "workers": [
+        {
+          "name": "Wave13-NPC-Click-Interaction",
+          "path": "E:\\maws_cli_parallel_wave13\\npc-click-interaction",
+          "branch": "feat/npc-click-interaction-menu",
+          "prompt": "docs\\codex_tasks\\WAVE13_NPC_CLICK_INTERACTION_MENU.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 npc click interaction menu",
+          "branch": "feat/npc-click-interaction-menu",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "first-look-smoke",
+      "workers": [
+        {
+          "name": "Wave13-First-Look-Smoke",
+          "path": "E:\\maws_cli_parallel_wave13\\first-look-smoke",
+          "branch": "test/wave13-first-look-smoke",
+          "prompt": "docs\\codex_tasks\\WAVE13_FIRST_LOOK_SMOKE_TESTS.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 first look smoke",
+          "branch": "test/wave13-first-look-smoke",
+          "validate": [
+            "npm run build",
+            "npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave13-QA",
+    "path": "E:\\maws_cli_parallel_wave13\\qa-wave13",
+    "branch": "qa/wave13-first-look-review",
+    "prompt": "docs\\codex_tasks\\WAVE13_QA_REVIEW.md",
+    "commitMessage": "docs: add wave13 first look qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
