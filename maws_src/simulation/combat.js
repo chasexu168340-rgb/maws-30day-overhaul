@@ -33,22 +33,63 @@ const PLAN_MODES = Object.freeze({
   manual: {
     id: "manual",
     label: "手动",
+    desc: "玩家自己排本窗口动作。",
     queue: []
   },
   safe: {
     id: "safe",
     label: "稳守",
-    queue: [["guard", "wild_swing"], ["guard", "retreat"]]
+    desc: "不熟悉敌人时，先抱架，再打一拍粗糙反击。",
+    queue: [["guard", "wild_swing"], ["guard", "retreat"]],
+    feedback: {
+      summary: "稳守配方：先把脸和重心收回来，再用一拳确认对方反应。",
+      actions: {
+        guard: "你先把架子收紧，没有急着赌拳。",
+        wild_swing: "你没有完全看懂对方，但这一拳让他不敢直接压进。",
+        retreat: "你没有赢拳，但赢了出口。"
+      }
+    }
   },
   pressure: {
     id: "pressure",
     label: "压迫",
-    queue: [["push_away", "wild_swing"]]
+    desc: "打没练过的人时，先抢空间，再接野路挥拳。",
+    queue: [["push_away", "wild_swing"]],
+    feedback: {
+      summary: "压迫配方：先用推搡抢到一拍，再把对方脚步打乱。",
+      actions: {
+        push_away: "你用推搡抢到一拍。",
+        wild_swing: "对方脚下乱了，你趁乱补上一拳。"
+      }
+    }
   },
   exit: {
     id: "exit",
     label: "脱离",
-    queue: [["talkdown", "retreat"]]
+    desc: "街头风险高时，先降温，再后撤找出口。",
+    queue: [["talkdown", "retreat"]],
+    feedback: {
+      summary: "脱离配方：先把火压下去，再把出口拿回来。",
+      actions: {
+        talkdown: "你先把话说慢，冲突没有继续升温。",
+        retreat: "你没有赢拳，但赢了出口。"
+      }
+    }
+  },
+  probe: {
+    id: "probe",
+    label: "试探",
+    desc: "不确定对方路数时，先退看一拍，或抱架后轻推试反应。",
+    queue: [["retreat", "wild_swing"], ["guard", "push_away"]],
+    feedback: {
+      summary: "试探配方：先让对方多走一步，你再决定打还是退。",
+      actions: {
+        retreat: "你先退半步，把对方的追法看清楚。",
+        wild_swing: "你用一记粗拳试他的反应，对方脚下乱了一下。",
+        guard: "你把架势摆稳，先观察对方怎么进来。",
+        push_away: "你轻推试距，知道这半步能不能抢。"
+      }
+    }
   }
 });
 
@@ -239,7 +280,7 @@ export function previewPlayerAction(state, skillId) {
     max,
     posture: calcPlayerPostureDamage(combatState, id),
     hit: Math.round(playerHitChance(combatState, id) * 100),
-    risk: Math.round(skillRisk(combatState, skill) * 100),
+    risk: Math.round(skillRisk(combatState, skill, id) * 100),
     sp: skill.sp,
     tp: skill.tp,
     dist: skill.dist.join("/"),
@@ -275,6 +316,7 @@ export function suggestCombatQueue(state) {
       source: "planMode",
       planMode: mode,
       planLabel: PLAN_MODES[mode].label,
+      feedback: planFeedback(mode),
       forced: false
     };
   }
@@ -300,6 +342,7 @@ export function suggestCombatQueue(state) {
     source: "equipSkills",
     planMode: mode,
     planLabel: PLAN_MODES[mode].label,
+    feedback: queue.length ? planFeedback(mode) : "",
     forced: false
   };
 }
@@ -377,7 +420,7 @@ export function resolveCombatExchange(state, selectedActions, rng = Math.random)
     const suggestion = suggestCombatQueue(combatState);
     if (suggestion.queue.length) {
       restStep.result.suggestedQueue = suggestion.queue;
-      restStep.log.push(`自动策略建议：下次可尝试【${suggestion.queue.map((id) => SKILLS[id]?.name || id).join("】→【")}】。`);
+      restStep.log.push(`自动策略建议：下次可尝试【${suggestion.queue.map((id) => SKILLS[id]?.name || id).join("】→【")}】。${suggestion.feedback || ""}`);
     }
     pushStep(combatState, steps, restStep);
     if (!isTerminal(combatState)) {
@@ -419,7 +462,7 @@ export function resolveCombatExchange(state, selectedActions, rng = Math.random)
       }, rng);
       combatState.currentEnemyResponse = enemyResponse;
 
-      const playerStep = resolvePlayerAction(combatState, id, rng);
+      const playerStep = resolvePlayerAction(combatState, id, rng, i);
       pushStep(combatState, steps, playerStep);
 
       if (isTerminal(combatState)) break;
@@ -618,7 +661,7 @@ function resolveRest(combatState) {
   };
 }
 
-function resolvePlayerAction(combatState, id, rng) {
+function resolvePlayerAction(combatState, id, rng, actionIndex = 0) {
   const skill = SKILLS[id];
   const player = combatState.player;
   const enemy = combatState.enemy;
@@ -626,13 +669,20 @@ function resolvePlayerAction(combatState, id, rng) {
   const fx = [];
   const log = [];
   const combo = currentComboBonus(combatState, id);
+  const recipeLine = recipeActionFeedback(combatState, id, actionIndex);
+  const perkLine = combatPerkFeedback(combatState, id);
+  const addFeelLines = () => {
+    if (recipeLine) log.push(recipeLine);
+    if (perkLine) log.push(perkLine);
+  };
 
   player.sp = clamp(player.sp - skill.sp, 0, player.spMax);
   learnFromUse(combatState, id, skill);
 
   if (id === "guard") {
-    combatState.playerBuff.def = COMBAT_TUNING.guardDef + styleBonus(combatState, "boxing", 0.0008);
+    combatState.playerBuff.def = COMBAT_TUNING.guardDef + styleBonus(combatState, "boxing", 0.0008) + combatPerkValue(combatState, "defense", id);
     fx.push(makeFx(combatState, "guard", "player", 0, "抱架", id));
+    addFeelLines();
     log.push("你收紧【防守抱架】，下一次受伤明显降低。");
     rememberComboAction(combatState, id);
     return step("player", id, { ok: true, defense: combatState.playerBuff.def, spCost: skill.sp }, log, fx);
@@ -642,6 +692,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.playerBuff.dodge = COMBAT_TUNING.dodgeDef + Math.max(0, stats.spd - 50) * 0.003 + effect(combatState, "dodge");
     combatState.playerBuff.counter = (combatState.playerBuff.counter || 0) + 0.04;
     fx.push(makeFx(combatState, "guard", "player", 0, "侧步", id));
+    addFeelLines();
     log.push("你侧步离线，降低被命中率，并给下一击制造角度。");
     rememberComboAction(combatState, id);
     return step("player", id, { ok: true, dodge: combatState.playerBuff.dodge, spCost: skill.sp }, log, fx);
@@ -651,6 +702,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.playerBuff.anti = COMBAT_TUNING.sprawlAnti + Math.max(0, stats.bal - 50) * 0.003 + styleBonus(combatState, "mma", 0.0012);
     combatState.playerBuff.def = 0.16;
     fx.push(makeFx(combatState, "guard", "player", 0, "防摔", id));
+    addFeelLines();
     log.push("你沉髋下压，专门防对手抱摔切入。");
     rememberComboAction(combatState, id);
     return step("player", id, { ok: true, antiGrapple: combatState.playerBuff.anti, spCost: skill.sp }, log, fx);
@@ -660,6 +712,7 @@ function resolvePlayerAction(combatState, id, rng) {
     combatState.distance = combatState.distance === "far" ? "mid" : "close";
     combatState.playerBuff.nextHit = (combatState.playerBuff.nextHit || 0) + 0.04 + Math.max(0, stats.spd - 50) * 0.001;
     fx.push(makeFx(combatState, "guard", "player", 0, "前压", id));
+    addFeelLines();
     log.push(`你前压入身，距离变为【${distText(combatState.distance)}】。`);
     rememberComboAction(combatState, id);
     return step("player", id, { ok: true, distance: combatState.distance, nextHit: combatState.playerBuff.nextHit, spCost: skill.sp }, log, fx);
@@ -673,6 +726,7 @@ function resolvePlayerAction(combatState, id, rng) {
       combatState.distance = combatState.distance === "close" ? "mid" : "far";
     }
     fx.push(makeFx(combatState, "guard", "player", 0, id === "dirtyescape" ? "撤离" : "后撤", id));
+    addFeelLines();
     log.push(id === "dirtyescape" ? "你选择夺路撤离，风险降低。" : `你后撤拉开，距离变为【${distText(combatState.distance)}】。`);
 
     if (id === "dirtyescape" && enemy.weapon) {
@@ -695,6 +749,7 @@ function resolvePlayerAction(combatState, id, rng) {
     const ok = rng() < clamp(playerHitChance(combatState, id) + combo.hit + (stats.jud - 50) * 0.002 + styleBonus(combatState, "street", 0.0012), 0.08, 0.90);
     enemy.morale = clamp(enemy.morale - (ok ? 18 : 6), 0, 100);
     fx.push(makeFx(combatState, "guard", "player", 0, ok ? "降温" : "拖住", id));
+    addFeelLines();
     log.push(ok ? "你言语降温成功，对手敌意明显下降。" : "你尝试降温，但对手只是犹豫了一下。");
     applyComboRefund(combatState, combo, log, fx, id);
     rememberComboAction(combatState, id);
@@ -707,9 +762,11 @@ function resolvePlayerAction(combatState, id, rng) {
       combatState.distance = "close";
       combatState.ground = "none";
       fx.push(makeFx(combatState, "guard", "player", 0, "脱身", id));
+      addFeelLines();
       log.push("你地面脱身成功，回到近身站立。");
     } else {
       fx.push(makeFx(combatState, "miss", "player", 0, "脱身失败", id));
+      addFeelLines();
       log.push("你尝试脱身失败，仍在地面压力中。");
     }
     rememberComboAction(combatState, id);
@@ -718,8 +775,9 @@ function resolvePlayerAction(combatState, id, rng) {
 
   const hit = rng() < clamp(playerHitChance(combatState, id) + combo.hit, 0.08, 0.97);
   if (!hit) {
-    player.posture = clamp(player.posture - Math.round(Math.max(0, skillRisk(combatState, skill) - combo.risk) * 16), 0, player.postureMax);
+    player.posture = clamp(player.posture - Math.round(Math.max(0, skillRisk(combatState, skill, id) - combo.risk) * 16), 0, player.postureMax);
     fx.push(makeFx(combatState, "miss", "player", 0, "MISS", id));
+    addFeelLines();
     log.push(`你使用【${skill.name}】落空，暴露破绽。`);
     applyComboRefund(combatState, combo, log, fx, id);
     rememberComboAction(combatState, id);
@@ -744,6 +802,7 @@ function resolvePlayerAction(combatState, id, rng) {
   enemy.posture = clamp(enemy.posture - postureDamage, 0, enemy.postureMax);
   enemy.morale = clamp(enemy.morale - 3, 0, 100);
 
+  addFeelLines();
   log.push(guarded
     ? `你使用【${skill.name}】被对手防下，但仍有 ${damage} 点削血，架势-${postureDamage}，对手体力-${COMBAT_TUNING.blockSpDrain}。`
     : `你使用【${skill.name}】命中${targetText(combatState.target)}，造成 ${damage} 伤害，架势-${postureDamage}。`);
@@ -1070,6 +1129,7 @@ function playerHitChance(combatState, id) {
   if (responsePlan?.intent === "pressure" && ["jab", "frontkick", "lowkick", "karate_front_kick", "tkd_roundhouse"].includes(id)) hit += COMBAT_TUNING.counterBonus;
   if (responsePlan?.intent === "clinch" && ["sprawl", "frontkick", "retreat", "karate_front_kick", "sanda_catch_throw"].includes(id)) hit += COMBAT_TUNING.counterBonus;
   if (responsePlan) hit += scoreSingleCounter(id, responsePlan);
+  hit += combatPerkValue(combatState, "hit", id);
   if (combatState.lastPlayerActions?.slice(-2).every((action) => action === id)) hit -= repeatPenalty;
   if (combatState.target === "head") hit -= 0.08;
   if (combatState.target === "leg") hit -= 0.04;
@@ -1180,12 +1240,14 @@ function normalizeCombatState(input) {
     styles: { boxing: 0, mma: 0, traditional: 0, street: 0, sanda: 0, karate: 0, taekwondo: 0, ...(source.styles || player.styles || {}) },
     equipSkills: Array.isArray(source.equipSkills) ? [...source.equipSkills] : [],
     effects: { ...(source.effects || source.equipmentEffects || {}) },
+    combatPerks: normalizeCombatPerks(source.combatPerks || source.perks || source.skillTree?.combatPerks || {}),
     playerBuff: { def: 0, dodge: 0, anti: 0, nextHit: 0, counter: 0, ...(source.playerBuff || {}) },
     history: Array.isArray(source.history) ? clonePlain(source.history) : [],
     lastPlayerActions: Array.isArray(source.lastPlayerActions) ? [...source.lastPlayerActions] : [],
     lastEnemyResponse: source.lastEnemyResponse || source.enemyPlan || null,
     currentEnemyResponse: source.currentEnemyResponse || null,
     planMode: PLAN_MODES[source.planMode] ? source.planMode : "manual",
+    lastPlanFill: source.lastPlanFill || null,
     planSlot: source.planSlot || null,
     comboSlot: source.comboSlot || null,
     log: Array.isArray(source.log) ? [...source.log] : [],
@@ -1269,6 +1331,7 @@ function publicCombatState(combatState) {
   delete out._comboActor;
   delete out._comboCount;
   delete out._lastComboAction;
+  delete out.combatPerks;
   return out;
 }
 
@@ -1296,8 +1359,8 @@ function skillMastery(combatState, id) {
   return number(combatState.skillState?.[id]?.p, 0);
 }
 
-function skillRisk(combatState, skill) {
-  return clamp((skill.risk || 0) + effect(combatState, "risk") - styleBonus(combatState, skill.style || "", 0.0008), 0, 0.45);
+function skillRisk(combatState, skill, id = "") {
+  return clamp((skill.risk || 0) + effect(combatState, "risk") + combatPerkValue(combatState, "risk", id) - styleBonus(combatState, skill.style || "", 0.0008), 0, 0.45);
 }
 
 function suggestedPlanQueue(mode, prefer) {
@@ -1307,6 +1370,37 @@ function suggestedPlanQueue(mode, prefer) {
     if (queue.length === pattern.length) return queue;
   }
   return [];
+}
+
+function planFeedback(mode) {
+  const plan = PLAN_MODES[mode] || PLAN_MODES.manual;
+  return plan.feedback?.summary || plan.desc || "";
+}
+
+function recipeActionFeedback(combatState, id, actionIndex) {
+  const fill = combatState.lastPlanFill;
+  if (!fill?.queue?.length || fill.queue[actionIndex] !== id) return "";
+  const plan = PLAN_MODES[fill.mode || combatState.planMode] || null;
+  return plan?.feedback?.actions?.[id] || "";
+}
+
+function normalizeCombatPerks(raw) {
+  const source = raw && typeof raw === "object" ? clonePlain(raw) : {};
+  source.skills ||= {};
+  source.logs ||= {};
+  return source;
+}
+
+function combatPerkValue(combatState, key, skillId = "") {
+  const perks = combatState.combatPerks || {};
+  const direct = number(perks[key], 0);
+  const bySkill = number(perks.skills?.[skillId]?.[key], 0) + number(perks[skillId]?.[key], 0);
+  return direct + bySkill;
+}
+
+function combatPerkFeedback(combatState, skillId = "") {
+  const perks = combatState.combatPerks || {};
+  return perks.logs?.[skillId] || perks.skills?.[skillId]?.log || perks[skillId]?.log || "";
 }
 
 function currentComboBonus(combatState, id) {

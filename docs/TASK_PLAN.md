@@ -4,33 +4,33 @@
 
 ## Current Task
 
-Wave 15 `TREE-SPEND-001`: make the first six skill-tree nodes spendable from state/data.
+Wave 15 core addiction slice: merge `TREE-SPEND-001` and `COMBAT-RECIPE-001`.
 
 ## Scope
 
-- Implement Insight point cost, prerequisite checks, purchase state, old-save defaults, and settlement/rewardDeltas.
-- Touch only `maws_src/content/data.js`, `maws_src/simulation/state.js`, and this task/report documentation.
-- Do not modify DOM UI, combat formulas, events, assets, package scripts, save key/version, or starter skill constants.
+- Skill tree spend branch adds Insight costs, prerequisites, purchase state, old-save defaults, and purchase feedback.
+- Combat recipe branch adds plan-mode recipes, human-readable combat feedback, and combat perk consumption.
+- Manager resolves the expected overlap in `maws_src/simulation/state.js`.
+- Do not change UI, assets, package scripts, starter skills, save key/version, or broad combat balance.
 
 ## Current Result
 
-- Added spendable metadata and structured effects for the six requested nodes.
-- Added state action aliases `purchaseSkillTreeNode`, `buySkillTreeNode`, and `unlockSkillTreeNode`.
-- Added `skillTree.unlocked`, `skillTree.purchased`, `skillTree.perks`, and `player.skillTreePerks` normalization for old saves.
-- Added settlement modal/rewardDeltas on purchase and light combat bridge via existing `effects.risk`.
+- `feat/skill-tree-spend-v1` merged and passed `npm run check:full`, `npm run test:playtest`, and `git diff --check`.
+- `feat/combat-recipe-v1` merge produced conflicts in this file and `maws_src/simulation/state.js`.
+- Conflict resolution keeps skill-tree spend state plus combat recipe perk bridge and plan feedback.
 
 ## Validation
 
-- `npm run check:full`: passed.
-- `npm run test:playtest`: passed.
-- Direct state check for `purchaseSkillTreeNode` and old-save normalization: passed.
-- `git diff --check`: passed.
+- Pending after conflict resolution:
+  - `npm run check:full`
+  - `node maws_src/tools/sim_day5_park_check.mjs`
+  - `git diff --check`
 
 ## Risks
 
-- UI buttons still dispatch `toast` because `maws_src/dom/ui.js` is forbidden in this worker. The render model exposes `canPurchase` and `purchaseAction` for a UI worker to wire.
-- Per-skill hit boosts are currently expressed as structured perks plus small mastery gains; full hit-formula consumption belongs to the combat worker because `combat.js` is forbidden.
+- This is a focused bridge between spendable nodes and combat recipes; it is not a full skill-tree economy or full automatic combat rewrite.
+- `GameDesigner_CombatAnalysis/` remains untracked and unrelated.
 
 ## Next Step
 
-Commit with `feat: add skill tree spend slice`; next UI worker should wire available skill-tree nodes to `purchaseSkillTreeNode`.
+Resolve conflicts, commit `merge: Wave15-CombatRecipe`, push staging, then continue Wave15 smoke and QA.
