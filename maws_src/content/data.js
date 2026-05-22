@@ -153,7 +153,7 @@ export const LOC_UNLOCKS = {
   taekwondo_club: { day: 24, reason: '腿法漂亮之前，先学会落地。', hint: 'Day 24 开放。' }
 };
 
-export const INITIAL_SKILLS = ['mystic', 'guard', 'retreat', 'talkdown'];
+export const INITIAL_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 
 export const LOC_POS = {
   home: [1, 6], park: [2, 3], store: [2, 5], metro_station: [3, 5], worksite: [4, 1], boxing: [4, 6],
@@ -171,6 +171,8 @@ export const TRAVEL_TUNING = {
 };
 
 export const SKILLS = {
+  wild_swing: { name: '野路挥拳', icon: '挥', type: 'strike', dist: ['far', 'mid', 'close'], dmg: 10, post: 8, sp: 6, ap: 1, hit: 0.66, risk: 0.18, style: 'street', desc: '没练过系统拳路，但真急眼时能把人逼退。能打赢完全没练过的人，遇到正规拳距就会漏出回收问题。' },
+  push_away: { name: '推搡', icon: '推', type: 'dirty', dist: ['mid', 'close'], dmg: 2, post: 12, sp: 6, ap: 1, hit: 0.74, risk: 0.10, style: 'street', desc: '用肩手把人顶开，抢一点喘气和距离。不是技术胜利，只是别让局面一下子贴死。' },
   jab: { name: '刺拳', icon: '拳', assetKey: 'skill.jab', type: 'strike', dist: ['far', 'mid'], dmg: 8, post: 7, sp: 5, ap: 1, hit: 0.84, risk: 0.06, style: 'boxing', desc: '探距离、打断前压。伤害不高，但能把对面节奏敲出一个小逗号。' },
   straight: { name: '直拳', icon: '直', assetKey: 'skill.straight', type: 'strike', dist: ['mid'], dmg: 18, post: 12, sp: 9, ap: 2, hit: 0.72, risk: 0.16, style: 'boxing', desc: '基础重击，打中了很有说法；回收慢，没打中就轮到对面写说法。' },
   guard: { name: '防守抱架', icon: '盾', assetKey: 'skill.guard', type: 'defense', dist: ['far', 'mid', 'close'], dmg: 0, post: 0, sp: 4, ap: 1, hit: 1, risk: 0.02, style: 'boxing', desc: '降低下一次受伤。不是怂，是把脸从公共资源改回个人财产。' },
@@ -198,10 +200,12 @@ export const SKILLS = {
 };
 
 export const SKILL_UNLOCKS = {
-  mystic: { skillId: 'mystic', initial: true, sourceSummary: '开局已会 · 家传旧招', openCondition: '开局自带。', unlockText: '父亲留下的混元一气掌还在手上，只是需要重新拆开验证。' },
-  guard: { skillId: 'guard', initial: true, sourceSummary: '开局已会 · 基础抱架', openCondition: '开局自带。', unlockText: '你至少知道把手抬起来，脸不是公共靶位。' },
-  retreat: { skillId: 'retreat', initial: true, sourceSummary: '开局已会 · 后撤拉开', openCondition: '开局自带。', unlockText: '退一步不是认输，是先把自己从错误距离里救出来。' },
-  talkdown: { skillId: 'talkdown', initial: true, sourceSummary: '开局已会 · 言语降温', openCondition: '开局自带。', unlockText: '不是每次冲突都值得打到底，嘴能省下不少医药费。' },
+  wild_swing: { skillId: 'wild_swing', initial: true, sourceSummary: '开局已会 · 茂家野路挥拳', openCondition: '开局自带。', unlockText: '你不懂刺拳和直拳，但知道人冲上来时不能只站着挨。' },
+  push_away: { skillId: 'push_away', initial: true, sourceSummary: '开局已会 · 推搡抢距', openCondition: '开局自带。', unlockText: '你先学会把人顶开一点，给呼吸和后撤留个缝。' },
+  mystic: { skillId: 'mystic', initial: true, sourceSummary: '开局已会 · 茂家旧招野生版', openCondition: '开局自带。', unlockText: '父亲留下的混元一气掌还在手上，只是现在更像没拆开的旧招。' },
+  guard: { skillId: 'guard', initial: true, sourceSummary: '开局已会 · 野生抱架', openCondition: '开局自带。', unlockText: '你至少知道把手抬起来，脸不是公共靶位。' },
+  retreat: { skillId: 'retreat', initial: true, sourceSummary: '开局已会 · 本能后撤', openCondition: '开局自带。', unlockText: '退一步不是认输，是先把自己从错误距离里救出来。' },
+  talkdown: { skillId: 'talkdown', initial: true, sourceSummary: '开局已会 · 嘴上降温', openCondition: '开局自带。', unlockText: '不是每次冲突都值得打到底，嘴能省下不少医药费。' },
   dodge: { skillId: 'dodge', locationId: 'home', actionId: 'shadow', openCondition: '在出租屋完成影子拳节拍。', sourceSummary: '出租屋 · 影子拳节拍', unlockText: '你开始把身体挪出线外，而不是站在原地等答案。' },
   jab: { skillId: 'jab', locationId: 'boxing', actionId: 'bag', openCondition: '拳馆开放后，完成沙包连击。', sourceSummary: '拳馆 · 沙包连击', unlockText: '你开始用刺拳先碰距离，而不是一上来就把重心借出去。' },
   straight: { skillId: 'straight', locationId: 'boxing', actionId: 'bag', openCondition: '拳馆开放后，完成沙包连击。', sourceSummary: '拳馆 · 沙包连击', unlockText: '后手直拳有了中线和回收，终于不只是用力砸沙包。' },

@@ -4,41 +4,39 @@
 
 ## Current Task
 
-Wave 10：Core Loop + Combat Tree 多 CLI。目标是复制任务包、使用 staged pipeline 启动实现 worker，并确保 QA 只在实现分支合并推送后运行。
+Wave 10 worker: `AGENT_B_GAMEPLAY_SYSTEMS + AGENT_C_COMBAT_FEEL` starter wild kit.
 
 ## Scope
 
-- 添加 Wave 10 worker prompts 与启动脚本。
-- 使用现有 `Invoke-MawsMultiCliPipeline.ps1`：实现 worker 先并行，Manager 合并验证后再启动 QA。
-- 本轮 Manager 不直接改 `maws_src/` 玩法代码；实现由 worker 分支完成。
+- Replace the Day 1 starter package with six wild/old skills.
+- Do not grant formal `jab` or `advance` on new game.
+- Keep formal skill progression behind existing training unlocks.
+- Update browser/playtest assertions and worker reports.
 
 ## Plan
 
-- [x] 解压并检查 Wave 10 任务包。
-- [x] 复制 `docs/codex_tasks/WAVE10_*.md`。
-- [x] 替换原始 launcher，避免 QA 提前跑和每窗口 `npm ci`。
-- [x] 添加 `scripts/wave10_coreloop_pipeline.json`。
-- [ ] 提交并推送 Wave 10 prompts/scripts。
-- [ ] 启动 `scripts/run_wave10_coreloop_workers.ps1`。
-- [ ] 等实现 worker 完成后按 pipeline 合并、验证、推送，再启动 QA。
+- [x] Add `wild_swing` and `push_away` as starter wild skills.
+- [x] Update `INITIAL_SKILLS`, new-game `equipSkills`, and migration fallback.
+- [x] Keep old saves from losing existing skills.
+- [x] Update smoke/playtest starter assertions.
+- [x] Write worker/report checkpoint files.
+- [x] Run final validation commands.
 
 ## Validation
 
-- `git diff --check`。
-- PowerShell 脚本解析检查。
-- Pipeline 运行时由每个 merge step 执行对应验证。
+- `npm run check:full`
+- `npm run test:playtest`
+- `git diff --check`
 
 ## Result
 
-进行中。
+Implemented and validated.
 
 ## Risks
 
-- Wave 10 明确会有冲突，pipeline 会在冲突处停下，Manager 需要手动解决后继续。
-- `feat/starter-wild-kit-v3` 和 `feat/time-dosage-prototype` 都可能碰 `data.js/state.js`。
-- `feat/reward-ui-juice` 和 `feat/time-dosage-prototype` 都可能碰 UI。
-- QA 必须等 staging 集成并 push 后运行，不能提前审旧版本。
+- No combat formula changes; early fight feel is tuned only through data values and existing advice counters.
+- E01 remains Day 5 objective battle coverage, not a KO/balance proof.
 
 ## Next Step
 
-提交并推送 Wave 10 任务包，然后启动多 CLI worker。
+Commit and push this worker branch.
