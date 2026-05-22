@@ -4,36 +4,40 @@
 
 ## Current Task
 
-Wave 12：Visual Slice Strike。
+Wave 13：First-Look Vertical Slice Polish。
 
-## Result
+## Goal
 
-- 已按 staged pipeline 完成并合并：`feat/structured-reward-deltas` -> `feat/visual-stage-hud-strike` -> `test/wave12-visual-smoke` -> `docs/wave12-art-direction-shotlist` -> `qa/wave12-visual-review`。
-- QA 在实现分支全部合并并推送后才启动，避免了提前审老版本。
-- Manager follow-up 已修复 QA P1/P2：
-  - reward chips 结构化优先，不再把 `settlementLines` / 长对话句重复解析成 chip。
-  - 弹窗内已有 hero chips 时不再额外叠一层 reward stack。
-  - 战斗 HUD 可见 4 张小行动卡，队列仍限制本窗口 1-2 招。
-  - Wave 12 visual smoke 增加结构化 reward chip 去重/短文本断言，以及可见战斗卡数量断言。
-- 已推送 `staging/reforge-unlocks-v1`。
+让 Day 1-Day 5 前 20 分钟的 5 个核心画面像一个能玩的城市武术 RPG：
+
+1. 出租屋主界面。
+2. 点击 NPC/角色。
+3. 普通事件收益反馈。
+4. 时间投入弹窗。
+5. Day 5 战斗 HUD。
+
+## Current Plan
+
+- [x] 将 Wave 13 文件化为 worker prompts。
+- [x] 将 pipeline 扩展为 staged worker flow，避免同文件冲突和 QA 提前跑。
+- [x] 按写集收敛执行顺序：Reward -> Time/Shotlist -> Visual Stage -> Combat Command -> NPC Click -> Smoke -> QA。
+- [ ] 提交并推送 Wave 13 prompts/scripts。
+- [ ] 启动 `scripts/run_wave13_first_look_workers.ps1`。
+- [ ] Pipeline 完成后人工看 `test-results/wave13/` 和现有 visual 截图。
 
 ## Validation
 
-- `npm run check:full`：通过。
-- `npm run test:playtest`：通过。
-- `npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line`：通过。
-- `git diff --check`：通过。
-- 人工查看截图：
-  - `test-results/wave12/desktop-combat.png`
-  - `test-results/wave12/desktop-map-modal.png`
-  - `test-results/wave12/mobile-main-cta.png`
+- Prompt/script 提交前：PowerShell parse、JSON parse、`git diff --check`。
+- Pipeline 内：每阶段按 spec 运行 `check:full`、`test:playtest`、Wave 12/Wave 13 visual smoke。
+- 最终：QA 最后运行，且只在所有实现分支合并并推送后启动。
 
 ## Risks
 
-- `GameDesigner_CombatAnalysis/` 仍是未跟踪目录，本轮未触碰。
-- QA 报告保留了原始 findings；本文件记录 manager follow-up 已修复 P1/P2。P3 是 manager/pipeline setup scope，不属于 worker 越界。
-- 视觉截图已明显改善，但高分辨率最终美术质量仍需后续人工 playtest 继续看第一眼观感。
+- `Reward Delta Contract v2` 与 `Time Activity Feel Pass` 都会碰 `state.js/economy.js/events.js`，所以本轮没有强行并行这两个 worker。
+- `Visual Stage`、`Combat Command Bar`、`NPC Click` 都会碰 UI，已强制串行。
+- 本轮仍不进入技能树 implementation。
+- `GameDesigner_CombatAnalysis/` 是未跟踪目录，本轮不触碰。
 
 ## Next Step
 
-人工进 `maws_30day_overhaul_v3.html` 看 Wave 12 最终画面；如果 5 个视觉硬门槛通过，再开下一轮，不要直接跳技能树 implementation。
+提交并推送 Wave 13 staged pipeline，然后启动 worker。

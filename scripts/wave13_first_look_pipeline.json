@@ -1,0 +1,167 @@
+{
+  "name": "wave13-first-look-vertical-slice-polish",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave13",
+  "reasoning": "medium",
+  "visibleWorkers": true,
+  "stages": [
+    {
+      "name": "reward-delta-contract",
+      "workers": [
+        {
+          "name": "Wave13-Reward-Delta-Contract",
+          "path": "E:\\maws_cli_parallel_wave13\\reward-delta-contract",
+          "branch": "feat/reward-delta-contract-v2",
+          "prompt": "docs\\codex_tasks\\WAVE13_REWARD_DELTA_CONTRACT_V2.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 reward delta contract v2",
+          "branch": "feat/reward-delta-contract-v2",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "time-activity-feel",
+      "workers": [
+        {
+          "name": "Wave13-Time-Activity-Feel",
+          "path": "E:\\maws_cli_parallel_wave13\\time-activity-feel",
+          "branch": "feat/time-activity-feel-pass",
+          "prompt": "docs\\codex_tasks\\WAVE13_TIME_ACTIVITY_FEEL_PASS.md"
+        },
+        {
+          "name": "Wave13-Visual-Shotlist",
+          "path": "E:\\maws_cli_parallel_wave13\\visual-shotlist",
+          "branch": "docs/wave13-first-look-shotlist",
+          "prompt": "docs\\codex_tasks\\WAVE13_VISUAL_SHOTLIST.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 time activity feel pass",
+          "branch": "feat/time-activity-feel-pass",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "git diff --check"
+          ]
+        },
+        {
+          "name": "wave13 first look shotlist",
+          "branch": "docs/wave13-first-look-shotlist",
+          "validate": [
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "visual-stage-hard-pass",
+      "workers": [
+        {
+          "name": "Wave13-Visual-Stage-Hard-Pass",
+          "path": "E:\\maws_cli_parallel_wave13\\visual-stage-hard-pass",
+          "branch": "feat/visual-stage-hard-pass",
+          "prompt": "docs\\codex_tasks\\WAVE13_VISUAL_STAGE_HARD_PASS.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 visual stage hard pass",
+          "branch": "feat/visual-stage-hard-pass",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "combat-command-bar",
+      "workers": [
+        {
+          "name": "Wave13-Combat-Command-Bar-2",
+          "path": "E:\\maws_cli_parallel_wave13\\combat-command-bar-2",
+          "branch": "feat/combat-command-bar-2",
+          "prompt": "docs\\codex_tasks\\WAVE13_COMBAT_COMMAND_BAR_2.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 combat command bar 2",
+          "branch": "feat/combat-command-bar-2",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "npc-click-interaction",
+      "workers": [
+        {
+          "name": "Wave13-NPC-Click-Interaction",
+          "path": "E:\\maws_cli_parallel_wave13\\npc-click-interaction",
+          "branch": "feat/npc-click-interaction-menu",
+          "prompt": "docs\\codex_tasks\\WAVE13_NPC_CLICK_INTERACTION_MENU.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 npc click interaction menu",
+          "branch": "feat/npc-click-interaction-menu",
+          "validate": [
+            "npm run check:full",
+            "npm run test:playtest",
+            "npx playwright test maws_src/tests/wave12_visual.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "first-look-smoke",
+      "workers": [
+        {
+          "name": "Wave13-First-Look-Smoke",
+          "path": "E:\\maws_cli_parallel_wave13\\first-look-smoke",
+          "branch": "test/wave13-first-look-smoke",
+          "prompt": "docs\\codex_tasks\\WAVE13_FIRST_LOOK_SMOKE_TESTS.md"
+        }
+      ],
+      "mergeOrder": [
+        {
+          "name": "wave13 first look smoke",
+          "branch": "test/wave13-first-look-smoke",
+          "validate": [
+            "npm run build",
+            "npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line",
+            "git diff --check"
+          ]
+        }
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave13-QA",
+    "path": "E:\\maws_cli_parallel_wave13\\qa-wave13",
+    "branch": "qa/wave13-first-look-review",
+    "prompt": "docs\\codex_tasks\\WAVE13_QA_REVIEW.md",
+    "commitMessage": "docs: add wave13 first look qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}

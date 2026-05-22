@@ -202,6 +202,62 @@ function AutoCommitQaIfNeeded {
   }
 }
 
+function Invoke-WorkerStage {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Stage,
+
+    [Parameter(Mandatory = $true)]
+    [string]$BaseBranch,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RepoNodeModules,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Reasoning,
+
+    [bool]$VisibleWorkers = $false
+  )
+
+  $stageName = if ($Stage.name) { $Stage.name } else { "implementation" }
+  Write-Host "== Stage: $stageName =="
+
+  Invoke-Git $RepoRoot @("fetch", "origin")
+  Invoke-Git $RepoRoot @("switch", $BaseBranch)
+  Invoke-Git $RepoRoot @("pull", "--ff-only")
+
+  $workers = @($Stage.workers)
+  foreach ($worker in $workers) {
+    Prepare-Worker $worker $BaseBranch $RepoNodeModules
+  }
+
+  $processes = @()
+  foreach ($worker in $workers) {
+    $processes += Start-CodexWorker $worker $Reasoning $VisibleWorkers
+  }
+
+  if ($processes.Count) {
+    Wait-WorkerGroup $processes "$stageName workers"
+  }
+
+  foreach ($worker in $workers) {
+    Push-CleanWorkerBranch $worker
+  }
+
+  Invoke-Git $RepoRoot @("fetch", "origin")
+  Invoke-Git $RepoRoot @("switch", $BaseBranch)
+  Invoke-Git $RepoRoot @("pull", "--ff-only")
+
+  foreach ($merge in @($Stage.mergeOrder)) {
+    Write-Host "== Merge $($merge.branch) =="
+    Invoke-Git $RepoRoot @("merge", "--no-ff", "origin/$($merge.branch)", "-m", "merge: $($merge.name)")
+    foreach ($command in @($merge.validate)) {
+      Invoke-CheckedCommand $RepoRoot $command
+    }
+    Invoke-Git $RepoRoot @("push")
+  }
+}
+
 if (!(Test-Path -LiteralPath $RepoRoot)) {
   throw "Repo root not found: $RepoRoot"
 }
@@ -234,33 +290,18 @@ Invoke-Git $RepoRoot @("fetch", "origin")
 Invoke-Git $RepoRoot @("switch", $baseBranch)
 Invoke-Git $RepoRoot @("pull", "--ff-only")
 
-$implWorkers = @($pipeline.implementationWorkers)
-foreach ($worker in $implWorkers) {
-  Prepare-Worker $worker $baseBranch $repoNodeModules
+$workerStages = if ($pipeline.stages) {
+  @($pipeline.stages)
+} else {
+  @([pscustomobject]@{
+    name = "implementation"
+    workers = @($pipeline.implementationWorkers)
+    mergeOrder = @($pipeline.mergeOrder)
+  })
 }
 
-$implProcesses = @()
-foreach ($worker in $implWorkers) {
-  $implProcesses += Start-CodexWorker $worker $reasoning $visibleWorkers
-}
-
-Wait-WorkerGroup $implProcesses "implementation workers"
-
-foreach ($worker in $implWorkers) {
-  Push-CleanWorkerBranch $worker
-}
-
-Invoke-Git $RepoRoot @("fetch", "origin")
-Invoke-Git $RepoRoot @("switch", $baseBranch)
-Invoke-Git $RepoRoot @("pull", "--ff-only")
-
-foreach ($merge in @($pipeline.mergeOrder)) {
-  Write-Host "== Merge $($merge.branch) =="
-  Invoke-Git $RepoRoot @("merge", "--no-ff", "origin/$($merge.branch)", "-m", "merge: $($merge.name)")
-  foreach ($command in @($merge.validate)) {
-    Invoke-CheckedCommand $RepoRoot $command
-  }
-  Invoke-Git $RepoRoot @("push")
+foreach ($stage in $workerStages) {
+  Invoke-WorkerStage $stage $baseBranch $repoNodeModules $reasoning $visibleWorkers
 }
 
 $qa = $pipeline.qaWorker
