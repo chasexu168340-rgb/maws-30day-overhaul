@@ -303,16 +303,19 @@ function opportunityButtonLabel(card = {}, currentLoc = '') {
 }
 
 function renderActionCard(action) {
+  const hasDuration = Array.isArray(action.durationOptions) && action.durationOptions.length > 0;
   const details = `
     <p>${esc(action.desc)}</p>
     ${summaryChips(action.summary?.cost || [], 'cost')}
     ${summaryChips(action.summary?.gain || [], 'gain')}
+    ${hasDuration ? summaryChips(['可选 30/60/90/120 分钟投入'], 'time') : ''}
     ${action.summary?.risk ? `<small class="maws-risk-note">${esc(action.summary.risk)}</small>` : ''}
   `;
   return `
     <article class="maws-action ${action.disabled ? 'disabled' : ''}">
       <div class="maws-action-core">
         <strong>${esc(action.icon)} ${esc(action.name)}</strong>
+        ${hasDuration ? '<small class="maws-duration-tag">可调时长</small>' : ''}
         <details class="maws-fold maws-action-detail">
           <summary>行动细节</summary>
           ${details}
@@ -578,7 +581,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
         <span>${esc(learned ? `熟练度 ${round(skill.state?.p)}%` : sourceText)}</span>
         <span>${esc(learned ? (skill.equipped ? '已装备' : '可装备') : '待解锁')}</span>
       </div>
-      <details class="maws-fold maws-skill-fold">
+      <details class="maws-fold maws-skill-fold" open>
         <summary>${learned ? '来源 / 数值详情' : '解锁详情'}</summary>
         <p>${esc(skill.desc)}</p>
         ${renderSkillUnlock(skill, unlock, learned)}
@@ -975,6 +978,36 @@ function renderEventNotebookModal(modal) {
   `, 'event-notebook');
 }
 
+function renderDurationChoiceModal(modal) {
+  const options = (modal.options || []).map((option) => {
+    const meta = [
+      `${option.minutes || 0}分钟`,
+      `体力-${option.sp || 0}`,
+      option.cost ? `现金-￥${option.cost}` : '现金0',
+      `收益x${Number(option.multiplier || 1).toFixed(2)}`,
+      option.riskText || ''
+    ].filter(Boolean);
+    return `
+      <article class="maws-duration-choice ${esc(option.id || '')}">
+        <strong>${esc(option.name || '标准 60m')}</strong>
+        <p>${esc(option.note || '')}</p>
+        ${summaryChips(meta, option.id === 'hard' ? 'cost' : 'gain')}
+        ${summaryChips(option.gainPreview || [], 'gain')}
+        ${btn('选择', 'chooseDuration', { id: modal.actionId, duration: option.id }, option.id === 'standard' ? 'primary' : 'ghost')}
+      </article>
+    `;
+  }).join('');
+  return renderModalShell(modal, `
+    <header class="maws-rpg-title">
+      <small>投入选择</small>
+      <h2>${esc(modal.title || '行动')}</h2>
+    </header>
+    <p class="maws-modal-lead">${esc(modal.desc || '选择这次投入多久。')}</p>
+    <div class="maws-duration-grid">${options}</div>
+    <div class="maws-modal-actions">${btn('取消', 'closeModal', {}, 'dark')}</div>
+  `, 'duration');
+}
+
 function renderModal(model) {
   const modal = model.modal;
   if (!modal) return '';
@@ -982,6 +1015,7 @@ function renderModal(model) {
   if (modal.type === 'dialogue') return renderDialogueModal(modal);
   if (modal.type === 'fatherDiary') return renderFatherDiaryModal(modal);
   if (modal.type === 'eventNotebook') return renderEventNotebookModal(modal);
+  if (modal.type === 'durationChoice') return renderDurationChoiceModal(modal);
   if (modal.type === 'travel') {
     const to = model.selectedTravel;
     const loc = LOCS[to];
@@ -1110,6 +1144,7 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'loadGame') store.dispatch({ type: 'loadGame' });
   else if (action === 'setTab') store.dispatch({ type: 'setTab', tab: dataset.tab });
   else if (action === 'doAction') store.dispatch({ type: 'doAction', actionId: dataset.id });
+  else if (action === 'chooseDuration') store.dispatch({ type: 'chooseDuration', actionId: dataset.id, durationId: dataset.duration });
   else if (action === 'startMainEvent') store.dispatch({ type: 'startMainEvent' });
   else if (action === 'resolveStoryChoice') store.dispatch({ type: 'resolveStoryChoice', choiceId: dataset.id });
   else if (action === 'advanceDialogue') store.dispatch({ type: 'advanceDialogue' });

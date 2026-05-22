@@ -4,41 +4,37 @@
 
 ## Current Task
 
-Wave 10：Core Loop + Combat Tree 多 CLI。目标是复制任务包、使用 staged pipeline 启动实现 worker，并确保 QA 只在实现分支合并推送后运行。
+Wave 10 `WAVE10_TIME_DOSAGE_PROTOTYPE`：训练/工作/观察行动增加投入时长选择，加入发呆/放空微行动，并保持分钟制兼容。
 
 ## Scope
 
-- 添加 Wave 10 worker prompts 与启动脚本。
-- 使用现有 `Invoke-MawsMultiCliPipeline.ps1`：实现 worker 先并行，Manager 合并验证后再启动 QA。
-- 本轮 Manager 不直接改 `maws_src/` 玩法代码；实现由 worker 分支完成。
+- 只改允许文件：`data.js`、`state.js`、`ui.js`、`ui.css` 和本 worker/report 文档。
+- 不改 `combat.js`、`manifest.js`、`assets/`、`INITIAL_SKILLS`、存档 key/version。
 
 ## Plan
 
-- [x] 解压并检查 Wave 10 任务包。
-- [x] 复制 `docs/codex_tasks/WAVE10_*.md`。
-- [x] 替换原始 launcher，避免 QA 提前跑和每窗口 `npm ci`。
-- [x] 添加 `scripts/wave10_coreloop_pipeline.json`。
-- [ ] 提交并推送 Wave 10 prompts/scripts。
-- [ ] 启动 `scripts/run_wave10_coreloop_workers.ps1`。
-- [ ] 等实现 worker 完成后按 pipeline 合并、验证、推送，再启动 QA。
+- [x] 添加 30/60/90/120 分钟投入档位数据。
+- [x] 在状态层按档位缩放收益、体力、现金、疲劳和硬练风险。
+- [x] 在 DOM UI 上为可调行动增加投入选择框。
+- [x] 增加发呆/放空微行动和少量叙事触发。
+- [x] 修复相关 UI 可见性与点击命中问题。
+- [x] 跑完最终验证并记录结果。
 
 ## Validation
 
-- `git diff --check`。
-- PowerShell 脚本解析检查。
-- Pipeline 运行时由每个 merge step 执行对应验证。
+- `npm run check:full`
+- `npm run test:playtest`
+- `git diff --check`
 
 ## Result
 
-进行中。
+代码已实现；`npm run check:full`、`npm run test:playtest`、`git diff --check` 均通过。
 
 ## Risks
 
-- Wave 10 明确会有冲突，pipeline 会在冲突处停下，Manager 需要手动解决后继续。
-- `feat/starter-wild-kit-v3` 和 `feat/time-dosage-prototype` 都可能碰 `data.js/state.js`。
-- `feat/reward-ui-juice` 和 `feat/time-dosage-prototype` 都可能碰 UI。
-- QA 必须等 staging 集成并 push 后运行，不能提前审旧版本。
+- 档位倍率为原型值，后续需要真实 playtest 后微调。
+- 硬练小伤风险当前为轻量实现，不改变存档结构。
 
 ## Next Step
 
-提交并推送 Wave 10 任务包，然后启动多 CLI worker。
+提交并推送当前分支。

@@ -151,12 +151,55 @@
   color: #ffd23f;
 }
 
+.maws-duration-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 210, 63, 0.5);
+  color: #ffd23f;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .maws-title-actions,
 .maws-modal-actions,
 .maws-combat-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.maws-duration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.maws-duration-choice {
+  min-width: 0;
+  border: 3px solid #050506;
+  background: rgba(17, 17, 20, 0.94);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.75);
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+
+.maws-duration-choice strong {
+  color: #fff7dc;
+}
+
+.maws-duration-choice p {
+  min-height: 36px;
+  margin: 6px 0;
+  color: #d7cfbd;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.maws-duration-choice.hard {
+  border-color: #ff4d3d;
 }
 
 .maws-hud {
@@ -468,6 +511,7 @@
   display: grid;
   grid-template-columns: minmax(140px, 14%) minmax(0, 1fr) minmax(240px, 22%);
   gap: 14px;
+  overflow: hidden;
 }
 
 .maws-loc-rail,
@@ -1344,6 +1388,7 @@
 
 .maws-toast {
   position: fixed;
+  pointer-events: none;
   left: 50%;
   top: 108px;
   transform: translateX(-50%);
@@ -4299,6 +4344,8 @@
 }
 
 .maws-today-rail {
+  position: relative;
+  z-index: 20;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -4315,6 +4362,8 @@
 }
 
 .maws-action-rail-main {
+  position: relative;
+  z-index: 1;
   grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
@@ -4324,6 +4373,10 @@
   gap: 10px;
   min-width: 0;
   align-content: start;
+}
+
+.maws-recommend-board {
+  pointer-events: none;
 }
 
 .maws-recommend-board {
@@ -4723,7 +4776,7 @@
 
 .maws-action-rail-main {
   right: 14px;
-  top: 14px;
+  top: 170px;
   bottom: auto;
   height: auto;
   grid-template-rows: auto auto auto auto;
@@ -4757,6 +4810,13 @@
 .maws-recommend-card {
   padding: 9px 10px;
   border-width: 2px;
+  pointer-events: none;
+}
+
+.maws-recommend-card button,
+.maws-recommend-card details,
+.maws-recommend-card summary {
+  pointer-events: auto;
 }
 
 .maws-recommend-card header {
@@ -4766,6 +4826,7 @@
 .maws-recommend-card p {
   margin-top: 4px;
   font-size: 12px;
+  pointer-events: none;
 }
 
 .maws-recommend-detail {
