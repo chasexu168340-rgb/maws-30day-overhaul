@@ -1,47 +1,40 @@
-# TASK_PLAN
-
 > 当前任务单。只保留本轮目标、结果、风险和下一步。
 
 ## Current Task
 
-解决 `feat/ui-skill-unlocks-display` 的 GitHub merge conflict：将 `origin/main` 合入当前 UI 分支，保留技能页读取 `model.skillUnlocks[skillId]` 的实现和当前任务 checkpoint。
+Wave 9 Event Feedback Loop：事件/普通行动点击后给即时结果反馈和下一步选择。
 
 ## Scope
 
-- 只解决合并冲突，不新增 UI 功能。
-- 保留 `maws_src/dom/ui.js` 的 `model.skillUnlocks[skillId]` 驱动展示。
-- 保留 `maws_src/dom/ui.css` 的技能来源信息块和响应式换行样式。
-- 保留 `docs/agent_reports/AGENT_E_UI_PRESENTATION.md`。
-- 冲突文件：`docs/TASK_PLAN.md`。
-- 不改 `data.js`、`state.js`、`combat.js`、`economy.js`、`manifest.js` 或资产。
+- 允许修改：`maws_src/simulation/state.js`、`maws_src/dom/ui.js`、`maws_src/dom/ui.css`、本轮 worker/report 文档。
+- 禁止修改：数据、战斗公式、事件系统、资产、依赖配置和存档结构。
 
 ## Plan
 
-- [x] 确认当前分支为 `feat/ui-skill-unlocks-display`。
-- [x] 拉取远端；常规 fetch 两次网络 reset 后，改用 `git -c http.version=HTTP/1.1 fetch origin` 成功。
-- [x] 确认本地 `origin/staging/reforge-unlocks-v1` 已是当前分支祖先，冲突目标来自更新后的 `origin/main`。
-- [x] 合入 `origin/main`。
-- [x] 解决 `docs/TASK_PLAN.md` 冲突，保留当前 UI 任务状态。
+- [x] 复用现有 `settlement` / `eventNotebook` / log 结构，不重写事件系统。
+- [x] 给普通行动结算生成 RPG 风格结果反馈：一句话摘要、获得/代价、日志和后续按钮。
+- [x] 给 `eventNotebook` 的 shop resolve 补结果反馈，action resolve 走同一结果反馈。
+- [x] 保持 battle/dialogue/training 等已有专用 modal 不重复叠弹。
 - [x] 运行 `npm run check:full`。
 - [x] 运行 `git diff --check`。
-- [x] 提交并 push 更新。
+- [x] 提交允许文件。
 
 ## Validation
 
-- [x] `npm run check:full`：通过；build、资产验证、4 个 Chromium smoke 用例通过。
-- [x] `git diff --check`：通过。
+- `npm run check:full`：通过，build/asset check/Chromium smoke 4 项通过。
+- `git diff --check`：通过。
 
 ## Result
 
-- 技能页实现保持不变：读取 `model.skillUnlocks[skillId]`，展示未学会、planned、initial 的来源和状态。
-- 已合入 `origin/main` 并解决 `docs/TASK_PLAN.md` 冲突。
-- 验证通过，已推送到 `origin/feat/ui-skill-unlocks-display`，等待审阅/合并。
+- 普通行动完成后显示 `结果` modal，并把已有 settlement lines、action summary 和最新 log 转成可读反馈。
+- 反馈 modal 提供 `继续行动` 和 `查看日志`，有可用推荐地点时可追加出行入口。
+- `eventNotebook` action resolve 不再像后台 action 一样只消失；shop resolve 会打开商店并显示结果反馈。
 
 ## Risks
 
-- `GameDesigner_CombatAnalysis/` 是本轮外既有未跟踪目录，继续不纳入提交。
-- planned 技能仍依赖当前 `SKILL_UNLOCKS` 数据的 planned 标记；本轮只负责如实展示，不补真实训练来源。
+- 未改数据和事件生成逻辑，推荐地点只在现有 modal 数据能提供 location id 且已解锁时出现。
+- 真实浏览器 smoke 未在本任务要求内；本轮按指定命令验证。
 
 ## Next Step
 
-合并到 `staging/reforge-unlocks-v1` 后，下一轮开 `feat/metro-runtime-background`，只接地铁站 runtime 背景映射。
+等待 Manager push/merge；如需新窗口恢复，读取 `docs/TASK_HANDOFF.md`、`docs/TASK_PLAN.md`、`docs/workers/event_feedback_loop.md`。

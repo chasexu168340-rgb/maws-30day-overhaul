@@ -1,0 +1,76 @@
+{
+  "name": "wave9-scene-presentation",
+  "baseBranch": "staging/reforge-unlocks-v1",
+  "workerRoot": "E:\\maws_cli_parallel_wave9",
+  "reasoning": "medium",
+  "visibleWorkers": true,
+  "implementationWorkers": [
+    {
+      "name": "Wave9-Scene-Stage",
+      "path": "E:\\maws_cli_parallel_wave9\\scene-stage",
+      "branch": "feat/scene-stage-scale",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE9_SCENE_STAGE_SCALE.md"
+    },
+    {
+      "name": "Wave9-Dialogue-Box",
+      "path": "E:\\maws_cli_parallel_wave9\\dialogue-box",
+      "branch": "feat/dialogue-box-rebuild",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE9_DIALOGUE_BOX_REBUILD.md"
+    },
+    {
+      "name": "Wave9-Event-Feedback",
+      "path": "E:\\maws_cli_parallel_wave9\\event-feedback",
+      "branch": "feat/event-feedback-loop",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE9_EVENT_FEEDBACK_LOOP.md"
+    },
+    {
+      "name": "Wave9-Visual-Direction",
+      "path": "E:\\maws_cli_parallel_wave9\\visual-direction",
+      "branch": "docs/visual-direction-scene-ui",
+      "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE9_VISUAL_DIRECTION_SCENE_UI.md"
+    }
+  ],
+  "mergeOrder": [
+    {
+      "name": "scene stage scale",
+      "branch": "feat/scene-stage-scale",
+      "validate": [
+        "npm run check:full",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "dialogue box rebuild",
+      "branch": "feat/dialogue-box-rebuild",
+      "validate": [
+        "npm run check:full",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "event feedback loop",
+      "branch": "feat/event-feedback-loop",
+      "validate": [
+        "npm run check:full",
+        "git diff --check"
+      ]
+    },
+    {
+      "name": "visual direction scene ui",
+      "branch": "docs/visual-direction-scene-ui",
+      "validate": [
+        "git diff --check"
+      ]
+    }
+  ],
+  "qaWorker": {
+    "name": "Wave9-QA",
+    "path": "E:\\maws_cli_parallel_wave9\\qa-wave9",
+    "branch": "qa/wave9-scene-review",
+    "prompt": "E:\\TH比赛照片\\docs\\codex_tasks\\WAVE9_QA_SCENE_REVIEW.md",
+    "commitMessage": "docs: add wave9 scene qa review"
+  },
+  "qaMergeValidate": [
+    "git diff --check"
+  ]
+}
