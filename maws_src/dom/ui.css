@@ -5107,3 +5107,182 @@
     padding-top: 78px;
   }
 }
+
+/* Wave 10: reward feedback should read as game payoff, not buried logs. */
+.maws-modal.result-compact {
+  align-items: center;
+}
+
+.maws-modal.result-compact section {
+  width: min(560px, calc(100vw - 28px));
+  max-height: min(78vh, 620px);
+  overflow: auto;
+}
+
+.maws-reward-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.maws-reward-chips.hero {
+  padding: 10px;
+  border: 3px solid var(--maws-ink, #050506);
+  background:
+    linear-gradient(100deg, rgba(255, 217, 65, 0.28), transparent 54%),
+    rgba(5, 5, 6, 0.08);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+}
+
+.maws-reward-chip {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, auto);
+  grid-template-areas:
+    "mark label"
+    "mark value";
+  gap: 1px 7px;
+  min-width: 118px;
+  max-width: 100%;
+  padding: 8px 10px 8px 8px;
+  border: 3px solid var(--maws-ink, #050506);
+  background: #ffd941;
+  color: var(--maws-ink, #050506);
+  box-shadow: 4px 4px 0 #000;
+  overflow-wrap: anywhere;
+  animation: maws-reward-pop 420ms cubic-bezier(0.2, 1.4, 0.28, 1) both;
+}
+
+.maws-reward-chip:nth-child(2) { animation-delay: 45ms; }
+.maws-reward-chip:nth-child(3) { animation-delay: 90ms; }
+.maws-reward-chip:nth-child(4) { animation-delay: 135ms; }
+.maws-reward-chip:nth-child(5) { animation-delay: 180ms; }
+
+.maws-reward-chip i {
+  grid-area: mark;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 5px;
+  border: 2px solid currentColor;
+  background: rgba(255, 255, 255, 0.36);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.maws-reward-chip b {
+  grid-area: label;
+  min-width: 0;
+  color: rgba(5, 5, 6, 0.72);
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+.maws-reward-chip strong {
+  grid-area: value;
+  min-width: 0;
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.maws-reward-chip.skill {
+  background:
+    linear-gradient(110deg, #fff3d2, #ffd941 50%, #ff1238 50%);
+  color: #050506;
+  transform-origin: left center;
+}
+
+.maws-reward-chip.skill strong {
+  font-size: 20px;
+}
+
+.maws-reward-chip.relation {
+  background:
+    linear-gradient(110deg, #bdf7dd, #6df1c7 58%, #fff3d2 58%);
+}
+
+.maws-reward-chip.risk {
+  background:
+    linear-gradient(110deg, #ffb657, #ff6b3d);
+}
+
+.maws-reward-stack {
+  position: fixed;
+  z-index: 72;
+  right: clamp(14px, 3vw, 34px);
+  top: clamp(92px, 15vh, 138px);
+  width: min(290px, calc(100vw - 28px));
+  pointer-events: none;
+}
+
+.maws-reward-chips.stack {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.maws-reward-chips.stack .maws-reward-chip {
+  min-width: min(230px, 100%);
+  transform-origin: right center;
+  animation-name: maws-reward-stack-in;
+}
+
+.maws-modal-fold .maws-result-summary {
+  margin: 10px;
+}
+
+@keyframes maws-reward-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.84) rotate(-1deg); }
+  70% { opacity: 1; transform: translateY(-2px) scale(1.04) rotate(0.5deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@keyframes maws-reward-stack-in {
+  0% { opacity: 0; transform: translateX(28px) scale(0.9); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .maws-reward-chip,
+  .maws-reward-chips.stack .maws-reward-chip {
+    animation: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .maws-reward-stack {
+    top: auto;
+    right: 10px;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    width: min(260px, calc(100vw - 20px));
+  }
+
+  .maws-reward-chips.hero {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .maws-reward-chip {
+    min-width: 0;
+    padding: 7px;
+  }
+
+  .maws-reward-chip strong {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .maws-reward-chips.hero {
+    grid-template-columns: 1fr;
+  }
+
+  .maws-reward-stack {
+    display: none;
+  }
+}
