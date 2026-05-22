@@ -29,7 +29,7 @@ import {
 } from '../content/data.js';
 import { applyGain, settlementLines } from './economy.js';
 import { buildOpportunities } from './events.js';
-import { chooseEnemyResponse, previewPlayerAction, resolveCombatExchange } from './combat.js';
+import { chooseEnemyResponse, previewPlayerAction, resolveCombatExchange, suggestCombatQueue } from './combat.js';
 
 export const clone = (value) => JSON.parse(JSON.stringify(value));
 export const clamp = (value, min, max) => Math.max(min, Math.min(max, Number.isFinite(Number(value)) ? Number(value) : 0));
@@ -57,6 +57,13 @@ const TRAINING_TEMPLATE_LABELS = {
 };
 
 const COMBAT_QUEUE_LIMIT = 2;
+const COMBAT_PLAN_MODES = Object.freeze([
+  { id: 'manual', label: '手动', desc: '玩家自己排本窗口动作。' },
+  { id: 'safe', label: '稳守', desc: '优先抱架，再找一次反击或拉开。' },
+  { id: 'pressure', label: '压迫', desc: '先推开抢空间，再接一记野路挥拳。' },
+  { id: 'exit', label: '脱离', desc: '先降温，再后撤离开冲突。' }
+]);
+const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 
 export function fmtTime(totalMinutes) {
@@ -916,6 +923,55 @@ function scaledGain(gain = {}, multiplier = 1, option = {}) {
   return out;
 }
 
+function positiveGainMultiplier(gain = {}, multiplier = 1) {
+  const out = {};
+  Object.entries(gain || {}).forEach(([key, value]) => {
+    if (typeof value !== 'number' || value <= 0 || key === 'fatigue' || key === 'heat') {
+      out[key] = value;
+      return;
+    }
+    out[key] = Math.max(1, Math.round(value * multiplier));
+  });
+  return out;
+}
+
+function trainingRepeatKind(action = {}) {
+  if (!action || action.type === 'idle' || action.type === 'sleep' || action.type === 'shop' || action.type === 'battle') return '';
+  const gain = action.gain || {};
+  if (gain.fatigue < 0 || gain.hp || gain.sp || action.id?.includes('work') || gain.money) return '';
+  if (action.minigame?.template) return action.minigame.template;
+  if (gain.skill || gain.skill2) return gain.skill || gain.skill2;
+  const trainsBody = Boolean(gain.fitXp || gain.str || gain.end || gain.spd || gain.bal || gain.tou);
+  if (trainsBody) return 'body';
+  if (gain.jud && /观察|围观|复盘/.test(`${action.name || ''}${action.desc || ''}`)) return 'judgement';
+  return '';
+}
+
+function applyTrainingRepeatPressure(state, action, gain = {}) {
+  const kind = trainingRepeatKind(action);
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  const repeat = state.daily.trainingRepeat || {};
+  const streak = kind && repeat.kind === kind ? Number(repeat.streak || 1) + 1 : (kind ? 1 : 0);
+  if (!kind) {
+    state.daily.trainingRepeat = { kind: '', streak: 0, actionId: action?.id || '' };
+    return { gain, note: '' };
+  }
+
+  state.daily.trainingRepeat = { kind, streak, actionId: action.id };
+  if (streak < 2) return { gain, note: '' };
+
+  const multiplier = streak >= 3 ? 0.7 : 0.85;
+  const fatigueTax = streak >= 3 ? 6 : 3;
+  const adjusted = positiveGainMultiplier(gain, multiplier);
+  adjusted.fatigue = Number(adjusted.fatigue || 0) + fatigueTax;
+  return {
+    gain: adjusted,
+    note: streak >= 3
+      ? '连续做同类训练，动作质量开始下滑：正向收益继续递减，额外疲劳明显上升。'
+      : '连续做同类训练，身体开始吃同一种压力：收益小幅递减，额外增加疲劳。'
+  };
+}
+
 function advanceTime(state, minutes) {
   state.time += minutes;
   state.daily.actions += 1;
@@ -1227,8 +1283,9 @@ function executeAction(state, action, options = {}) {
     addLog(state, `${NPCS[action.npc]?.name || '有人'}给了你一段建议。`);
   } else {
     const beforeSkillState = clone(state.skillState || {});
-    const gain = dosage ? scaledGain(action.gain || {}, Number(dosage.multiplier || 1), dosage) : (action.gain || {});
-    applyGain(state, gain);
+    const baseGain = dosage ? scaledGain(action.gain || {}, Number(dosage.multiplier || 1), dosage) : (action.gain || {});
+    const repeat = applyTrainingRepeatPressure(state, action, baseGain);
+    applyGain(state, repeat.gain);
     const idleEvent = action.type === 'idle' ? maybeIdleEvent(state) : null;
     if (dosage?.injuryRisk && actionRoll(state, 59) < dosage.injuryRisk) {
       addMinorInjury(state);
@@ -1237,7 +1294,7 @@ function executeAction(state, action, options = {}) {
     const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
     addLog(state, `完成行动：${action.name}${dosage ? ` · ${dosage.name}` : ''}`);
     const idleBody = idleEvent ? `${idleEvent.title}：${idleEvent.text}` : '';
-    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, idleBody].filter(Boolean).join('\n') } });
+    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, repeat.note, idleBody].filter(Boolean).join('\n') } });
   }
 }
 
@@ -1454,7 +1511,9 @@ function finishTrainingMini(state, gradeId, result = {}) {
   const before = snapshotState(state);
   const beforeSkillState = clone(state.skillState || {});
   const durationMultiplier = dosage ? Number(dosage.multiplier || 1) : 1;
-  const gain = scaledGain(action.gain || {}, grade.multiplier * durationMultiplier, dosage || {});
+  const baseGain = scaledGain(action.gain || {}, grade.multiplier * durationMultiplier, dosage || {});
+  const repeat = applyTrainingRepeatPressure(state, action, baseGain);
+  const gain = repeat.gain;
   state.player.sp -= spCost;
   if (moneyCost) state.player.money -= moneyCost;
   advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
@@ -1468,7 +1527,7 @@ function finishTrainingMini(state, gradeId, result = {}) {
   state.ui.modal = {
     type: 'settlement',
     title: `${action.name} · ${grade.label}`,
-    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result)].filter(Boolean).join('\n'),
+    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result), repeat.note].filter(Boolean).join('\n'),
     lines
   };
 }
@@ -1502,6 +1561,10 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     phase: 'planning',
     clock: 0,
     playerQueue: [],
+    planMode: DEFAULT_COMBAT_PLAN_MODE,
+    planSlot: null,
+    comboSlot: null,
+    lastPlanFill: null,
     enemyCooldown: 0,
     eventSeq: 0,
     windowCount: 0,
@@ -1584,6 +1647,7 @@ function mergeCombatResult(state, previousCombat, nextCombat) {
     },
     selected: [],
     playerQueue: [],
+    lastPlanFill: previousCombat.lastPlanFill || null,
     phase: 'planning',
     clock: Number(previousCombat.clock || 0) + windowDuration,
     enemyCooldown: windowPressure.level,
@@ -2111,11 +2175,30 @@ export class GameStore {
     } else if (action.type === 'setTarget') {
       const c = s.combat;
       if (c && ['head', 'body', 'leg'].includes(action.target)) c.target = action.target;
+    } else if (action.type === 'setCombatPlan') {
+      const c = s.combat;
+      if (c && c.phase !== 'auto' && combatPlanMode(action.planMode).id === action.planMode) {
+        c.planMode = action.planMode;
+        c.lastPlanFill = null;
+      }
     } else if (action.type === 'confirmBattle') {
       const c = s.combat;
       if (c && c.phase !== 'auto') {
         const previousCombat = clone(c);
-        previousCombat.playerQueue = c.selected?.length ? [...c.selected] : ['guard'];
+        const playerPickedQueue = c.selected?.length ? [...c.selected] : [];
+        const planMode = combatPlanMode(previousCombat.planMode);
+        const suggestion = playerPickedQueue.length || planMode.id === 'manual' ? null : suggestCombatQueue(toCombatInput({ ...s, combat: previousCombat }));
+        const planFill = !playerPickedQueue.length && suggestion?.queue?.length ? {
+          mode: planMode.id,
+          label: planMode.label,
+          queue: [...suggestion.queue],
+          reason: suggestion.reason,
+          source: suggestion.source,
+          planSlot: previousCombat.planSlot || null,
+          comboSlot: previousCombat.comboSlot || null
+        } : null;
+        previousCombat.playerQueue = playerPickedQueue.length ? playerPickedQueue : (planFill?.queue?.length ? [...planFill.queue] : ['guard']);
+        previousCombat.lastPlanFill = planFill;
         const plannedCombat = { ...c, playerQueue: previousCombat.playerQueue, selected: c.selected?.length ? [...c.selected] : [] };
         const plannedState = { ...s, combat: plannedCombat };
         previousCombat.enemyTell = combatPlanningRead(plannedState, toCombatInput(plannedState));
@@ -2125,7 +2208,8 @@ export class GameStore {
         mergeCombatResult(s, previousCombat, result.combatState);
         const stepLogs = result.steps.flatMap((step) => Array.isArray(step.log) ? step.log : step.log ? [step.log] : []);
         const feedbackLine = s.combat?.lastWindow?.feedback?.text || '';
-        if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, feedbackLine, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
+        const planLine = planFill ? `PLAN触发：${planFill.label}（${planFill.mode}）自动填入本窗口建议队列：${planQueueNames(planFill.queue)}。comboSlot=${planFill.comboSlot || 'empty'}，planSlot=${planFill.planSlot || 'empty'}。` : '';
+        if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, planLine, feedbackLine, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
         if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 1) {
           finishBattle(s, 'first_wind');
         } else if (s.combat?.objectiveSet === 'park_check' && finalObjectiveList(s.combat).filter((item) => item.done).length >= Number(s.combat.objectivePassCount || 2)) {
@@ -2381,6 +2465,14 @@ function counterSkillsForPlan(plan) {
   return ['guard', 'wild_swing', 'push_away'];
 }
 
+function combatPlanMode(id) {
+  return COMBAT_PLAN_MODES.find((mode) => mode.id === id) || COMBAT_PLAN_MODES[0];
+}
+
+function planQueueNames(queue = []) {
+  return queue.map((id) => SKILLS[id]?.name || id).join(' -> ');
+}
+
 function queueAdvice(queue, plan) {
   const counters = counterSkillsForPlan(plan);
   const chosenCounters = queue.filter((id) => counters.includes(id));
@@ -2406,7 +2498,9 @@ function combatPlanningRead(state, combatInput) {
   const combat = state.combat;
   if (!combat || !combatInput || combat.phase === 'auto') return null;
   const queue = combat.selected?.length ? [...combat.selected] : [];
-  const assumedQueue = queue.length ? queue : ['guard'];
+  const planMode = combatPlanMode(combat.planMode);
+  const suggestion = queue.length || planMode.id === 'manual' ? null : suggestCombatQueue(combatInput);
+  const assumedQueue = queue.length ? queue : (suggestion?.queue?.length ? suggestion.queue : ['guard']);
   const nextAction = assumedQueue[0];
   const rng = seededCombatRng(state, combat, assumedQueue);
   const plan = chooseEnemyResponse({
@@ -2418,6 +2512,11 @@ function combatPlanningRead(state, combatInput) {
   const advice = queueAdvice(queue, plan);
   return {
     ...plan,
+    planMode: planMode.id,
+    planLabel: planMode.label,
+    suggestedQueue: suggestion?.queue || [],
+    suggestedQueueNames: suggestion?.queue?.length ? planQueueNames(suggestion.queue) : '',
+    suggestedQueueReason: suggestion?.reason || '',
     skillName: SKILLS[plan.skill]?.name || plan.skill,
     nextAction,
     nextActionName: SKILLS[nextAction]?.name || nextAction,
@@ -2515,20 +2614,23 @@ function todayFocusModel(state, mainEvent) {
 function dailyDirectorModel(state, mainEvent, opportunities = []) {
   const period = dayPeriod(state.time);
   const actionsDone = clamp(state.daily?.actions, 0, 99);
-  const baselineSlots = state.time < 1320 ? 3 : 1;
-  const remainingActions = clamp(Math.min(baselineSlots - actionsDone, 3), 0, 3);
+  const baselineSlots = state.time < 1320 ? 4 : 1;
+  const anchorPending = Boolean(mainEvent && !state.daily?.mainDone && !state.flags?.[`main_${state.day}`]);
+  const remainingActions = clamp(Math.min(baselineSlots - actionsDone, anchorPending && actionsDone >= 2 ? 1 : 4), 0, 4);
   const focus = todayFocusModel(state, mainEvent);
   const idleSleepStreak = Number(state.daily?.idleSleepStreak || 0);
   const freeActionHint = remainingActions <= 0
     ? '今天的自由行动感已经很满了，适合收尾、恢复或睡觉。'
-    : idleSleepStreak > 0
+    : anchorPending && actionsDone >= 2
+      ? `还能安排 1 个自由行动，但今日主线锚点还没处理：优先去${focus.locName || '目标地点'}。`
+      : idleSleepStreak > 0
       ? '先做一个很小的出门动作：复盘、补给、观察都可以，不需要立刻战斗。'
       : `还适合安排 ${remainingActions} 个自由行动；优先从当前推荐里挑，不要无限刷地图。`;
   return {
     period,
     todayFocus: focus,
     mainline: focus,
-    recommendedCount: Math.min(opportunities.length, 3),
+    recommendedCount: Math.min(opportunities.length, 2),
     remainingActions,
     softCombatDays: state.day <= 7,
     freeActionHint,
@@ -2675,7 +2777,17 @@ export function buildRenderModel(state) {
     actions,
     opportunities,
     mainEvent: decoratedMainEvent,
-    combat: state.combat ? { ...state.combat, queueLimit: COMBAT_QUEUE_LIMIT, enemyTell: combatPlanningRead(state, combatInput), objectiveList: finalObjectiveList(state.combat) } : null,
+    combat: state.combat ? {
+      ...state.combat,
+      queueLimit: COMBAT_QUEUE_LIMIT,
+      planModes: COMBAT_PLAN_MODES,
+      planMode: combatPlanMode(state.combat.planMode).id,
+      planLabel: combatPlanMode(state.combat.planMode).label,
+      planSlot: state.combat.planSlot || null,
+      comboSlot: state.combat.comboSlot || null,
+      enemyTell: combatPlanningRead(state, combatInput),
+      objectiveList: finalObjectiveList(state.combat)
+    } : null,
     log: state.log || [],
     eventLog: state.eventLog || [],
     combatMemory: state.combatMemory,

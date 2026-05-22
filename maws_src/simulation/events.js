@@ -896,7 +896,9 @@ function publicCard(rule, score, breakdown) {
 
 export function buildOpportunities(state = {}) {
   const factors = factorsFor(state);
-  const count = clamp(Math.floor(number(state.opportunityCount, 3)), 1, 3);
+  const actionsDone = clamp(state.daily?.actions, 0, 99);
+  const requestedCount = clamp(Math.floor(number(state.opportunityCount, 2)), 1, 2);
+  const count = actionsDone >= 3 ? 1 : requestedCount;
   const cooldowns = state.daily?.opportunityCooldowns || {};
   const usedKeys = new Set();
   return EVENT_RULES
