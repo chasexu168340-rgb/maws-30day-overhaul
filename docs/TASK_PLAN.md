@@ -4,19 +4,19 @@
 
 ## Current Task
 
-Wave 13：Reward Delta Contract v2（AGENT_B_GAMEPLAY_SYSTEMS）。
+Wave 13：Time Activity Feel Pass（AGENT_B_GAMEPLAY_SYSTEMS）。
 
 ## Goal
 
-让行动、事件、训练、出行、战斗结算继续兼容现有 UI，同时输出字段完整、可被后续 UI 直接读取的结构化 `rewardDeltas`。
+让 30/60/90/120 分钟投入成为“安排一段时间”的玩法，不继续膨胀倍率；微行动保持恢复、消息、自省或轻量线索定位，不成为刷资源最优路线。
 
 ## Current Result
 
-- [x] 将 `rewardDeltas` 统一规范化为 `key/label/value/delta/kind/icon/tone/priority/source`。
-- [x] 将收益类型收敛到契约集合：`gain`、`cost`、`relation`、`skill`、`risk`、`time`、`item`、`money`。
-- [x] 技能解锁 delta 保持短标签：`学会 <技能名>`，不把来源/条件塞进 chip 字段。
-- [x] 事件 notebook 增加结构化风险 delta；物品使用增加结构化 item delta。
-- [x] 行动、训练、出行、战斗继续从结算差值生成结构化 cost/time/reward deltas。
+- [x] 调整 `TIME_DOSAGE_OPTIONS`：短练低消耗、标准稳、深练有机会成本、硬练高疲劳/高小伤风险。
+- [x] `state.js` 记录 `daily.timeCommitted` 和 `daily.schedulePressure`，深练/硬练结算会提示错过机会。
+- [x] 微行动加入当日限刷：重复或过量后只保留恢复/自省价值。
+- [x] `events.js` 读取日程压力，压低硬战机会并把机会卡收窄到 1 张。
+- [x] 输出 worker 报告和 agent report。
 
 ## Validation
 
@@ -26,9 +26,9 @@ Wave 13：Reward Delta Contract v2（AGENT_B_GAMEPLAY_SYSTEMS）。
 
 ## Risks
 
-- 未修改 DOM UI，本轮只保证结构化字段可用；展示样式仍由后续 UI worker 接入。
-- 未修改经济曲线、剧情内容、战斗公式、数据表和存档 key/version。
+- 未修改 UI、combat、assets、package、存档 key/version。
+- 未大改经济曲线；深练/硬练仍需后续 playtest 观察实际选择率。
 
 ## Next Step
 
-后续 UI worker 可直接读取 `modal.rewardDeltas` 和 `eventNotebook.rewardDeltas`，避免从长文案解析收益。
+后续建议人工 playtest Day 9 后拳馆训练：连续深练/硬练后机会卡是否自然转向恢复、对话或补给。

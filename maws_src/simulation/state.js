@@ -65,6 +65,7 @@ const COMBAT_PLAN_MODES = Object.freeze([
 ]);
 const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
+const MICRO_ACTION_IDS = new Set(['idle_blank', 'read_notes', 'scroll_short_video', 'message_friend', 'simple_stretch']);
 
 export function fmtTime(totalMinutes) {
   const m = Math.floor(totalMinutes % 1440);
@@ -925,6 +926,31 @@ function scaledGain(gain = {}, multiplier = 1, option = {}) {
   return out;
 }
 
+function applyMicroActionPressure(state, action, gain = {}) {
+  if (!MICRO_ACTION_IDS.has(action?.id)) return { gain, note: '' };
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  state.daily.microActions ||= {};
+  const total = Object.values(state.daily.microActions).reduce((sum, value) => sum + Number(value || 0), 0);
+  const same = Number(state.daily.microActions[action.id] || 0);
+  state.daily.microActions[action.id] = same + 1;
+  if (same <= 0 && total < 2) return { gain, note: '' };
+
+  const adjusted = {};
+  Object.entries(gain || {}).forEach(([key, value]) => {
+    if (typeof value !== 'number') {
+      adjusted[key] = value;
+      return;
+    }
+    if (value < 0 || key === 'calm') adjusted[key] = value;
+  });
+  return {
+    gain: adjusted,
+    note: same > 0
+      ? '同一个微行动重复做，今天只保留恢复和自省价值，不再刷额外收益。'
+      : '微行动已经够多了，继续做只算收尾，不再把它变成资源路线。'
+  };
+}
+
 function positiveGainMultiplier(gain = {}, multiplier = 1) {
   const out = {};
   Object.entries(gain || {}).forEach(([key, value]) => {
@@ -977,7 +1003,21 @@ function applyTrainingRepeatPressure(state, action, gain = {}) {
 function advanceTime(state, minutes) {
   state.time += minutes;
   state.daily.actions += 1;
+  state.daily.timeCommitted = Number(state.daily.timeCommitted || 0) + Math.max(0, Number(minutes || 0));
   if (state.time >= 1500) sleep(state, true);
+}
+
+function applyDosageSchedulePressure(state, dosage = null) {
+  const pressure = Number(dosage?.opportunityPressure || 0);
+  if (!pressure) return '';
+  state.daily ||= { talked: {}, actions: 0, mainDone: false, sideSeed: state.day || 1 };
+  state.daily.schedulePressure = Number(state.daily.schedulePressure || 0) + pressure;
+  state.daily.opportunityCooldowns ||= {};
+  if (pressure >= 1) state.daily.opportunityCooldowns.deep_practice_window = true;
+  if (pressure >= 2) state.daily.opportunityCooldowns.hard_practice_window = true;
+  return pressure >= 2
+    ? '硬练占掉了今天很大一段余裕：机会卡会收窄，身体风险也会更早显出来。'
+    : '深练占掉了一段机会窗口：收益更集中，但今天能顺手处理的事会变少。';
 }
 
 function actionRoll(state, salt = 0) {
@@ -1481,9 +1521,11 @@ function executeAction(state, action, options = {}) {
   } else {
     const beforeSkillState = clone(state.skillState || {});
     const baseGain = dosage ? scaledGain(action.gain || {}, Number(dosage.multiplier || 1), dosage) : (action.gain || {});
-    const repeat = applyTrainingRepeatPressure(state, action, baseGain);
+    const micro = applyMicroActionPressure(state, action, baseGain);
+    const repeat = applyTrainingRepeatPressure(state, action, micro.gain);
     applyGain(state, repeat.gain);
     const idleEvent = action.type === 'idle' ? maybeIdleEvent(state) : null;
+    const scheduleNote = applyDosageSchedulePressure(state, dosage);
     if (dosage?.injuryRisk && actionRoll(state, 59) < dosage.injuryRisk) {
       addMinorInjury(state);
       state.player.fatigue = clamp((state.player.fatigue || 0) + 4, 0, 100);
@@ -1491,7 +1533,7 @@ function executeAction(state, action, options = {}) {
     const lines = settlementLines(before, snapshotState(state)).concat(skillUnlockSettlementLines(beforeSkillState, state, action));
     addLog(state, `完成行动：${action.name}${dosage ? ` · ${dosage.name}` : ''}`);
     const idleBody = idleEvent ? `${idleEvent.title}：${idleEvent.text}` : '';
-    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, repeat.note, idleBody].filter(Boolean).join('\n') } });
+    state.ui.modal = actionResultModal(state, action, lines, { ...options, dosage: dosageId, eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, micro.note, repeat.note, scheduleNote, idleBody].filter(Boolean).join('\n') } });
   }
 }
 
@@ -1720,6 +1762,7 @@ function finishTrainingMini(state, gradeId, result = {}) {
   if (moneyCost) state.player.money -= moneyCost;
   advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
   applyGain(state, gain);
+  const scheduleNote = applyDosageSchedulePressure(state, dosage);
   if (dosage?.injuryRisk && actionRoll(state, 71) < dosage.injuryRisk) {
     addMinorInjury(state);
     state.player.fatigue = clamp((state.player.fatigue || 0) + 4, 0, 100);
@@ -1729,7 +1772,7 @@ function finishTrainingMini(state, gradeId, result = {}) {
   state.ui.modal = {
     type: 'settlement',
     title: `${action.name} · ${grade.label}`,
-    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result), repeat.note].filter(Boolean).join('\n'),
+    body: [dosage ? `投入：${dosage.name}。${dosage.note}` : '', trainingResultBody(grade, result), repeat.note, scheduleNote].filter(Boolean).join('\n'),
     lead: oneSentence(trainingResultBody(grade, result), `${action.name}完成。`),
     rewardDeltas: rewardDeltasFromSettlement(lines, state, {
       source: 'training',
