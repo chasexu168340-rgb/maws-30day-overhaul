@@ -153,7 +153,7 @@ export const LOC_UNLOCKS = {
   taekwondo_club: { day: 24, reason: '腿法漂亮之前，先学会落地。', hint: 'Day 24 开放。' }
 };
 
-export const INITIAL_SKILLS = ['mystic', 'guard', 'retreat', 'talkdown'];
+export const INITIAL_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 
 export const LOC_POS = {
   home: [1, 6], park: [2, 3], store: [2, 5], metro_station: [3, 5], worksite: [4, 1], boxing: [4, 6],
@@ -170,7 +170,22 @@ export const TRAVEL_TUNING = {
   taxi: { name: '打车', icon: '的', desc: '最快，不耗体力，但跨区和夜间成本明显。钱包会替你挨这一下。', time: [10, 18, 32], money: [26, 48, 86], sp: [0, 0, 0], fitXp: [0, 0, 0], fatigue: [0, 0, 0] }
 };
 
+export const TIME_DOSAGE_OPTIONS = {
+  short: { name: '短练 30m', minutes: 30, multiplier: 0.55, spMultiplier: 0.55, fatigueMultiplier: 0.45, costMultiplier: 0.65, note: '低收益低疲劳，适合塞进碎片时间。' },
+  standard: { name: '标准 60m', minutes: 60, multiplier: 1, spMultiplier: 1, fatigueMultiplier: 1, costMultiplier: 1, note: '默认收益，节奏最稳。' },
+  deep: { name: '深练 90m', minutes: 90, multiplier: 1.32, spMultiplier: 1.35, fatigueMultiplier: 1.55, costMultiplier: 1.2, note: '收益更高，但疲劳明显上升。' },
+  hard: { name: '硬练 120m', minutes: 120, multiplier: 1.5, spMultiplier: 1.75, fatigueMultiplier: 2.25, costMultiplier: 1.35, injuryRisk: 0.18, note: '收益递减，疲劳和小伤风险都更高。' }
+};
+
+export const IDLE_EVENTS = [
+  { id: 'father_memory', title: '父亲记忆', text: '你想起父亲说过，先把冲动放下，拳才有地方落。', gain: { calm: 2 }, maw: { fatherMemory: 1 } },
+  { id: 'diary_self', title: '日记自省', text: '你在本子上写下今天最想硬撑的一刻，决定下次先看清楚。', gain: { calm: 1, auth: 1 } },
+  { id: 'friend_message', title: '朋友消息', text: '刘胖子发来一句别练到报废。语气欠揍，但道理还行。', gain: { morale: 2, rel_fatty: 1 } }
+];
+
 export const SKILLS = {
+  wild_swing: { name: '野路挥拳', icon: '挥', type: 'strike', dist: ['far', 'mid', 'close'], dmg: 10, post: 8, sp: 6, ap: 1, hit: 0.66, risk: 0.18, style: 'street', desc: '没练过系统拳路，但真急眼时能把人逼退。能打赢完全没练过的人，遇到正规拳距就会漏出回收问题。' },
+  push_away: { name: '推搡', icon: '推', type: 'dirty', dist: ['mid', 'close'], dmg: 2, post: 12, sp: 6, ap: 1, hit: 0.74, risk: 0.10, style: 'street', desc: '用肩手把人顶开，抢一点喘气和距离。不是技术胜利，只是别让局面一下子贴死。' },
   jab: { name: '刺拳', icon: '拳', assetKey: 'skill.jab', type: 'strike', dist: ['far', 'mid'], dmg: 8, post: 7, sp: 5, ap: 1, hit: 0.84, risk: 0.06, style: 'boxing', desc: '探距离、打断前压。伤害不高，但能把对面节奏敲出一个小逗号。' },
   straight: { name: '直拳', icon: '直', assetKey: 'skill.straight', type: 'strike', dist: ['mid'], dmg: 18, post: 12, sp: 9, ap: 2, hit: 0.72, risk: 0.16, style: 'boxing', desc: '基础重击，打中了很有说法；回收慢，没打中就轮到对面写说法。' },
   guard: { name: '防守抱架', icon: '盾', assetKey: 'skill.guard', type: 'defense', dist: ['far', 'mid', 'close'], dmg: 0, post: 0, sp: 4, ap: 1, hit: 1, risk: 0.02, style: 'boxing', desc: '降低下一次受伤。不是怂，是把脸从公共资源改回个人财产。' },
@@ -198,10 +213,12 @@ export const SKILLS = {
 };
 
 export const SKILL_UNLOCKS = {
-  mystic: { skillId: 'mystic', initial: true, sourceSummary: '开局已会 · 家传旧招', openCondition: '开局自带。', unlockText: '父亲留下的混元一气掌还在手上，只是需要重新拆开验证。' },
-  guard: { skillId: 'guard', initial: true, sourceSummary: '开局已会 · 基础抱架', openCondition: '开局自带。', unlockText: '你至少知道把手抬起来，脸不是公共靶位。' },
-  retreat: { skillId: 'retreat', initial: true, sourceSummary: '开局已会 · 后撤拉开', openCondition: '开局自带。', unlockText: '退一步不是认输，是先把自己从错误距离里救出来。' },
-  talkdown: { skillId: 'talkdown', initial: true, sourceSummary: '开局已会 · 言语降温', openCondition: '开局自带。', unlockText: '不是每次冲突都值得打到底，嘴能省下不少医药费。' },
+  wild_swing: { skillId: 'wild_swing', initial: true, sourceSummary: '开局已会 · 茂家野路挥拳', openCondition: '开局自带。', unlockText: '你不懂刺拳和直拳，但知道人冲上来时不能只站着挨。' },
+  push_away: { skillId: 'push_away', initial: true, sourceSummary: '开局已会 · 推搡抢距', openCondition: '开局自带。', unlockText: '你先学会把人顶开一点，给呼吸和后撤留个缝。' },
+  mystic: { skillId: 'mystic', initial: true, sourceSummary: '开局已会 · 茂家旧招野生版', openCondition: '开局自带。', unlockText: '父亲留下的混元一气掌还在手上，只是现在更像没拆开的旧招。' },
+  guard: { skillId: 'guard', initial: true, sourceSummary: '开局已会 · 野生抱架', openCondition: '开局自带。', unlockText: '你至少知道把手抬起来，脸不是公共靶位。' },
+  retreat: { skillId: 'retreat', initial: true, sourceSummary: '开局已会 · 本能后撤', openCondition: '开局自带。', unlockText: '退一步不是认输，是先把自己从错误距离里救出来。' },
+  talkdown: { skillId: 'talkdown', initial: true, sourceSummary: '开局已会 · 嘴上降温', openCondition: '开局自带。', unlockText: '不是每次冲突都值得打到底，嘴能省下不少医药费。' },
   dodge: { skillId: 'dodge', locationId: 'home', actionId: 'shadow', openCondition: '在出租屋完成影子拳节拍。', sourceSummary: '出租屋 · 影子拳节拍', unlockText: '你开始把身体挪出线外，而不是站在原地等答案。' },
   jab: { skillId: 'jab', locationId: 'boxing', actionId: 'bag', openCondition: '拳馆开放后，完成沙包连击。', sourceSummary: '拳馆 · 沙包连击', unlockText: '你开始用刺拳先碰距离，而不是一上来就把重心借出去。' },
   straight: { skillId: 'straight', locationId: 'boxing', actionId: 'bag', openCondition: '拳馆开放后，完成沙包连击。', sourceSummary: '拳馆 · 沙包连击', unlockText: '后手直拳有了中线和回收，终于不只是用力砸沙包。' },
@@ -256,6 +273,7 @@ export const ACTIONS = {
   home: [
     { id: 'review', name: '视频复盘', icon: '复', time: 45, sp: 0, desc: '分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。', type: 'simple', gain: { jud: 1, calm: 4, skill: 'jab', xp: 4 } },
     { id: 'shadow', name: '影子拳节拍', icon: '影', time: 50, sp: 12, desc: '轻训练，练直拳回收和步法节奏。影子不会还手，但它也不会夸你。', type: 'simple', gain: { skill: 'dodge', xp: 6, boxing: 4, fatigue: 6, fitXp: 2 } },
+    { id: 'idle_blank', name: '发呆放空', icon: '空', time: 20, sp: 0, desc: '不刷视频，不加练，只让脑子从热度里退出来一点。可能想起父亲、写下几句日记，或收到朋友消息。', type: 'idle', noDurationOptions: true, gain: { calm: 2, morale: 1, fatigue: -2 } },
     { id: 'online', name: '网上冲浪找资料', icon: '网', time: 35, sp: 3, desc: '刷新机会卡，提升真实性或发现迷货。信息海很大，别把泡沫当秘籍。', type: 'simple', gain: { auth: 2, heat: 1 } },
     { id: 'nap', name: '小睡恢复', icon: '睡', time: 60, sp: 0, desc: '恢复体力，降低疲劳。给身体一次不被打扰的停机维护。', type: 'simple', gain: { sp: 30, fatigue: -15 } },
     { id: 'sleep', name: '睡觉到明天', icon: '眠', time: 0, sp: 0, desc: '结束当天。太晚不睡，明天的身体会带着账本来找你。', type: 'sleep' }
@@ -270,6 +288,7 @@ export const ACTIONS = {
     { id: 'metro_observe', name: '观察通勤人流', icon: '看', time: 35, sp: 0, desc: '看距离、看动线、看冲突怎么在拥挤里发酵。人群不讲武德，但很讲空间。', type: 'simple', gain: { jud: 1, street: 4, calm: 2 } },
     { id: 'metro_short_video', name: '刷打假短视频', icon: '刷', time: 30, sp: 2, desc: '越刷越上头，越刷越想证明点什么。手机很亮，判断力会被照得有点虚。', type: 'simple', gain: { heat: 1, auth: -1, morale: 3 } },
     { id: 'metro_shadow_step', name: '站台步法小练', icon: '步', time: 25, sp: 6, desc: '不占人、不丢人，练一步进退。脚下能收住，心里才不容易乱冲。', type: 'simple', gain: { skill: 'retreat', xp: 4, jud: 1, fatigue: 3 } },
+    { id: 'metro_breathe', name: '站边放空', icon: '空', time: 15, sp: 0, desc: '站到不挡路的边上，数几班车进站。城市还在推着人走，你先不跟它较劲。', type: 'idle', noDurationOptions: true, gain: { calm: 2, fatigue: -1 } },
     { id: 'metro_line_rumor', name: '听下一站线索', icon: '线', time: 40, sp: 0, desc: '听保安、学生和外卖骑手闲聊，城市的训练地点会先以传闻出现。线索不保证靠谱，但比硬闯强。', type: 'simple', gain: { auth: 2, fame: 4, rel_fatty: 1 } }
   ],
   worksite: [
@@ -280,6 +299,7 @@ export const ACTIONS = {
   park: [
     { id: 'spar_rookie', name: '开放验货局', icon: '验', time: 60, sp: 12, desc: '和拳击新人低风险切磋。适合确认动作能不能离开教程区。', type: 'battle', enemy: 'E01', risk: 1 },
     { id: 'observe_park', name: '围观不插手', icon: '看', time: 40, sp: 0, desc: '观察别人出招，提升判断。站远点也能学，前提是别站成裁判。', type: 'simple', gain: { jud: 1, calm: 3, auth: 1 } },
+    { id: 'park_short_walk', name: '绕场短走', icon: '走', time: 20, sp: 0, desc: '不插手也不围上去，只绕着场边走一圈，把呼吸和脚步找回来。', type: 'idle', noDurationOptions: true, gain: { calm: 2, fatigue: -1, fitXp: 1 } },
     { id: 'poster', name: '帮拳馆贴海报', icon: '贴', time: 55, sp: 8, desc: '提升拳馆关系和名声。胶水味不浪漫，但名声会一点点粘上来。', type: 'simple', gain: { fame: 14, rel_coach: 1, money: 20 } },
     { id: 'push_old', name: '推手大爷交流', icon: '推', time: 55, sp: 10, desc: '低风险近身控制训练。大爷笑得慈祥，重心拆得很不慈祥。', type: 'battle', enemy: 'E02', risk: 1 }
   ],

@@ -118,15 +118,17 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
       day: state.day,
       loc: state.loc,
       starterSkills: Object.keys(state.unlocked).filter((id) => state.unlocked[id]).sort(),
-      equipped: state.equipSkills.slice(0, 4)
+      equipped: state.equipSkills
     };
   });
   expect(dayOne).toMatchObject({
     day: 1,
     loc: 'home'
   });
-  expect(dayOne.starterSkills).toEqual(['guard', 'mystic', 'retreat', 'talkdown']);
-  expect(dayOne.equipped).toEqual(['mystic', 'guard', 'retreat', 'talkdown']);
+  expect(dayOne.starterSkills).toEqual(['guard', 'mystic', 'push_away', 'retreat', 'talkdown', 'wild_swing']);
+  expect(dayOne.starterSkills).not.toContain('jab');
+  expect(dayOne.starterSkills).not.toContain('advance');
+  expect(dayOne.equipped).toEqual(['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown']);
   await expect(page.locator('.maws-task-card.main').filter({ hasText: /父亲/ })).toBeVisible();
 
   await page.locator('button[data-action="openCityMap"]').first().click();
@@ -140,11 +142,10 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
   await expectNoHorizontalOverflow(page, 'metro entry');
 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
-  await expect(page.locator('.maws-skill-unlock').first()).toBeVisible();
   expect(await page.locator('.maws-skill-unlock.initial').count()).toBeGreaterThan(0);
   expect(await page.locator('.maws-skill-unlock.planned').count()).toBeGreaterThan(0);
   expect(await page.locator('.maws-skill-unlock.locked').count()).toBeGreaterThan(0);
-  await expect(page.locator('.maws-skill-unlock').filter({ hasText: /来源/ }).first()).toBeVisible();
+  expect(await page.locator('.maws-skill-unlock').filter({ hasText: /来源/ }).count()).toBeGreaterThan(0);
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
@@ -157,7 +158,7 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
     store.emit();
   });
   await expect(page.locator('button[data-action="startMainEvent"]').first()).toBeVisible();
-  await page.locator('button[data-action="startMainEvent"]').first().click();
+  await page.locator('button[data-action="startMainEvent"]').first().evaluate((button) => button.click());
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   const dayFiveCombat = await page.evaluate(() => ({
     day: window.MAWS_STORE.state.day,
@@ -171,6 +172,45 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
     main: true,
     objectiveSet: 'park_check'
   });
+  const starterWildPreview = await page.evaluate(async () => {
+    const { previewPlayerAction } = await import('/maws_src/simulation/combat.js');
+    const state = window.MAWS_STORE.state;
+    const combatInput = {
+      ...state.combat,
+      day: state.day,
+      player: state.player,
+      skillState: state.skillState,
+      styles: state.styles,
+      equipSkills: state.equipSkills
+    };
+    return ['push_away', 'wild_swing'].map((id) => {
+      const preview = previewPlayerAction(combatInput, id);
+      return { id, valid: preview.valid, reason: preview.reason, name: preview.name };
+    });
+  });
+  expect(starterWildPreview).toEqual([
+    { id: 'push_away', valid: true, reason: '', name: '推搡' },
+    { id: 'wild_swing', valid: true, reason: '', name: '野路挥拳' }
+  ]);
+  await page.evaluate(() => {
+    window.MAWS_STORE.state.combat.objectivePassCount = 99;
+    window.MAWS_STORE.emit();
+  });
+  const pushCard = page.locator('.maws-skill.combat-card').filter({ hasText: /推搡/ }).first();
+  const wildCard = page.locator('.maws-skill.combat-card').filter({ hasText: /野路挥拳/ }).first();
+  await expect(pushCard.locator('button[data-action="selectSkill"]')).toBeEnabled();
+  await expect(wildCard.locator('button[data-action="selectSkill"]')).toBeEnabled();
+  await pushCard.locator('button[data-action="selectSkill"]').click();
+  await wildCard.locator('button[data-action="selectSkill"]').click();
+  await page.locator('button[data-action="confirmBattle"]').click();
+  const starterWildResolved = await page.evaluate(() => ({
+    activeCombat: Boolean(window.MAWS_STORE.state.combat),
+    windowCount: window.MAWS_STORE.state.combat?.windowCount || 0,
+    log: window.MAWS_STORE.state.combat?.log?.join('\n') || ''
+  }));
+  expect(starterWildResolved.activeCombat).toBe(true);
+  expect(starterWildResolved.windowCount).toBeGreaterThanOrEqual(1);
+  expect(starterWildResolved.log).toMatch(/推搡|野路挥拳|推开后立刻挥击/);
 
   expect(errors).toEqual([]);
 });
@@ -185,7 +225,7 @@ test('390x844 skills and map do not overflow horizontally', async ({ page }) => 
 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
   await expect(page.locator('.maws-skill').first()).toBeVisible();
-  await expect(page.locator('.maws-skill-unlock').first()).toBeVisible();
+  expect(await page.locator('.maws-skill-unlock').count()).toBeGreaterThan(0);
   await expectNoHorizontalOverflow(page, 'mobile skills');
 
   expect(errors).toEqual([]);

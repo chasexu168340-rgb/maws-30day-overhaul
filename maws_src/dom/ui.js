@@ -89,6 +89,102 @@ function summaryChips(parts = [], className = '') {
     : '';
 }
 
+const rewardLabelAliases = {
+  money: '现金',
+  cash: '现金',
+  calm: '冷静',
+  misread: '误判',
+  relation: '关系',
+  relationship: '关系',
+  skill: '技能'
+};
+
+function rewardChipKind(label = '', text = '', group = '') {
+  const raw = `${label} ${text} ${group}`;
+  if (/技能|学会|习得|掌握|招式|心法/.test(raw)) return 'skill';
+  if (/关系|好感|信任|师徒|人情|结交/.test(raw)) return 'relation';
+  if (/误判|热度|风险|伤|代价/.test(raw)) return 'risk';
+  return 'gain';
+}
+
+function rewardChipFromText(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const normalized = raw.replace(/[：:]/g, ' ').replace(/\s+/g, ' ');
+  const match = normalized.match(/^(.*?)([+＋-－]\s*\d+(?:\.\d+)?%?)\s*$/);
+  const learned = normalized.match(/(?:学会|习得|掌握|解锁)\s*(?:了|：|:)?\s*(.+)$/);
+  if (learned) {
+    return { label: '学会', value: learned[1].trim(), text: raw, kind: 'skill' };
+  }
+  if (match) {
+    const label = match[1].trim().replace(/[，,。.]$/, '') || '收益';
+    const valueText = match[2].replace(/[＋－]/g, (ch) => (ch === '＋' ? '+' : '-')).replace(/\s+/g, '');
+    return { label, value: valueText, text: raw, kind: rewardChipKind(label, valueText) };
+  }
+  if (/技能|关系|好感|信任|收益|获得|增加|提升|学会|习得|掌握/.test(normalized)) {
+    const kind = rewardChipKind(normalized, normalized);
+    const label = kind === 'skill' ? '技能' : kind === 'relation' ? '关系' : '收益';
+    return { label, value: normalized.replace(/^(获得|增加|提升)\s*/, ''), text: raw, kind };
+  }
+  return null;
+}
+
+function rewardChipFromLine(line) {
+  if (!line || typeof line !== 'object') return rewardChipFromText(line);
+  const label = rewardLabelAliases[line.key] || line.label || line.key || line.group || '收益';
+  const delta = Number(line.delta || 0);
+  const text = line.text || (delta ? `${delta > 0 ? '+' : ''}${delta}` : '');
+  const parsed = rewardChipFromText(`${label} ${text}`);
+  return parsed ? { ...parsed, kind: rewardChipKind(label, text, line.group) } : null;
+}
+
+function collectRewardChips(modal = {}, limit = 5) {
+  const items = [
+    ...(modal.gain || []),
+    ...(modal.summary?.gain || []),
+    ...(modal.summaryChips || []),
+    ...(modal.settlementLines || []),
+    ...(modal.lines || [])
+  ];
+  const chips = [];
+  const seen = new Set();
+  items.forEach((item) => {
+    const chip = rewardChipFromLine(item);
+    if (!chip) return;
+    const key = `${chip.kind}|${chip.label}|${chip.value}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    chips.push(chip);
+  });
+  return chips
+    .sort((a, b) => {
+      const weight = { skill: 0, relation: 1, gain: 2, risk: 3 };
+      return (weight[a.kind] ?? 4) - (weight[b.kind] ?? 4);
+    })
+    .slice(0, limit);
+}
+
+function renderRewardChips(chips = [], className = '') {
+  if (!chips.length) return '';
+  return `
+    <div class="maws-reward-chips ${className}">
+      ${chips.map((chip) => `
+        <span class="maws-reward-chip ${esc(chip.kind)}">
+          <i>${chip.kind === 'skill' ? 'NEW' : chip.kind === 'relation' ? 'LINK' : chip.kind === 'risk' ? '!' : '+'}</i>
+          <b>${esc(chip.label)}</b>
+          <strong>${esc(chip.value)}</strong>
+        </span>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderRewardStack(modal) {
+  const chips = collectRewardChips(modal, 4);
+  if (!chips.length) return '';
+  return `<aside class="maws-reward-stack" aria-hidden="true">${renderRewardChips(chips, 'stack')}</aside>`;
+}
+
 function effectChips(eff = {}) {
   const labels = {
     strikeDmg: '拳类伤害',
@@ -303,16 +399,19 @@ function opportunityButtonLabel(card = {}, currentLoc = '') {
 }
 
 function renderActionCard(action) {
+  const hasDuration = Array.isArray(action.durationOptions) && action.durationOptions.length > 0;
   const details = `
     <p>${esc(action.desc)}</p>
     ${summaryChips(action.summary?.cost || [], 'cost')}
     ${summaryChips(action.summary?.gain || [], 'gain')}
+    ${hasDuration ? summaryChips(['可选 30/60/90/120 分钟投入'], 'time') : ''}
     ${action.summary?.risk ? `<small class="maws-risk-note">${esc(action.summary.risk)}</small>` : ''}
   `;
   return `
     <article class="maws-action ${action.disabled ? 'disabled' : ''}">
       <div class="maws-action-core">
         <strong>${esc(action.icon)} ${esc(action.name)}</strong>
+        ${hasDuration ? '<small class="maws-duration-tag">可调时长</small>' : ''}
         <details class="maws-fold maws-action-detail">
           <summary>行动细节</summary>
           ${details}
@@ -578,7 +677,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
         <span>${esc(learned ? `熟练度 ${round(skill.state?.p)}%` : sourceText)}</span>
         <span>${esc(learned ? (skill.equipped ? '已装备' : '可装备') : '待解锁')}</span>
       </div>
-      <details class="maws-fold maws-skill-fold">
+      <details class="maws-fold maws-skill-fold" open>
         <summary>${learned ? '来源 / 数值详情' : '解锁详情'}</summary>
         <p>${esc(skill.desc)}</p>
         ${renderSkillUnlock(skill, unlock, learned)}
@@ -801,7 +900,7 @@ function modalBodyLines(body) {
 
 function renderModalShell(modal, inner, className = '') {
   const classes = ['maws-modal', className].filter(Boolean).join(' ');
-  return `<div class="${classes}"><section class="maws-modal-shell">${inner}</section></div>`;
+  return `<div class="${classes}">${renderRewardStack(modal)}<section class="maws-modal-shell">${inner}</section></div>`;
 }
 
 function renderModalAction(action) {
@@ -975,6 +1074,36 @@ function renderEventNotebookModal(modal) {
   `, 'event-notebook');
 }
 
+function renderDurationChoiceModal(modal) {
+  const options = (modal.options || []).map((option) => {
+    const meta = [
+      `${option.minutes || 0}分钟`,
+      `体力-${option.sp || 0}`,
+      option.cost ? `现金-￥${option.cost}` : '现金0',
+      `收益x${Number(option.multiplier || 1).toFixed(2)}`,
+      option.riskText || ''
+    ].filter(Boolean);
+    return `
+      <article class="maws-duration-choice ${esc(option.id || '')}">
+        <strong>${esc(option.name || '标准 60m')}</strong>
+        <p>${esc(option.note || '')}</p>
+        ${summaryChips(meta, option.id === 'hard' ? 'cost' : 'gain')}
+        ${summaryChips(option.gainPreview || [], 'gain')}
+        ${btn('选择', 'chooseDuration', { id: modal.actionId, duration: option.id }, option.id === 'standard' ? 'primary' : 'ghost')}
+      </article>
+    `;
+  }).join('');
+  return renderModalShell(modal, `
+    <header class="maws-rpg-title">
+      <small>投入选择</small>
+      <h2>${esc(modal.title || '行动')}</h2>
+    </header>
+    <p class="maws-modal-lead">${esc(modal.desc || '选择这次投入多久。')}</p>
+    <div class="maws-duration-grid">${options}</div>
+    <div class="maws-modal-actions">${btn('取消', 'closeModal', {}, 'dark')}</div>
+  `, 'duration');
+}
+
 function renderModal(model) {
   const modal = model.modal;
   if (!modal) return '';
@@ -982,6 +1111,7 @@ function renderModal(model) {
   if (modal.type === 'dialogue') return renderDialogueModal(modal);
   if (modal.type === 'fatherDiary') return renderFatherDiaryModal(modal);
   if (modal.type === 'eventNotebook') return renderEventNotebookModal(modal);
+  if (modal.type === 'durationChoice') return renderDurationChoiceModal(modal);
   if (modal.type === 'travel') {
     const to = model.selectedTravel;
     const loc = LOCS[to];
@@ -1036,12 +1166,14 @@ function renderModal(model) {
     ? `<div class="maws-modal-actions">${btn('技术复盘', 'postReview', { kind: 'tech' }, 'primary')}${btn('冷静复盘', 'postReview', { kind: 'calm' }, 'ghost')}${btn('情报复盘', 'postReview', { kind: 'intel' }, 'dark')}</div>`
     : `<div class="maws-modal-actions">${btn('知道了', 'closeModal', {}, 'primary')}</div>`;
   if (modal.type === 'battleResult') {
+    const rewardChips = collectRewardChips(modal, 5);
     return renderModalShell(modal, `
       <header class="maws-rpg-title">
         <small>结果</small>
         <h2>${esc(modal.title || '战斗结果')}</h2>
       </header>
       <p class="maws-scene-summary">${esc(lead)}</p>
+      ${renderRewardChips(rewardChips, 'hero')}
       ${objectiveLines ? `<div class="maws-battle-learned"><b>你学到了什么</b>${objectiveLines}</div>` : '<div class="maws-battle-learned"><b>你学到了什么</b><p>复盘会把这场的判断写进下一步行动。</p></div>'}
       ${review}
       <details class="maws-fold maws-modal-fold">
@@ -1056,35 +1188,39 @@ function renderModal(model) {
       .map(renderModalAction)
       .join('');
     const cost = summaryChips(modal.cost || [], 'cost');
+    const rewardChips = collectRewardChips(modal, 5);
     const gain = summaryChips(modal.gain || [], 'gain');
     const hasSummary = (modal.cost || []).length || (modal.gain || []).length || modal.risk;
     return renderModalShell(modal, `
       <small class="maws-result-kicker">${esc(modal.kicker || modal.title || '行动')}</small>
       <h2>${esc(modal.title || '结果')}</h2>
       <p class="maws-modal-lead">${esc(modal.lead || lead)}</p>
-      ${hasSummary ? `
-        <div class="maws-result-summary">
-          <div><b>代价</b>${cost || '<small>没有额外代价</small>'}</div>
-          <div><b>获得</b>${gain || '<small>状态已推进</small>'}</div>
-          ${modal.risk ? `<small>${esc(modal.risk)}</small>` : ''}
-        </div>
-      ` : ''}
+      ${renderRewardChips(rewardChips, 'hero')}
       <div class="maws-modal-actions">${resultActions}</div>
       <details class="maws-fold maws-modal-fold">
-        <summary>结算明细 / 日志</summary>
+        <summary>详细结算</summary>
+        ${hasSummary ? `
+          <div class="maws-result-summary">
+            <div><b>代价</b>${cost || '<small>没有额外代价</small>'}</div>
+            <div><b>获得</b>${gain || '<small>状态已推进</small>'}</div>
+            ${modal.risk ? `<small>${esc(modal.risk)}</small>` : ''}
+          </div>
+        ` : ''}
         ${restBody ? `<div class="maws-modal-body">${restBody}</div>` : ''}
         ${objectiveLines}
         ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
         ${modal.logText ? `<p class="maws-result-log">${esc(modal.logText)}</p>` : ''}
       </details>
-    `, 'result-feedback');
+    `, 'result-feedback result-compact');
   }
+  const rewardChips = collectRewardChips(modal, 5);
   return renderModalShell(modal, `
     <header class="maws-rpg-title">
       <small>结果</small>
       <h2>${esc(modal.title || '提示')}</h2>
     </header>
     <p class="maws-scene-summary">${esc(lead)}</p>
+    ${renderRewardChips(rewardChips, 'hero')}
     ${review}
     <details class="maws-fold maws-modal-fold">
       <summary>查看详细结算</summary>
@@ -1110,6 +1246,7 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'loadGame') store.dispatch({ type: 'loadGame' });
   else if (action === 'setTab') store.dispatch({ type: 'setTab', tab: dataset.tab });
   else if (action === 'doAction') store.dispatch({ type: 'doAction', actionId: dataset.id });
+  else if (action === 'chooseDuration') store.dispatch({ type: 'chooseDuration', actionId: dataset.id, durationId: dataset.duration });
   else if (action === 'startMainEvent') store.dispatch({ type: 'startMainEvent' });
   else if (action === 'resolveStoryChoice') store.dispatch({ type: 'resolveStoryChoice', choiceId: dataset.id });
   else if (action === 'advanceDialogue') store.dispatch({ type: 'advanceDialogue' });

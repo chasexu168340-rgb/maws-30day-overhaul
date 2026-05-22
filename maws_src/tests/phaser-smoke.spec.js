@@ -132,8 +132,10 @@ test('location locks and metro station work in the real browser', async ({ page 
   });
   expect(dayOneModel.day).toBe(1);
   expect(dayOneModel.loc).toBe('home');
-  expect(dayOneModel.unlocked.sort()).toEqual(['guard', 'mystic', 'retreat', 'talkdown'].sort());
-  expect(dayOneModel.starterSlots.slice(0, 4)).toEqual(['mystic', 'guard', 'retreat', 'talkdown']);
+  expect(dayOneModel.unlocked.sort()).toEqual(['guard', 'mystic', 'push_away', 'retreat', 'talkdown', 'wild_swing'].sort());
+  expect(dayOneModel.unlocked).not.toContain('jab');
+  expect(dayOneModel.unlocked).not.toContain('advance');
+  expect(dayOneModel.starterSlots).toEqual(['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown']);
 
   const lockedPark = page.locator('button.maws-city-marker.locked[data-text]').first();
   await lockedPark.click();
