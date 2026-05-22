@@ -20,6 +20,7 @@ const FACTOR_LABELS = Object.freeze({
   currentLoc: '当前位置',
   recoveryNeed: '恢复需求',
   hardFightStress: '硬战压力',
+  schedulePressure: '日程压力',
   highHeatChallenge: '热度挑战',
   earlyDay: '早期引导',
   homeIdle: '宅家提醒',
@@ -699,6 +700,7 @@ function factorsFor(state = {}) {
     mawMisread: clamp(maw.misread, 0, 100) / 10,
     fatherMemory: clamp(maw.fatherMemory, 0, 100) / 10,
     mawReforge: clamp(maw.reforge, 0, 100) / 10,
+    schedulePressure: clamp(number(state.daily?.schedulePressure), 0, 4),
     earlyDay: day <= 7 ? (8 - day) / 2 : 0,
     homeIdle: state.loc === 'home' && (dailyActions <= 0 || number(state.daily?.idleSleepStreak) > 0) ? 1 : 0,
     jabNeed: day >= 6 && !hasSkill(state, 'jab') ? 1 : 0
@@ -805,6 +807,7 @@ function contextualBreakdown(rule, factors) {
   const fatigue = clamp(player.fatigue, 0, 100);
   const heat = clamp(player.heat, 0, 100);
   const injuries = clamp(factors.injuries, 0, 10);
+  const schedulePressure = clamp(factors.schedulePressure, 0, 4);
   const risk = eventRiskLevel(rule);
   const isBattle = Boolean(rule.enemy);
   const out = {};
@@ -825,6 +828,11 @@ function contextualBreakdown(rule, factors) {
   if (factors.homeIdle && factors.day <= 7) {
     if (isBattle) out.homeIdle = -10;
     else if (rule.kind === 'dialog' || rule.kind === 'shop') out.homeIdle = 4;
+  }
+
+  if (schedulePressure > 0) {
+    if (isBattle) out.schedulePressure = -schedulePressure * Math.max(2, risk);
+    else if (['dialog', 'shop', 'recovery'].includes(rule.kind)) out.schedulePressure = schedulePressure * 1.5;
   }
 
   return out;
@@ -851,6 +859,7 @@ function readableReason(key, value) {
     mawReforge: '茂拳重铸推进',
     recoveryNeed: '身体需要恢复',
     hardFightStress: '身体状态不适合硬战',
+    schedulePressure: positive ? '今天时间已经压紧' : '日程还有余裕',
     highHeatChallenge: '热度引来挑战',
     earlyDay: '早期适合低压安排',
     homeIdle: positive ? '今天还没出门，适合轻提醒' : '不优先推硬战',
@@ -898,7 +907,9 @@ export function buildOpportunities(state = {}) {
   const factors = factorsFor(state);
   const actionsDone = clamp(state.daily?.actions, 0, 99);
   const requestedCount = clamp(Math.floor(number(state.opportunityCount, 2)), 1, 2);
-  const count = actionsDone >= 3 ? 1 : requestedCount;
+  const schedulePressure = clamp(number(state.daily?.schedulePressure), 0, 4);
+  const timeCommitted = clamp(number(state.daily?.timeCommitted), 0, 1440);
+  const count = actionsDone >= 3 || schedulePressure >= 2 || timeCommitted >= 240 ? 1 : requestedCount;
   const cooldowns = state.daily?.opportunityCooldowns || {};
   const usedKeys = new Set();
   return EVENT_RULES
