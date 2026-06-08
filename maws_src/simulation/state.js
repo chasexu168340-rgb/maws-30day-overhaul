@@ -1321,6 +1321,20 @@ export function locationLockReason(state, locId) {
   return rule.reason || locationUnlockHint(locId) || '线索还不成熟。';
 }
 
+function isOpportunityAvailable(state, card = {}) {
+  if (!card.loc) return true;
+  if (!LOCS[card.loc]) return false;
+  if (!isLocationUnlocked(state, card.loc)) return false;
+  if (card.loc === 'home' || card.loc === 'store') return true;
+  return inOpen(state, card.loc);
+}
+
+function opportunityUnavailableReason(state, card = {}) {
+  if (!card.loc || !LOCS[card.loc]) return '这个地点暂时不可用。';
+  if (!isLocationUnlocked(state, card.loc)) return locationLockReason(state, card.loc);
+  return `${LOCS[card.loc].name}当前时段不开放。`;
+}
+
 function learnSkill(state, id, xp = 5) {
   if (!SKILLS[id]) return;
   const skill = state.skillState[id] || { p: 0, use: 0, retrain: 0, zhus: [] };
@@ -1887,6 +1901,11 @@ function resolveEventNotebook(state) {
   const card = buildOpportunities(state).find((item) => item.id === modal.id) || modal.card;
   if (!card) {
     state.ui.toast = '这个待办已经过期';
+    state.ui.modal = null;
+    return;
+  }
+  if (!isOpportunityAvailable(state, card)) {
+    state.ui.toast = opportunityUnavailableReason(state, card);
     state.ui.modal = null;
     return;
   }
@@ -2894,8 +2913,8 @@ export class GameStore {
     } else if (action.type === 'takeOpportunity') {
       const card = buildOpportunities(s).find((item) => item.id === action.id);
       if (!card) s.ui.toast = '这个待办已经过期';
-      else if (card.loc && !isLocationUnlocked(s, card.loc)) {
-        s.ui.toast = locationLockReason(s, card.loc);
+      else if (!isOpportunityAvailable(s, card)) {
+        s.ui.toast = opportunityUnavailableReason(s, card);
         s.ui.cityMapOpen = false;
       }
       else if (card.loc && card.loc !== s.loc) {
@@ -3480,7 +3499,7 @@ export function buildRenderModel(state) {
   const stats = derivedStats(state);
   const fit = fitBonus(p);
   const mainEvent = MAIN_EVENTS[state.day] && !state.flags[`main_${state.day}`] ? MAIN_EVENTS[state.day] : null;
-  const opportunities = buildOpportunities(state);
+  const opportunities = buildOpportunities(state).filter((card) => isOpportunityAvailable(state, card));
   const dailyDirector = dailyDirectorModel(state, mainEvent, opportunities);
   const timeOfDay = timeOfDayKey(state.time);
   const backgroundKey = locationBackgroundKey(state.loc, timeOfDay);

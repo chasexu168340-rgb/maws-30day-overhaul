@@ -4,33 +4,38 @@
 
 ## Current Task
 
-Wave 15 core addiction slice: merge `TREE-SPEND-001` and `COMBAT-RECIPE-001`.
+Wave 15 manual QA round 6 focused UI blocker fixes on `fix/wave15-ui-blockers`.
 
 ## Scope
 
-- Skill tree spend branch adds Insight costs, prerequisites, purchase state, old-save defaults, and purchase feedback.
-- Combat recipe branch adds plan-mode recipes, human-readable combat feedback, and combat perk consumption.
-- Manager resolves the expected overlap in `maws_src/simulation/state.js`.
-- Do not change UI, assets, package scripts, starter skills, save key/version, or broad combat balance.
+- Fix bottom navigation / dock overlap with map scene character labels.
+- Fix combat "current window action queue" so it no longer sticks to the bottom of the left combat planner and covers intent/log information.
+- Prefer CSS-only changes in `maws_src/dom/ui.css`.
+- Do not change package files, assets, save key/version, combat formulas, enemy data, economy, skill tree logic, or surrender result logic.
+- Do not revisit already-passed dark card text readability rules unless this task regresses them.
 
 ## Current Result
 
-- `feat/skill-tree-spend-v1` merged and passed `npm run check:full`, `npm run test:playtest`, and `git diff --check`.
-- `feat/combat-recipe-v1` merge produced conflicts in this file and `maws_src/simulation/state.js`.
-- Conflict resolution keeps skill-tree spend state plus combat recipe perk bridge and plan feedback.
+- Updated `maws_src/dom/ui.css` only for runtime UI.
+- Bottom navigation clearance now uses a larger `--maws-bottom-nav-clearance` for `.maws-main`, so scene content stops above the fixed nav with a safe gap.
+- Normal scene character labels get extra scene-cast bottom clearance plus a small upward label offset; interaction-menu-specific label lifting remains separate.
+- `.maws-combat-queue` is forced back into normal document flow with `position: static`, `bottom: auto`, and no elevated z-index, while keeping capped height and internal vertical scrolling.
+- No JS, combat logic, data, package files, save keys, or assets were changed.
 
 ## Validation
 
-- Pending after conflict resolution:
-  - `npm run check:full`
-  - `node maws_src/tools/sim_day5_park_check.mjs`
-  - `git diff --check`
+- `npm run build`: passed.
+- `git diff --check`: passed with CRLF warnings only for existing working-copy line-ending normalization.
+- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`: passed, 5 Chromium tests.
+- In-app Browser plugin was unavailable (`iab` browser not available), so final UI smoke used local Playwright.
+- Targeted Playwright geometry smoke passed at 1365x768, 900x700, and 390x844: scene labels clear the bottom nav, queue computed style is `position: static` and `bottom: auto`, planner/side panels scroll internally, and map/combat horizontal overflow is 0.
 
 ## Risks
 
-- This is a focused bridge between spendable nodes and combat recipes; it is not a full skill-tree economy or full automatic combat rewrite.
-- `GameDesigner_CombatAnalysis/` remains untracked and unrelated.
+- This remains CSS-only and layered after prior Wave 15 overrides, so manual QA should still recheck against the original failing state.
+- Increasing `.maws-main` bottom clearance reduces vertical content space slightly, especially on small screens, but preserves bottom nav visibility and clickability.
 
 ## Next Step
 
-Resolve conflicts, commit `merge: Wave15-CombatRecipe`, push staging, then continue Wave15 smoke and QA.
+- Run build and UI smoke.
+- If continuing in a new window, read `docs/TASK_HANDOFF.md`, `docs/FILE_MAP.md`, and this `docs/TASK_PLAN.md`.
