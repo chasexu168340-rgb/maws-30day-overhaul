@@ -160,6 +160,12 @@
   color: #ffd23f;
 }
 
+.maws-shop-cost,
+.maws-npc-target {
+  line-height: 1.35;
+  white-space: normal;
+}
+
 .maws-duration-tag {
   display: inline-flex;
   align-items: center;
