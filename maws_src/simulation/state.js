@@ -2544,9 +2544,10 @@ function finalObjectiveTier(count) {
 
 function finishFirstWindBattle(state, reason = 'first_wind') {
   const combat = state.combat;
+  const surrendered = reason === 'surrender';
   state.maw = createDefaultMaw(state.maw);
   const before = snapshotState(state);
-  recordCombatOutcome(state, false, 'first_wind');
+  recordCombatOutcome(state, false, surrendered ? 'surrender' : 'first_wind');
   state.maw.chapter = 'broken';
   state.maw.firstWindDone = true;
   state.flags.needFatherDiary = true;
@@ -2555,17 +2556,23 @@ function finishFirstWindBattle(state, reason = 'first_wind') {
   addInsight(state, 2);
   const targetSp = Math.round(state.player.spMax * 0.66);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
-  addLog(state, '一阵风之后，你知道旧招名接不住真实拳距。第9天，该回家翻开父亲日记。');
+  addLog(state, surrendered
+    ? '战斗结束：你认输撤退，旧招名的问题仍然暴露出来。第9天，该回家翻开父亲日记。'
+    : '一阵风之后，你知道旧招名接不住真实拳距。第9天，该回家翻开父亲日记。');
   const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
-    title: '一阵风之后',
+    title: surrendered ? '认输/撤退' : '一阵风之后',
     body: [
-      '沉默拳击手没有陪你演一招成名。第一个窗口结束时，你已经明白：问题不在输赢，而在你一直把误判当成神功。',
-      '误判被清账，祖传信念被打碎一角。父亲留下的东西，可能不在招名里。',
+      surrendered
+        ? '你主动认输撤出，但第一个真实拳距已经把旧招名的问题摆到面前。'
+        : '沉默拳击手没有陪你演一招成名。第一个窗口结束时，你已经明白：问题不在输赢，而在你一直把误判当成神功。',
+      surrendered
+        ? '这场按失败/撤退记录，不结算对手奖励。父亲留下的东西，可能不在招名里。'
+        : '误判被清账，祖传信念被打碎一角。父亲留下的东西，可能不在招名里。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
     ].join('\n'),
-    lead: '你被第一波真实拳距打醒了。',
+    lead: surrendered ? '你认输撤出，但复盘问题已经足够明确。' : '你被第一波真实拳距打醒了。',
     rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
     lines,
     win: false,
@@ -2581,28 +2588,35 @@ function finishObjectiveBattle(state, reason = 'normal') {
   const objectives = finalObjectiveList(combat);
   const completed = objectives.filter((item) => item.done).length;
   const tier = finalObjectiveTier(completed);
+  const surrendered = reason === 'surrender';
+  const resultTier = surrendered
+    ? { ...tier, key: 'collapse', title: '认输/撤退', body: '你主动认输撤出，第30天目标战按失败/撤退记录，只留下复盘材料。' }
+    : tier;
   const before = snapshotState(state);
-  const win = completed >= 3 || combat.enemy.hp <= 0 || reason === 'riskwin';
-  recordCombatOutcome(state, win, tier.key);
+  const win = !surrendered && (completed >= 3 || combat.enemy.hp <= 0 || reason === 'riskwin');
+  const outcomeReason = surrendered ? 'surrender' : tier.key;
+  recordCombatOutcome(state, win, outcomeReason);
   state.maw.finalResult = {
-    tier: tier.key,
+    tier: resultTier.key,
     completed,
     total: objectives.length,
     day: state.day,
     reason
   };
-  state.player.morale = clamp(state.player.morale + (completed >= 3 ? 7 : completed >= 2 ? 2 : -5), 0, 100);
-  state.player.calm = clamp(state.player.calm + (completed >= 2 ? 4 : -4), 0, 100);
-  addInsight(state, completed >= 3 ? 3 : 1);
+  state.player.morale = clamp(state.player.morale + (surrendered ? -5 : completed >= 3 ? 7 : completed >= 2 ? 2 : -5), 0, 100);
+  state.player.calm = clamp(state.player.calm + (surrendered ? 3 : completed >= 2 ? 4 : -4), 0, 100);
+  addInsight(state, !surrendered && completed >= 3 ? 3 : 1);
   const targetSp = Math.round(state.player.spMax * 0.58);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
-  addLog(state, `第30天目标战：${tier.title}（${completed}/${objectives.length}）。`);
+  addLog(state, surrendered
+    ? `第30天目标战：认输/撤退（${completed}/${objectives.length}）。`
+    : `第30天目标战：${tier.title}（${completed}/${objectives.length}）。`);
   const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
-    title: tier.title,
+    title: resultTier.title,
     body: [
-      tier.body,
+      resultTier.body,
       `目标完成：${completed}/${objectives.length}`,
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
     ].join('\n'),
@@ -2612,12 +2626,12 @@ function finishObjectiveBattle(state, reason = 'normal') {
       done: item.done,
       status: item.done ? '完成' : '未完成'
     })),
-    lead: oneSentence(tier.body, tier.title),
+    lead: oneSentence(resultTier.body, resultTier.title),
     rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
     lines,
     win,
-    reason: tier.key,
-    tier: tier.key
+    reason: outcomeReason,
+    tier: resultTier.key
   };
   state.combat = null;
   state.ui.tab = 'map';
@@ -2628,9 +2642,11 @@ function finishParkCheckBattle(state, reason = 'normal') {
   const objectives = finalObjectiveList(combat);
   const completed = objectives.filter((item) => item.done).length;
   const required = Number(combat.objectivePassCount || 2);
-  const win = reason === 'objective_pass' || reason === 'riskwin' || combat.enemy.hp <= 0 || completed >= required;
+  const surrendered = reason === 'surrender';
+  const win = !surrendered && (reason === 'objective_pass' || reason === 'riskwin' || combat.enemy.hp <= 0 || completed >= required);
+  const outcomeReason = win ? 'park_check_pass' : surrendered ? 'surrender' : 'park_check_review';
   const before = snapshotState(state);
-  recordCombatOutcome(state, win, win ? 'park_check_pass' : 'park_check_review');
+  recordCombatOutcome(state, win, outcomeReason);
   state.flags[`main_${state.day}`] = true;
   state.daily.mainDone = true;
   state.player.morale = clamp(state.player.morale + (win ? 4 : -2), 0, 100);
@@ -2638,16 +2654,20 @@ function finishParkCheckBattle(state, reason = 'normal') {
   addInsight(state, win ? 2 : 1);
   const targetSp = Math.round(state.player.spMax * 0.64);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
-  addLog(state, win
+  addLog(state, surrendered
+    ? `公园验货认输/撤退：完成 ${completed}/${objectives.length} 个轻目标。`
+    : win
     ? `公园验货通过：完成 ${completed}/${objectives.length} 个轻目标。`
     : `公园验货未通过：完成 ${completed}/${objectives.length} 个轻目标，复盘后去拳馆学刺拳。`);
   const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
-    title: win ? '验货通过' : '验货未通过',
+    title: surrendered ? '认输/撤退' : win ? '验货通过' : '验货未通过',
     body: [
       `目标完成：${completed}/${objectives.length}，通过要求：${required} 项。`,
-      win
+      surrendered
+        ? '你主动认输撤出，这场按失败/撤退记录，不结算通过结果。'
+        : win
         ? '这不是 KO 证明，只是说明你在第一波拳距里能做出具体选择。'
         : '失败也有复盘价值：别急着追重招，去拳馆学刺拳，先把拳距和回收补上。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
@@ -2658,11 +2678,11 @@ function finishParkCheckBattle(state, reason = 'normal') {
       done: item.done,
       status: item.done ? '完成' : '未完成'
     })),
-    lead: win ? '你在第一波拳距里做出了具体选择。' : '这次验货留下了明确复盘目标。',
+    lead: surrendered ? '你认输撤出，验货按失败/撤退记录。' : win ? '你在第一波拳距里做出了具体选择。' : '这次验货留下了明确复盘目标。',
     rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
     lines,
     win,
-    reason: win ? 'park_check_pass' : 'park_check_review',
+    reason: outcomeReason,
     tier: win ? 'pass' : 'review'
   };
   state.combat = null;
@@ -2701,7 +2721,8 @@ function finishBattle(state, reason = 'normal') {
     finishObjectiveBattle(state, reason);
     return;
   }
-  const win = reason === 'riskwin' || combat.enemy.hp <= 0 || (state.player.hp > 0 && state.player.hp >= combat.enemy.hp);
+  const surrendered = reason === 'surrender';
+  const win = !surrendered && (reason === 'riskwin' || combat.enemy.hp <= 0 || (state.player.hp > 0 && state.player.hp >= combat.enemy.hp));
   const reward = combat.enemy.reward || {};
   const before = snapshotState(state);
   recordCombatOutcome(state, win, reason);
@@ -2713,20 +2734,22 @@ function finishBattle(state, reason = 'normal') {
   } else {
     state.player.morale = clamp(state.player.morale - 6, 0, 100);
     state.player.calm = clamp(state.player.calm + 3, 0, 100);
-    addLog(state, `战斗结束：输给 ${combat.enemy.name}，但获得复盘材料。`);
+    addLog(state, surrendered
+      ? `战斗结束：你向 ${combat.enemy.name} 认输撤退，本场按失败记录，不结算对手奖励。`
+      : `战斗结束：输给 ${combat.enemy.name}，但获得复盘材料。`);
   }
   const targetSp = Math.round(state.player.spMax * (reason === 'surrender' ? 0.66 : 0.58));
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
-    title: reason === 'riskwin' ? '风险胜利' : win ? '胜利' : '失败/撤离',
+    title: reason === 'riskwin' ? '风险胜利' : surrendered ? '认输/撤退' : win ? '胜利' : '失败/撤离',
     body: [
       `对手：${combat.enemy.name}`,
-      win ? `收益：现金 +${reward.money || 0} / 名声 +${reward.fame || 0}` : '失败也能复盘，别只看输赢。',
+      surrendered ? '你主动认输撤出，本场只留下复盘材料，不结算对手奖励。' : win ? `收益：现金 +${reward.money || 0} / 名声 +${reward.fame || 0}` : '失败也能复盘，别只看输赢。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
     ].join('\n'),
-    lead: win ? `你战胜了${combat.enemy.name}。` : `你从${combat.enemy.name}这场里拿到了复盘材料。`,
+    lead: surrendered ? `你向${combat.enemy.name}认输并撤出这场。` : win ? `你战胜了${combat.enemy.name}。` : `你从${combat.enemy.name}这场里拿到了复盘材料。`,
     rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
     lines,
     win,
