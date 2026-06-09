@@ -233,6 +233,72 @@ test('combat plan mode exposes at least three tactical recipe modes', async ({ p
   expect(errors).toEqual([]);
 });
 
+test('battle surrender resolves as retreat without victory rewards or win memory', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'startBattle', enemyId: 'E01' }));
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+
+  const result = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const combat = store.state.combat;
+    const before = {
+      money: store.state.player.money,
+      fame: store.state.player.fame,
+      wins: store.state.combatMemory.wins,
+      losses: store.state.combatMemory.losses,
+      playerHp: store.state.player.hp,
+      enemyHp: combat?.enemy?.hp || 0,
+      reward: { ...(combat?.enemy?.reward || {}) }
+    };
+    store.dispatch({ type: 'surrender' });
+    const modal = store.state.ui.modal || {};
+    return {
+      before,
+      after: {
+        money: store.state.player.money,
+        fame: store.state.player.fame,
+        wins: store.state.combatMemory.wins,
+        losses: store.state.combatMemory.losses,
+        lastResult: store.state.combatMemory.lastResult
+      },
+      combatActive: Boolean(store.state.combat),
+      modal: {
+        type: modal.type,
+        title: modal.title || '',
+        body: modal.body || '',
+        lead: modal.lead || '',
+        win: modal.win,
+        reason: modal.reason
+      },
+      latestLog: store.state.log?.[0]?.text || '',
+      latestEvent: store.state.eventLog?.[0] || null
+    };
+  });
+
+  expect(result.before.playerHp, 'fixture should cover the old HP-based false-win path').toBeGreaterThanOrEqual(result.before.enemyHp);
+  expect(result.combatActive, 'surrender should close active combat').toBe(false);
+  expect(result.modal).toMatchObject({
+    type: 'battleResult',
+    win: false,
+    reason: 'surrender'
+  });
+  const modalText = [result.modal.title, result.modal.body, result.modal.lead].join('\n');
+  expect(modalText).toMatch(/认输|撤退|撤出|失败/);
+  expect(modalText).not.toMatch(/胜利|战胜/);
+  expect(result.after.money, 'surrender should not pay enemy money reward').toBe(result.before.money);
+  expect(result.after.fame, 'surrender should not pay enemy fame reward').toBe(result.before.fame);
+  expect(result.after.wins, 'surrender should not increment combat wins').toBe(result.before.wins);
+  expect(result.after.losses, 'surrender should increment combat losses').toBe(result.before.losses + 1);
+  expect(result.after.lastResult).toBe('loss');
+  expect(result.latestLog).toMatch(/认输|撤退|撤出|失败/);
+  expect(result.latestLog).not.toMatch(/胜利|战胜/);
+  expect(result.latestEvent?.result).toBe('loss');
+  await expect(page.locator('.maws-modal.result-compact')).toContainText(/认输|撤退|撤出|失败/);
+
+  expect(errors).toEqual([]);
+});
+
 test('Day 5 combat recipe produces readable tactical feedback', async ({ page }) => {
   const errors = await loadGame(page);
 
