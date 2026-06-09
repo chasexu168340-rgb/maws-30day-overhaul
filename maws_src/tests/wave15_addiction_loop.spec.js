@@ -206,6 +206,80 @@ test('purchasing a tree node gives compact reward feedback and survives rerender
   expect(errors).toEqual([]);
 });
 
+test('core affordance fixes expose NPC travel, shop cost, insight, and risk guidance', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 9;
+    store.state.time = 600;
+    store.state.loc = 'home';
+    store.state.player.money = 1000;
+    store.state.player.insightPoints = 4;
+    store.state.ui = { ...store.state.ui, tab: 'npc', modal: null, toast: null, cityMapOpen: false };
+    store.emit();
+  });
+
+  const coachCard = page.locator('.maws-item').filter({ hasText: '梁教练' });
+  await expect(coachCard).toContainText('对应地点');
+  await expect(coachCard.locator('button[data-action="openTravel"][data-loc="boxing"]')).toBeVisible();
+  await coachCard.locator('button[data-action="openTravel"][data-loc="boxing"]').click();
+  const travelModal = page.locator('.maws-modal');
+  await expect(travelModal).toContainText('拳馆');
+  await expect(travelModal.locator('button[data-action="travel"]').first()).toBeVisible();
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.ui = { ...store.state.ui, tab: 'shop', modal: null, toast: null, cityMapOpen: false };
+    store.emit();
+  });
+  const riceCard = page.locator('.maws-item').filter({ hasText: '便利店饭团' });
+  await expect(riceCard).toContainText(/购买耗时\s*10分钟/);
+  await expect(riceCard).toContainText('推进行动节奏');
+  await riceCard.locator('button[data-action="buyItem"]').click();
+  const purchaseModal = page.locator('.maws-modal.result-feedback');
+  await expect(purchaseModal).toBeVisible();
+  await expect(purchaseModal).toContainText('购买补给');
+  await expect(purchaseModal).toContainText(/耗时\s*10分钟|推进行动节奏/);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.player.insightPoints = 4;
+    store.state.ui = { ...store.state.ui, tab: 'profile', modal: null, toast: null, cityMapOpen: false };
+    store.emit();
+  });
+  const profilePanel = page.locator('.maws-panel').filter({ hasText: '资源注释' });
+  await expect(profilePanel).toContainText('风险/热度');
+  await expect(profilePanel).toContainText('言语降温');
+  const insightResource = page.locator('.maws-stat.resource').filter({ hasText: '洞察点' });
+  await expect(insightResource).toContainText('4');
+  await openSpendableSkillTree(page, 4);
+  await expect(page.locator('.maws-skill-tree-slice')).toContainText(/洞察点\s+4/);
+
+  expect(errors).toEqual([]);
+});
+
+test('heat gain updates the HUD risk chip immediately after an action', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.loc = 'home';
+    store.state.time = 600;
+    store.state.player.heat = 0;
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 1, npcActionGates: {}, microActions: {} };
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, toast: null, cityMapOpen: false };
+    store.emit();
+  });
+
+  await expect(page.locator('.maws-resource-row .maws-chip.risk')).toContainText(/风险\s*0/);
+  await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'doAction', actionId: 'scroll_short_video' }));
+  await expect(page.locator('.maws-resource-row .maws-chip.risk')).toContainText(/风险\s*1/);
+  expect(await page.evaluate(() => window.MAWS_STORE.state.player.heat)).toBe(1);
+
+  expect(errors).toEqual([]);
+});
+
 test('combat plan mode exposes at least three tactical recipe modes', async ({ page }) => {
   const errors = await loadGame(page);
 
@@ -230,6 +304,90 @@ test('combat plan mode exposes at least three tactical recipe modes', async ({ p
   expect(await page.evaluate(() => window.MAWS_STORE.state.combat?.planMode)).toBe(visibleModes[0]);
 
   await expectNoHorizontalOverflow(page, 'desktop combat plan recipes');
+  expect(errors).toEqual([]);
+});
+
+test('unavailable combat distance explains how to change distance', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'startBattle', enemyId: 'E01' });
+    store.state.combat.distance = 'ground';
+    store.emit();
+  });
+  const combatUi = page.locator('.maws-combat-ui');
+  await expect(combatUi).toBeVisible();
+  await expect(combatUi).toContainText('改变距离');
+  await expect(combatUi).toContainText(/前压|后撤|脱身/);
+
+  expect(errors).toEqual([]);
+});
+
+test('unavailable combat distance exposes a clickable fallback when no learned movement action is legal', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'startBattle', enemyId: 'E01' });
+    store.state.equipSkills = ['straight', 'grip'];
+    store.state.skillState.straight = { p: 16, use: 0, retrain: 0, zhus: [] };
+    store.state.skillState.grip = { p: 16, use: 0, retrain: 0, zhus: [] };
+    store.state.combat.distance = 'far';
+    store.state.combat.selected = [];
+    store.state.combat.playerQueue = [];
+    store.emit();
+  });
+
+  const combatUi = page.locator('.maws-combat-ui');
+  await expect(combatUi).toBeVisible();
+  const adjust = combatUi.locator('button[data-action="adjustCombatDistance"]');
+  await expect(adjust).toBeVisible();
+  await expect(adjust).toContainText('调整距离');
+  await adjust.click();
+  expect(await page.evaluate(() => window.MAWS_STORE.state.combat?.distance)).toBe('mid');
+  await expect(combatUi).toContainText('中距');
+
+  expect(errors).toEqual([]);
+});
+
+test('random event confirmation produces visible result feedback', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  const card = await page.evaluate(async () => {
+    const store = window.MAWS_STORE;
+    store.state.day = 1;
+    store.state.time = 600;
+    store.state.loc = 'home';
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 5 };
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, toast: null, cityMapOpen: false };
+    store.emit();
+    const { buildOpportunities } = await import('/maws_src/simulation/events.js');
+    const cards = buildOpportunities(store.state);
+    const chosen = cards.find((item) => item.loc === store.state.loc && !item.enemy && !item.action) || cards.find((item) => !item.enemy && !item.action);
+    if (chosen?.loc) store.state.loc = chosen.loc;
+    store.emit();
+    return chosen ? { id: chosen.id, title: chosen.title, loc: chosen.loc } : null;
+  });
+  expect(card, 'expected a non-combat random event opportunity').not.toBeNull();
+
+  await page.evaluate((id) => window.MAWS_STORE.dispatch({ type: 'takeOpportunity', id }), card.id);
+  await expect(page.locator('.maws-modal.event-notebook')).toBeVisible();
+  await page.locator('button[data-action="resolveEventNotebook"]').first().click();
+  await expect(page.locator('.maws-modal')).toBeVisible();
+
+  const feedback = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    return {
+      modalType: store.state.ui.modal?.type || '',
+      modalText: document.querySelector('.maws-modal')?.textContent?.replace(/\s+/g, ' ').trim() || '',
+      latestLog: store.state.log?.[0]?.text || '',
+      latestEvent: store.state.eventLog?.[0]?.text || ''
+    };
+  });
+  expect(feedback.modalType || feedback.latestLog || feedback.latestEvent).toBeTruthy();
+  expect(`${feedback.modalText} ${feedback.latestLog} ${feedback.latestEvent}`).toMatch(/结果|完成|处理|商店|已记录|继续刷新|记下/);
+
   expect(errors).toEqual([]);
 });
 

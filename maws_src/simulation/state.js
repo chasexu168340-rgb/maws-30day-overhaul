@@ -91,9 +91,16 @@ function addInsight(state, amount = 0) {
   return value;
 }
 
+function normalizeGainAliases(gain = {}) {
+  if (!gain || typeof gain !== 'object') return gain;
+  if (gain.heat != null || gain.risk == null) return gain;
+  return { ...gain, heat: gain.risk };
+}
+
 function applyGain(state, gain = {}) {
-  applyEconomyGain(state, gain);
-  addInsight(state, gain?.insight ?? gain?.insightPoints ?? 0);
+  const normalized = normalizeGainAliases(gain);
+  applyEconomyGain(state, normalized);
+  addInsight(state, normalized?.insight ?? normalized?.insightPoints ?? 0);
   return state;
 }
 
@@ -148,6 +155,11 @@ const COMBAT_PLAN_MODES = Object.freeze([
 ]);
 const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
+const SHOP_PURCHASE_MINUTES = 10;
+const SHOP_PURCHASE_COST_NOTE = `购买会花费 ${SHOP_PURCHASE_MINUTES} 分钟，并推进行动节奏。`;
+const RISK_GUIDE_TEXT = '风险/热度代表你被看见、被挑战和被意外拖住的压力。它越高，挑战、旧城事件和新伤压力越容易出现；想降低或避开，优先选低风险行动，必要时休息、理疗、战后复盘、撤离、言语降温，别连续硬顶高风险行动。';
+const DISTANCE_ADJUST_HINT = '需要前压 / 后撤 / 脱身等动作先改变距离；如果当前没有合法调距动作，指令栏会提供“调整距离”入口。';
+const DISTANCE_TOOL_IDS = new Set(['advance', 'retreat', 'dirtyescape', 'escape', 'dodge', 'push_away', 'frontkick', 'karate_front_kick']);
 const MICRO_ACTION_IDS = new Set(['idle_blank', 'read_notes', 'scroll_short_video', 'message_friend', 'simple_stretch']);
 
 export function fmtTime(totalMinutes) {
@@ -627,6 +639,7 @@ function gainParts(gain = {}) {
     fame: '名声',
     auth: '真实性',
     heat: '热度',
+    risk: '热度',
     fitXp: '体能沉淀',
     insight: '洞察点',
     insightPoints: '洞察点',
@@ -674,12 +687,12 @@ function actionSummary(action, dosage = null) {
     ? [`对手：${ENEMIES[action.enemy]?.name || action.enemy}`, `胜利奖励：￥${ENEMIES[action.enemy]?.reward?.money || 0} / 名声+${ENEMIES[action.enemy]?.reward?.fame || 0}`]
     : gainParts(gainSource);
   if (!gain.length) gain.push(action.type === 'dialog' ? '收益：关系/线索' : '收益：状态推进');
-  const risk = option?.injuryRisk
+  const riskBase = option?.injuryRisk
     ? `风险 疲劳/小伤 ${Math.round(option.injuryRisk * 100)}%`
     : action.type === 'battle'
     ? `风险 战斗 ${action.risk || ENEMIES[action.enemy]?.risk || '中'}`
     : action.risk ? `风险 事件 ${action.risk}` : '风险 低';
-  return { cost, gain, risk };
+  return { cost, gain, risk: `${riskBase} · ${RISK_GUIDE_TEXT}` };
 }
 
 function actionSourceLabel(locId, actionId, fallbackAction = null) {
@@ -945,7 +958,59 @@ function notebookData(item = {}) {
 
 function riskText(item = {}) {
   const raw = item.riskLabel ?? item.risk ?? ENEMIES[item.enemy]?.risk ?? (item.enemy ? '中' : '低');
-  return `风险 ${raw}`;
+  return `风险 ${raw} · ${RISK_GUIDE_TEXT}`;
+}
+
+function combatUnavailableReason(reason = '') {
+  if (!reason) return '';
+  if (/^当前距离不能用/.test(reason)) return `${reason}。${DISTANCE_ADJUST_HINT}`;
+  return reason;
+}
+
+function playerHeatValue(player = {}) {
+  return Math.round(Number(player.heat ?? player.risk ?? 0) || 0);
+}
+
+function isDistanceBlockedPreview(preview = {}) {
+  return /^当前距离不能用/.test(preview.reason || preview.unavailableReason || '');
+}
+
+function combatDistanceLabel(distance = '') {
+  return { far: '远距', mid: '中距', close: '近身', ground: '地面' }[distance] || distance || '当前距离';
+}
+
+function fallbackDistanceTarget(current = 'mid', wanted = []) {
+  if (current === 'ground') return 'close';
+  if (current === 'far') return 'mid';
+  if (current === 'close') return 'mid';
+  if (wanted.includes('far')) return 'far';
+  if (wanted.includes('close') || wanted.includes('ground')) return 'close';
+  return 'far';
+}
+
+function combatDistanceAdjustFallback(state, combatInput = null) {
+  if (!state?.combat || state.combat.phase === 'auto' || !combatInput) return null;
+  if ((state.combat.selected || []).length >= COMBAT_QUEUE_LIMIT) return null;
+  const equipped = (state.equipSkills || []).filter((id) => id && SKILLS[id]);
+  const blocked = equipped
+    .map((id) => ({ id, skill: SKILLS[id], preview: previewPlayerAction(combatInput, id) }))
+    .find((entry) => isDistanceBlockedPreview(entry.preview));
+  if (!blocked) return null;
+  const hasLegalDistanceTool = equipped.some((id) => (
+    DISTANCE_TOOL_IDS.has(id)
+    && state.skillState?.[id]
+    && !previewPlayerAction(combatInput, id).reason
+  ));
+  if (hasLegalDistanceTool) return null;
+  const target = fallbackDistanceTarget(state.combat.distance, blocked.skill?.dist || []);
+  return {
+    target,
+    label: `调整到${combatDistanceLabel(target)}`,
+    text: `当前没有可用的前压、后撤或脱身动作，先把距离调整到${combatDistanceLabel(target)}。`,
+    from: state.combat.distance,
+    blockedSkillId: blocked.id,
+    blockedSkillName: blocked.skill?.name || blocked.id
+  };
 }
 
 function eventKind(item = {}, action = null) {
@@ -1321,6 +1386,32 @@ export function locationLockReason(state, locId) {
   return rule.reason || locationUnlockHint(locId) || '线索还不成熟。';
 }
 
+function npcLocationTarget(state, npcId) {
+  const candidates = Object.entries(ACTIONS).flatMap(([locId, actions]) => (
+    (actions || [])
+      .filter((action) => action.npc === npcId)
+      .map((action) => ({ locId, action }))
+  ));
+  const currentAction = candidates.find((item) => item.locId === state.loc);
+  const preferred = candidates.find((item) => item.action.type === 'dialog') || candidates[0] || null;
+  const locId = preferred?.locId || '';
+  const locked = locId ? !isLocationUnlocked(state, locId) : false;
+  const closed = locId && !locked && locId !== 'home' && locId !== 'store' && !inOpen(state, locId);
+  return {
+    locId,
+    locName: LOCS[locId]?.name || '',
+    actionId: currentAction?.action?.id || '',
+    actionName: currentAction?.action?.name || '',
+    locked,
+    closed,
+    reason: locked
+      ? locationLockReason(state, locId)
+      : closed
+        ? `${LOCS[locId]?.name || '对应地点'}当前休息中，仍可先规划路线。`
+        : locId ? `对应地点：${LOCS[locId]?.name || locId}` : '暂时没有明确对应地点，先打开城市地图。'
+  };
+}
+
 function isOpportunityAvailable(state, card = {}) {
   if (!card.loc) return true;
   if (!LOCS[card.loc]) return false;
@@ -1664,10 +1755,10 @@ function riskRewardDelta(item = {}, source = 'event') {
   if (!raw) return null;
   const riskValue = { 低: 1, 中: 2, 高: 4, 剧情: 5, 终局: 5 }[raw] || Number(raw) || 1;
   return normalizeRewardDelta({
-    key: 'risk',
-    label: `风险 ${raw}`,
-    value: riskValue,
-    delta: riskValue,
+    key: 'risk:level',
+    label: '事件风险',
+    value: raw,
+    delta: 0,
     kind: 'risk',
     tone: riskValue >= 3 ? 'bad' : 'neutral',
     priority: 45,
@@ -1909,37 +2000,64 @@ function resolveEventNotebook(state) {
     state.ui.modal = null;
     return;
   }
+  const outcomeText = modal.result || notebookData(card).result || notebookData(card).outcome || '';
+  const visibleOutcome = outcomeText || '已记录到日志，后续机会会继续刷新。';
+  const recordEventFeedback = () => {
+    state.eventLog.unshift({ day: state.day, time: state.time, type: 'event', text: `${card.title || '随机事件'}：${visibleOutcome}` });
+    state.eventLog = state.eventLog.slice(0, 30);
+  };
 
   if (card.enemy) {
     markOpportunityCooldown(state, card);
+    recordEventFeedback();
     addLog(state, `进入事件：${card.title}`);
     startBattle(state, card.enemy);
   } else if (card.shop) {
     markOpportunityCooldown(state, card);
+    recordEventFeedback();
     state.ui.tab = 'shop';
     addLog(state, `处理待办：${card.title}`);
     state.ui.modal = resultFeedbackModal(state, {
       title: card.title || '待办',
-      body: card.result || '你把这件待办处理到可以继续采购和整理装备。',
+      body: visibleOutcome,
       lines: [],
-      summary: { cost: [], gain: ['商店已打开'], risk: riskText(card) },
+      summary: { cost: [], gain: ['商店已打开', visibleOutcome], risk: riskText(card) },
       rewardDeltas: [riskRewardDelta(card, 'eventNotebook')].filter(Boolean),
       logText: state.log?.[0]?.text || ''
     });
   } else if (card.action) {
     markOpportunityCooldown(state, card);
+    recordEventFeedback();
     const action = findAction(state, card.action) || actionById(card.action);
     executeAction(state, action, { allowNotebook: false, eventContext: modal });
   } else {
     markOpportunityCooldown(state, card);
+    recordEventFeedback();
     const before = snapshotState(state);
     if (card.npc) state.relations[card.npc] = (state.relations[card.npc] || 0) + 1;
     const settlementLinesForCard = settlementLines(before, snapshotState(state));
+    const dialogueLines = [...(card.dialogue || [{ speaker: card.title, text: card.desc }])];
+    if (visibleOutcome) dialogueLines.push({ speaker: '旁白', text: visibleOutcome });
+    if (!card.npc) {
+      state.ui.modal = resultFeedbackModal(state, {
+        title: card.title || '随机事件',
+        body: visibleOutcome,
+        lines: settlementLinesForCard,
+        summary: { cost: [], gain: [visibleOutcome], risk: riskText(card) },
+        rewardDeltas: rewardDeltasFromSettlement(settlementLinesForCard, state, {
+          source: 'eventNotebook',
+          extra: [riskRewardDelta(card, 'eventNotebook')]
+        }),
+        logText: state.log?.[0]?.text || ''
+      });
+      addLog(state, `处理待办：${card.title}`);
+      return;
+    }
     state.ui.modal = dialogueModal({
       title: card.title,
       npc: card.npc,
-      body: card.desc,
-      lines: card.dialogue || [{ speaker: card.title, text: card.desc }],
+      body: visibleOutcome || card.desc,
+      lines: dialogueLines,
       settlementLines: settlementLinesForCard,
       rewardDeltas: rewardDeltasFromSettlement(settlementLinesForCard, state, { source: 'eventNotebook' }),
       actionLabel: '记下'
@@ -2395,6 +2513,21 @@ function mergeCombatResult(state, previousCombat, nextCombat) {
     steps: sequencedSteps
   };
   updateCombatObjectives(state, previousCombat, state.combat, sequencedSteps);
+}
+
+function applyCombatDistanceAdjustFallback(state) {
+  if (!state?.combat) return;
+  const fallback = combatDistanceAdjustFallback(state, toCombatInput(state));
+  if (!fallback) {
+    state.ui.toast = '当前已有可用调距动作，优先使用指令卡。';
+    return;
+  }
+  state.combat.distance = fallback.target;
+  state.combat.log = [
+    `你稳住脚步调整距离：${combatDistanceLabel(fallback.from)} -> ${combatDistanceLabel(fallback.target)}。`,
+    ...(state.combat.log || [])
+  ].slice(0, 12);
+  state.ui.toast = fallback.text;
 }
 
 function combatCounterFeedback(actions = [], tell = null) {
@@ -2955,6 +3088,8 @@ export class GameStore {
       startBattle(s, action.enemyId);
     } else if (action.type === 'openFatherDiary') {
       s.ui.modal = fatherDiaryModal(s);
+    } else if (action.type === 'adjustCombatDistance') {
+      applyCombatDistanceAdjustFallback(s);
     } else if (action.type === 'selectSkill') {
       const c = s.combat;
       const skill = SKILLS[action.skillId];
@@ -3041,10 +3176,29 @@ export class GameStore {
       const item = ITEMS[action.itemId];
       if (!item || s.player.money < item.price) s.ui.toast = '钱不够';
       else {
+        const before = snapshotState(s);
         s.player.money -= item.price;
         s.inventory[action.itemId] = (s.inventory[action.itemId] || 0) + 1;
-        advanceTime(s, 10);
-        s.ui.toast = `买到 ${item.name}`;
+        advanceTime(s, SHOP_PURCHASE_MINUTES);
+        const lines = settlementLines(before, snapshotState(s));
+        addLog(s, `购买 ${item.name}：现金 -￥${item.price}，耗时 ${SHOP_PURCHASE_MINUTES} 分钟。`);
+        s.ui.toast = null;
+        s.ui.modal = resultFeedbackModal(s, {
+          title: '购买补给',
+          body: `买到 ${item.name}。${SHOP_PURCHASE_COST_NOTE}`,
+          lines,
+          summary: {
+            cost: [`现金 -￥${item.price}`, `耗时 ${SHOP_PURCHASE_MINUTES}分钟`, '推进行动节奏 +1'],
+            gain: [`${item.name} +1`],
+            risk: ''
+          },
+          logText: s.log?.[0]?.text || '',
+          rewardDeltas: rewardDeltasFromSettlement(lines, s, {
+            source: 'shop',
+            minutes: SHOP_PURCHASE_MINUTES,
+            extra: [itemRewardDelta(action.itemId, 1, 'shop')]
+          })
+        });
       }
     } else if (action.type === 'useItem') {
       const result = useItem(s, action.itemId);
@@ -3536,7 +3690,7 @@ export function buildRenderModel(state) {
       ...preview,
       damageText: preview.max > 0 ? `${preview.min}-${preview.max}` : '0',
       postureText: preview.posture > 0 ? String(preview.posture) : '0',
-      unavailableReason: queueReason || preview.reason || ''
+      unavailableReason: queueReason || combatUnavailableReason(preview.reason)
     };
   };
   const actions = (ACTIONS[state.loc] || []).map((action) => {
@@ -3622,7 +3776,7 @@ export function buildRenderModel(state) {
       ['士气', Math.round(p.morale), '火'],
       ['真实性', Math.round(p.auth), '真'],
       ['名声', Math.round(p.fame), '星'],
-      ['热度', Math.round(p.heat), '热'],
+      ['热度', playerHeatValue(p), '热'],
       ['洞察点', Math.round(p.insightPoints || 0), '悟'],
       ['体能沉淀', `Lv${fit.level} ${fit.progress}/20`, '体']
     ],
@@ -3658,7 +3812,13 @@ export function buildRenderModel(state) {
     inventory: Object.entries(state.inventory || {}).filter(([, count]) => count > 0).map(([id, count]) => ({ id, count, item: ITEMS[id] })),
     equipmentSlots,
     shopItems: Object.entries(ITEMS).map(([id, item]) => ({ id, ...item, owned: state.inventory[id] || 0 })),
-    npcs: Object.entries(NPCS).filter(([, npc]) => !npc.hidden).map(([id, npc]) => ({ id, ...npc, relation: state.relations[id] || 0 })),
+    shopPurchase: { minutes: SHOP_PURCHASE_MINUTES, note: SHOP_PURCHASE_COST_NOTE },
+    npcs: Object.entries(NPCS).filter(([, npc]) => !npc.hidden).map(([id, npc]) => ({
+      id,
+      ...npc,
+      relation: state.relations[id] || 0,
+      target: npcLocationTarget(state, id)
+    })),
     actions,
     opportunities,
     mainEvent: decoratedMainEvent,
@@ -3671,6 +3831,7 @@ export function buildRenderModel(state) {
       planSlot: state.combat.planSlot || null,
       comboSlot: state.combat.comboSlot || null,
       enemyTell: combatPlanningRead(state, combatInput),
+      distanceAdjustFallback: combatDistanceAdjustFallback(state, combatInput),
       objectiveList: finalObjectiveList(state.combat)
     } : null,
     log: state.log || [],

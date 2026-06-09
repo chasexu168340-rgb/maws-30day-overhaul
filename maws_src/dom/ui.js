@@ -144,7 +144,8 @@ function rewardChipFromText(value) {
 
 function rewardChipFromLine(line) {
   if (!line || typeof line !== 'object') return rewardChipFromText(line);
-  const label = rewardLabelAliases[line.key] || line.label || line.key || line.group || '收益';
+  const rawLabel = rewardLabelAliases[line.key] || line.label || line.key || line.group || '收益';
+  const label = rawLabel === '热度' ? '风险/热度' : rawLabel;
   const kind = line.kind || rewardChipKind(label, line.text || line.value || '', line.group);
   const isSkillUnlock = kind === 'skill'
     && (String(line.key || '').startsWith('skills:') || /^学会\s+/.test(String(label)) || /学会|习得|掌握|解锁/.test(String(line.text || '')));
@@ -372,6 +373,21 @@ function renderHudChip([label, value, icon]) {
 function primaryHudResources(resources = []) {
   const primary = new Set(['现金', '体力', '健康', '热度']);
   return resources.filter(([label]) => primary.has(label));
+}
+
+const PROFILE_RISK_GUIDE = '风险/热度代表你被看见、被挑战和被意外拖住的压力。它升高后，更容易遇到挑战、旧城事件和新伤压力；想降低或避开，优先选择低风险行动，必要时休息、理疗、战后复盘、撤离、言语降温，避免连续硬顶高风险行动。';
+const DISTANCE_TOOL_IDS = new Set(['advance', 'retreat', 'dirtyescape', 'escape', 'dodge', 'push_away', 'frontkick', 'karate_front_kick']);
+
+function modelHeatValue(model = {}) {
+  return Math.round(Number(model.player?.heat ?? model.player?.risk ?? 0) || 0);
+}
+
+function isDistanceBlockedCard(skill = {}) {
+  return /^当前距离不能用/.test(skill.preview?.unavailableReason || skill.preview?.reason || '');
+}
+
+function isLegalDistanceToolCard(skill = {}) {
+  return DISTANCE_TOOL_IDS.has(skill.id) && !skill.preview?.unavailableReason;
 }
 
 function meter(label, value, max, iconKey = null) {
@@ -693,7 +709,8 @@ function renderProfile(model) {
     money: model.player?.money,
     fame: model.player?.fame,
     auth: model.player?.auth,
-    heat: model.player?.heat,
+    heat: modelHeatValue(model),
+    insightPoints: model.skillTree?.points ?? model.player?.insightPoints,
     fitXp: `Lv${model.player?.fit?.level || 0} ${model.player?.fit?.progress || 0}/20`
   };
   const resources = Object.entries(model.resourceRules || {}).map(([key, rule]) => `
@@ -706,8 +723,8 @@ function renderProfile(model) {
       ${renderMawPanel(model)}
       <div class="maws-style-grid">${styles}</div>
       <div class="maws-stat-grid">${stats}</div>
-      <div class="maws-panel-title small"><h2>资源注释</h2><p>这些不是装饰数字，它们会影响机会、风险、恢复和结局稳定性。</p></div>
-      <div class="maws-stat-grid compact">${resources}</div>
+      <div class="maws-panel-title small"><h2>资源注释</h2><p>这些不是装饰数字，它们会影响机会、风险、恢复和结局稳定性。风险/热度越高，挑战、旧城事件和新伤压力越容易出现；休息、理疗、撤离/言语降温和低压观察能压低风险。</p></div>
+      <div class="maws-stat-grid compact"><article class="maws-stat resource risk-guide"><strong>! 风险/热度怎么理解</strong><b>${esc(modelHeatValue(model))}</b><p>${esc(PROFILE_RISK_GUIDE)}</p></article>${resources}</div>
     </section>
   `;
 }
@@ -874,20 +891,38 @@ function renderBag(model) {
 }
 
 function renderShop(model) {
+  const purchase = model.shopPurchase || {};
+  const purchaseNote = purchase.note || '购买会推进行动时间。';
   const items = (model.shopItems || []).map((item) => `
-    <article class="maws-item"><strong>${assetIcon(item.assetKey, item.icon)} ${esc(item.name)}</strong><p>${esc(item.desc)}</p><small>￥${esc(item.price)} · 已有 ${esc(item.owned)}</small>${btn('购买', 'buyItem', { id: item.id }, item.price > model.player.money ? 'disabled' : 'primary')}</article>
+    <article class="maws-item"><strong>${assetIcon(item.assetKey, item.icon)} ${esc(item.name)}</strong><p>${esc(item.desc)}</p><small class="maws-shop-cost">￥${esc(item.price)} · 购买耗时 ${esc(purchase.minutes || 10)}分钟 · 推进行动节奏 · 已有 ${esc(item.owned)}</small>${btn('购买', 'buyItem', { id: item.id }, item.price > model.player.money ? 'disabled' : 'primary')}</article>
   `).join('');
-  return `<section class="maws-panel">${renderPanelHeader('商店', '先补短板，别乱买玄学。')}<div class="maws-card-grid">${items}</div></section>`;
+  return `<section class="maws-panel">${renderPanelHeader('商店', `先补短板，别乱买玄学。${purchaseNote}`)}<div class="maws-card-grid">${items}</div></section>`;
 }
 
 function npcActionId(model, npcId) {
   return (ACTIONS[model.loc?.id] || []).find((action) => action.type === 'dialog' && action.npc === npcId)?.id || '';
 }
 
+function renderNpcCommand(model, npc) {
+  const actionId = npcActionId(model, npc.id);
+  const target = npc.target || {};
+  if (actionId) return btn('聊几句', 'doAction', { id: actionId }, 'primary');
+  if (target.actionId) return btn(target.actionName || '处理相关行动', 'doAction', { id: target.actionId }, 'primary');
+  if (target.locId) {
+    const label = target.locName ? `去${target.locName}` : '去对应地点';
+    return btn(label, target.locked ? 'toast' : 'openTravel', target.locked ? { text: target.reason } : { loc: target.locId }, target.locked ? 'ghost' : 'primary');
+  }
+  return btn('打开城市地图', 'openCityMap', {}, 'ghost');
+}
+
 function renderNpc(model) {
   const npcs = (model.npcs || []).map((npc) => {
     const actionId = npcActionId(model, npc.id);
-    return `<article class="maws-item"><strong>${esc(npc.icon)} ${esc(npc.name)}</strong><p>关系 ${esc(npc.relation)}</p>${btn(actionId ? '聊几句' : '去对应地点', actionId ? 'doAction' : 'toast', actionId ? { id: actionId } : { text: '去对应地点更容易聊到重点' }, actionId ? 'primary' : 'ghost')}</article>`;
+    const target = npc.target || {};
+    const targetText = actionId
+      ? '当前地点可以直接对话'
+      : target.reason || '先打开地图找到对应地点';
+    return `<article class="maws-item"><strong>${esc(npc.icon)} ${esc(npc.name)}</strong><p>关系 ${esc(npc.relation)}</p><small class="maws-npc-target">${esc(targetText)}</small>${renderNpcCommand(model, npc)}</article>`;
   }).join('');
   return `<section class="maws-panel">${renderPanelHeader('NPC', '关系对话仍走现有行动系统。')}<div class="maws-card-grid compact">${npcs}</div></section>`;
 }
@@ -970,21 +1005,46 @@ function renderCombat(model) {
     selected: slot.selected,
     desc: slot.skill.desc
   }));
+  const hasDistanceBlocked = equippedCards.some(isDistanceBlockedCard);
+  const legalDistanceCards = equippedCards.filter(isLegalDistanceToolCard);
+  const showDistanceFallback = hasDistanceBlocked && !legalDistanceCards.length && combat.distanceAdjustFallback;
   const selectedCards = equippedCards.filter((skill) => skill.selected);
   const standbyCards = equippedCards.filter((skill) => !skill.selected);
   const visibleCardLimit = Math.max(4, Math.min(6, equippedCards.length || 4));
-  const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, visibleCardLimit));
+  const cardWindowLimit = Math.max(1, visibleCardLimit - (showDistanceFallback ? 1 : 0));
+  const baseWindowCards = [...selectedCards, ...standbyCards].slice(0, cardWindowLimit);
+  const promotedDistanceCard = hasDistanceBlocked
+    ? legalDistanceCards.find((skill) => !baseWindowCards.some((card) => card.id === skill.id))
+    : null;
+  let windowCards = promotedDistanceCard
+    ? baseWindowCards.filter((skill) => skill.id !== promotedDistanceCard.id)
+    : baseWindowCards;
+  if (promotedDistanceCard) {
+    if (windowCards.length >= cardWindowLimit) {
+      const replaceIndex = windowCards.findIndex((skill) => !skill.selected && !isDistanceBlockedCard(skill));
+      if (replaceIndex >= 0) windowCards.splice(replaceIndex, 1);
+      else windowCards.pop();
+    }
+    windowCards.push(promotedDistanceCard);
+  }
   const windowIds = new Set(windowCards.map((skill) => skill.id));
   const drawerCards = equippedCards.filter((skill) => !windowIds.has(skill.id));
   const windowCardHtml = windowCards.map((skill) => renderSkillCard(skill, true)).join('');
   const drawerCardHtml = drawerCards.map((skill) => renderSkillCard(skill, true)).join('');
+  const distanceFallbackCommand = showDistanceFallback ? btn(
+    `<strong>调整距离</strong><small>${esc(combat.distanceAdjustFallback.label || '先换距')}</small>`,
+    'adjustCombatDistance',
+    {},
+    `maws-combat-command-chip ${combat.phase === 'auto' ? 'disabled' : 'primary'}`
+  ) : '';
+  const fillerBudget = Math.max(0, 4 - windowCards.length - (distanceFallbackCommand ? 1 : 0));
   const commandFillers = [
     btn('<strong>抱架</strong><small>空队列交换</small>', 'confirmBattle', {}, `maws-combat-command-chip ${combat.phase === 'auto' ? 'disabled' : 'primary'}`),
     btn('<strong>清队</strong><small>重排 1-2 招</small>', 'clearSkills', {}, 'maws-combat-command-chip'),
     btn('<strong>攻身</strong><small>稳妥目标</small>', 'setTarget', { target: 'body' }, `maws-combat-command-chip ${combat.target === 'body' ? 'active' : ''}`),
     btn('<strong>读招</strong><small>悬停看详情</small>', 'toast', { text: '悬停或聚焦指令卡查看完整数值与描述。' }, 'maws-combat-command-chip')
-  ].slice(0, Math.max(0, 4 - windowCards.length)).join('');
-  const windowCommandHtml = windowCardHtml + commandFillers;
+  ].slice(0, fillerBudget).join('');
+  const windowCommandHtml = windowCardHtml + distanceFallbackCommand + commandFillers;
   const logs = (combat.log || []).slice(0, 7).map((line) => `<li>${esc(line)}</li>`).join('');
   const feedback = combat.lastWindow?.feedback;
   const feedbackPanel = `
@@ -1448,6 +1508,7 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'toast') store.dispatch({ type: 'toast', text: dataset.text || null });
   else if (action === 'startBattle') store.dispatch({ type: 'startBattle', enemyId: dataset.id });
   else if (action === 'selectSkill') store.dispatch({ type: 'selectSkill', skillId: dataset.id });
+  else if (action === 'adjustCombatDistance') store.dispatch({ type: 'adjustCombatDistance' });
   else if (action === 'clearSkills') store.dispatch({ type: 'clearSkills' });
   else if (action === 'setTarget') store.dispatch({ type: 'setTarget', target: dataset.target });
   else if (action === 'setCombatPlan') store.dispatch({ type: 'setCombatPlan', planMode: dataset.mode });

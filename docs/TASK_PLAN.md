@@ -4,68 +4,36 @@
 
 ## Current Task
 
-Wave15 known issue triage on `docs/wave15-known-issues`.
+Wave15 second manual QA focused fixes on `fix/wave15-core-affordance-gaps`.
 
 ## Scope
 
-- Docs-only triage of 10 user-reported unresolved Wave15 issues into the next QA backlog.
-- Only modify `docs/TASK_PLAN.md` and `docs/TASK_HANDOFF.md`.
-- Do not modify code, package files, assets, `maws_src/`, save data, gameplay values, or build outputs.
+- Fix only remaining manual QA failures: risk explanation clarity, risk/heat HUD synchronization, and actionable distance adjustment when current distance is unusable.
+- Do not touch already-passed NPC travel, shop cost disclosure, or insight display unless required to prevent regression.
+- Do not implement skill pagination, 100% completion rewards, Boxing Basics deepening, random-event logic expansion, package changes, assets, save key/version, economy curves, or event weights.
 
 ## Current Result
 
-- Current task is now Wave15 known issue triage.
-- The 10 reported issues are recorded below as backlog for the next QA/code phase.
-- Source issue 5 is split into an inspection UX gap and a Boxing Basics design/depth item so the next code PR can stay focused.
-
-## Wave15 Known Issue Backlog
-
-### P0/P1: Core Affordance And Data Consistency
-
-- W15-KI-01: "Go to matching location" is not implemented.
-- W15-KI-02: Store purchases do not disclose that buying one item costs 10 stamina.
-- W15-KI-03: Risk is not explained in-game, including what it is, its negative effects, and how to remove or reduce it.
-- W15-KI-04: Action results show Insight gained, but the resource annotation does not show received Insight while the skill-tree slice does show current Insight; resource display should sync.
-- W15-KI-09: The game says the current distance is unavailable, but gives no interaction for changing distance.
-- W15-KI-10: Random event confirmation has no visible result or state feedback after confirm.
-
-### P2: Explanation And Inspection UX
-
-- W15-KI-05A: After clicking view/inspect, only a small brief popup appears and no detailed information is available.
-
-### Design: Growth Systems And Page Structure
-
-- W15-KI-05B: After the Day 9 gym opens, Boxing Basics does not show the expected boxing gym jab training option; treat this as Boxing Basics depth/design work.
-- W15-KI-06: The skills page is too crowded; consider tabs by school/style.
-- W15-KI-07: Several boards/modules have no state change or interaction after reaching 100% completion.
-- W15-KI-08: Individual skills have no state change or interaction after reaching 100% proficiency.
-
-## Next Code PR Recommendation
-
-The next code PR should fix only the core affordance gaps:
-
-- Go to matching location.
-- Store 10-stamina purchase cost disclosure.
-- Risk explanation, negative impact, and removal/reduction guidance.
-- Insight resource display synchronization.
-- Distance-changing entry point when current distance is unavailable.
-- Random event confirm feedback.
-
-Do not mix skill-page tabs, 100% completion rewards/interactions, or Boxing Basics deepening into the same PR.
+- Risk/heat guidance is now clearer in action/event risk text and in a stable profile resource card explaining what risk means, negative effects, and existing mitigation routes.
+- `gain.risk` is normalized to `gain.heat`, and HUD/profile heat display reads `player.heat` with `player.risk` fallback; real heat changes now update the HUD immediately.
+- Event danger chips now display as `事件风险 低/中/高` instead of fake resource deltas like `风险 +1`, so only real heat changes imply HUD movement.
+- Combat distance UI now promotes an existing legal movement card when distance is unusable; if none is legal, it shows a clickable `调整距离` fallback that adjusts one step toward a usable distance without unlocking planned skills.
+- Focused regression coverage was expanded in `maws_src/tests/wave15_addiction_loop.spec.js` for HUD heat sync and the fallback distance action.
 
 ## Verified State
 
-- Docs-only update.
-- `npm run build`: skipped because no runtime code, data, assets, or package files were changed.
+- `npm run build`: passed.
+- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`: passed, 11 tests.
+- `npm run test:smoke`: passed, 4 tests.
 
 ## Risks
 
-- Some backlog items may need code investigation before exact file ownership is known.
-- Design items should remain separate from the next core-affordance PR to avoid scope creep.
-- Completion and Boxing Basics depth work may require design decisions before implementation.
+- The fallback distance button is intentionally narrow: it appears only when a distance-unavailable card exists and no learned/equipped movement action is currently legal.
+- It adjusts combat distance directly as a temporary affordance, not as a full new movement/initiative system.
+- Random event logic was not expanded; only the misleading event-risk chip wording was changed.
 
 ## Next Step
 
-Open the next code PR for the P0/P1 core affordance gaps only, then run build plus focused browser/manual QA.
+Manual QA the three remaining items: profile/action/event risk copy, immediate HUD risk change after a heat action, and the combat `调整距离` fallback.
 
 If continuing in a new window, read `docs/TASK_HANDOFF.md`, `docs/FILE_MAP.md`, and this `docs/TASK_PLAN.md`.
