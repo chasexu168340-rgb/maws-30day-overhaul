@@ -370,9 +370,8 @@ function renderHudChip([label, value, icon]) {
   const displayLabel = label;
   const isHeat = label === '热度';
   const className = isHeat ? 'maws-chip risk heat-tooltip' : 'maws-chip';
-  const hint = isHeat ? ` title="${esc(HUD_HEAT_TOOLTIP)}" aria-label="${esc(HUD_HEAT_TOOLTIP)}" aria-describedby="maws-hud-heat-tooltip" tabindex="0"` : '';
-  const tooltip = isHeat ? `<span id="maws-hud-heat-tooltip" class="maws-chip-tooltip" role="tooltip">${esc(HUD_HEAT_TOOLTIP)}</span>` : '';
-  return `<span class="${className}"${hint}>${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b>${esc(value)}${tooltip}</span>`;
+  const hint = isHeat ? ` aria-label="${esc(HUD_HEAT_TOOLTIP)}" aria-describedby="maws-hud-heat-tooltip" tabindex="0"` : '';
+  return `<span class="${className}"${hint}>${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b>${esc(value)}</span>`;
 }
 
 function primaryHudResources(resources = []) {
@@ -1545,10 +1544,86 @@ function emitClickFx(root, event, target) {
   window.setTimeout(() => fx.remove(), 720);
 }
 
+function hudHeatChipFromTarget(root, target) {
+  const chip = target?.closest?.('.maws-chip.heat-tooltip');
+  return chip && root.contains(chip) ? chip : null;
+}
+
+function hudHeatTooltipNode() {
+  return document.getElementById('maws-hud-heat-tooltip');
+}
+
+function ensureHudHeatTooltip() {
+  let tooltip = hudHeatTooltipNode();
+  if (!tooltip) {
+    tooltip = document.createElement('span');
+    tooltip.id = 'maws-hud-heat-tooltip';
+    document.body.appendChild(tooltip);
+  } else if (tooltip.parentElement !== document.body) {
+    document.body.appendChild(tooltip);
+  }
+  tooltip.className = 'maws-chip-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  tooltip.textContent = HUD_HEAT_TOOLTIP;
+  return tooltip;
+}
+
+function clampTooltipPosition(value, min, max) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function positionHudHeatTooltip(chip, event = null) {
+  const tooltip = hudHeatTooltipNode();
+  if (!tooltip) return;
+  const padding = 8;
+  const offsetX = 14;
+  const offsetY = 16;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const tooltipWidth = tooltipRect.width || Math.min(320, Math.max(160, viewportWidth - padding * 2));
+  const tooltipHeight = tooltipRect.height || 58;
+  let x;
+  let y;
+
+  if (typeof event?.clientX === 'number' && typeof event?.clientY === 'number') {
+    x = event.clientX + offsetX;
+    y = event.clientY + offsetY;
+    if (x + tooltipWidth + padding > viewportWidth) x = event.clientX - tooltipWidth - offsetX;
+    if (y + tooltipHeight + padding > viewportHeight) y = event.clientY - tooltipHeight - offsetY;
+  } else {
+    const chipRect = chip.getBoundingClientRect();
+    x = chipRect.left;
+    y = chipRect.bottom + 10;
+    if (y + tooltipHeight + padding > viewportHeight) y = chipRect.top - tooltipHeight - 10;
+  }
+
+  x = clampTooltipPosition(x, padding, viewportWidth - tooltipWidth - padding);
+  y = clampTooltipPosition(y, padding, viewportHeight - tooltipHeight - padding);
+  tooltip.style.setProperty('--maws-tooltip-x', `${Math.round(x)}px`);
+  tooltip.style.setProperty('--maws-tooltip-y', `${Math.round(y)}px`);
+}
+
+function showHudHeatTooltip(chip, event = null) {
+  positionHudHeatTooltip(chip, event);
+  chip.classList.add('maws-tooltip-active');
+  hudHeatTooltipNode()?.classList.add('maws-tooltip-active');
+}
+
+function hideHudHeatTooltip(chip) {
+  const tooltip = hudHeatTooltipNode();
+  chip?.classList.remove('maws-tooltip-active');
+  tooltip?.classList.remove('maws-tooltip-active');
+  tooltip?.style.removeProperty('--maws-tooltip-x');
+  tooltip?.style.removeProperty('--maws-tooltip-y');
+}
+
 export function initMawsDomUI(store, root) {
   if (!root) return;
+  ensureHudHeatTooltip();
   let toastTimer = null;
   const paint = () => {
+    hideHudHeatTooltip(root.querySelector('.maws-chip.heat-tooltip.maws-tooltip-active'));
     const model = buildRenderModel(store.state);
     root.className = model.combat ? 'maws-ui combat' : 'maws-ui';
     root.innerHTML = render(model);
@@ -1573,6 +1648,30 @@ export function initMawsDomUI(store, root) {
     if (!target || !root.contains(target) || target.tagName === 'BUTTON') return;
     event.preventDefault();
     target.click();
+  });
+  root.addEventListener('pointerover', (event) => {
+    const chip = hudHeatChipFromTarget(root, event.target);
+    if (chip) showHudHeatTooltip(chip, event);
+  });
+  root.addEventListener('pointermove', (event) => {
+    const chip = hudHeatChipFromTarget(root, event.target);
+    if (chip) showHudHeatTooltip(chip, event);
+  });
+  root.addEventListener('pointerout', (event) => {
+    const chip = hudHeatChipFromTarget(root, event.target);
+    const related = event.relatedTarget;
+    if (!chip || (related instanceof Node && chip.contains(related))) return;
+    hideHudHeatTooltip(chip);
+  });
+  root.addEventListener('focusin', (event) => {
+    const chip = hudHeatChipFromTarget(root, event.target);
+    if (chip) showHudHeatTooltip(chip);
+  });
+  root.addEventListener('focusout', (event) => {
+    const chip = hudHeatChipFromTarget(root, event.target);
+    const related = event.relatedTarget;
+    if (!chip || (related instanceof Node && chip.contains(related))) return;
+    hideHudHeatTooltip(chip);
   });
   store.subscribe(paint);
   paint();
