@@ -4,36 +4,35 @@
 
 ## Current Task
 
-Wave15 second manual QA focused fixes on `fix/wave15-core-affordance-gaps`.
+Second-round polish fixes on `polish/risk-heat-terminology`.
 
 ## Scope
 
-- Fix only remaining manual QA failures: risk explanation clarity, risk/heat HUD synchronization, and actionable distance adjustment when current distance is unusable.
-- Do not touch already-passed NPC travel, shop cost disclosure, or insight display unless required to prevent regression.
-- Do not implement skill pagination, 100% completion rewards, Boxing Basics deepening, random-event logic expansion, package changes, assets, save key/version, economy curves, or event weights.
+- Remove duplicated heat guidance card from the resource annotation page.
+- Add a visible HUD heat-chip tooltip for the left/top resource bar.
+- Keep real long-term heat resource deltas displayed as `热度 +1/-1`.
+- Keep action/event danger wording as `行动风险` / `事件风险`.
+- Do not change risk values, event weights, economy curves, combat logic, save key/version, package files, lock files, assets, skill pagination, or 100% completion rewards.
 
 ## Current Result
 
-- Risk/heat guidance is now clearer in action/event risk text and in a stable profile resource card explaining what risk means, negative effects, and existing mitigation routes.
-- `gain.risk` is normalized to `gain.heat`, and HUD/profile heat display reads `player.heat` with `player.risk` fallback; real heat changes now update the HUD immediately.
-- Event danger chips now display as `事件风险 低/中/高` instead of fake resource deltas like `风险 +1`, so only real heat changes imply HUD movement.
-- Combat distance UI now promotes an existing legal movement card when distance is unusable; if none is legal, it shows a clickable `调整距离` fallback that adjusts one step toward a usable distance without unlocking planned skills.
-- Focused regression coverage was expanded in `maws_src/tests/wave15_addiction_loop.spec.js` for HUD heat sync and the fallback distance action.
+- `maws_src/dom/ui.js`: removed the standalone `! 热度怎么理解` pseudo resource card; the original heat resource card is now titled `热度（长期暴露压力）` and carries the explanatory resource description.
+- `maws_src/dom/ui.js` and `maws_src/dom/ui.css`: HUD heat chip now keeps `title`/`aria-label` and includes a minimal visible hover/focus tooltip at `#maws-hud-heat-tooltip`.
+- `maws_src/simulation/state.js` and `maws_src/dom/ui.js`: added label fallbacks so long-term `heat` or legacy `risk` resource deltas render as `热度`, including result lead text and reward chips.
+- `maws_src/tests/wave15_addiction_loop.spec.js`: updated focused Playwright coverage for single heat resource card, visible HUD tooltip, `热度 +1` result feedback, and preserved `行动风险` / `事件风险` wording.
 
 ## Verified State
 
-- `npm run build`: passed.
-- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`: passed, 11 tests.
-- `npm run test:smoke`: passed, 4 tests.
+- `npm run build` passed.
+- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line` passed: 11/11.
 
 ## Risks
 
-- The fallback distance button is intentionally narrow: it appears only when a distance-unavailable card exists and no learned/equipped movement action is currently legal.
-- It adjusts combat distance directly as a temporary affordance, not as a full new movement/initiative system.
-- Random event logic was not expanded; only the misleading event-risk chip wording was changed.
+- HUD heat chip still uses the existing `.risk` CSS class for visual danger styling only; player-facing copy remains `热度`.
+- The fix is terminology/rendering only; no gameplay values, weights, packages, assets, combat, or save identifiers were changed.
 
 ## Next Step
 
-Manual QA the three remaining items: profile/action/event risk copy, immediate HUD risk change after a heat action, and the combat `调整距离` fallback.
+Run `npm run build` and `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`.
 
 If continuing in a new window, read `docs/TASK_HANDOFF.md`, `docs/FILE_MAP.md`, and this `docs/TASK_PLAN.md`.
