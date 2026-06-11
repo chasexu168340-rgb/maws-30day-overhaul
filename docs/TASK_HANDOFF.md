@@ -4,56 +4,51 @@
 
 ## Current Task
 
-Wave15 known issue triage.
+Post #45 planning / Wave15 follow-up planning.
 
 ## Current Baseline
 
-- Current branch: `docs/wave15-known-issues`.
-- User reported 10 unresolved Wave15 issues for backlog triage.
+- Current branch: `docs/post-risk-heat-polish-plan`.
+- PR #45 `polish: clarify risk and heat terminology` has been completed and merged.
 - This task is docs-only and must not modify code, package files, assets, `maws_src/`, save data, gameplay values, or build outputs.
 
 ## Goal
 
-Record the 10 reported Wave15 issues as a severity-classified QA backlog and define a narrow next code PR scope.
+Close out #45 documentation and define the next small Wave15 follow-up options.
 
-## Wave15 Known Issue Backlog
+## #45 Completed And Merged
 
-### P0/P1: Core Affordance And Data Consistency
+- Removed the duplicated heat explanation card from the resource annotation page.
+- Added the baseline HUD heat tooltip.
+- Kept long-term resource changes displayed as `热度 +1/-1`.
+- Kept action danger wording as `行动风险`.
+- Kept event danger wording as `事件风险`.
+- Did not change numeric values, event weights, economy curves, combat logic, package files, assets, or save key/version.
 
-- W15-KI-01: "Go to matching location" is not implemented.
-- W15-KI-02: Store purchases do not disclose that buying one item costs 10 stamina.
-- W15-KI-03: Risk is not explained in-game, including what it is, its negative effects, and how to remove or reduce it.
-- W15-KI-04: Action results show Insight gained, but the resource annotation does not show received Insight while the skill-tree slice does show current Insight; resource display should sync.
-- W15-KI-09: The game says the current distance is unavailable, but gives no interaction for changing distance.
-- W15-KI-10: Random event confirmation has no visible result or state feedback after confirm.
+## Verified State
 
-### P2: Explanation And Inspection UX
+- `npm run build` passed.
+- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line` passed.
+- `npm run test:smoke` passed.
+- Manual playtest completed.
 
-- W15-KI-05A: After clicking view/inspect, only a small brief popup appears and no detailed information is available.
+## Follow-up Candidates
 
-### Design: Growth Systems And Page Structure
-
-- W15-KI-05B: After the Day 9 gym opens, Boxing Basics does not show the expected boxing gym jab training option; treat this as Boxing Basics depth/design work.
-- W15-KI-06: The skills page is too crowded; consider tabs by school/style.
-- W15-KI-07: Several boards/modules have no state change or interaction after reaching 100% completion.
-- W15-KI-08: Individual skills have no state change or interaction after reaching 100% proficiency.
+- `P2-HUD-FOLLOW-CURSOR-TOOLTIP`: upgrade the HUD heat explanation to a cursor-following floating tooltip.
+- `P1-COMBAT-GROUND-DISTANCE-QA`: test whether distance adjustment can get stuck in MMA / ground-state combat.
+- Full Day1-Day7 manual QA pass.
+- Skill pagination, 100% completion feedback, and Boxing Basics deepening are paused; do not mix them into the next small PR.
 
 ## Next Recommended Work
 
-1. Open the next code PR for only the P0/P1 core affordance gaps:
-   - Go to matching location.
-   - Store 10-stamina purchase cost disclosure.
-   - Risk explanation, negative impact, and removal/reduction guidance.
-   - Insight resource display synchronization.
-   - Distance-changing entry point when current distance is unavailable.
-   - Random event confirm feedback.
-2. Keep skill-page tabs, 100% completion rewards/interactions, and Boxing Basics deepening out of that PR.
-3. Triage P2 and Design items after the core affordance PR lands and is verified.
+1. Prefer a narrow QA task or `P2-HUD-FOLLOW-CURSOR-TOOLTIP`.
+2. If choosing QA first, start with `P1-COMBAT-GROUND-DISTANCE-QA` or a Full Day1-Day7 manual QA pass.
+3. Do not jump directly into a large growth-system redesign.
 
 ## Validation
 
-- This triage update is docs-only and does not require `npm run build`.
-- For the next code PR, run `npm run build`, focused browser/manual QA, and any relevant smoke checks.
+- This closeout update is docs-only and does not require rerunning build or browser tests.
+- For the next code/UI PR, run `npm run build`, relevant focused Playwright checks, `npm run test:smoke`, and manual QA for the touched flow.
 
 ## Read First
 
@@ -64,7 +59,7 @@ Record the 10 reported Wave15 issues as a severity-classified QA backlog and def
 
 ## Do Not Do
 
-- Do not implement code during this docs-only triage task.
+- Do not implement code during this docs-only closeout task.
 - Do not change gameplay values, save key/version, package files, assets, or `maws_src/`.
-- Do not mix skill-page tabs, 100% completion rewards/interactions, or Boxing Basics deepening into the next core-affordance PR.
+- Do not mix skill pagination, 100% completion feedback, or Boxing Basics deepening into the next small PR.
 - Do not treat historical stubs as the current task source.
