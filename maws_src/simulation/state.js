@@ -157,10 +157,21 @@ const DEFAULT_COMBAT_PLAN_MODE = 'manual';
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 const SHOP_PURCHASE_MINUTES = 10;
 const SHOP_PURCHASE_COST_NOTE = `购买会花费 ${SHOP_PURCHASE_MINUTES} 分钟，并推进行动节奏。`;
-const RISK_GUIDE_TEXT = '风险/热度代表你被看见、被挑战和被意外拖住的压力。它越高，挑战、旧城事件和新伤压力越容易出现；想降低或避开，优先选低风险行动，必要时休息、理疗、战后复盘、撤离、言语降温，别连续硬顶高风险行动。';
+const RISK_GUIDE_TEXT = '这里的风险表示本次行动/事件的危险程度，不是资源栏热度；高风险行动可能提高热度。热度越高，挑战、旧城事件和新伤压力越容易出现。';
 const DISTANCE_ADJUST_HINT = '需要前压 / 后撤 / 脱身等动作先改变距离；如果当前没有合法调距动作，指令栏会提供“调整距离”入口。';
 const DISTANCE_TOOL_IDS = new Set(['advance', 'retreat', 'dirtyescape', 'escape', 'dodge', 'push_away', 'frontkick', 'karate_front_kick']);
 const MICRO_ACTION_IDS = new Set(['idle_blank', 'read_notes', 'scroll_short_video', 'message_friend', 'simple_stretch']);
+
+function riskLevelLabel(raw, fallback = '低') {
+  const value = raw ?? fallback;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) {
+    if (numeric >= 3) return '高';
+    if (numeric >= 2) return '中';
+    return '低';
+  }
+  return String(value || fallback);
+}
 
 export function fmtTime(totalMinutes) {
   const m = Math.floor(totalMinutes % 1440);
@@ -687,11 +698,12 @@ function actionSummary(action, dosage = null) {
     ? [`对手：${ENEMIES[action.enemy]?.name || action.enemy}`, `胜利奖励：￥${ENEMIES[action.enemy]?.reward?.money || 0} / 名声+${ENEMIES[action.enemy]?.reward?.fame || 0}`]
     : gainParts(gainSource);
   if (!gain.length) gain.push(action.type === 'dialog' ? '收益：关系/线索' : '收益：状态推进');
+  const rawRisk = action.type === 'battle'
+    ? (action.risk ?? ENEMIES[action.enemy]?.risk ?? '中')
+    : (action.risk ?? '低');
   const riskBase = option?.injuryRisk
-    ? `风险 疲劳/小伤 ${Math.round(option.injuryRisk * 100)}%`
-    : action.type === 'battle'
-    ? `风险 战斗 ${action.risk || ENEMIES[action.enemy]?.risk || '中'}`
-    : action.risk ? `风险 事件 ${action.risk}` : '风险 低';
+    ? `行动风险：疲劳/小伤 ${Math.round(option.injuryRisk * 100)}%`
+    : `行动风险：${riskLevelLabel(rawRisk, action.type === 'battle' ? '中' : '低')}`;
   return { cost, gain, risk: `${riskBase} · ${RISK_GUIDE_TEXT}` };
 }
 
@@ -958,7 +970,7 @@ function notebookData(item = {}) {
 
 function riskText(item = {}) {
   const raw = item.riskLabel ?? item.risk ?? ENEMIES[item.enemy]?.risk ?? (item.enemy ? '中' : '低');
-  return `风险 ${raw} · ${RISK_GUIDE_TEXT}`;
+  return `事件风险：${riskLevelLabel(raw, item.enemy ? '中' : '低')} · ${RISK_GUIDE_TEXT}`;
 }
 
 function combatUnavailableReason(reason = '') {
@@ -1615,8 +1627,16 @@ function eventSettlementBody(action, context = null) {
   return '';
 }
 
+function isHeatResourceDelta(line = {}) {
+  const key = String(line.key || '');
+  const label = String(line.label || '');
+  const compactLabel = label.replace(/[\/\s]/g, '');
+  return key === 'heat' || key === 'risk' || label === '热度' || compactLabel === '风险热度';
+}
+
 function settlementText(line) {
   if (!line || typeof line !== 'object') return String(line || '');
+  if (isHeatResourceDelta(line) && line.delta) return `热度 ${rewardDeltaText(line.delta)}`;
   return line.text || [line.label, line.delta ? `${Number(line.delta) > 0 ? '+' : ''}${line.delta}` : ''].filter(Boolean).join(' ');
 }
 
@@ -1675,6 +1695,7 @@ function rewardValueFromSnapshot(line = {}, snapshot = {}) {
 function rewardLabel(line = {}) {
   if (line.group === 'relations') return `${NPCS[line.key]?.name || line.key}关系`;
   if (line.group === 'skills') return `学会 ${SKILLS[line.key]?.name || line.key}`;
+  if (isHeatResourceDelta(line)) return '热度';
   return line.label || line.key || '变化';
 }
 
@@ -1757,7 +1778,7 @@ function riskRewardDelta(item = {}, source = 'event') {
   return normalizeRewardDelta({
     key: 'risk:level',
     label: '事件风险',
-    value: raw,
+    value: riskLevelLabel(raw, item.enemy ? '中' : '低'),
     delta: 0,
     kind: 'risk',
     tone: riskValue >= 3 ? 'bad' : 'neutral',

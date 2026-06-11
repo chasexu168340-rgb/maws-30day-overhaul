@@ -249,8 +249,13 @@ test('core affordance fixes expose NPC travel, shop cost, insight, and risk guid
     store.emit();
   });
   const profilePanel = page.locator('.maws-panel').filter({ hasText: '资源注释' });
-  await expect(profilePanel).toContainText('风险/热度');
-  await expect(profilePanel).toContainText('言语降温');
+  await expect(profilePanel).not.toContainText('热度怎么理解');
+  await expect(profilePanel.locator('.maws-stat.resource.risk-guide')).toHaveCount(0);
+  const heatResourceCards = profilePanel.locator('.maws-stat.resource').filter({ hasText: '热度' });
+  await expect(heatResourceCards).toHaveCount(1);
+  await expect(heatResourceCards).toContainText('长期累计的暴露压力');
+  await expect(heatResourceCards).toContainText('不是单次行动风险');
+  await expect(heatResourceCards).toContainText('言语降温');
   const insightResource = page.locator('.maws-stat.resource').filter({ hasText: '洞察点' });
   await expect(insightResource).toContainText('4');
   await openSpendableSkillTree(page, 4);
@@ -259,7 +264,7 @@ test('core affordance fixes expose NPC travel, shop cost, insight, and risk guid
   expect(errors).toEqual([]);
 });
 
-test('heat gain updates the HUD risk chip immediately after an action', async ({ page }) => {
+test('heat gain updates the HUD heat chip and result copy immediately after an action', async ({ page }) => {
   const errors = await loadGame(page);
 
   await page.evaluate(() => {
@@ -272,9 +277,28 @@ test('heat gain updates the HUD risk chip immediately after an action', async ({
     store.emit();
   });
 
-  await expect(page.locator('.maws-resource-row .maws-chip.risk')).toContainText(/风险\s*0/);
+  const heatChip = page.locator('.maws-resource-row .maws-chip.risk').filter({ hasText: '热度' });
+  const heatTooltip = page.locator('#maws-hud-heat-tooltip');
+  await expect(heatChip).toContainText(/热度\s*0/);
+  await expect(heatChip.locator('b')).toHaveText('热度');
+  await expect(heatChip).toHaveAttribute('title', /长期暴露压力/);
+  await expect(heatChip).toHaveAttribute('aria-label', /高风险行动可能提高热度/);
+  await expect(heatChip).toHaveAttribute('aria-describedby', 'maws-hud-heat-tooltip');
+  await expect(heatTooltip).toContainText('热度：长期暴露压力');
+  await expect(heatTooltip).not.toBeVisible();
+  await heatChip.hover();
+  await expect(heatTooltip).toBeVisible();
+
+  const shortVideoAction = page.locator('.maws-action').filter({ hasText: '刷短视频' });
+  await expect(shortVideoAction).toContainText('行动风险');
   await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'doAction', actionId: 'scroll_short_video' }));
-  await expect(page.locator('.maws-resource-row .maws-chip.risk')).toContainText(/风险\s*1/);
+  await expect(heatChip).toContainText(/热度\s*1/);
+  const resultModal = page.locator('.maws-modal');
+  const heatRewardChip = resultModal.locator('.maws-reward-chip').filter({ hasText: '热度' });
+  await expect(heatRewardChip).toContainText('+1');
+  await expect(resultModal).toContainText(/热度\s*\+1/);
+  await expect(resultModal).not.toContainText(/风险\/热度\s*\+1/);
+  await expect(resultModal).not.toContainText(/风险\s*\+1/);
   expect(await page.evaluate(() => window.MAWS_STORE.state.player.heat)).toBe(1);
 
   expect(errors).toEqual([]);
@@ -364,7 +388,10 @@ test('random event confirmation produces visible result feedback', async ({ page
     store.emit();
     const { buildOpportunities } = await import('/maws_src/simulation/events.js');
     const cards = buildOpportunities(store.state);
-    const chosen = cards.find((item) => item.loc === store.state.loc && !item.enemy && !item.action) || cards.find((item) => !item.enemy && !item.action);
+    const chosen = cards.find((item) => item.loc === store.state.loc && !item.enemy && !item.action && !item.npc)
+      || cards.find((item) => !item.enemy && !item.action && !item.npc)
+      || cards.find((item) => item.loc === store.state.loc && !item.enemy && !item.action)
+      || cards.find((item) => !item.enemy && !item.action);
     if (chosen?.loc) store.state.loc = chosen.loc;
     store.emit();
     return chosen ? { id: chosen.id, title: chosen.title, loc: chosen.loc } : null;
@@ -372,7 +399,10 @@ test('random event confirmation produces visible result feedback', async ({ page
   expect(card, 'expected a non-combat random event opportunity').not.toBeNull();
 
   await page.evaluate((id) => window.MAWS_STORE.dispatch({ type: 'takeOpportunity', id }), card.id);
-  await expect(page.locator('.maws-modal.event-notebook')).toBeVisible();
+  const eventNotebook = page.locator('.maws-modal.event-notebook');
+  await expect(eventNotebook).toBeVisible();
+  await expect(eventNotebook).toContainText(/事件风险：?(低|中|高|剧情|终局)/);
+  await expect(eventNotebook).not.toContainText(/风险\s*[+＋]\s*\d/);
   await page.locator('button[data-action="resolveEventNotebook"]').first().click();
   await expect(page.locator('.maws-modal')).toBeVisible();
 
@@ -387,6 +417,7 @@ test('random event confirmation produces visible result feedback', async ({ page
   });
   expect(feedback.modalType || feedback.latestLog || feedback.latestEvent).toBeTruthy();
   expect(`${feedback.modalText} ${feedback.latestLog} ${feedback.latestEvent}`).toMatch(/结果|完成|处理|商店|已记录|继续刷新|记下/);
+  expect(feedback.modalText).not.toMatch(/风险\s*[+＋]\s*\d/);
 
   expect(errors).toEqual([]);
 });

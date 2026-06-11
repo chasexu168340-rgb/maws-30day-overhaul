@@ -254,6 +254,42 @@
   color: #fff7dc;
 }
 
+.maws-chip.heat-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.maws-chip-tooltip {
+  position: fixed;
+  z-index: 120;
+  top: 78px;
+  right: 18px;
+  width: min(320px, calc(100vw - 36px));
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 210, 63, 0.78);
+  background: rgba(21, 18, 14, 0.96);
+  color: #fff7dc;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.38);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+  pointer-events: none;
+}
+
+.maws-chip.heat-tooltip:hover .maws-chip-tooltip,
+.maws-chip.heat-tooltip:focus .maws-chip-tooltip,
+.maws-chip.heat-tooltip:focus-within .maws-chip-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 .maws-chip i {
   font-style: normal;
   color: #ffd23f;
@@ -7510,6 +7546,7 @@
   overflow-y: hidden;
   padding-bottom: 2px;
   scrollbar-width: none;
+  pointer-events: auto;
 }
 
 .maws-hud.maws-hud-compact .maws-resource-row::-webkit-scrollbar {
@@ -7519,6 +7556,11 @@
 .maws-hud.maws-hud-compact .maws-chip {
   flex: 0 0 auto;
   max-width: 124px;
+}
+
+.maws-hud.maws-hud-compact .maws-chip.heat-tooltip {
+  overflow: visible;
+  pointer-events: auto;
 }
 
 .maws-city-return {

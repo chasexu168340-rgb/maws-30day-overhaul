@@ -106,6 +106,8 @@ const rewardLabelAliases = {
   money: '现金',
   cash: '现金',
   calm: '冷静',
+  heat: '热度',
+  risk: '热度',
   misread: '误判',
   relation: '关系',
   relationship: '关系',
@@ -145,7 +147,7 @@ function rewardChipFromText(value) {
 function rewardChipFromLine(line) {
   if (!line || typeof line !== 'object') return rewardChipFromText(line);
   const rawLabel = rewardLabelAliases[line.key] || line.label || line.key || line.group || '收益';
-  const label = rawLabel === '热度' ? '风险/热度' : rawLabel;
+  const label = rawLabel;
   const kind = line.kind || rewardChipKind(label, line.text || line.value || '', line.group);
   const isSkillUnlock = kind === 'skill'
     && (String(line.key || '').startsWith('skills:') || /^学会\s+/.test(String(label)) || /学会|习得|掌握|解锁/.test(String(line.text || '')));
@@ -365,9 +367,12 @@ function resourceIconKey(label) {
 }
 
 function renderHudChip([label, value, icon]) {
-  const displayLabel = label === '热度' ? '风险' : label;
-  const className = label === '热度' ? 'maws-chip risk' : 'maws-chip';
-  return `<span class="${className}">${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b>${esc(value)}</span>`;
+  const displayLabel = label;
+  const isHeat = label === '热度';
+  const className = isHeat ? 'maws-chip risk heat-tooltip' : 'maws-chip';
+  const hint = isHeat ? ` title="${esc(HUD_HEAT_TOOLTIP)}" aria-label="${esc(HUD_HEAT_TOOLTIP)}" aria-describedby="maws-hud-heat-tooltip" tabindex="0"` : '';
+  const tooltip = isHeat ? `<span id="maws-hud-heat-tooltip" class="maws-chip-tooltip" role="tooltip">${esc(HUD_HEAT_TOOLTIP)}</span>` : '';
+  return `<span class="${className}"${hint}>${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b>${esc(value)}${tooltip}</span>`;
 }
 
 function primaryHudResources(resources = []) {
@@ -375,7 +380,7 @@ function primaryHudResources(resources = []) {
   return resources.filter(([label]) => primary.has(label));
 }
 
-const PROFILE_RISK_GUIDE = '风险/热度代表你被看见、被挑战和被意外拖住的压力。它升高后，更容易遇到挑战、旧城事件和新伤压力；想降低或避开，优先选择低风险行动，必要时休息、理疗、战后复盘、撤离、言语降温，避免连续硬顶高风险行动。';
+const HUD_HEAT_TOOLTIP = '热度：长期暴露压力。高风险行动可能提高热度；热度高会增加挑战、旧城事件和新伤压力。';
 const DISTANCE_TOOL_IDS = new Set(['advance', 'retreat', 'dirtyescape', 'escape', 'dodge', 'push_away', 'frontkick', 'karate_front_kick']);
 
 function modelHeatValue(model = {}) {
@@ -713,9 +718,10 @@ function renderProfile(model) {
     insightPoints: model.skillTree?.points ?? model.player?.insightPoints,
     fitXp: `Lv${model.player?.fit?.level || 0} ${model.player?.fit?.progress || 0}/20`
   };
-  const resources = Object.entries(model.resourceRules || {}).map(([key, rule]) => `
-    <article class="maws-stat resource"><strong>${esc(rule.icon)} ${esc(rule.name)}</strong><b>${esc(resourceValue[key] ?? 0)}</b><p>${esc(rule.desc)}</p></article>
-  `).join('');
+  const resources = Object.entries(model.resourceRules || {}).map(([key, rule]) => {
+    const title = key === 'heat' ? '热度（长期暴露压力）' : rule.name;
+    return `<article class="maws-stat resource"><strong>${esc(rule.icon)} ${esc(title)}</strong><b>${esc(resourceValue[key] ?? 0)}</b><p>${esc(rule.desc)}</p></article>`;
+  }).join('');
   return `
     <section class="maws-panel">
       ${renderPanelHeader(model.player?.name, `${model.player?.origin?.name || ''} · ${model.player?.trait || ''}`)}
@@ -723,8 +729,8 @@ function renderProfile(model) {
       ${renderMawPanel(model)}
       <div class="maws-style-grid">${styles}</div>
       <div class="maws-stat-grid">${stats}</div>
-      <div class="maws-panel-title small"><h2>资源注释</h2><p>这些不是装饰数字，它们会影响机会、风险、恢复和结局稳定性。风险/热度越高，挑战、旧城事件和新伤压力越容易出现；休息、理疗、撤离/言语降温和低压观察能压低风险。</p></div>
-      <div class="maws-stat-grid compact"><article class="maws-stat resource risk-guide"><strong>! 风险/热度怎么理解</strong><b>${esc(modelHeatValue(model))}</b><p>${esc(PROFILE_RISK_GUIDE)}</p></article>${resources}</div>
+      <div class="maws-panel-title small"><h2>资源注释</h2><p>这些不是装饰数字，它们会影响机会、风险、恢复和结局稳定性。热度是长期暴露压力，不是单次行动风险；高风险行动可能提高热度。</p></div>
+      <div class="maws-stat-grid compact">${resources}</div>
     </section>
   `;
 }
