@@ -279,15 +279,80 @@ test('heat gain updates the HUD heat chip and result copy immediately after an a
 
   const heatChip = page.locator('.maws-resource-row .maws-chip.risk').filter({ hasText: '热度' });
   const heatTooltip = page.locator('#maws-hud-heat-tooltip');
+  const tooltipIntersection = async () => heatTooltip.evaluate((node) => new Promise((resolve) => {
+    const fallback = window.setTimeout(() => {
+      const rect = node.getBoundingClientRect();
+      resolve({ ratio: 0, width: 0, height: 0, boundsWidth: rect.width, boundsHeight: rect.height });
+    }, 250);
+    const observer = new IntersectionObserver(([entry]) => {
+      window.clearTimeout(fallback);
+      observer.disconnect();
+      resolve({
+        ratio: entry.intersectionRatio,
+        width: entry.intersectionRect.width,
+        height: entry.intersectionRect.height,
+        boundsWidth: entry.boundingClientRect.width,
+        boundsHeight: entry.boundingClientRect.height
+      });
+    });
+    observer.observe(node);
+  }));
+  const expectTooltipInViewport = (box) => {
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+  };
   await expect(heatChip).toContainText(/热度\s*0/);
   await expect(heatChip.locator('b')).toHaveText('热度');
-  await expect(heatChip).toHaveAttribute('title', /长期暴露压力/);
+  expect(await heatChip.getAttribute('title')).toBeNull();
   await expect(heatChip).toHaveAttribute('aria-label', /高风险行动可能提高热度/);
   await expect(heatChip).toHaveAttribute('aria-describedby', 'maws-hud-heat-tooltip');
+  await expect(heatChip).toHaveAttribute('tabindex', '0');
   await expect(heatTooltip).toContainText('热度：长期暴露压力');
   await expect(heatTooltip).not.toBeVisible();
-  await heatChip.hover();
+  await expect(heatTooltip).toHaveCSS('position', 'fixed');
+  await expect(heatTooltip).toHaveCSS('pointer-events', 'none');
+  const overlayPlacement = await heatTooltip.evaluate((node) => ({
+    parentTag: node.parentElement?.tagName,
+    insideChip: Boolean(node.closest('.maws-chip')),
+    insideResourceRow: Boolean(node.closest('.maws-resource-row')),
+    insideHud: Boolean(node.closest('.maws-hud'))
+  }));
+  expect(overlayPlacement).toEqual({
+    parentTag: 'BODY',
+    insideChip: false,
+    insideResourceRow: false,
+    insideHud: false
+  });
+  const heatBox = await heatChip.boundingBox();
+  expect(heatBox).not.toBeNull();
+  await page.mouse.move(heatBox.x + 6, heatBox.y + heatBox.height / 2);
   await expect(heatTooltip).toBeVisible();
+  const firstTooltipBox = await heatTooltip.boundingBox();
+  expect(firstTooltipBox).not.toBeNull();
+  expect(firstTooltipBox.width).toBeGreaterThan(180);
+  expect(firstTooltipBox.height).toBeGreaterThan(30);
+  expectTooltipInViewport(firstTooltipBox);
+  const firstVisibleArea = await tooltipIntersection();
+  expect(firstVisibleArea.ratio).toBeGreaterThan(0.95);
+  expect(firstVisibleArea.width).toBeGreaterThan(firstTooltipBox.width - 2);
+  expect(firstVisibleArea.height).toBeGreaterThan(firstTooltipBox.height - 2);
+  await page.mouse.move(heatBox.x + heatBox.width - 6, heatBox.y + heatBox.height / 2);
+  await expect(heatTooltip).toBeVisible();
+  const secondTooltipBox = await heatTooltip.boundingBox();
+  expect(secondTooltipBox).not.toBeNull();
+  expectTooltipInViewport(secondTooltipBox);
+  expect(Math.abs(secondTooltipBox.x - firstTooltipBox.x) + Math.abs(secondTooltipBox.y - firstTooltipBox.y)).toBeGreaterThan(4);
+  await page.mouse.move(4, 4);
+  await expect(heatTooltip).not.toBeVisible();
+  await heatChip.focus();
+  await expect(heatTooltip).toBeVisible();
+  const focusTooltipBox = await heatTooltip.boundingBox();
+  expect(focusTooltipBox).not.toBeNull();
+  expectTooltipInViewport(focusTooltipBox);
 
   const shortVideoAction = page.locator('.maws-action').filter({ hasText: '刷短视频' });
   await expect(shortVideoAction).toContainText('行动风险');

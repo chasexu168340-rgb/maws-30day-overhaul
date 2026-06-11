@@ -255,15 +255,16 @@
 }
 
 .maws-chip.heat-tooltip {
-  position: relative;
   cursor: help;
 }
 
 .maws-chip-tooltip {
+  display: block;
   position: fixed;
-  z-index: 120;
-  top: 78px;
-  right: 18px;
+  z-index: 1200;
+  top: var(--maws-tooltip-y, 78px);
+  left: var(--maws-tooltip-x, 18px);
+  box-sizing: border-box;
   width: min(320px, calc(100vw - 36px));
   padding: 8px 10px;
   border: 1px solid rgba(255, 210, 63, 0.78);
@@ -282,9 +283,7 @@
   pointer-events: none;
 }
 
-.maws-chip.heat-tooltip:hover .maws-chip-tooltip,
-.maws-chip.heat-tooltip:focus .maws-chip-tooltip,
-.maws-chip.heat-tooltip:focus-within .maws-chip-tooltip {
+.maws-chip-tooltip.maws-tooltip-active {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -7559,7 +7558,6 @@
 }
 
 .maws-hud.maws-hud-compact .maws-chip.heat-tooltip {
-  overflow: visible;
   pointer-events: auto;
 }
 
