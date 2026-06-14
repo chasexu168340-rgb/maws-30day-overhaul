@@ -138,6 +138,57 @@ async function firstPurchasableNode(page) {
   });
 }
 
+async function setBoxingBasicsState(page, overrides = {}) {
+  await page.evaluate((options) => {
+    const store = window.MAWS_STORE;
+    const {
+      day = 9,
+      time = 540,
+      loc = 'home',
+      tab = 'skills',
+      money = 1000,
+      sp = 100,
+      learnedSkills = []
+    } = options || {};
+    store.state.day = day;
+    store.state.time = time;
+    store.state.loc = loc;
+    store.state.player.money = money;
+    store.state.player.sp = sp;
+    store.state.player.insightPoints = 4;
+    store.state.skillState = { ...(store.state.skillState || {}) };
+    store.state.unlocked = { ...(store.state.unlocked || {}) };
+    delete store.state.skillState.jab;
+    delete store.state.unlocked.jab;
+    delete store.state.skillState.straight;
+    delete store.state.unlocked.straight;
+    const learnedSkillDefaults = {
+      jab: { p: 18, use: 0, retrain: 0, zhus: [] },
+      straight: { p: 16, use: 0, retrain: 0, zhus: [] }
+    };
+    learnedSkills.forEach((skillId) => {
+      store.state.skillState[skillId] = { ...(learnedSkillDefaults[skillId] || { p: 12, use: 0, retrain: 0, zhus: [] }) };
+      store.state.unlocked[skillId] = 1;
+    });
+    store.state.ui = {
+      ...store.state.ui,
+      tab,
+      modal: null,
+      toast: null,
+      selectedTravel: null,
+      cityMapOpen: false,
+      interactionMenu: null
+    };
+    store.emit();
+  }, overrides);
+}
+
+function boxingJabTreeNode(page) {
+  return page.locator('.maws-tree-node').filter({
+    has: page.locator('header strong', { hasText: /^刺拳入门\/强化$/ })
+  });
+}
+
 test('skills page exposes spendable tree status and insight points', async ({ page }) => {
   const errors = await loadGame(page);
 
@@ -153,6 +204,115 @@ test('skills page exposes spendable tree status and insight points', async ({ pa
   });
 
   await expectNoHorizontalOverflow(page, 'desktop skill tree spend status');
+  expect(errors).toEqual([]);
+});
+
+test('boxing basics jab node guides Day9 players to the boxing gym', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await setBoxingBasicsState(page, { day: 9, time: 540, loc: 'home', tab: 'skills' });
+
+  const jabNode = boxingJabTreeNode(page);
+  await expect(jabNode).toBeVisible();
+  await expect(jabNode).toContainText('沙包连击（刺拳入门）');
+  await expect(jabNode).toContainText('去拳馆');
+
+  const travelCta = jabNode.locator('button[data-action="openTravel"][data-loc="boxing"]');
+  await expect(travelCta).toBeVisible();
+  await travelCta.click();
+
+  const travelModal = page.locator('.maws-modal');
+  await expect(travelModal).toContainText('拳馆');
+  await expect(travelModal.locator('button[data-action="travel"]').first()).toBeVisible();
+
+  expect(errors).toEqual([]);
+});
+
+test('boxing gym features jab bag drill and starts training feedback', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await setBoxingBasicsState(page, { day: 9, time: 540, loc: 'boxing', tab: 'map' });
+
+  const primaryActions = page.locator('.maws-actions-primary');
+  await expect(primaryActions).toContainText('沙包连击（刺拳入门）');
+  const bagButton = primaryActions.locator('button[data-action="doAction"][data-id="bag"]');
+  await expect(bagButton).toBeVisible();
+  await bagButton.click();
+
+  const modal = page.locator('.maws-modal');
+  await expect(modal).toContainText('沙包连击（刺拳入门）');
+  await expect(modal).toContainText('投入选择');
+  await modal.locator('button[data-action="chooseDuration"][data-id="bag"]').nth(1).click();
+  await expect(modal).toContainText('三轮沙包连击');
+  await modal.locator('button[data-action="answerTraining"]').first().click();
+  await expect(modal.locator('.maws-training-feedback')).toBeVisible();
+  for (let i = 0; i < 2; i += 1) {
+    await modal.locator('button[data-action="answerTraining"]').first().click();
+  }
+  await expect(modal).toContainText('沙包连击（刺拳入门）');
+  await expect(modal).toContainText('学会 刺拳');
+  await expect(modal).not.toContainText('学会 直拳');
+
+  expect(errors).toEqual([]);
+});
+
+test('boxing gym labels bag drill as straight entry after jab is learned', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await setBoxingBasicsState(page, { day: 9, time: 540, loc: 'boxing', tab: 'map', learnedSkills: ['jab'] });
+
+  const primaryActions = page.locator('.maws-actions-primary');
+  await expect(primaryActions).toContainText('沙包连击（直拳入门）');
+  await expect(primaryActions).not.toContainText('沙包连击（刺拳入门）');
+  const bagButton = primaryActions.locator('button[data-action="doAction"][data-id="bag"]');
+  await expect(bagButton).toBeVisible();
+  await bagButton.click();
+
+  const modal = page.locator('.maws-modal');
+  await expect(modal).toContainText('沙包连击（直拳入门）');
+  await expect(modal).not.toContainText('沙包连击（刺拳入门）');
+  await modal.locator('button[data-action="chooseDuration"][data-id="bag"]').nth(1).click();
+  for (let i = 0; i < 3; i += 1) {
+    await modal.locator('button[data-action="answerTraining"]').first().click();
+  }
+
+  await expect(modal).toContainText('沙包连击（直拳入门）');
+  await expect(modal).toContainText('学会 直拳');
+  await expect(modal).not.toContainText('沙包连击（刺拳入门）');
+  await expect(modal).not.toContainText('学会 刺拳');
+
+  expect(errors).toEqual([]);
+});
+
+test('boxing basics jab node points to straight training after jab is learned', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await setBoxingBasicsState(page, { day: 9, time: 540, loc: 'boxing', tab: 'skills', learnedSkills: ['jab'] });
+
+  const jabNode = boxingJabTreeNode(page);
+  await expect(jabNode).toBeVisible();
+  await expect(jabNode).toContainText('刺拳已掌握');
+  await expect(jabNode).toContainText('下一步');
+  await expect(jabNode).toContainText('直拳');
+  await expect(jabNode.locator('button.maws-tree-guide-cta')).toContainText('开始沙包连击（直拳入门）');
+  await expect(jabNode).not.toContainText('开始沙包连击（刺拳入门）');
+
+  expect(errors).toEqual([]);
+});
+
+test('boxing basics jab guide explains locked and closed gym states', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await setBoxingBasicsState(page, { day: 8, time: 540, loc: 'home', tab: 'skills' });
+  let jabNode = boxingJabTreeNode(page);
+  await expect(jabNode).toContainText('Day 9 开放');
+  await expect(jabNode.locator('button.maws-tree-guide-cta')).toBeDisabled();
+
+  await setBoxingBasicsState(page, { day: 9, time: 480, loc: 'home', tab: 'skills' });
+  jabNode = boxingJabTreeNode(page);
+  await expect(jabNode).toContainText('拳馆当前未营业');
+  await expect(jabNode.locator('button.maws-tree-guide-cta')).toBeDisabled();
+
   expect(errors).toEqual([]);
 });
 

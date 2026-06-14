@@ -580,8 +580,30 @@ export function snapshotState(state) {
   return clone({ player: state.player, styles: state.styles, relations: state.relations });
 }
 
+function hasLearnedSkill(state, skillId) {
+  return Boolean(state?.skillState?.[skillId] || state?.unlocked?.[skillId]);
+}
+
+function boxingBagActionName(state) {
+  if (!hasLearnedSkill(state, 'jab')) return '沙包连击（刺拳入门）';
+  if (!hasLearnedSkill(state, 'straight')) return '沙包连击（直拳入门）';
+  return '沙包连击（拳击基础）';
+}
+
+function actionNameForState(state, locId, action = {}) {
+  if (locId === 'boxing' && action.id === 'bag') return boxingBagActionName(state);
+  return action.name || action.id || '行动';
+}
+
+function actionForState(state, locId, action = null) {
+  if (!action) return null;
+  const name = actionNameForState(state, locId, action);
+  return name === action.name ? action : { ...action, name };
+}
+
 function findAction(state, actionId) {
-  return (ACTIONS[state.loc] || []).find((a) => a.id === actionId) || null;
+  const action = (ACTIONS[state.loc] || []).find((a) => a.id === actionId) || null;
+  return actionForState(state, state.loc, action);
 }
 
 function dailyGateKey(action = {}) {
@@ -718,6 +740,7 @@ function skillUnlocksModel(state) {
     const skillId = unlock.skillId || id;
     const locId = unlock.locationId;
     const action = (ACTIONS[locId] || []).find((item) => item.id === unlock.actionId) || null;
+    const actionModel = actionForState(state, locId, action);
     const locked = locId ? !isLocationUnlocked(state, locId) : false;
     const closed = locId && locId !== 'home' && locId !== 'store' ? !inOpen(state, locId) : false;
     return [skillId, {
@@ -731,10 +754,10 @@ function skillUnlocksModel(state) {
       locationId: locId,
       locationName: LOCS[locId]?.name || locId || '',
       actionId: unlock.actionId,
-      actionName: action?.name || unlock.actionId,
+      actionName: actionModel?.name || unlock.actionId,
       openCondition: unlock.openCondition,
       unlockText: unlock.unlockText,
-      sourceSummary: unlock.sourceSummary || actionSourceLabel(locId, unlock.actionId, action),
+      sourceSummary: unlock.sourceSummary || actionSourceLabel(locId, unlock.actionId, actionModel),
       learned: Boolean(state.skillState?.[skillId]),
       locked,
       lockReason: locked ? locationLockReason(state, locId) : '',
@@ -762,6 +785,72 @@ function skillTreePurchaseGateReason(state, node, points = null, purchased = nul
   const availablePoints = points == null ? normalizeInsightPoints(state) : points;
   if (cost > availablePoints) return '洞察点不足';
   return '';
+}
+
+function skillTreeTrainingDescription(state, skillId, actionName, sourceText) {
+  if (skillId === 'jab' && hasLearnedSkill(state, 'jab')) {
+    if (!hasLearnedSkill(state, 'straight')) {
+      return '刺拳已掌握。下一步：去拳馆练直拳，继续拳击基础训练。';
+    }
+    return '刺拳已掌握。拳击基础训练可以用沙包连击继续巩固。';
+  }
+  return `${sourceText}：${actionName}就是当前可做的${SKILLS[skillId]?.name || skillId}入门训练。`;
+}
+
+function skillTreeTrainingGuide(state, node) {
+  const skillId = node?.sourceSkill || node?.skillId;
+  if (!skillId) return null;
+  const unlock = SKILL_UNLOCKS[skillId] || Object.values(SKILL_UNLOCKS).find((item) => item.skillId === skillId);
+  const locId = unlock?.locationId;
+  const actionId = unlock?.actionId;
+  if (!locId || !actionId || !LOCS[locId]) return null;
+  const action = (ACTIONS[locId] || []).find((item) => item.id === actionId);
+  if (!action) return null;
+  const locName = LOCS[locId]?.name || locId;
+  const actionName = actionNameForState(state, locId, action) || unlock.actionName || actionId;
+  const unlocked = isLocationUnlocked(state, locId);
+  const closed = unlocked && locId !== 'home' && locId !== 'store' && !inOpen(state, locId);
+  const here = state.loc === locId;
+  const sourceText = unlock.sourceSummary || `${locName} · ${actionName}`;
+  const base = {
+    skillId,
+    locationId: locId,
+    locationName: locName,
+    actionId,
+    actionName,
+    sourceText,
+    description: skillTreeTrainingDescription(state, skillId, actionName, sourceText)
+  };
+  if (!unlocked) {
+    return {
+      ...base,
+      status: 'locked',
+      ctaLabel: locationUnlockHint(locId) || `${locName}未开放`,
+      reason: locationUnlockHint(locId) || locationLockReason(state, locId)
+    };
+  }
+  if (closed) {
+    return {
+      ...base,
+      status: 'closed',
+      ctaLabel: `${locName}未营业`,
+      reason: `${locName}当前未营业，开放 ${locationOpenText(LOCS[locId])}。`
+    };
+  }
+  if (here) {
+    return {
+      ...base,
+      status: 'availableHere',
+      ctaLabel: `开始${actionName}`,
+      actionType: 'doAction'
+    };
+  }
+  return {
+    ...base,
+    status: 'travel',
+    ctaLabel: `去${locName}`,
+    actionType: 'openTravel'
+  };
 }
 
 function skillTreeModel(state) {
@@ -793,6 +882,7 @@ function skillTreeModel(state) {
       locked: status === 'locked' || status === 'future',
       lockedReason,
       unavailableReason: owned ? '已经点亮' : lockedReason,
+      trainingGuide: skillTreeTrainingGuide(state, node),
       purchaseAction: status === 'available' ? { type: 'purchaseSkillTreeNode', nodeId: node.id } : null
     };
   });
@@ -819,8 +909,16 @@ function skillIdsFromGain(gain = {}) {
   return [...new Set([gain.skill, gain.skill2].filter(Boolean))];
 }
 
+function boxingBagFeedbackSkillIds(beforeSkillState = {}, gain = {}) {
+  const ids = skillIdsFromGain(gain);
+  if (!beforeSkillState.jab) return ids.filter((id) => id === 'jab');
+  if (!beforeSkillState.straight) return ids.filter((id) => id === 'straight');
+  return ids;
+}
+
 function skillUnlockSettlementLines(beforeSkillState = {}, state, action, gain = action?.gain || {}) {
-  return skillIdsFromGain(gain)
+  const skillIds = action?.id === 'bag' ? boxingBagFeedbackSkillIds(beforeSkillState, gain) : skillIdsFromGain(gain);
+  return skillIds
     .filter((id) => !beforeSkillState[id] && state.skillState?.[id])
     .map((id) => ({
       group: 'skills',
@@ -2216,7 +2314,7 @@ function answerTrainingMini(state, optionId) {
 
 function finishTrainingMini(state, gradeId, result = {}) {
   const modal = state.ui.modal;
-  const action = Object.values(ACTIONS).flat().find((item) => item.id === modal?.actionId);
+  const action = findAction(state, modal?.actionId) || actionById(modal?.actionId);
   const grade = TRAINING_GRADES[gradeId] || TRAINING_GRADES.solid;
   if (!action) {
     state.ui.toast = '训练项目不存在';
@@ -3715,17 +3813,18 @@ export function buildRenderModel(state) {
     };
   };
   const actions = (ACTIONS[state.loc] || []).map((action) => {
-    const durationOptions = actionDosageOptions(action);
-    const cheapestSp = durationOptions.length ? Math.min(...durationOptions.map((option) => option.sp)) : actionSpCost(action);
-    const cheapestCost = durationOptions.length ? Math.min(...durationOptions.map((option) => option.cost)) : Number(action.cost || 0);
-    const gateReason = dailyGateReason(state, action);
+    const actionModel = actionForState(state, state.loc, action);
+    const durationOptions = actionDosageOptions(actionModel);
+    const cheapestSp = durationOptions.length ? Math.min(...durationOptions.map((option) => option.sp)) : actionSpCost(actionModel);
+    const cheapestCost = durationOptions.length ? Math.min(...durationOptions.map((option) => option.cost)) : Number(actionModel.cost || 0);
+    const gateReason = dailyGateReason(state, actionModel);
     return {
-      ...action,
+      ...actionModel,
       disabled: Boolean(gateReason) || cheapestSp > p.sp || cheapestCost > p.money,
       disabledReason: gateReason || (cheapestSp > p.sp ? '体力不足' : (cheapestCost > p.money ? '钱不够' : '')),
-      spCost: actionSpCost(action),
+      spCost: actionSpCost(actionModel),
       durationOptions,
-      summary: actionSummary(action)
+      summary: actionSummary(actionModel)
     };
   });
   const sceneCast = sceneCharacters(state, mainEvent);
