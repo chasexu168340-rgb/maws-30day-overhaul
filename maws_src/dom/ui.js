@@ -576,7 +576,10 @@ function renderRecommendations(model) {
 
 function renderMap(model) {
   const currentActions = model.actions || [];
-  const featuredAction = currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length) || currentActions[0];
+  const boxingBasicsAction = model.loc?.id === 'boxing' && (!model.skillUnlocks?.jab?.learned || !model.skillUnlocks?.straight?.learned)
+    ? currentActions.find((action) => action.id === 'bag')
+    : null;
+  const featuredAction = boxingBasicsAction || currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length) || currentActions[0];
   const primaryAction = featuredAction ? renderActionCard(featuredAction) : '';
   const secondaryActions = currentActions.filter((action) => action !== featuredAction).map(renderActionCard).join('');
   const recommendations = renderRecommendations(model);
@@ -811,6 +814,30 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
   `;
 }
 
+function renderSkillTreeGuide(node) {
+  const guide = node.trainingGuide;
+  if (!guide) return '';
+  const action = guide.actionType === 'doAction'
+    ? 'doAction'
+    : guide.actionType === 'openTravel'
+      ? 'openTravel'
+      : 'toast';
+  const params = action === 'doAction'
+    ? { id: guide.actionId }
+    : action === 'openTravel'
+      ? { loc: guide.locationId }
+      : { text: guide.reason || guide.description };
+  const disabled = !guide.actionType;
+  const ctaClass = disabled ? 'ghost disabled maws-tree-guide-cta' : 'primary maws-tree-guide-cta';
+  return `
+    <div class="maws-tree-guide">
+      <small>${esc(guide.description || guide.sourceText || '')}</small>
+      ${guide.reason ? `<em>${esc(guide.reason)}</em>` : ''}
+      ${btn(guide.ctaLabel || '查看训练入口', action, params, ctaClass)}
+    </div>
+  `;
+}
+
 function renderSkillTree(treeModel) {
   const trees = treeModel?.trees || [];
   if (!trees.length) return '';
@@ -823,6 +850,7 @@ function renderSkillTree(treeModel) {
   const cards = trees.map((tree) => {
     const nodes = (tree.nodes || []).map((node) => {
       const detail = node.lockedReason || node.effectText || node.unlockText || '节点说明待接入。';
+      const guide = renderSkillTreeGuide(node);
       const meta = [
         node.kind || '',
         node.skillId ? `skill:${node.skillId}` : '',
@@ -834,7 +862,8 @@ function renderSkillTree(treeModel) {
           <p>${esc(node.unlockText || node.effectText || '')}</p>
           <div class="maws-tree-node-meta">${meta.map((part) => `<small>${esc(part)}</small>`).join('')}</div>
           ${node.lockedReason ? `<em>${esc(node.lockedReason)}</em>` : ''}
-          ${btn(node.status === 'future' ? '后续' : node.status === 'locked' ? '锁定' : '查看', 'toast', { text: detail }, node.locked ? 'ghost' : 'primary')}
+          ${guide}
+          ${btn(node.status === 'future' ? '后续' : '查看详情', 'toast', { text: detail }, node.locked ? 'ghost' : 'primary')}
         </article>
       `;
     }).join('');
