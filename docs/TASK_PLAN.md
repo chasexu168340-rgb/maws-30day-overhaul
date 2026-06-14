@@ -2,47 +2,56 @@
 
 ## Current Task
 
-Fix second-round QA issue on branch `fix/boxing-basics-affordance`: boxing gym `bag` copy must match the next real Boxing Basics reward target after the player may already know `jab`.
+Post Boxing Basics affordance planning / Wave15 follow-up planning on branch `docs/post-boxing-basics-affordance-plan`.
 
 ## Scope
 
-- Keep existing Day9 boxing gym unlock logic.
-- Keep real skill ids: `jab` for 刺拳 and `straight` for 直拳.
-- Do not change rewards, reward values, save key/version, package files, assets, combat formulas, economy curves, event weights, skill pagination, 100% completion rewards, or broader Boxing Basics systems.
-- Limit changes to dynamic UI/render labels, skill-tree guide copy, focused tests, and this task plan.
+- Docs-only closeout after PR `fix: clarify boxing basics training entry` was merged.
+- Only update `docs/TASK_PLAN.md` and `docs/TASK_HANDOFF.md`.
+- Do not modify `maws_src/`, package files, assets, build outputs, save key/version, combat formulas, economy curves, event weights, skill pagination, or 100% completion rewards.
+- Do not commit from this task.
 
 ## Current Result
 
-- `bag` data name is back to the generic `沙包连击`.
-- `state.js` now derives the displayed `bag` name from current learned skills:
+- PR `fix: clarify boxing basics training entry` is recorded as merged.
+- Original 10-item issue #5, Boxing Basics / jab training entry and guidance unclear after the boxing gym opens, is resolved.
+- The merged PR improved the Boxing Basics / jab node CTA, Day9 boxing gym guidance from the skill page, and boxing gym bag affordance.
+- The bag display name now follows current Boxing Basics skill state:
   - no `jab`: `沙包连击（刺拳入门）`
   - has `jab` but no `straight`: `沙包连击（直拳入门）`
   - has both: `沙包连击（拳击基础）`
-- The dynamic action object is used by the map action list, duration choice modal, training mini modal, training result title, and skill-tree guide.
-- `bag` settlement unlock feedback now surfaces only the next target that matched the pre-action derived label: no `jab` shows `学会 刺拳`; `jab` learned but no `straight` shows `学会 直拳`.
-- The Boxing Basics jab node now says `刺拳已掌握` and points to straight / continued Boxing Basics training after `jab` is already learned, instead of showing a刺拳入门 CTA.
-- The boxing gym still features `bag` as the primary action while either `jab` or `straight` is missing.
-- Focused coverage now includes Day9 no-jab entry guidance, jab-learned/straight-missing bag label, straight reward feedback, and jab-node CTA behavior.
+- The misleading state where the UI said jab intro but the actual reward was straight has been fixed.
+- No package files, assets, save key/version, combat formulas, economy curves, event weights, skill pagination, or 100% completion rewards were changed by that PR.
+
+## Original 10-Item Issue Status
+
+- #5 Boxing Basics / jab training entry unclear: resolved by merged PR `fix: clarify boxing basics training entry`.
+- #6 Skill page pagination: paused.
+- #7 Section 100% completion feedback: paused.
+- #8 Individual skill 100% completion feedback: paused.
+- #9 Distance unavailable: basic fallback is already done, but MMA / ground-state distance still needs QA.
+- #10 Random event confirmation appears to have no change: needs another QA pass to confirm.
 
 ## Modified Files
 
-- `maws_src/simulation/state.js`
-- `maws_src/dom/ui.js`
-- `maws_src/content/data.js`
-- `maws_src/tests/wave15_addiction_loop.spec.js`
 - `docs/TASK_PLAN.md`
+- `docs/TASK_HANDOFF.md`
 
 ## Verified State
 
 - `npm run build` passed.
-- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line` passed: 16/16.
-- `npm run test:smoke` passed: 4/4.
+- `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line` passed.
+- `npm run test:smoke` passed.
+- `git diff --check` passed.
+- Manual playtest passed.
 
 ## Risks
 
-- `bag` rewards are intentionally unchanged, so this fix only aligns displayed labels and feedback with the player's current next missing Boxing Basics skill.
-- No package files, assets, save key/version, combat formulas, economy curves, or event weights were modified.
+- This task records already-merged PR state only; it does not re-run the full code validation suite.
+- Remaining Wave15 candidates should stay narrow and QA-driven before any larger skill pagination or 100% reward system work.
 
 ## Next Step
+
+Prefer #10 random event confirmation feedback QA or #9 MMA / ground-state distance QA next. Do not jump directly into skill pagination or 100% completion reward systems.
 
 If continuing in a new window, read `docs/TASK_HANDOFF.md`, `docs/FILE_MAP.md`, and this `docs/TASK_PLAN.md`.
