@@ -75,6 +75,49 @@ function Clear-WorkerGeneratedTemp {
 
   Get-ChildItem -LiteralPath $WorkerPath -Force -Filter ".wave*_local_skill_preamble.md" -ErrorAction SilentlyContinue |
     Remove-Item -Force
+  Get-ChildItem -LiteralPath $WorkerPath -Force -Filter ".maws_worker_prompt_*.md" -ErrorAction SilentlyContinue |
+    Remove-Item -Force
+}
+
+function New-GuardedWorkerPrompt {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Worker,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Model,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Reasoning
+  )
+
+  $promptPath = if ([System.IO.Path]::IsPathRooted($Worker.Prompt)) {
+    $Worker.Prompt
+  } else {
+    Join-Path $Worker.Path $Worker.Prompt
+  }
+
+  if (!(Test-Path -LiteralPath $promptPath)) {
+    throw "Prompt not found: $promptPath"
+  }
+
+  $safeName = ($Worker.Name -replace '[^A-Za-z0-9_.-]', '_')
+  $guardedPrompt = Join-Path $Worker.Path ".maws_worker_prompt_$safeName.md"
+  $original = Get-Content -Raw -LiteralPath $promptPath
+  $preamble = @"
+# MAWS Worker Runtime Contract
+
+- Required model/reasoning: $Model / $Reasoning. If the launcher cannot satisfy this, stop and report the mismatch.
+- Do not generate images, sprite sheets, moodboards, or visual assets in this CLI worker.
+- If the task needs image generation, write a handoff note for the main Codex session instead of generating it here.
+- Keep generated screenshots or audit captures local and do not commit them unless the prompt explicitly asks for test artifacts.
+
+---
+
+"@
+
+  Set-Content -LiteralPath $guardedPrompt -Encoding UTF8 -Value ($preamble + $original)
+  return $guardedPrompt
 }
 
 function Start-CodexWorker {
@@ -92,14 +135,19 @@ function Start-CodexWorker {
   )
 
   if (!(Test-Path -LiteralPath $Worker.Prompt)) {
-    throw "Prompt not found: $($Worker.Prompt)"
+    $resolvedPrompt = Join-Path $Worker.Path $Worker.Prompt
+    if (!(Test-Path -LiteralPath $resolvedPrompt)) {
+      throw "Prompt not found: $($Worker.Prompt)"
+    }
   }
+
+  $promptForWorker = New-GuardedWorkerPrompt $Worker $Model $Reasoning
 
   $args = @(
     "-ExecutionPolicy", "Bypass",
     "-File", $Launcher,
     "-Worktree", $Worker.Path,
-    "-Prompt", $Worker.Prompt,
+    "-Prompt", $promptForWorker,
     "-Title", $Worker.Name,
     "-Model", $Model,
     "-Reasoning", $Reasoning
