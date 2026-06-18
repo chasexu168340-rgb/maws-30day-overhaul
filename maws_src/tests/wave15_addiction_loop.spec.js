@@ -385,6 +385,20 @@ test('Day 5 park check review persists as Fatty memory and growth prompt', async
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
+    store.state.loc = 'metro_station';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+  });
+  const jabSourceCard = page.locator('.maws-recommend-card').filter({ hasText: '公园验货之后，把刺拳来源记住' });
+  await expect(jabSourceCard, 'reviewed park check should recommend the concrete jab source').toBeVisible();
+  await jabSourceCard.locator('button[data-action="takeOpportunity"][data-id="park_check_jab_source"]').click();
+  const jabSourceNotebook = page.locator('.maws-modal').filter({ hasText: '公园验货之后，把刺拳来源记住' });
+  await expect(jabSourceNotebook, 'jab-source recommendation should open a readable event notebook').toContainText('拳馆 · 沙包连击');
+  await expect(jabSourceNotebook).toContainText('Day 9');
+  await expect(jabSourceNotebook).toContainText('刺拳来源不是开局白送');
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
     store.state.flags.e00_wild_tryout_win = true;
     store.state.loc = 'home';
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'fatty' } };

@@ -236,6 +236,38 @@ export const EVENT_RULES = deepFreeze([
     weights: { earlyDay: 4.4, lowAuth: 1.0, homeIdle: 1.6, fatigue: -0.4 }
   },
   {
+    id: 'park_check_jab_source',
+    title: '公园验货之后，把刺拳来源记住',
+    loc: 'metro_station',
+    desc: 'E01 不是靠玄学压住你，他靠的是刺拳、回收和距离。拳馆还没正式开放，但沙包连击这条路可以先记进计划。',
+    eventNotebook: {
+      reason: 'E01 复盘后的成长路线',
+      entry: '地铁站广告牌下面，你又看见那张拳馆传单。刚才公园里那几下不神秘：对方先用刺拳占线，再把手收回去，你追不上，是因为自己还没有这块基础。',
+      beats: [
+        '你没有把差距解释成天赋，只把它写成一个更具体的下一步。',
+        '刺拳来源不是开局白送，也不是嘴硬悟出来的东西。',
+        '等 Day 9 拳馆开放后，去做拳馆 · 沙包连击，把出拳和回收练成同一件事。'
+      ],
+      actionLabel: '记下沙包连击',
+      actionText: '把刺拳来源写进今天路线：拳馆开放后，先找沙包，不急着上台。',
+      outcome: '你知道下一步不是继续找软目标，而是等拳馆开放后完成沙包连击。'
+    },
+    npc: 'coach',
+    kind: 'dialog',
+    base: 96,
+    cooldownKey: 'park_check_jab_source',
+    tags: ['刺拳提示', '沙包连击', '成长路线'],
+    when: {
+      minDay: 5,
+      maxDay: 8,
+      any: [
+        { flag: 'reviewed_park_check_pass' },
+        { flag: 'reviewed_park_check_review' }
+      ]
+    },
+    weights: { earlyDay: 3.6, jabNeed: 4.2, combatMemory: 0.9, homeIdle: 0.5 }
+  },
+  {
     id: 'early_metro_observe',
     title: '地铁站观察一会儿',
     loc: 'metro_station',

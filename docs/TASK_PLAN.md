@@ -69,6 +69,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current E01 loop pass makes Day 5 park-check results persist as explicit `park_check_pass/review` flags.
 - War-room style post-review now marks `reviewed_park_check_*`, keeps `去点技能树` visible, and lets 刘胖子 surface a reviewed park-check memory ahead of older E00 banter.
 - Wave15 smoke now walks Day 5 mainline -> E01 objective pass -> 技术复盘 -> Fatty memory.
+- Current growth-path pass adds a post-review opportunity card: after Day 5/E01 park-check review, `公园验货之后，把刺拳来源记住` points the player toward `Day 9 / 拳馆 · 沙包连击 / 刺拳`.
+- The card is a route prompt only: it does not open boxing early, does not alter starter skills, and does not change combat formulas.
+- Wave15 smoke now verifies Day 5 mainline -> E01 objective pass -> 技术复盘 -> jab-source recommendation -> event notebook -> Fatty memory.
 
 ## Validation
 
@@ -88,4 +91,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the Day 5 park-check review memory pass on `codex/skillopt-optimization-pass`.
+Commit and push the post-E01 jab-source recommendation pass on `codex/skillopt-optimization-pass`.
