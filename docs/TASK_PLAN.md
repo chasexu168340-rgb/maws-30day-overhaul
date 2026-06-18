@@ -64,6 +64,8 @@ SkillOpt-style optimization pass for the current playable slice.
 - Wave15 smoke now asserts both E00 follow-up recommendations from the visible recommendation cards.
 - Current validation pass tightens the E00 win follow-up smoke to use a real unlocked Day 3 park state, click the E01 recommendation, confirm the event notebook, and assert the battle resolves into `E01`.
 - This keeps the test on the player path instead of a partial card-visibility check.
+- Current combat-feel pass rewrites combo/recipe feedback from label-style `COMBO！` copy into body-language feedback such as `连段反馈：你先用推搡抢到一拍空间...`.
+- Wave15 combat smoke now asserts pressure-plan feedback mentions the physical read (`抢到一拍` / `脚下乱了`) and blocks the old `COMBO！` label from returning.
 
 ## Validation
 
@@ -83,4 +85,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the E00 follow-up path validation pass on `codex/skillopt-optimization-pass`.
+Commit and push the combat feedback body-language pass on `codex/skillopt-optimization-pass`.

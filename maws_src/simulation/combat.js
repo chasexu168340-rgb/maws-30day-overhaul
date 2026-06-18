@@ -22,11 +22,11 @@ const COMBAT_TUNING = Object.freeze({
 });
 
 const COMBO_RULES = Object.freeze([
-  { id: "boxing_one_two", from: "jab", to: "straight", hit: 0.06, risk: 0.03, spRefund: 3, label: "1-2节奏", log: "COMBO！刺拳探路接直拳重击，拳路更顺。" },
-  { id: "wild_one_two", from: "push_away", to: "wild_swing", hit: 0.05, risk: 0.02, spRefund: 2, label: "推开挥击", log: "COMBO！推开后立刻挥击，抢到一拍空间。" },
-  { id: "guard_counter", from: "guard", toType: "strike", hit: 0.05, risk: 0.04, spRefund: 2, label: "防反", log: "COMBO！抱架后抓回合反击，出手更稳。" },
-  { id: "pull_and_tag", from: "retreat", toType: "strike", hit: 0.04, risk: 0.03, spRefund: 2, label: "拉开点打", log: "COMBO！后撤拉开后点回一拳，风险下降。" },
-  { id: "cool_exit", from: "talkdown", to: "retreat", hit: 0, risk: 0.05, spRefund: 4, label: "降温撤离", log: "COMBO！先降温再撤离，冲突热度被压下去。" }
+  { id: "boxing_one_two", from: "jab", to: "straight", hit: 0.06, risk: 0.03, spRefund: 3, label: "1-2节奏", log: "连段反馈：刺拳先把距离点出来，直拳接上时手路顺了半拍。" },
+  { id: "wild_one_two", from: "push_away", to: "wild_swing", hit: 0.05, risk: 0.02, spRefund: 2, label: "推开挥击", log: "连段反馈：你先用推搡抢到一拍空间，野路挥拳砸过去时对方脚下乱了。" },
+  { id: "guard_counter", from: "guard", toType: "strike", hit: 0.05, risk: 0.04, spRefund: 2, label: "防反", log: "连段反馈：抱架把脸收住以后，你终于不是闭眼换拳，反击稳了一点。" },
+  { id: "pull_and_tag", from: "retreat", toType: "strike", hit: 0.04, risk: 0.03, spRefund: 2, label: "拉开点打", log: "连段反馈：后撤让拳头有了路，你点回去那一下没有站在原地赌。" },
+  { id: "cool_exit", from: "talkdown", to: "retreat", hit: 0, risk: 0.05, spRefund: 4, label: "降温撤离", log: "连段反馈：话先慢下来，脚再退出来，冲突没有继续往上烧。" }
 ]);
 
 const PLAN_MODES = Object.freeze({
@@ -58,8 +58,8 @@ const PLAN_MODES = Object.freeze({
     feedback: {
       summary: "压迫配方：先用推搡抢到一拍，再把对方脚步打乱。",
       actions: {
-        push_away: "你用推搡抢到一拍。",
-        wild_swing: "对方脚下乱了，你趁乱补上一拳。"
+        push_away: "你用推搡抢到一拍，肩膀先顶住，对方没法舒服地压进来。",
+        wild_swing: "对方脚下乱了，你趁他重心还没找回来，补上一记野路挥拳。"
       }
     }
   },
