@@ -41,6 +41,10 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass surfaces purchased skill-tree combat perks before the player acts: reinforced combat cards now show compact notes like `技能树 · 命中 +2%`.
 - The first purchased Street Wild node is now visible on the next `野路挥拳` combat action card, tightening the `I bought it -> next fight feels different` loop.
 - Wave15 smoke now asserts the visible combat-card perk note, not just post-exchange feedback.
+- Current pass makes 刘胖子二段复盘 consume existing NPC memory: if the player has the Day 3 convenience-store mistake flag, the result modal now surfaces his specific follow-up line instead of generic completion copy.
+- Memory-aware review writes a `reviewed_<memoryKey>` flag, so follow-up review is a real state transition rather than a prettier toast.
+- Compact settlement modals now prefer `modal.lead` over generic "completed" text, while still showing reward chips.
+- Wave15 smoke now asserts the remembered Day 3 line, reward chips, skill-tree next step, and persisted memory-review flag.
 
 ## Validation
 
@@ -56,8 +60,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target combat recipe fallback readability or one small event follow-up choice, using the same audit -> patch -> gate loop.
+- The next likely pass should target one small event follow-up choice or next-day NPC banter surfacing, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation, then commit and push the combat-card skill-tree visibility pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the NPC memory review pass on `codex/skillopt-optimization-pass`.

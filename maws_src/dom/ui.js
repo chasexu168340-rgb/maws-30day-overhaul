@@ -1430,9 +1430,9 @@ function renderModal(model) {
     const rewardChips = collectRewardChips(modal, 5);
     const gain = summaryChips(modal.gain || [], 'gain');
     const hasSummary = (modal.cost || []).length || (modal.gain || []).length || modal.risk;
-    const leadText = rewardChips.length
+    const leadText = modal.lead || (rewardChips.length
       ? (modal.kicker ? `${modal.kicker}完成。` : '结果已结算。')
-      : (modal.lead || lead);
+      : lead);
     return renderModalShell(modal, `
       <small class="maws-result-kicker">${esc(modal.kicker || modal.title || '行动')}</small>
       <h2>${esc(modal.title || '结果')}</h2>

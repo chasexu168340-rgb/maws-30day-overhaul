@@ -1857,6 +1857,7 @@ function executeAction(state, action, options = {}) {
     const repeat = applyTrainingRepeatPressure(state, action, micro.gain);
     applyGain(state, repeat.gain);
     if (action.maw) applyMawPatch(state, action.maw);
+    const memoryReview = actionMemoryReview(state, action);
     const idleEvent = action.type === 'idle' ? maybeIdleEvent(state) : null;
     const scheduleNote = applyDosageSchedulePressure(state, dosage);
     if (dosage?.injuryRisk && actionRoll(state, 59) < dosage.injuryRisk) {
@@ -1870,7 +1871,7 @@ function executeAction(state, action, options = {}) {
       ...options,
       dosage: dosageId,
       extraRewardDeltas: mawRewardDeltas(beforeMaw, state, action.maw, options.eventContext?.type === 'eventNotebook' ? 'eventNotebook' : 'action'),
-      eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, micro.note, repeat.note, scheduleNote, idleBody].filter(Boolean).join('\n') }
+      eventContext: { ...(options.eventContext || {}), result: [options.eventContext?.result, memoryReview, micro.note, repeat.note, scheduleNote, idleBody].filter(Boolean).join('\n') }
     });
   }
 }
@@ -3082,27 +3083,55 @@ function npcLine(npc) {
   return lines[npc] || '先把今天的事做扎实。';
 }
 
-function npcMemoryLine(state, npc) {
+function npcMemory(state, npc) {
   if (npc === 'fatty') {
     if (state.combatMemory?.lastEnemy === 'E01' || state.flags?.main_5) {
-      return '刘胖子翻着录像说：公园那场你没把人 KO，但至少知道自己哪一拍漏风了。下次先把刺拳练明白。';
+      return {
+        key: 'park_check_review',
+        line: '刘胖子翻着录像说：公园那场你没把人 KO，但至少知道自己哪一拍漏风了。下次先把刺拳练明白。'
+      };
     }
     if (state.flags?.day3_store_show_form) {
-      return '刘胖子看完便利店那段，憋了半天：你那个祖传架势不像镇场，像货架临时请来的保安。';
+      return {
+        key: 'day3_store_show_form',
+        line: '刘胖子看完便利店那段，憋了半天：你那个祖传架势不像镇场，像货架临时请来的保安。'
+      };
     }
     if (state.flags?.day3_store_ask_first || state.flags?.day3_store_shelf_between) {
-      return '刘胖子说：便利店那次你先把事收住了，这比把泡面打成证据强。';
+      return {
+        key: 'day3_store_deescalate',
+        line: '刘胖子说：便利店那次你先把事收住了，这比把泡面打成证据强。'
+      };
     }
   }
   if (npc === 'xiaoman') {
     if (state.flags?.day3_store_show_form) {
-      return '小满把薯片往后挪了一排：别误会，不是怕你，是怕祖传掌法又误伤零食。';
+      return {
+        key: 'day3_store_show_form',
+        line: '小满把薯片往后挪了一排：别误会，不是怕你，是怕祖传掌法又误伤零食。'
+      };
     }
     if (state.flags?.day3_store_ask_first || state.flags?.day3_store_shelf_between) {
-      return '小满敲了敲收银台：上次你先问清楚，这点比会几招更像靠谱的人。';
+      return {
+        key: 'day3_store_deescalate',
+        line: '小满敲了敲收银台：上次你先问清楚，这点比会几招更像靠谱的人。'
+      };
     }
   }
-  return '';
+  return null;
+}
+
+function npcMemoryLine(state, npc) {
+  return npcMemory(state, npc)?.line || '';
+}
+
+function actionMemoryReview(state, action = {}) {
+  if (!action.memoryReviewNpc) return null;
+  const memory = npcMemory(state, action.memoryReviewNpc);
+  if (!memory?.line) return null;
+  state.flags ||= {};
+  state.flags[`reviewed_${memory.key}`] = true;
+  return memory.line;
 }
 
 const LOCATION_BACKGROUND_KEYS = {

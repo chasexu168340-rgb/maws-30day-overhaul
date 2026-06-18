@@ -232,6 +232,10 @@ test('purchasing a tree node gives compact reward feedback and survives rerender
 
 test('video review follow-up can chain into Fatty review and back to skill tree', async ({ page }) => {
   const errors = await loadGame(page);
+  await page.evaluate(() => {
+    window.MAWS_STORE.state.flags.day3_store_show_form = true;
+    window.MAWS_STORE.emit();
+  });
 
   const reviewButton = page.locator('button[data-action="doAction"][data-id="review"]').first();
   await expect(reviewButton).toBeVisible();
@@ -246,8 +250,10 @@ test('video review follow-up can chain into Fatty review and back to skill tree'
   const modal = page.locator('.maws-modal.result-compact');
   await expect(modal, 'Fatty follow-up should resolve as a compact result modal').toBeVisible();
   await expect(modal).toContainText('一起复盘');
+  await expect(modal, 'Fatty review should remember the prior convenience-store mistake').toContainText('祖传架势不像镇场');
   await expect(modal.locator('.maws-reward-chip').first(), 'Fatty follow-up should still show reward chips').toBeVisible();
   await expect(modal.locator('button[data-action="setTab"][data-tab="skills"]'), 'Fatty review should keep the growth path visible').toContainText('去点技能树');
+  expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.reviewed_day3_store_show_form)), 'Fatty review should persist that this memory was reviewed').toBe(true);
 
   expect(errors).toEqual([]);
 });

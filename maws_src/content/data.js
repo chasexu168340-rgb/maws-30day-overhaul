@@ -416,7 +416,7 @@ export const ENEMIES = {
 
 export const ACTIONS = {
   home: [
-    { id: 'fatty_review_together', name: '一起复盘', icon: '复', time: 25, sp: 0, desc: '刘胖子陪你把今天最容易上头的一拍讲清楚。话不长，能让脑子慢下来。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_review', flags: { fatty_review_seen: true }, gain: { jud: 1, calm: 1, rel_fatty: 1 }, followUps: [
+    { id: 'fatty_review_together', name: '一起复盘', icon: '复', time: 25, sp: 0, desc: '刘胖子陪你把今天最容易上头的一拍讲清楚。话不长，能让脑子慢下来。', type: 'simple', npc: 'fatty', memoryReviewNpc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_review', flags: { fatty_review_seen: true }, gain: { jud: 1, calm: 1, rel_fatty: 1 }, followUps: [
       { label: '去点技能树', action: 'setTab', params: { tab: 'skills' }, className: 'primary' }
     ] },
     { id: 'fatty_today_advice', name: '问今日建议', icon: '问', time: 15, sp: 0, desc: '问刘胖子今天先别犯哪种蠢。建议很短，但够你少冲一次。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_advice', flags: { fatty_advice_seen: true }, gain: { jud: 1, rel_fatty: 1 } },
