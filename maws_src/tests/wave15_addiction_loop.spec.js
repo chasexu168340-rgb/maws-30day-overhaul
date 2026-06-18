@@ -305,6 +305,17 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
   await expect(result).toContainText('先把能收回来的动作练稳');
   expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.e00_wild_tryout_review)), 'E00 review outcome should persist a flag').toBe(true);
 
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.flags.e00_wild_tryout_win = true;
+    store.state.loc = 'home';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'fatty' } };
+    store.emit();
+  });
+  const fattyMenu = page.locator('.maws-npc-menu').filter({ hasText: '刘胖子' });
+  await expect(fattyMenu, 'E00 win should surface as later Fatty banter').toContainText('打赢嘴硬路人');
+  await expect(fattyMenu).toContainText('别把这当拳馆毕业证');
+
   expect(errors).toEqual([]);
 });
 

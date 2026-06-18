@@ -3104,6 +3104,12 @@ function npcLine(npc) {
 
 function npcMemory(state, npc) {
   if (npc === 'fatty') {
+    if (state.flags?.e00_wild_tryout_win) {
+      return {
+        key: 'e00_wild_tryout_win',
+        line: '刘胖子刷到你打赢嘴硬路人那段：可以，能把塑料袋里的愤怒甩出去。但别把这当拳馆毕业证。'
+      };
+    }
     if (state.flags?.reviewed_day3_store_show_form) {
       return {
         key: 'reviewed_day3_store_show_form',
@@ -3130,6 +3136,12 @@ function npcMemory(state, npc) {
     }
   }
   if (npc === 'xiaoman') {
+    if (state.flags?.e00_wild_tryout_win) {
+      return {
+        key: 'e00_wild_tryout_win',
+        line: '小满把饮料推过来：赢嘴硬路人可以开心十分钟，别开心到拿他当半年拳击新人。'
+      };
+    }
     if (state.flags?.reviewed_day3_store_show_form) {
       return {
         key: 'reviewed_day3_store_show_form',

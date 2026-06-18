@@ -56,6 +56,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Ordinary battle surrender no longer resolves as a win just because the player HP is higher than the enemy HP.
 - Battle-result modals now prefer `modal.lead`, so enemy-specific lessons appear in the first visible line instead of being buried in details.
 - Wave15 smoke now verifies E00 result feedback and the persisted `e00_wild_tryout_review` flag.
+- Current pass makes E00 win-side memory visible in NPC banter: after `e00_wild_tryout_win`, 刘胖子 can joke that beating a mouthy passer is not a boxing-gym diploma.
+- E00 win memory now has high priority in `npcMemory()`, so it is not buried behind older Day 3 / Day 5 memories.
+- Wave15 smoke now asserts the post-E00 Fatty scene menu banter.
 
 ## Validation
 
@@ -71,8 +74,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target one small event follow-up choice or E00 win-side NPC banter, using the same audit -> patch -> gate loop.
+- The next likely pass should target one small event follow-up choice or a compact E00 win/review opportunity card, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation, then commit and push the E00 outcome feedback pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the E00 NPC banter pass on `codex/skillopt-optimization-pass`.
