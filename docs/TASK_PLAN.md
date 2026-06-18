@@ -38,6 +38,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass turns 刘胖子二段复盘 into a real follow-up loop: `视频复盘 -> 找刘胖子再看一遍 -> 去点技能树`.
 - `fatty_review_together` now resolves with reward chips and keeps a skill-tree next step visible, so the second-step button is not a dead end.
 - Wave15 smoke now covers the full chained follow-up path.
+- Current pass surfaces purchased skill-tree combat perks before the player acts: reinforced combat cards now show compact notes like `技能树 · 命中 +2%`.
+- The first purchased Street Wild node is now visible on the next `野路挥拳` combat action card, tightening the `I bought it -> next fight feels different` loop.
+- Wave15 smoke now asserts the visible combat-card perk note, not just post-exchange feedback.
 
 ## Validation
 
@@ -57,4 +60,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Run full validation, then commit and push the Fatty follow-up chain pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the combat-card skill-tree visibility pass on `codex/skillopt-optimization-pass`.

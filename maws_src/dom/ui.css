@@ -5251,6 +5251,21 @@
   overflow: hidden;
 }
 
+.maws-combat-perk-note {
+  min-width: 0;
+  margin: 0;
+  padding: 3px 7px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(255, 217, 65, 0.52);
+  background: rgba(255, 217, 65, 0.14);
+  color: var(--maws-gold, #ffd941);
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .maws-skill-use {
   padding: 0 1px;
 }

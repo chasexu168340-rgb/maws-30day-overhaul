@@ -2331,6 +2331,26 @@ function skillTreeCombatPerks(state) {
   return out;
 }
 
+function signedPercentText(value) {
+  const percent = Math.round(Number(value || 0) * 100);
+  if (!percent) return '';
+  return `${percent > 0 ? '+' : ''}${percent}%`;
+}
+
+function skillTreeCombatPreviewText(combatPerks = {}, skillId = '') {
+  const perk = combatPerks.skills?.[skillId] || {};
+  const parts = [
+    perk.hit ? `命中 ${signedPercentText(perk.hit)}` : '',
+    perk.risk ? `风险 ${signedPercentText(perk.risk)}` : '',
+    perk.defense ? `防护 ${signedPercentText(perk.defense)}` : ''
+  ].filter(Boolean);
+  if (!parts.length && !combatPerks.logs?.[skillId]) return null;
+  return {
+    text: `技能树 · ${parts.length ? parts.join(' / ') : '已强化'}`,
+    detail: combatPerks.logs?.[skillId] || perk.log || ''
+  };
+}
+
 function toCombatInput(state) {
   normalizeSkillTree(state);
   return {
@@ -3554,10 +3574,13 @@ export function buildRenderModel(state) {
     if (!id || !combatInput) return null;
     const preview = previewPlayerAction(combatInput, id);
     const queueReason = selectedCount >= COMBAT_QUEUE_LIMIT ? '本回合队列已满' : '';
+    const skillTreePreview = skillTreeCombatPreviewText(combatInput.combatPerks, id);
     return {
       ...preview,
       damageText: preview.max > 0 ? `${preview.min}-${preview.max}` : '0',
       postureText: preview.posture > 0 ? String(preview.posture) : '0',
+      perkText: skillTreePreview?.text || '',
+      perkDetail: skillTreePreview?.detail || '',
       unavailableReason: queueReason || preview.reason || ''
     };
   };

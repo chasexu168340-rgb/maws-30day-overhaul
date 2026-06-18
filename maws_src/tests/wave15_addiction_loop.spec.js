@@ -304,6 +304,9 @@ test('Day 5 combat recipe produces readable tactical feedback', async ({ page })
     store.dispatch({ type: 'startBattle', enemyId: 'E01' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  const wildSwingCard = page.locator('.maws-skill.combat-card').filter({ hasText: '野路挥拳' }).first();
+  await expect(wildSwingCard, 'purchased skill-tree node should be visible on the next combat action card').toContainText('技能树');
+  await expect(wildSwingCard, 'wild swing mastery should expose the concrete combat preview bonus').toContainText(/命中\s*\+2%/);
 
   const modeButton = page.locator('button[data-action="setCombatPlan"][data-mode="pressure"]');
   if (await modeButton.count()) await modeButton.evaluate((button) => button.click());

@@ -774,6 +774,9 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
   const useLine = inCombat
     ? `${esc(skill.type || '招式')} · ${esc(dist)} · ${esc(preview.unavailableReason || skill.unavailableReason || `熟练度 ${round(skill.state?.p)}%`)}`
     : `${esc(skill.desc || '用于战斗与训练判断。')}`;
+  const perkNote = inCombat && preview.perkText
+    ? `<p class="maws-combat-perk-note">${esc(preview.perkText)}</p>`
+    : '';
   if (inCombat) {
     const cost = `${esc(skill.sp || 0)}/${esc(skill.ap || 1)}`;
     const no = String(skill.displayNo || 1).padStart(2, '0');
@@ -786,6 +789,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
         <span class="maws-combat-card-no">${esc(no)}</span>
         <header><strong>${esc(skill.name)}</strong><small>${skill.selected ? '已入队' : disabled ? '不可用' : esc(skill.type)}</small></header>
         <p class="maws-combat-card-use">${useLine}</p>
+        ${perkNote}
         <dl class="maws-combat-key">
           <div><dt>效果</dt><dd>${esc(damage)} / 架${esc(posture)}</dd></div>
           <div><dt>命</dt><dd>${esc(hit)}</dd></div>
@@ -799,6 +803,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
             <div><dt>距离</dt><dd>${esc(dist)}</dd></div>
           </dl>
           <span>${esc(preview.unavailableReason || skill.unavailableReason || `熟练度 ${round(skill.state?.p)}%`)}</span>
+          ${preview.perkDetail ? `<span>${esc(preview.perkDetail)}</span>` : ''}
         </div>
         <footer>${btn(skill.selected ? '再加一次' : '加入', action, params, disabled ? 'disabled' : 'primary')}</footer>
       </article>
