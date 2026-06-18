@@ -263,6 +263,14 @@ test('combat plan mode exposes at least three tactical recipe modes', async ({ p
 test('Day 5 combat recipe produces readable tactical feedback', async ({ page }) => {
   const errors = await loadGame(page);
 
+  await earnInsightThroughReview(page);
+  await openSpendableSkillTree(page);
+  const node = await firstPurchasableNode(page);
+  expect(node, 'expected one spendable skill-tree node before combat').not.toBeNull();
+  await page.locator(`button[data-action="purchaseSkillTreeNode"][data-id="${node.id}"]`).click();
+  await expect(page.locator('.maws-modal.result-compact')).toContainText('技能树点亮');
+  await page.locator('button[data-action="closeModal"]').click();
+
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
     store.state.day = 5;
@@ -296,6 +304,7 @@ test('Day 5 combat recipe produces readable tactical feedback', async ({ page })
   expect(feedback.planMode, 'recipe plan mode should be active').not.toBe('manual');
   expect(readableLines.length, 'Day 5 recipe feedback should contain readable tactical sentences').toBeGreaterThan(0);
   expect(text.trim(), 'combat feedback should not be only a combo placeholder').not.toBe('触发 combo');
+  expect(text, 'purchased skill-tree node should surface in the next combat feedback').toContain('技能树反馈');
 
   expect(errors).toEqual([]);
 });

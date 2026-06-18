@@ -3742,6 +3742,15 @@
   min-width: 0;
 }
 
+.maws-combat-feedback small {
+  display: block;
+  margin-top: 4px;
+  color: #fff7dc;
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 .maws-combat-feedback b {
   margin-bottom: 3px;
   color: var(--maws-gold, #ffd941);

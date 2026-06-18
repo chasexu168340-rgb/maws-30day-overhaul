@@ -22,7 +22,8 @@ SkillOpt-style optimization pass for the current playable slice.
 - Collapsed the combat tactics drawer by default so the battle stage and command bar stay dominant.
 - Follow-up pass connected the existing early `视频复盘` action to the tested skill-tree spend loop: tests now earn Insight through UI before buying.
 - Skill-tree copy now names the source of Insight: review, training, and mainline progress.
-- Targeted Wave15 Playwright gate passed after the follow-up.
+- Third pass surfaces purchased skill-tree effects in the next combat feedback panel, not only in the hidden combat math.
+- Targeted Wave15 Playwright gate passed after the follow-up and third pass.
 
 ## Validation
 
@@ -39,4 +40,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the second optimization patch on `codex/skillopt-optimization-pass`, then continue with the next SkillOpt loop: make a purchased node's next-fight effect more obvious to the player.
+Commit and push the third pass on `codex/skillopt-optimization-pass`. Next SkillOpt loop should target event/NPC follow-up memory or reward burst visibility.

@@ -986,10 +986,12 @@ function renderCombat(model) {
   const windowCommandHtml = windowCardHtml + commandFillers;
   const logs = (combat.log || []).slice(0, 7).map((line) => `<li>${esc(line)}</li>`).join('');
   const feedback = combat.lastWindow?.feedback;
+  const perkPulse = (combat.log || []).find((line) => /^技能树反馈/.test(String(line || '')));
   const feedbackPanel = `
     <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
       <b>窗口反馈</b>
       <span>${esc(feedback?.text || '先读意图，再放 1-2 张动作卡。')}</span>
+      ${perkPulse ? `<small>${esc(perkPulse)}</small>` : ''}
     </aside>`;
   const lastWindow = combat.lastWindow
     ? `上个窗口 ${esc(combat.lastWindow.duration)}秒 · ${esc(combat.lastWindow.stepCount || 0)}个动作 · ${esc(combat.lastWindow.pressure || '交换')}`

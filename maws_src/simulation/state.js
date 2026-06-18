@@ -2215,6 +2215,14 @@ function combinedCombatEffects(state, combat = {}) {
 function skillTreeCombatFeedback(state, actions = []) {
   const perks = normalizeSkillTree(state).perks || {};
   const lines = [];
+  const combatPerks = skillTreeCombatPerks(state);
+  const seen = new Set();
+  actions.forEach((id) => {
+    const log = combatPerks.logs?.[id] || combatPerks.skills?.[id]?.log || combatPerks[id]?.log || '';
+    if (!log || seen.has(log)) return;
+    seen.add(log);
+    lines.push(`技能树反馈：${log}`);
+  });
   if (actions.includes('guard') && perks.byKey?.guard_breathing_stable) {
     lines.push('技能树反馈：铁布衫改写生效，抱架时呼吸稳定了一拍。');
   }
