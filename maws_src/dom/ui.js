@@ -824,7 +824,7 @@ function renderSkillTree(treeModel) {
   }).join('');
   return `
     <section class="maws-skill-tree-slice" aria-label="技能树切片">
-      <div class="maws-panel-title small"><h2>技能树切片</h2><p>${esc(treeModel.pointName || '洞察点')} ${esc(treeModel.points || 0)} · 三条路线的当前领悟状态。</p></div>
+      <div class="maws-panel-title small"><h2>技能树切片</h2><p>${esc(treeModel.pointName || '洞察点')} ${esc(treeModel.points || 0)} · 复盘、训练和主线后留下的可分配理解。</p></div>
       <div class="maws-skill-tree-grid">${cards}</div>
     </section>
   `;

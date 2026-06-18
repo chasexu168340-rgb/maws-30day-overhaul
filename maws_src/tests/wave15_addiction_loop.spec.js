@@ -110,13 +110,29 @@ async function expectNoHorizontalOverflow(page, label) {
   expect(scrollWidth, `${label} horizontal overflow`).toBeLessThanOrEqual(metrics.innerWidth + 1);
 }
 
-async function openSpendableSkillTree(page, points = 3) {
-  await page.evaluate((amount) => {
+async function earnInsightThroughReview(page) {
+  const before = await page.evaluate(() => Number(window.MAWS_STORE.state.player.insightPoints || 0));
+  const reviewButton = page.locator('button[data-action="doAction"][data-id="review"]').first();
+  await expect(reviewButton, 'home review action should be visible as an early Insight source').toBeVisible();
+  await reviewButton.click();
+  const durationChoice = page.locator('button[data-action="chooseDuration"][data-id="review"][data-duration="standard"]');
+  if (await durationChoice.count()) {
+    await expect(durationChoice).toBeVisible();
+    await durationChoice.click();
+  }
+  await expect(page.locator('.maws-modal')).toContainText('洞察点');
+  const after = await page.evaluate(() => Number(window.MAWS_STORE.state.player.insightPoints || 0));
+  expect(after, 'video review should naturally grant Insight before skill-tree purchase').toBeGreaterThan(before);
+  await page.locator('button[data-action="closeModal"]').click();
+  return after;
+}
+
+async function openSpendableSkillTree(page) {
+  await page.evaluate(() => {
     const store = window.MAWS_STORE;
-    store.state.player.insightPoints = amount;
     store.state.ui = { ...store.state.ui, tab: 'skills', modal: null, cityMapOpen: false };
     store.emit();
-  }, points);
+  });
   await expect(page.locator('.maws-skill-tree-slice')).toBeVisible();
 }
 
@@ -141,11 +157,13 @@ async function firstPurchasableNode(page) {
 test('skills page exposes spendable tree status and insight points', async ({ page }) => {
   const errors = await loadGame(page);
 
+  const points = await earnInsightThroughReview(page);
   await openSpendableSkillTree(page);
 
   const treeSlice = page.locator('.maws-skill-tree-slice');
   await expect(treeSlice).toContainText('技能树切片');
-  await expect(treeSlice).toContainText(/洞察点\s+3/);
+  await expect(treeSlice).toContainText(new RegExp(`洞察点\\s+${points}`));
+  await expect(treeSlice).toContainText('复盘、训练和主线');
   expect(await treeSlice.locator('.maws-tree-node.status-available').count(), 'skill tree should expose purchasable nodes').toBeGreaterThanOrEqual(1);
   expect(await firstPurchasableNode(page), 'render model should mark a node as canPurchase').toMatchObject({
     status: 'available',
@@ -159,6 +177,7 @@ test('skills page exposes spendable tree status and insight points', async ({ pa
 test('purchasing a tree node gives compact reward feedback and survives rerender', async ({ page }) => {
   const errors = await loadGame(page);
 
+  await earnInsightThroughReview(page);
   await openSpendableSkillTree(page);
   const node = await firstPurchasableNode(page);
   expect(node, 'expected one spendable skill-tree node').not.toBeNull();
@@ -285,6 +304,7 @@ test('390x844 addiction-loop surfaces do not overflow horizontally', async ({ pa
   const errors = await loadGame(page, MOBILE);
 
   await expectNoHorizontalOverflow(page, 'mobile map start');
+  await earnInsightThroughReview(page);
   await openSpendableSkillTree(page);
   await expectNoHorizontalOverflow(page, 'mobile skill tree spend');
 

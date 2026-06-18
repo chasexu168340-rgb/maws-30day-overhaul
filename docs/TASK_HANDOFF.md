@@ -25,6 +25,7 @@ The player-facing target remains: the player clicks something, the game responds
 2. Fix the highest-impact gap with minimal architecture movement.
 3. Strengthen tests so they validate the player path instead of bypassing UI.
 4. Update checkpoint and validation evidence.
+5. Current follow-up verifies the natural path: early `视频复盘` earns Insight through UI, then the player buys a skill-tree node through UI.
 
 ## Deferred Larger Work
 

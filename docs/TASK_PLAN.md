@@ -20,7 +20,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Strengthened `wave15_addiction_loop.spec.js` so purchase is verified through the visible UI button instead of direct `store.dispatch()`.
 - Hid the self-check/debug tab from normal navigation unless `?debug=1` is present.
 - Collapsed the combat tactics drawer by default so the battle stage and command bar stay dominant.
-- Targeted and full Playwright gates passed after the fix.
+- Follow-up pass connected the existing early `视频复盘` action to the tested skill-tree spend loop: tests now earn Insight through UI before buying.
+- Skill-tree copy now names the source of Insight: review, training, and mainline progress.
+- Targeted Wave15 Playwright gate passed after the follow-up.
 
 ## Validation
 
@@ -37,4 +39,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit this optimization pass on `codex/skillopt-optimization-pass`, then continue with the next SkillOpt loop: natural Insight source -> purchase -> next-fight effect.
+Commit and push the second optimization patch on `codex/skillopt-optimization-pass`, then continue with the next SkillOpt loop: make a purchased node's next-fight effect more obvious to the player.
