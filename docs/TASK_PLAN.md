@@ -62,6 +62,8 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass adds compact E00 follow-up opportunity cards: review outcomes recommend `视频复盘`, while win outcomes recommend moving from the mouthy passer to the E01 park check.
 - Opportunity rules now support small flag gates (`flag` / `notFlag`) so result-specific follow-ups can be data-driven without UI text parsing.
 - Wave15 smoke now asserts both E00 follow-up recommendations from the visible recommendation cards.
+- Current validation pass tightens the E00 win follow-up smoke to use a real unlocked Day 3 park state, click the E01 recommendation, confirm the event notebook, and assert the battle resolves into `E01`.
+- This keeps the test on the player path instead of a partial card-visibility check.
 
 ## Validation
 
@@ -81,4 +83,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Run full validation, then commit and push the E00 follow-up opportunity pass on `codex/skillopt-optimization-pass`.
+Commit and push the E00 follow-up path validation pass on `codex/skillopt-optimization-pass`.

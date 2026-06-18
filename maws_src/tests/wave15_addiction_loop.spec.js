@@ -273,6 +273,7 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
+    store.state.day = 3;
     store.state.loc = 'park';
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
     store.emit();
@@ -330,9 +331,16 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
   const e01Card = page.locator('.maws-recommend-card').filter({ hasText: '嘴硬路人之后，去验真正拳距' });
   await expect(e01Card, 'E00 win should recommend moving from fun target to E01 check').toBeVisible();
   await expect(e01Card.locator('button[data-action="takeOpportunity"][data-id="e00_win_e01_check"]')).toContainText('开打');
+  await e01Card.locator('button[data-action="takeOpportunity"][data-id="e00_win_e01_check"]').click();
+  await expect(page.locator('.maws-modal')).toContainText('嘴硬路人之后，去验真正拳距');
+  await expect(page.locator('.maws-modal')).toContainText('半年拳击新人');
+  await page.locator('.maws-modal button[data-action="resolveEventNotebook"][data-id="resolve"]').click();
+  await expect(page.locator('.maws-combat-ui')).toContainText('拳击新人');
+  expect(await page.evaluate(() => window.MAWS_STORE.state.combat?.enemyId), 'E00 win follow-up should resolve into E01 check').toBe('E01');
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
+    store.state.combat = null;
     store.state.loc = 'home';
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'fatty' } };
     store.emit();
