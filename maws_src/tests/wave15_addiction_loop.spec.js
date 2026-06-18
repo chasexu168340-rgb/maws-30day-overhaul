@@ -352,6 +352,51 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
   expect(errors).toEqual([]);
 });
 
+test('Day 5 park check review persists as Fatty memory and growth prompt', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 5;
+    store.state.loc = 'park';
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 5 };
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.dispatch({ type: 'startMainEvent' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toContainText('拳击新人');
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.combat.objectiveProgress.parkSurviveWindow1 = true;
+    store.state.combat.objectiveProgress.parkGuardPressure = true;
+    store.dispatch({ type: 'surrender' });
+  });
+
+  const result = page.locator('.maws-modal').filter({ hasText: '验货通过' });
+  await expect(result, 'Day 5 park check should resolve as objective-style pass').toContainText('你在第一波拳距里做出了具体选择');
+  expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.park_check_pass)), 'park check pass should persist a result flag').toBe(true);
+
+  await page.locator('.maws-modal button[data-action="postReview"][data-kind="tech"]').click();
+  const reviewModal = page.locator('.maws-modal.result-compact');
+  await expect(reviewModal, 'park check post-review should resolve as a compact result').toContainText('战后复盘结算');
+  await expect(reviewModal).toContainText('先守住，再看距离');
+  await expect(reviewModal.locator('button[data-action="setTab"][data-tab="skills"]'), 'park check review should keep the growth path visible').toContainText('去点技能树');
+  expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.reviewed_park_check_pass)), 'park check review should persist reviewed memory').toBe(true);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.flags.e00_wild_tryout_win = true;
+    store.state.loc = 'home';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'fatty' } };
+    store.emit();
+  });
+  const fattyMenu = page.locator('.maws-npc-menu').filter({ hasText: '刘胖子' });
+  await expect(fattyMenu, 'reviewed park check should outrank older E00 banter').toContainText('公园验货');
+  await expect(fattyMenu).toContainText('先守住一拍');
+
+  expect(errors).toEqual([]);
+});
+
 test('combat plan mode exposes at least three tactical recipe modes', async ({ page }) => {
   const errors = await loadGame(page);
 

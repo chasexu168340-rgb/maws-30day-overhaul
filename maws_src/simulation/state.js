@@ -2653,6 +2653,8 @@ function finishParkCheckBattle(state, reason = 'normal') {
   const win = reason === 'objective_pass' || reason === 'riskwin' || combat.enemy.hp <= 0 || completed >= required;
   const before = snapshotState(state);
   recordCombatOutcome(state, win, win ? 'park_check_pass' : 'park_check_review');
+  state.flags ||= {};
+  state.flags[win ? 'park_check_pass' : 'park_check_review'] = true;
   state.flags[`main_${state.day}`] = true;
   state.daily.mainDone = true;
   state.player.morale = clamp(state.player.morale + (win ? 4 : -2), 0, 100);
@@ -3045,13 +3047,27 @@ export class GameStore {
       if (action.kind === 'tech') { learnSkill(s, 'jab', 4); learnSkill(s, 'guard', 4); }
       if (action.kind === 'calm') { s.player.calm = clamp(s.player.calm + 12, 0, 100); s.player.posture = s.player.postureMax; }
       if (action.kind === 'intel') { s.player.stats.jud += 1; s.player.auth = clamp(s.player.auth + 3, 0, 100); s.player.heat += 1; }
+      const parkCheckKey = s.flags?.park_check_pass ? 'park_check_pass' : s.flags?.park_check_review ? 'park_check_review' : null;
+      if (parkCheckKey) {
+        s.flags[`reviewed_${parkCheckKey}`] = true;
+      }
       const lines = settlementLines(before, snapshotState(s));
       s.ui.modal = {
         type: 'settlement',
         title: '战后复盘结算',
-        lead: '战后复盘完成。',
+        lead: parkCheckKey
+          ? (parkCheckKey === 'park_check_pass'
+            ? '你把公园验货拆成了能重复的动作：先守住，再看距离。'
+            : '你把公园验货拆成了下一步：先学刺拳，再补回收。')
+          : '战后复盘完成。',
         rewardDeltas: rewardDeltasFromSettlement(lines, s, { source: 'postReview' }),
-        lines
+        lines,
+        actions: parkCheckKey
+          ? [
+            { label: '去点技能树', action: 'setTab', params: { tab: 'skills' }, className: 'primary' },
+            { label: '继续行动', action: 'closeModal', className: 'ghost' }
+          ]
+          : undefined
       };
     } else if (['purchaseSkillTreeNode', 'buySkillTreeNode', 'unlockSkillTreeNode'].includes(action.type)) {
       purchaseSkillTreeNode(s, action.nodeId || action.id);
@@ -3104,6 +3120,18 @@ function npcLine(npc) {
 
 function npcMemory(state, npc) {
   if (npc === 'fatty') {
+    if (state.flags?.reviewed_park_check_pass) {
+      return {
+        key: 'reviewed_park_check_pass',
+        line: '刘胖子把公园验货那段倒回去两遍：你过了，不是因为神功，是因为终于肯先守住一拍。'
+      };
+    }
+    if (state.flags?.reviewed_park_check_review) {
+      return {
+        key: 'reviewed_park_check_review',
+        line: '刘胖子指着公园录像说：你不是完全不能打，是每次手出去了，回家的路还没修好。'
+      };
+    }
     if (state.flags?.e00_wild_tryout_win) {
       return {
         key: 'e00_wild_tryout_win',

@@ -66,6 +66,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - This keeps the test on the player path instead of a partial card-visibility check.
 - Current combat-feel pass rewrites combo/recipe feedback from label-style `COMBO！` copy into body-language feedback such as `连段反馈：你先用推搡抢到一拍空间...`.
 - Wave15 combat smoke now asserts pressure-plan feedback mentions the physical read (`抢到一拍` / `脚下乱了`) and blocks the old `COMBO！` label from returning.
+- Current E01 loop pass makes Day 5 park-check results persist as explicit `park_check_pass/review` flags.
+- War-room style post-review now marks `reviewed_park_check_*`, keeps `去点技能树` visible, and lets 刘胖子 surface a reviewed park-check memory ahead of older E00 banter.
+- Wave15 smoke now walks Day 5 mainline -> E01 objective pass -> 技术复盘 -> Fatty memory.
 
 ## Validation
 
@@ -85,4 +88,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the combat feedback body-language pass on `codex/skillopt-optimization-pass`.
+Commit and push the Day 5 park-check review memory pass on `codex/skillopt-optimization-pass`.
