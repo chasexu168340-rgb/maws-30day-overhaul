@@ -22,9 +22,9 @@ The player-facing target remains: the player clicks something, the game responds
 ## Current Pass
 
 1. Use SkillOpt-style rollout/audit evidence from the current worktree and rendered screenshots.
-2. Pick one high-impact first-look issue instead of broad speculative redesign.
-3. Patch the boot screen so players no longer see development-shell language before gameplay.
-4. Strengthen smoke tests around boot-screen polish and mobile overflow.
+2. Pick one high-impact in-game first-look issue instead of broad speculative redesign.
+3. Patch the Day 1 rental-room scene so mobile HUD, toast, scene info, characters, and bottom nav stop fighting each other.
+4. Strengthen Wave13 first-look tests around mobile nav geometry, toast placement, reachable CTA, and NPC click feedback.
 5. Keep screenshots in local `outputs/` only; do not commit generated audit artifacts.
 
 ## Deferred Larger Work

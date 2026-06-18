@@ -7311,3 +7311,170 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* SkillOpt scene first-look pass: keep the first playable view readable on phone. */
+.maws-scene-character:focus {
+  outline: 0 solid transparent !important;
+}
+
+.maws-scene-character:focus-visible {
+  outline: 2px solid rgba(255, 217, 65, 0.72);
+  outline-offset: 8px;
+}
+
+.maws-scene-character.maws-click-hit::before {
+  background:
+    radial-gradient(ellipse, rgba(255, 217, 65, 0.42), rgba(255, 217, 65, 0.12) 42%, transparent 72%),
+    radial-gradient(ellipse, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.16) 58%, transparent 76%);
+}
+
+@media (max-width: 430px) {
+  .maws-main {
+    top: 96px;
+    bottom: 64px;
+  }
+
+  .maws-hud.maws-hud-compact {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    width: auto;
+    grid-template-columns: minmax(104px, 0.8fr) minmax(0, 1.45fr);
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .maws-hud.maws-hud-compact > div:first-child {
+    padding: 4px 6px;
+  }
+
+  .maws-hud.maws-hud-compact > div:first-child strong {
+    font-size: 12px;
+  }
+
+  .maws-hud.maws-hud-compact > div:first-child span {
+    font-size: 10px;
+  }
+
+  .maws-hud-compact .maws-resource-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .maws-hud.maws-hud-compact .maws-chip {
+    min-height: 22px;
+    padding: 2px 5px;
+    font-size: 11px;
+    justify-content: center;
+  }
+
+  .maws-map-shell {
+    overflow: auto;
+  }
+
+  .maws-scene {
+    min-height: 52vh;
+    --player-stage-height: min(34vh, 72%);
+    --npc-stage-height: min(29vh, 60%);
+    background-position: 50% 54%;
+  }
+
+  .maws-scene-info {
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    max-height: 134px;
+    padding: 7px 8px;
+    overflow: hidden;
+    background: rgba(8, 8, 10, 0.58);
+  }
+
+  .maws-scene-info span {
+    font-size: 10px;
+  }
+
+  .maws-scene-info h2 {
+    margin-top: 1px;
+    font-size: 22px;
+  }
+
+  .maws-scene-meta {
+    display: flex;
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .maws-scene-meta b {
+    flex: 1 1 0;
+    padding: 3px 4px;
+    font-size: 10px;
+  }
+
+  .maws-scene-desc {
+    display: none;
+  }
+
+  .maws-scene-cast {
+    align-items: end;
+    padding-top: 134px;
+  }
+
+  .maws-scene-character {
+    min-width: 86px;
+    max-width: 30vw;
+  }
+
+  .maws-scene-character figcaption {
+    max-width: 104px;
+    padding: 4px 7px;
+  }
+
+  .maws-nav {
+    bottom: max(6px, env(safe-area-inset-bottom));
+    height: 48px;
+    max-height: 48px;
+    padding: 5px;
+    overflow: hidden;
+  }
+
+  .maws-nav > div {
+    flex-basis: calc(100% - 112px) !important;
+    width: calc(100% - 112px) !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+
+  .maws-nav > aside {
+    flex-basis: 104px !important;
+    width: 104px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+  }
+
+  .maws-nav button,
+  .maws-tab {
+    height: 32px !important;
+    min-height: 30px;
+    max-height: 32px;
+    padding: 3px 6px;
+  }
+
+  .maws-action-rail-main {
+    padding-bottom: 68px;
+  }
+
+  .maws-toast {
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: calc(62px + env(safe-area-inset-bottom));
+    transform: none;
+    max-width: none;
+    padding: 8px 11px;
+    border-width: 2px;
+    font-size: 13px;
+    line-height: 1.28;
+    box-shadow: 4px 4px 0 #050506;
+  }
+}

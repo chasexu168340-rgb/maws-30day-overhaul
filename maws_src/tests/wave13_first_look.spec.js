@@ -162,6 +162,13 @@ test('rental home first look opens with reachable main CTA and no horizontal ove
 
   await expect(page.locator('.maws-scene')).toBeVisible();
   await expect(page.locator('.maws-scene-character').first()).toBeVisible();
+  const navBox = await visibleBox(page, '.maws-nav');
+  expect(navBox.top, 'bottom nav should remain fully visible').toBeGreaterThanOrEqual(0);
+  expect(navBox.bottom, 'bottom nav should remain fully inside mobile viewport').toBeLessThanOrEqual(navBox.viewportHeight + 1);
+  const toastBox = await visibleBox(page, '.maws-toast');
+  expect(toastBox.left, 'opening toast should stay inside mobile viewport').toBeGreaterThanOrEqual(0);
+  expect(toastBox.right, 'opening toast should stay inside mobile viewport').toBeLessThanOrEqual(toastBox.viewportWidth + 1);
+  expect(toastBox.bottom, 'opening toast should stay inside mobile viewport').toBeLessThanOrEqual(toastBox.viewportHeight + 1);
   const mainCta = page.locator('.maws-action-rail-main .maws-actions-primary button[data-action="doAction"]').first();
   await expect(mainCta).toBeVisible();
   await expectClickableAboveBottomNav(page, mainCta, 'rental home main CTA');
@@ -202,6 +209,13 @@ test('clicking a scene character opens interaction menu or clear feedback', asyn
     await expect(menu.first()).toBeVisible();
     expect(await page.locator('.maws-npc-menu-action').count(), 'interaction menu should expose compact actions').toBeGreaterThan(0);
   }
+  const activeCharacterFocus = await page.locator('.maws-scene-character.actionable').first().evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      outlineStyle: style.outlineStyle
+    };
+  });
+  expect(activeCharacterFocus.outlineStyle, 'scene character click feedback should not look like a native focus square').toBe('none');
 
   await expectNoHorizontalOverflow(page, 'desktop NPC click');
   await screenshot(page, '02-npc-interaction.png');
