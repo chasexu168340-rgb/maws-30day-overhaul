@@ -1749,8 +1749,10 @@
 
 .maws-title {
   place-items: center;
+  align-content: center;
   background:
-    linear-gradient(135deg, rgba(5, 5, 6, 0.9), rgba(36, 0, 8, 0.92)),
+    radial-gradient(circle at 28% 20%, rgba(255, 216, 74, 0.12), transparent 26%),
+    linear-gradient(135deg, rgba(5, 5, 6, 0.92), rgba(36, 0, 8, 0.94)),
     repeating-linear-gradient(116deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 26px);
 }
 
@@ -1762,19 +1764,24 @@
 
 .maws-title-copy {
   position: relative;
-  padding: 24px 28px;
+  display: grid;
+  gap: 8px;
+  padding: clamp(18px, 3vw, 30px);
   color: var(--maws-ink);
-  background: var(--maws-paper);
+  background:
+    linear-gradient(100deg, rgba(255, 255, 255, 0.2), transparent 42%),
+    var(--maws-paper);
   border: 6px solid var(--maws-ink);
-  box-shadow: 16px 16px 0 var(--maws-ink);
+  box-shadow: 12px 12px 0 var(--maws-ink), 0 18px 52px rgba(0, 0, 0, 0.38);
   transform: rotate(-1deg);
+  overflow: visible;
 }
 
 .maws-title-copy::after {
-  content: "PHASER UI";
+  content: "30日试炼";
   position: absolute;
-  right: -18px;
-  top: 12px;
+  right: clamp(10px, 2vw, 22px);
+  top: -16px;
   padding: 6px 18px;
   color: #fff7dc;
   background: var(--maws-red);
@@ -1785,14 +1792,42 @@
 }
 
 .maws-title-copy h1 {
-  max-width: 620px;
+  max-width: 780px;
   color: var(--maws-ink);
+  font-size: clamp(42px, 7.2vw, 84px);
+  text-wrap: balance;
   text-shadow: 4px 4px 0 var(--maws-red), 7px 7px 0 #000;
 }
 
 .maws-title-copy p {
+  max-width: 720px;
+  margin: 0;
   color: var(--maws-ink);
   font-weight: 900;
+  line-height: 1.45;
+}
+
+.maws-title-kicker {
+  width: fit-content;
+  padding: 4px 10px;
+  color: var(--maws-paper);
+  background: var(--maws-ink);
+  border: 2px solid var(--maws-red);
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 rgba(255, 23, 69, 0.82);
+}
+
+.maws-title .maws-origin-grid {
+  align-items: stretch;
+}
+
+.maws-title .maws-origin {
+  min-height: 174px;
+}
+
+.maws-title-actions {
+  justify-content: flex-start;
 }
 
 .maws-hud {
@@ -6790,6 +6825,47 @@
 }
 
 @media (max-width: 430px) {
+  .maws-title {
+    align-content: start;
+    gap: 14px;
+    padding: 18px 16px 28px;
+  }
+
+  .maws-title-copy {
+    width: 100%;
+    padding: 18px 16px 16px;
+    border-width: 4px;
+    box-shadow: 8px 8px 0 var(--maws-ink);
+    transform: rotate(-0.4deg);
+  }
+
+  .maws-title-copy::after {
+    right: 8px;
+    top: -14px;
+    padding: 4px 10px;
+    border-width: 3px;
+    font-size: 12px;
+  }
+
+  .maws-title-copy h1 {
+    max-width: 100%;
+    font-size: clamp(38px, 13vw, 54px);
+    text-shadow: 3px 3px 0 var(--maws-red), 5px 5px 0 #000;
+  }
+
+  .maws-title-copy p {
+    font-size: 13px;
+  }
+
+  .maws-title-kicker {
+    font-size: 12px;
+  }
+
+  .maws-title .maws-origin-grid,
+  .maws-title-actions {
+    width: 100%;
+  }
+
   .maws-main {
     top: 112px;
   }

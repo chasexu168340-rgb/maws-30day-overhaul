@@ -113,6 +113,20 @@ async function expectNoHorizontalOverflow(page, label) {
   expect(scrollWidth, `${label} horizontal overflow`).toBeLessThanOrEqual(metrics.innerWidth + 1);
 }
 
+test('boot screen reads as game UI and not a development shell', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(baseURL);
+  await page.waitForFunction(
+    () => window.MAWS_GAME && window.MAWS_STORE && document.querySelectorAll('canvas').length > 0,
+    null,
+    { timeout: 15000 }
+  );
+  await expect(page.locator('.maws-title')).toBeVisible();
+  await expect(page.locator('.maws-title')).not.toContainText('PHASER UI');
+  await expect(page).toHaveTitle(/了不起的武术模拟器：去伪存真$/);
+  await expectNoHorizontalOverflow(page, 'boot screen mobile');
+});
+
 test('location locks and metro station work in the real browser', async ({ page }) => {
   const errors = await loadGame(page, { width: 900, height: 700 });
 

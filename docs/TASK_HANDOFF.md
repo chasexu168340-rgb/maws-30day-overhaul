@@ -21,11 +21,11 @@ The player-facing target remains: the player clicks something, the game responds
 
 ## Current Pass
 
-1. Identify real gaps between render model capability and player-facing UI.
-2. Fix the highest-impact gap with minimal architecture movement.
-3. Strengthen tests so they validate the player path instead of bypassing UI.
-4. Update checkpoint and validation evidence.
-5. Current follow-up verifies the natural path: early `视频复盘` earns Insight through UI, then the player buys a skill-tree node through UI.
+1. Use SkillOpt-style rollout/audit evidence from the current worktree and rendered screenshots.
+2. Pick one high-impact first-look issue instead of broad speculative redesign.
+3. Patch the boot screen so players no longer see development-shell language before gameplay.
+4. Strengthen smoke tests around boot-screen polish and mobile overflow.
+5. Keep screenshots in local `outputs/` only; do not commit generated audit artifacts.
 
 ## Deferred Larger Work
 

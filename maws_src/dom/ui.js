@@ -449,8 +449,9 @@ function renderBoot(model) {
   return `
     <section class="maws-title">
       <div class="maws-title-copy">
-        <p>30天，把能不能打这件事说清楚</p>
+        <span class="maws-title-kicker">30天 · 去伪存真</span>
         <h1>了不起的武术模拟器</h1>
+        <p>从出租屋、便利店和拳馆开始，把嘴上的功夫一点点练成身体记得住的东西。</p>
       </div>
       <div class="maws-origin-grid">${origins}</div>
       <div class="maws-title-actions">${btn('读取存档', 'loadGame', {}, 'ghost')}</div>
