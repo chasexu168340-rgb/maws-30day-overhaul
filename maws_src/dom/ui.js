@@ -1401,7 +1401,7 @@ function renderModal(model) {
     ? `<ol class="maws-final-objectives">${modal.objectiveLines.map(renderObjectiveResultLine).join('')}</ol>`
     : '';
   const bodyLines = modalBodyLines(modal.body);
-  const lead = bodyLines[0] || (modal.type === 'battleResult' ? '这场打完了。' : '需要确认一下。');
+  const lead = modal.lead || bodyLines[0] || (modal.type === 'battleResult' ? '这场打完了。' : '需要确认一下。');
   const restBody = bodyLines.slice(1).map((line) => `<p>${esc(line)}</p>`).join('');
   const review = modal.type === 'battleResult'
     ? `<div class="maws-modal-actions">${btn('技术复盘', 'postReview', { kind: 'tech' }, 'primary')}${btn('冷静复盘', 'postReview', { kind: 'calm' }, 'ghost')}${btn('情报复盘', 'postReview', { kind: 'intel' }, 'dark')}</div>`

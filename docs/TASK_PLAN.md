@@ -52,6 +52,10 @@ SkillOpt-style optimization pass for the current playable slice.
 - Park now features `嘴硬路人试手` as the primary local action before the E01 check, with tiny rewards and a daily gate so it does not become a grind loop.
 - The existing E01 `开放验货局` remains intact as the trained baseline; this pass does not weaken E01 or change combat formulas.
 - Wave15 smoke now walks the visible park action -> event notebook confirmation -> E00 battle path.
+- Current pass adds E00-specific battle-result feedback: wins explain that wild skills can handle untrained people, while retreat/review explains that low risk still needs review.
+- Ordinary battle surrender no longer resolves as a win just because the player HP is higher than the enemy HP.
+- Battle-result modals now prefer `modal.lead`, so enemy-specific lessons appear in the first visible line instead of being buried in details.
+- Wave15 smoke now verifies E00 result feedback and the persisted `e00_wild_tryout_review` flag.
 
 ## Validation
 
@@ -67,8 +71,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target one small event follow-up choice or E00 outcome feedback, using the same audit -> patch -> gate loop.
+- The next likely pass should target one small event follow-up choice or E00 win-side NPC banter, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation, then commit and push the low-risk E00 early fun target pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the E00 outcome feedback pass on `codex/skillopt-optimization-pass`.

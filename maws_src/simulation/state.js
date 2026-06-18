@@ -2709,6 +2709,19 @@ function recordCombatOutcome(state, win, reason = 'normal') {
   state.eventLog = state.eventLog.slice(0, 30);
 }
 
+function earlyFunTargetResult(combat, win) {
+  if (combat?.enemyId !== 'E00') return null;
+  return {
+    flag: win ? 'e00_wild_tryout_win' : 'e00_wild_tryout_review',
+    lead: win
+      ? '野路子处理没练过的人够用了，但这不是正经拳距。'
+      : '你发现嘴硬路人也会乱出手，低风险不等于不用复盘。',
+    note: win
+      ? '你用野路挥拳和推搡把场面压住了。爽归爽，下一道尺子仍然是公园里的拳击新人。'
+      : '这场输得不重，但提醒很清楚：先把能收回来的动作练稳，再去碰 E01。'
+  };
+}
+
 function finishBattle(state, reason = 'normal') {
   const combat = state.combat;
   if (combat?.main && combat.script === 'first_wind') {
@@ -2723,7 +2736,7 @@ function finishBattle(state, reason = 'normal') {
     finishObjectiveBattle(state, reason);
     return;
   }
-  const win = reason === 'riskwin' || combat.enemy.hp <= 0 || (state.player.hp > 0 && state.player.hp >= combat.enemy.hp);
+  const win = reason !== 'surrender' && (reason === 'riskwin' || combat.enemy.hp <= 0 || (state.player.hp > 0 && state.player.hp >= combat.enemy.hp));
   const reward = combat.enemy.reward || {};
   const before = snapshotState(state);
   recordCombatOutcome(state, win, reason);
@@ -2740,15 +2753,21 @@ function finishBattle(state, reason = 'normal') {
   const targetSp = Math.round(state.player.spMax * (reason === 'surrender' ? 0.66 : 0.58));
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
   const lines = settlementLines(before, snapshotState(state));
+  const earlyFun = earlyFunTargetResult(combat, win);
+  if (earlyFun?.flag) {
+    state.flags ||= {};
+    state.flags[earlyFun.flag] = true;
+  }
   state.ui.modal = {
     type: 'battleResult',
     title: reason === 'riskwin' ? '风险胜利' : win ? '胜利' : '失败/撤离',
     body: [
       `对手：${combat.enemy.name}`,
+      earlyFun?.note || '',
       win ? `收益：现金 +${reward.money || 0} / 名声 +${reward.fame || 0}` : '失败也能复盘，别只看输赢。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
-    ].join('\n'),
-    lead: win ? `你战胜了${combat.enemy.name}。` : `你从${combat.enemy.name}这场里拿到了复盘材料。`,
+    ].filter(Boolean).join('\n'),
+    lead: earlyFun?.lead || (win ? `你战胜了${combat.enemy.name}。` : `你从${combat.enemy.name}这场里拿到了复盘材料。`),
     rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
     lines,
     win,

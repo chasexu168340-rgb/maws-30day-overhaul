@@ -299,6 +299,11 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
     dailyGate: true
   });
   expect(combatState.tags).toContain('完全没练过');
+  await page.locator('.maws-combat-ui button[data-action="surrender"]').evaluate((button) => button.click());
+  const result = page.locator('.maws-modal').filter({ hasText: '嘴硬路人' });
+  await expect(result, 'E00 outcome should explain the low-risk lesson').toContainText('低风险不等于不用复盘');
+  await expect(result).toContainText('先把能收回来的动作练稳');
+  expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.e00_wild_tryout_review)), 'E00 review outcome should persist a flag').toBe(true);
 
   expect(errors).toEqual([]);
 });
