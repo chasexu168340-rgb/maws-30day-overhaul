@@ -35,6 +35,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass connects the early `视频复盘` action to concrete follow-up choices: players can jump directly to the skill tree or ask 刘胖子 to review again from the result modal.
 - Result settlement modals now render bounded `followUps` as real actions, instead of storing them as unused metadata.
 - Wave15 smoke now asserts the video-review result exposes both next-step buttons.
+- Current pass turns 刘胖子二段复盘 into a real follow-up loop: `视频复盘 -> 找刘胖子再看一遍 -> 去点技能树`.
+- `fatty_review_together` now resolves with reward chips and keeps a skill-tree next step visible, so the second-step button is not a dead end.
+- Wave15 smoke now covers the full chained follow-up path.
 
 ## Validation
 
@@ -54,4 +57,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Run full validation, then commit and push the video-review follow-up pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the Fatty follow-up chain pass on `codex/skillopt-optimization-pass`.

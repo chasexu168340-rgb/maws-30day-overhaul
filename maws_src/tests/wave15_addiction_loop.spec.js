@@ -230,6 +230,28 @@ test('purchasing a tree node gives compact reward feedback and survives rerender
   expect(errors).toEqual([]);
 });
 
+test('video review follow-up can chain into Fatty review and back to skill tree', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  const reviewButton = page.locator('button[data-action="doAction"][data-id="review"]').first();
+  await expect(reviewButton).toBeVisible();
+  await reviewButton.click();
+  const durationChoice = page.locator('button[data-action="chooseDuration"][data-id="review"][data-duration="standard"]');
+  if (await durationChoice.count()) await durationChoice.click();
+
+  const fattyFollowUp = page.locator('.maws-modal button[data-action="doAction"][data-id="fatty_review_together"]');
+  await expect(fattyFollowUp, 'video review should offer Fatty as a second-step review').toBeVisible();
+  await fattyFollowUp.click();
+
+  const modal = page.locator('.maws-modal.result-compact');
+  await expect(modal, 'Fatty follow-up should resolve as a compact result modal').toBeVisible();
+  await expect(modal).toContainText('一起复盘');
+  await expect(modal.locator('.maws-reward-chip').first(), 'Fatty follow-up should still show reward chips').toBeVisible();
+  await expect(modal.locator('button[data-action="setTab"][data-tab="skills"]'), 'Fatty review should keep the growth path visible').toContainText('去点技能树');
+
+  expect(errors).toEqual([]);
+});
+
 test('combat plan mode exposes at least three tactical recipe modes', async ({ page }) => {
   const errors = await loadGame(page);
 

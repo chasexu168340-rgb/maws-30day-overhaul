@@ -416,7 +416,9 @@ export const ENEMIES = {
 
 export const ACTIONS = {
   home: [
-    { id: 'fatty_review_together', name: '一起复盘', icon: '复', time: 25, sp: 0, desc: '刘胖子陪你把今天最容易上头的一拍讲清楚。话不长，能让脑子慢下来。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_review', flags: { fatty_review_seen: true }, gain: { jud: 1, calm: 1, rel_fatty: 1 } },
+    { id: 'fatty_review_together', name: '一起复盘', icon: '复', time: 25, sp: 0, desc: '刘胖子陪你把今天最容易上头的一拍讲清楚。话不长，能让脑子慢下来。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_review', flags: { fatty_review_seen: true }, gain: { jud: 1, calm: 1, rel_fatty: 1 }, followUps: [
+      { label: '去点技能树', action: 'setTab', params: { tab: 'skills' }, className: 'primary' }
+    ] },
     { id: 'fatty_today_advice', name: '问今日建议', icon: '问', time: 15, sp: 0, desc: '问刘胖子今天先别犯哪种蠢。建议很短，但够你少冲一次。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_advice', flags: { fatty_advice_seen: true }, gain: { jud: 1, rel_fatty: 1 } },
     { id: 'father_incense', name: '给父亲上香', icon: '香', time: 20, sp: 0, desc: '把香插稳，不把今天的急劲带到父亲面前。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_incense', flags: { father_incense_seen: true }, gain: { calm: 1 }, maw: { fatherMemory: 1 } },
     { id: 'father_self_check', name: '对父亲自省', icon: '省', time: 15, sp: 0, desc: '在旧照片前承认一句：有些动作不是勇，是莽。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_self_check', flags: { father_self_check_seen: true }, gain: { jud: 1, calm: 1 }, maw: { fatherMemory: 1 } },
