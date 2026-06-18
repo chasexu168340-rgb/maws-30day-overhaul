@@ -401,6 +401,17 @@ test('Day 5 park check review persists as Fatty memory and growth prompt', async
   await expect(jabSourceResult, 'jab-source confirmation should resolve with a visible route reward').toContainText('Day 9 拳馆开放后');
   await expect(jabSourceResult.locator('.maws-reward-chip').filter({ hasText: '刺拳路线' })).toBeVisible();
   expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.park_check_jab_source_seen)), 'jab-source route should persist after confirmation').toBe(true);
+  const nextDayOpportunityIds = await page.evaluate(async () => {
+    const { buildRenderModel } = await import('/maws_src/simulation/state.js');
+    const store = window.MAWS_STORE;
+    store.state.day = 6;
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 6 };
+    store.state.loc = 'metro_station';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+    return buildRenderModel(store.state).opportunities.map((card) => card.id);
+  });
+  expect(nextDayOpportunityIds, 'confirmed jab-source route should not repeat as a Day 6 recommendation').not.toContain('park_check_jab_source');
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;

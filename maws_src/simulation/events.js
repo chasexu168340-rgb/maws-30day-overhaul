@@ -265,6 +265,7 @@ export const EVENT_RULES = deepFreeze([
     when: {
       minDay: 5,
       maxDay: 8,
+      notFlag: 'park_check_jab_source_seen',
       any: [
         { flag: 'reviewed_park_check_pass' },
         { flag: 'reviewed_park_check_review' }

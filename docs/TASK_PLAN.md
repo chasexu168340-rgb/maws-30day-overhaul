@@ -75,6 +75,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current event-memory pass makes dialog opportunity confirmations capable of writing scoped flags and structured reward deltas.
 - The post-E01 jab-source card now persists `park_check_jab_source_seen` and shows a visible `刺拳路线` reward chip after the player confirms it.
 - Wave15 smoke now verifies the full route: E01 review -> jab-source notebook -> confirmation result -> persisted route flag -> Fatty memory.
+- Current de-duplication pass prevents the confirmed jab-source route from repeating on later early days.
+- The `park_check_jab_source` opportunity now respects `notFlag: park_check_jab_source_seen`, so the card is a one-time route memory instead of a repeated nag.
+- Wave15 smoke now verifies that Day 6 recommendations no longer include `park_check_jab_source` after the player confirms the route.
 
 ## Validation
 
@@ -94,4 +97,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the event-memory route confirmation pass on `codex/skillopt-optimization-pass`.
+Commit and push the jab-route de-duplication pass on `codex/skillopt-optimization-pass`.
