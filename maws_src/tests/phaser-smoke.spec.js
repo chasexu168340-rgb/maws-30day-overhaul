@@ -116,6 +116,9 @@ async function expectNoHorizontalOverflow(page, label) {
 test('location locks and metro station work in the real browser', async ({ page }) => {
   const errors = await loadGame(page, { width: 900, height: 700 });
 
+  await expect(page.locator('.maws-nav')).not.toContainText('自检');
+  await expect(page.locator('button[data-action="setTab"][data-tab="check"]')).toHaveCount(0);
+
   await page.locator('button[data-action="openCityMap"]').first().click();
   await expect(page.locator('button.maws-city-marker[data-loc="metro_station"]')).toBeVisible();
   expect(await page.locator('button.maws-city-marker.locked[data-text]').count()).toBeGreaterThan(0);
@@ -153,6 +156,28 @@ test('location locks and metro station work in the real browser', async ({ page 
   await expect(page.locator('button[data-action="closeModal"]')).toBeVisible();
 
   await expectNoHorizontalOverflow(page, 'metro flow');
+  expect(errors).toEqual([]);
+});
+
+test('debug navigation exposes self check only behind debug flag', async ({ page }) => {
+  const errors = collectRuntimeErrors(page);
+  await page.setViewportSize({ width: 900, height: 700 });
+  await page.goto(`${baseURL}?debug=1`);
+  await page.waitForFunction(
+    () => window.MAWS_GAME && window.MAWS_STORE && document.querySelectorAll('canvas').length > 0,
+    null,
+    { timeout: 15000 }
+  );
+  await page.evaluate(() => {
+    localStorage.clear();
+    window.MAWS_STORE.dispatch({ type: 'newGame', origin: 'worker' });
+  });
+  await page.locator('#maws-ui-root').waitFor({ state: 'attached' });
+
+  await expect(page.locator('button[data-action="setTab"][data-tab="check"]')).toBeVisible();
+  await page.locator('button[data-action="setTab"][data-tab="check"]').click();
+  await expect(page.locator('.maws-panel')).toContainText('自检');
+
   expect(errors).toEqual([]);
 });
 

@@ -4,33 +4,37 @@
 
 ## Current Task
 
-Wave 15 core addiction slice: merge `TREE-SPEND-001` and `COMBAT-RECIPE-001`.
+SkillOpt-style optimization pass for the current playable slice.
 
 ## Scope
 
-- Skill tree spend branch adds Insight costs, prerequisites, purchase state, old-save defaults, and purchase feedback.
-- Combat recipe branch adds plan-mode recipes, human-readable combat feedback, and combat perk consumption.
-- Manager resolves the expected overlap in `maws_src/simulation/state.js`.
-- Do not change UI, assets, package scripts, starter skills, save key/version, or broad combat balance.
+- Apply the SkillOpt loop to MAWS production work: rollout/audit, reflect, select a bounded high-impact patch, validate behind gates, and checkpoint.
+- Use the current moodboard direction as a product constraint: grounded city RPG, compact HUD, reward burst, readable combat feedback, low debug noise.
+- This pass does not rewrite the architecture, save key/version, asset structure, starter skills, broad combat balance, or economy curve.
 
 ## Current Result
 
-- `feat/skill-tree-spend-v1` merged and passed `npm run check:full`, `npm run test:playtest`, and `git diff --check`.
-- `feat/combat-recipe-v1` merge produced conflicts in this file and `maws_src/simulation/state.js`.
-- Conflict resolution keeps skill-tree spend state plus combat recipe perk bridge and plan feedback.
+- Baseline `npm run check:full` passed before edits.
+- Identified a high-impact loop break: skill-tree nodes were spendable in state but the player-facing UI button still used `toast`.
+- Fixed skill-tree node UI so available nodes render a real `purchaseSkillTreeNode` action.
+- Strengthened `wave15_addiction_loop.spec.js` so purchase is verified through the visible UI button instead of direct `store.dispatch()`.
+- Hid the self-check/debug tab from normal navigation unless `?debug=1` is present.
+- Collapsed the combat tactics drawer by default so the battle stage and command bar stay dominant.
+- Targeted and full Playwright gates passed after the fix.
 
 ## Validation
 
-- Pending after conflict resolution:
+- Passed:
+  - `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`
   - `npm run check:full`
-  - `node maws_src/tools/sim_day5_park_check.mjs`
+  - `npm run test:playtest`
   - `git diff --check`
 
 ## Risks
 
-- This is a focused bridge between spendable nodes and combat recipes; it is not a full skill-tree economy or full automatic combat rewrite.
-- `GameDesigner_CombatAnalysis/` remains untracked and unrelated.
+- This is the first bounded SkillOpt optimization patch, not a claim that the whole game is fully optimized.
+- The next likely pass should target combat feel/readability or NPC memory follow-up, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Resolve conflicts, commit `merge: Wave15-CombatRecipe`, push staging, then continue Wave15 smoke and QA.
+Commit this optimization pass on `codex/skillopt-optimization-pass`, then continue with the next SkillOpt loop: natural Insight source -> purchase -> next-fight effect.

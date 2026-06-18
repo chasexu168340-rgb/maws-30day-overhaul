@@ -413,7 +413,9 @@ function renderHud(model) {
 }
 
 function renderNav(model) {
-  const tabs = (model.tabs || []).map((tab) => {
+  const debugEnabled = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search || '').get('debug') === '1';
+  const tabs = (model.tabs || []).filter((tab) => debugEnabled || tab.id !== 'check').map((tab) => {
     const action = tab.id === 'map' ? 'openCityMap' : 'setTab';
     const params = tab.id === 'map' ? {} : { tab: tab.id };
     return btn(
@@ -781,7 +783,7 @@ function renderSkillTree(treeModel) {
   if (!trees.length) return '';
   const statusText = {
     owned: '已点亮',
-    available: '可查看',
+    available: '可点亮',
     locked: 'Locked',
     future: 'Future'
   };
@@ -793,13 +795,23 @@ function renderSkillTree(treeModel) {
         node.skillId ? `skill:${node.skillId}` : '',
         node.cost == null ? '' : `${node.cost} ${treeModel.pointName || '洞察点'}`
       ].filter(Boolean);
+      const actionLabel = node.status === 'available'
+        ? `点亮 -${node.cost || 0}`
+        : node.status === 'owned'
+          ? '已点亮'
+          : node.status === 'future'
+            ? '后续'
+            : '锁定';
+      const actionName = node.status === 'available' ? 'purchaseSkillTreeNode' : 'toast';
+      const actionParams = node.status === 'available' ? { id: node.id } : { text: detail };
+      const actionClass = node.status === 'available' ? 'primary' : node.status === 'owned' ? 'ghost' : 'disabled';
       return `
         <article class="maws-tree-node status-${esc(node.status || 'locked')}">
           <header><strong>${esc(node.label || node.id)}</strong><span>${esc(statusText[node.status] || node.status || 'Locked')}</span></header>
           <p>${esc(node.unlockText || node.effectText || '')}</p>
           <div class="maws-tree-node-meta">${meta.map((part) => `<small>${esc(part)}</small>`).join('')}</div>
           ${node.lockedReason ? `<em>${esc(node.lockedReason)}</em>` : ''}
-          ${btn(node.status === 'future' ? '后续' : node.status === 'locked' ? '锁定' : '查看', 'toast', { text: detail }, node.locked ? 'ghost' : 'primary')}
+          ${btn(actionLabel, actionName, actionParams, actionClass)}
         </article>
       `;
     }).join('');
@@ -1007,7 +1019,7 @@ function renderCombat(model) {
           <b>指令栏 · 选 ${esc(queueLimit)} 招入队</b>
           <div class="maws-card-grid combat focus">${windowCommandHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
         </div>
-        <details class="maws-fold maws-tactics-drawer" ${drawerCards.length ? 'open' : ''}>
+        <details class="maws-fold maws-tactics-drawer">
           <summary>更多动作 / 战术抽屉 <span>${esc(drawerCards.length)}张</span></summary>
           <div class="maws-card-grid combat">${drawerCardHtml || '<p class="maws-empty">没有更多可用动作。</p>'}</div>
         </details>
@@ -1443,6 +1455,7 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'buyItem') store.dispatch({ type: 'buyItem', itemId: dataset.id });
   else if (action === 'useItem') store.dispatch({ type: 'useItem', itemId: dataset.id });
   else if (action === 'unequipItem') store.dispatch({ type: 'unequipItem', slot: dataset.slot });
+  else if (action === 'purchaseSkillTreeNode') store.dispatch({ type: 'purchaseSkillTreeNode', nodeId: dataset.id });
   else if (action === 'equipSkill') store.dispatch({ type: 'equipSkill', skillId: dataset.id });
   else if (action === 'unequipSkill') store.dispatch({ type: 'unequipSkill', index: Number(dataset.index) });
 }

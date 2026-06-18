@@ -163,10 +163,13 @@ test('purchasing a tree node gives compact reward feedback and survives rerender
   const node = await firstPurchasableNode(page);
   expect(node, 'expected one spendable skill-tree node').not.toBeNull();
 
+  const purchaseButton = page.locator(`button[data-action="purchaseSkillTreeNode"][data-id="${node.id}"]`);
+  await expect(purchaseButton, 'spendable skill-tree node should be purchasable through UI').toBeVisible();
+  await expect(purchaseButton).toContainText('点亮');
+  await purchaseButton.click();
+
   const result = await page.evaluate((nodeId) => {
     const store = window.MAWS_STORE;
-    store.dispatch({ type: 'purchaseSkillTreeNode', nodeId });
-    store.emit();
     const owned = Boolean(store.state.skillTree?.unlocked?.[nodeId]);
     return {
       owned,
@@ -214,6 +217,11 @@ test('combat plan mode exposes at least three tactical recipe modes', async ({ p
 
   const planControl = page.locator('.maws-plan-mode-control');
   await expect(planControl).toBeVisible();
+  const tacticsDrawer = page.locator('.maws-tactics-drawer');
+  if (await tacticsDrawer.count()) {
+    await expect(tacticsDrawer.locator('summary')).toBeVisible();
+    expect(await tacticsDrawer.evaluate((node) => node.hasAttribute('open')), 'tactics drawer should start collapsed so combat stage stays dominant').toBe(false);
+  }
   const recipeModes = ['safe', 'pressure', 'exit', 'probe'];
   const visibleModes = [];
   for (const mode of recipeModes) {

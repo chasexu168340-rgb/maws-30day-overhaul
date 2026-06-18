@@ -4,35 +4,35 @@
 
 ## Current Task
 
-Wave 15: Addiction Loop Slice.
+SkillOpt-style optimization pass for the current MAWS playable slice.
 
 ## Current Staging Baseline
 
-- Wave 14 QA passed.
-- NPC compact interaction menu has partial real actions for the early slice.
-- Reward chips are compact and structured.
-- Skill tree exists as a runtime/render-model/UI slice, but nodes are not spendable yet.
-- Combat plan mode is visible and clickable.
-- `wave14_loop` smoke covers NPC real actions, reward chips, skill tree display, plan mode, and mobile time-investment overflow.
+- Wave 15 QA merged.
+- Skill-tree spend state exists with Insight costs, prerequisites, purchased state, and small runtime effects.
+- Combat recipes exist for tactical plan modes.
+- Wave15 smoke covers skill-tree spend, recipe controls, recipe feedback, and mobile overflow.
 
 ## Goal
 
-Create the first true addiction loop: the player spends Insight, unlocks a small skill-tree node, sees a real combat/training change, uses a readable combat recipe, and wants to try another day.
+Use the Microsoft SkillOpt pattern as a production workflow: run a current-state rollout/audit, select bounded high-impact patches, validate them behind gates, and keep only changes that improve the player-facing loop.
 
-## Wave 15 First Stage
+The player-facing target remains: the player clicks something, the game responds clearly, the character changes, and the next action or fight feels different.
 
-1. `TREE-SPEND-001`: make six skill-tree nodes spendable with costs, prerequisites, unlocked state, and one real small effect.
-2. `COMBAT-RECIPE-001`: turn plan mode into readable tactical recipes with human combat feedback.
-3. `LOOP-SMOKE-015`: verify skill spend, recipe controls, recipe feedback, and mobile overflow.
-4. `QA-015`: final QA after implementation branches are complete and integrated.
+## Current Pass
 
-## Deferred Second Stage
+1. Identify real gaps between render model capability and player-facing UI.
+2. Fix the highest-impact gap with minimal architecture movement.
+3. Strengthen tests so they validate the player path instead of bypassing UI.
+4. Update checkpoint and validation evidence.
 
-- NPC memory banter.
-- Event follow-up choices.
-- Alt route media/rules slice.
+## Deferred Larger Work
 
-These should not run in parallel with first-stage `data.js/state.js` work unless implemented as docs-only proposals.
+- Full 30-day implementation.
+- Full skill-tree economy.
+- Day 8/9 emotional beat implementation.
+- Broad enemy or combat formula rewrites.
+- New asset pipeline work.
 
 ## Read First
 
@@ -41,16 +41,19 @@ These should not run in parallel with first-stage `data.js/state.js` work unless
 3. `docs/FILE_MAP.md`
 4. `docs/TASK_PLAN.md`
 5. `docs/VALIDATION.md`
-6. current worker prompt under `docs/codex_tasks/`
+6. current worker prompt or optimization report if present
 
 ## Validation
 
-- Code/data workers: `npm run check:full`, relevant targeted command, `git diff --check`.
-- Wave15 smoke: `npm run build`, `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`, `git diff --check`.
-- QA must run last; do not start QA against stale base state.
+- Targeted optimization check:
+  - `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`
+- Full gate before merge:
+  - `npm run check:full`
+  - `npm run test:playtest`
+  - `git diff --check`
 
 ## Do Not Do
 
-- Do not implement full 30 days, full skill tree, Day 8/9, more UI panels, broad enemy rewrites, or save key/version changes.
+- Do not implement full 30 days, full skill tree, Day 8/9, more UI panels, broad enemy rewrites, or save key/version changes during this bounded pass.
 - Do not give `jab` / `advance` as new starter skills.
 - Do not let multiple workers edit the same UI files concurrently.
