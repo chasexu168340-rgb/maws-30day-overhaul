@@ -486,6 +486,32 @@ export const EVENT_RULES = deepFreeze([
     weights: { losses: 4, lowAuth: 1.2, earlyDay: 2.5, homeIdle: 1.4, jabNeed: 12 }
   },
   {
+    id: 'park_route_bag_training',
+    title: '拳馆开放了，去把沙包连击做掉',
+    loc: 'boxing',
+    desc: '你之前已经把刺拳来源记下来了。今天拳馆开门，别再把路线留在纸上，先用沙包把刺拳、直拳和回收连成一件事。',
+    eventNotebook: {
+      reason: '路线记忆转成训练',
+      entry: '拳馆门口的地垫有点旧，里面传来沙包回摆的闷响。你翻到那条路线备注：Day 9，拳馆，沙包连击。',
+      beats: [
+        '这不是新的嘴硬目标，是把公园验货留下的问题拿来补。',
+        '先刺拳找距离，再接直拳，最后把手收回来。',
+        '做完这组，路线才从“知道”变成“身体记过”。'
+      ],
+      actionLabel: '开始沙包连击',
+      actionText: '进入沙包连击训练，不上台，不找人证明。',
+      outcome: '你把记下来的刺拳来源变成了一组真正的训练。'
+    },
+    action: 'bag',
+    npc: 'coach',
+    kind: 'dialog',
+    base: 98,
+    cooldownKey: 'park_route_bag_training',
+    tags: ['沙包连击', '刺拳提示', '路线兑现'],
+    when: { minDay: 9, flag: 'park_check_jab_source_seen', notFlag: 'boxing_bag_first_done' },
+    weights: { combatMemory: 1.2, lowAuth: 0.8, jabNeed: 6 }
+  },
+  {
     id: 'mma_open_mat',
     title: 'MMA垫子空出一块地板',
     loc: 'mma',

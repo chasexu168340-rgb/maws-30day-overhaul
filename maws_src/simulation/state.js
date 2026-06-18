@@ -2114,6 +2114,7 @@ function finishTrainingMini(state, gradeId, result = {}) {
   state.player.sp -= spCost;
   if (moneyCost) state.player.money -= moneyCost;
   advanceTime(state, dosage ? dosage.minutes : (action.time || 30));
+  if (action.flags) applyStoryFlags(state, action.flags);
   applyGain(state, gain);
   const scheduleNote = applyDosageSchedulePressure(state, dosage);
   if (dosage?.injuryRisk && actionRoll(state, 71) < dosage.injuryRisk) {

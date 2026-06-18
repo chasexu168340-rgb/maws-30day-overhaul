@@ -507,7 +507,8 @@ export const ACTIONS = {
           }
         ]
       },
-      gain: { skill: 'jab', xp: 8, skill2: 'straight', xp2: 6, boxing: 8, fatigue: 10, fitXp: 2, insight: 1 }
+      gain: { skill: 'jab', xp: 8, skill2: 'straight', xp2: 6, boxing: 8, fatigue: 10, fitXp: 2, insight: 1 },
+      flags: { boxing_bag_first_done: true }
     },
     { id: 'coach_drill', name: '梁教练纠错', icon: '教', time: 80, sp: 18, cost: 35, desc: '指出技能配置和战斗问题。教练的嘴很硬，通常是因为他说得对。', type: 'dialog', npc: 'coach' },
     { id: 'heavybag', name: '重靶爆点', icon: '爆', time: 70, sp: 26, cost: 22, desc: '提升直拳和爆发，但疲劳高。打得越响，肩膀越会记仇。', type: 'simple', gain: { skill: 'straight', xp: 9, str: 1, fatigue: 16, fitXp: 3 } },

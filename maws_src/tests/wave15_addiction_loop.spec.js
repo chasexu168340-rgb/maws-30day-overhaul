@@ -415,6 +415,37 @@ test('Day 5 park check review persists as Fatty memory and growth prompt', async
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
+    store.state.day = 9;
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 9 };
+    store.state.loc = 'boxing';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+  });
+  const bagTrainingCard = page.locator('.maws-recommend-card').filter({ hasText: '拳馆开放了，去把沙包连击做掉' });
+  await expect(bagTrainingCard, 'remembered jab route should become a Day 9 bag training recommendation').toBeVisible();
+  await bagTrainingCard.locator('button[data-action="takeOpportunity"][data-id="park_route_bag_training"]').click();
+  const bagNotebook = page.locator('.maws-modal').filter({ hasText: '拳馆开放了，去把沙包连击做掉' });
+  await expect(bagNotebook).toContainText('Day 9，拳馆，沙包连击');
+  await expect(bagNotebook).toContainText('开始沙包连击');
+  await bagNotebook.locator('button[data-action="resolveEventNotebook"][data-id="resolve"]').click();
+  await expect(page.locator('.maws-modal').filter({ hasText: '沙包连击' }), 'route recommendation should enter the real bag minigame').toContainText('三轮沙包连击');
+  await page.locator('button[data-action="answerTraining"][data-id="bag_range_jab"]').click();
+  await page.locator('button[data-action="answerTraining"][data-id="bag_cross_line"]').click();
+  await page.locator('button[data-action="answerTraining"][data-id="bag_exit_guard"]').click();
+  await expect(page.locator('.maws-modal.result-compact, .maws-modal').filter({ hasText: '沙包连击' })).toContainText('打完还能站住');
+  expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.boxing_bag_first_done)), 'bag training should persist that the remembered route was completed').toBe(true);
+  const afterBagOpportunityIds = await page.evaluate(async () => {
+    const { buildRenderModel } = await import('/maws_src/simulation/state.js');
+    const store = window.MAWS_STORE;
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 9 };
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+    return buildRenderModel(store.state).opportunities.map((card) => card.id);
+  });
+  expect(afterBagOpportunityIds, 'completed bag route should not keep asking the player to do the same route card').not.toContain('park_route_bag_training');
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
     store.state.flags.e00_wild_tryout_win = true;
     store.state.loc = 'home';
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'fatty' } };

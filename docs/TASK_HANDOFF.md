@@ -58,3 +58,6 @@ The player-facing target remains: the player clicks something, the game responds
 - Do not implement full 30 days, full skill tree, Day 8/9, more UI panels, broad enemy rewrites, or save key/version changes during this bounded pass.
 - Do not give `jab` / `advance` as new starter skills.
 - Do not let multiple workers edit the same UI files concurrently.
+- Do not start CLI workers unless the user explicitly asks for workers.
+- If CLI workers are explicitly requested, use `gpt-5.5` with high reasoning by default and keep QA after implementation branches are pushed or merged.
+- Do not ask CLI workers to generate images; image generation belongs in the current Codex session only.

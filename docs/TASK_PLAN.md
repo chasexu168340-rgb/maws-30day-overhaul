@@ -78,6 +78,10 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current de-duplication pass prevents the confirmed jab-source route from repeating on later early days.
 - The `park_check_jab_source` opportunity now respects `notFlag: park_check_jab_source_seen`, so the card is a one-time route memory instead of a repeated nag.
 - Wave15 smoke now verifies that Day 6 recommendations no longer include `park_check_jab_source` after the player confirms the route.
+- Current Day9 route pass turns the remembered jab source into a real `拳馆开放了，去把沙包连击做掉` recommendation once Day 9 boxing is available.
+- The Day9 route recommendation enters the existing `bag` minigame instead of staying a reminder card.
+- Completing the bag minigame now persists `boxing_bag_first_done`, so the Day9 route card stops after the player turns the note into training.
+- Worker workflow checkpoint updated: future CLI workers are opt-in only, default to `gpt-5.5` + high reasoning, and must not generate images.
 
 ## Validation
 
@@ -97,4 +101,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the jab-route de-duplication pass on `codex/skillopt-optimization-pass`.
+Commit and push the Day9 jab-route-to-bag-training pass on `codex/skillopt-optimization-pass`.
