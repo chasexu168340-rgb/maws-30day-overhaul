@@ -3050,6 +3050,29 @@ function npcLine(npc) {
   return lines[npc] || '先把今天的事做扎实。';
 }
 
+function npcMemoryLine(state, npc) {
+  if (npc === 'fatty') {
+    if (state.combatMemory?.lastEnemy === 'E01' || state.flags?.main_5) {
+      return '刘胖子翻着录像说：公园那场你没把人 KO，但至少知道自己哪一拍漏风了。下次先把刺拳练明白。';
+    }
+    if (state.flags?.day3_store_show_form) {
+      return '刘胖子看完便利店那段，憋了半天：你那个祖传架势不像镇场，像货架临时请来的保安。';
+    }
+    if (state.flags?.day3_store_ask_first || state.flags?.day3_store_shelf_between) {
+      return '刘胖子说：便利店那次你先把事收住了，这比把泡面打成证据强。';
+    }
+  }
+  if (npc === 'xiaoman') {
+    if (state.flags?.day3_store_show_form) {
+      return '小满把薯片往后挪了一排：别误会，不是怕你，是怕祖传掌法又误伤零食。';
+    }
+    if (state.flags?.day3_store_ask_first || state.flags?.day3_store_shelf_between) {
+      return '小满敲了敲收银台：上次你先问清楚，这点比会几招更像靠谱的人。';
+    }
+  }
+  return '';
+}
+
 const LOCATION_BACKGROUND_KEYS = {
   home: { day: 'bg.home.day', night: 'bg.home.night' },
   store: { day: 'bg.store.day', night: 'bg.store.night' },
@@ -3243,7 +3266,11 @@ function sceneInteractionMenuModel(state, characters = [], actions = []) {
       : { label: menuActionLabel(action), action: 'doAction', id: action.id, kind: 'primary' };
   });
   const hasExecutable = menuActions.some((item) => item.action === 'doAction');
+  const memoryLine = npcMemoryLine(state, character.id);
   if (NPCS[character.id]) {
+    if (memoryLine) {
+      menuActions.push({ label: '提起上次', action: 'toast', text: memoryLine, kind: 'ghost' });
+    }
     if (!menuActions.some((item) => item.label === '聊几句')) {
       menuActions.push({ label: '聊几句', action: 'toast', text: npcLine(character.id), kind: hasExecutable ? 'ghost' : 'primary' });
     }
@@ -3262,13 +3289,20 @@ function sceneInteractionMenuModel(state, characters = [], actions = []) {
   if (!menuActions.length) {
     menuActions.push({ label: '记下', action: 'toast', text: fallback, kind: 'primary' });
   }
+  const visibleActions = memoryLine
+    ? [
+      ...menuActions.filter((item) => item.action === 'doAction').slice(0, 2),
+      menuActions.find((item) => item.label === '提起上次'),
+      ...menuActions.filter((item) => item.action !== 'doAction' && item.label !== '提起上次')
+    ].filter(Boolean).slice(0, 3)
+    : menuActions.slice(0, 3);
   return {
     id: character.id,
     name: character.name || '角色',
     role: character.role || '场景角色',
-    feedback: hasExecutable ? `${character.name || '对方'}等你开口。` : fallback,
+    feedback: memoryLine || (hasExecutable ? `${character.name || '对方'}等你开口。` : fallback),
     executableCount: menuActions.filter((item) => item.action === 'doAction').length,
-    actions: menuActions.slice(0, 3)
+    actions: visibleActions
   };
 }
 

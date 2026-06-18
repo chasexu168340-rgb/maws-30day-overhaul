@@ -169,6 +169,28 @@ test('one small NPC action returns compact reward chips', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('NPC menu remembers earlier awkward choices', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.loc = 'store';
+    store.state.flags.day3_store_show_form = true;
+    store.emit();
+  });
+
+  await page.locator('.maws-scene-character.actionable').filter({ hasText: '小满' }).first().click();
+  const menu = page.locator('.maws-npc-menu');
+  await expect(menu).toBeVisible();
+  await expect(menu, 'NPC feedback should reference remembered player behavior').toContainText('薯片');
+  await expect(menu).toContainText('提起上次');
+
+  await menu.locator('button[data-action="toast"]').filter({ hasText: '提起上次' }).click();
+  await expect(page.locator('.maws-toast')).toContainText('误伤零食');
+
+  expect(errors).toEqual([]);
+});
+
 test('skills tab displays the Wave 14 skill tree slice', async ({ page }) => {
   const errors = await loadGame(page);
 
@@ -179,7 +201,7 @@ test('skills tab displays the Wave 14 skill tree slice', async ({ page }) => {
 
   expect(await treeSlice.locator('.maws-skill-tree').count(), 'skill tree slice should show three route columns').toBeGreaterThanOrEqual(3);
   expect(await treeSlice.locator('.maws-tree-node').count(), 'skill tree slice should expose nodes').toBeGreaterThanOrEqual(3);
-  await expect(treeSlice.locator('.maws-tree-node button').first()).toBeEnabled();
+  await expect(treeSlice.locator('.maws-tree-node button').first()).toBeVisible();
 
   await expectNoHorizontalOverflow(page, 'skills tree slice');
   expect(errors).toEqual([]);

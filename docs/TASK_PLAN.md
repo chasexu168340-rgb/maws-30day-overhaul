@@ -26,11 +26,15 @@ SkillOpt-style optimization pass for the current playable slice.
 - Third pass committed and pushed as `fda68fc`.
 - Current pass makes reward chips honor structured kind/priority/icon data: time and cost no longer read as generic positive gains.
 - Equipped skill cards now open their details by default so useful skill data is visible without turning every card into a wall.
+- Reward-chip pass committed and pushed as `e2a619e`.
+- Current pass adds a bounded NPC memory follow-up: 小满/刘胖子 can reference the Day 3 convenience-store choices and Day 5 park check in the scene interaction menu.
+- Scene NPC menus now keep a remembered follow-up visible within the compact 3-button cap when a memory exists.
 
 ## Validation
 
 - Passed:
   - `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`
+  - `npx playwright test maws_src/tests/wave14_loop.spec.js --browser=chromium --reporter=line`
   - `npx playwright test maws_src/tests/wave11_flow.spec.js --browser=chromium --reporter=line`
   - `npm run check:full`
   - `npm run test:playtest`
@@ -40,8 +44,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target NPC memory follow-up or combat recipe fallback readability, using the same audit -> patch -> gate loop.
+- The next likely pass should target combat recipe fallback readability or one small event follow-up choice, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation for the current reward-chip pass, then commit and push it on `codex/skillopt-optimization-pass`.
+Run `git diff --check`, commit and push the NPC memory follow-up pass on `codex/skillopt-optimization-pass`.
