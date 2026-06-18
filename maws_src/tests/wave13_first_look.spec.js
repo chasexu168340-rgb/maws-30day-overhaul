@@ -231,6 +231,7 @@ test('ordinary action reward feedback uses compact non-duplicated chips', async 
   await expect(page.locator('.maws-modal.duration')).toBeVisible();
   await page.locator('button[data-action="chooseDuration"][data-duration="standard"]').click();
   await expect(page.locator('.maws-modal.result-compact')).toBeVisible();
+  await page.waitForTimeout(550);
 
   const chips = await page.locator('.maws-modal .maws-reward-chip').evaluateAll((nodes) => nodes.map((node) => node.textContent.replace(/\s+/g, ' ').trim()));
   expect(chips.length, 'result should show reward chips').toBeGreaterThan(0);
@@ -239,6 +240,34 @@ test('ordinary action reward feedback uses compact non-duplicated chips', async 
   chips.forEach((chip) => {
     expect(chip.length, 'reward chip text should stay compact').toBeLessThanOrEqual(36);
     expect(chip, 'reward chip should not include source/detail prose').not.toMatch(/来源|开放条件|后续|重复|沙包连击|\/|。/);
+  });
+
+  const rewardBurst = await page.locator('.maws-modal .maws-reward-chips.hero').evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const chipRects = Array.from(node.querySelectorAll('.maws-reward-chip')).map((chip) => {
+      const chipRect = chip.getBoundingClientRect();
+      const value = chip.querySelector('strong');
+      const valueStyle = value ? getComputedStyle(value) : null;
+      return {
+        width: chipRect.width,
+        height: chipRect.height,
+        valueText: value?.textContent?.trim() || '',
+        valueFont: valueStyle ? Number.parseFloat(valueStyle.fontSize) : 0
+      };
+    });
+    return {
+      role: node.getAttribute('role'),
+      height: rect.height,
+      chipRects
+    };
+  });
+  expect(rewardBurst.role, 'reward burst should be exposed as a compact list').toBe('list');
+  expect(rewardBurst.height, 'reward burst should not leave a giant empty payoff box on desktop').toBeLessThanOrEqual(118);
+  rewardBurst.chipRects.forEach((chip) => {
+    expect(chip.width, 'reward chip should keep a readable footprint').toBeGreaterThan(80);
+    expect(chip.height, 'reward chip should stay compact').toBeLessThanOrEqual(78);
+    expect(chip.valueText, 'reward chip should surface a numeric/new value').toMatch(/\S/);
+    expect(chip.valueFont, 'reward value should be visually stronger than body text').toBeGreaterThanOrEqual(18);
   });
 
   const visibleTextStats = await page.locator('.maws-modal.result-compact section').first().evaluate((section) => {

@@ -250,15 +250,18 @@ function rewardChipMark(chip = {}) {
 
 function renderRewardChips(chips = [], className = '') {
   if (!chips.length) return '';
+  const classes = ['maws-reward-chips', ...String(className || '').split(/\s+/)].filter(Boolean).join(' ');
   return `
-    <div class="maws-reward-chips ${className}">
-      ${chips.map((chip) => `
-        <span class="maws-reward-chip ${esc(chip.kind)} ${esc(chip.tone || '')}" title="${esc(chip.text || `${chip.label} ${chip.value}`)}">
+    <div class="${esc(classes)}" role="list" aria-label="行动收益" style="--reward-count:${esc(chips.length)}">
+      ${chips.map((chip) => {
+        const chipClasses = ['maws-reward-chip', chip.kind, chip.tone].filter(Boolean).join(' ');
+        return `
+        <span class="${esc(chipClasses)}" role="listitem" data-kind="${esc(chip.kind)}" title="${esc(chip.text || `${chip.label} ${chip.value}`)}">
           <i>${esc(rewardChipMark(chip))}</i>
           <b>${esc(chip.label)}</b>
           <strong>${esc(chip.value)}</strong>
-        </span>
-      `).join('')}
+        </span>`;
+      }).join('')}
     </div>
   `;
 }

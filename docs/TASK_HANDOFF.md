@@ -22,10 +22,11 @@ The player-facing target remains: the player clicks something, the game responds
 ## Current Pass
 
 1. Use SkillOpt-style rollout/audit evidence from the current worktree and rendered screenshots.
-2. Pick one high-impact in-game first-look issue instead of broad speculative redesign.
-3. Patch the Day 1 rental-room scene so mobile HUD, toast, scene info, characters, and bottom nav stop fighting each other.
-4. Strengthen Wave13 first-look tests around mobile nav geometry, toast placement, reachable CTA, and NPC click feedback.
-5. Keep screenshots in local `outputs/` only; do not commit generated audit artifacts.
+2. Pick one high-impact player-facing issue instead of broad speculative redesign.
+3. Completed first-scene polish: Day 1 rental-room mobile HUD, toast, scene info, character click feedback, and bottom nav no longer fight for the same vertical space.
+4. Completed ordinary reward-feedback polish: result reward chips now render as a compact centered payoff burst instead of a wide empty information box.
+5. Strengthened Wave13 first-look tests around mobile nav geometry, toast placement, reachable CTA, NPC click feedback, compact reward chips, reward-burst geometry, time modal fit, and Day 5 combat HUD.
+6. Keep screenshots in local `outputs/` or `test-results/` only; do not commit generated audit artifacts.
 
 ## Deferred Larger Work
 
@@ -47,7 +48,7 @@ The player-facing target remains: the player clicks something, the game responds
 ## Validation
 
 - Targeted optimization check:
-  - `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line`
+  - `npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line`
 - Full gate before merge:
   - `npm run check:full`
   - `npm run test:playtest`
