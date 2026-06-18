@@ -1722,8 +1722,18 @@ function resultLead(title = '行动', body = '', lines = []) {
   return `${title}已经处理完，可以决定下一步。`;
 }
 
-function resultActions(state, recommendLoc = '') {
+function resultActions(state, recommendLoc = '', followUps = []) {
+  const normalizedFollowUps = (Array.isArray(followUps) ? followUps : [])
+    .filter((item) => item?.action)
+    .slice(0, 2)
+    .map((item) => ({
+      label: item.label || '继续',
+      action: item.action,
+      params: item.params || {},
+      className: item.className || 'ghost'
+    }));
   const actions = [
+    ...normalizedFollowUps,
     { label: '继续行动', action: 'closeModal', className: 'primary' },
     { label: '查看日志', action: 'setTab', params: { tab: 'log' }, className: 'ghost' }
   ];
@@ -1739,6 +1749,7 @@ function resultActions(state, recommendLoc = '') {
 }
 
 function resultFeedbackModal(state, { title = '行动', body = '', lines = [], summary = null, logText = '', recommendLoc = '', rewardDeltas = [], followUps = [] } = {}) {
+  const compactFollowUps = (Array.isArray(followUps) ? followUps : []).slice(0, 2);
   return {
     type: 'settlement',
     title: '结果',
@@ -1749,10 +1760,10 @@ function resultFeedbackModal(state, { title = '行动', body = '', lines = [], s
     gain: summary?.gain || [],
     risk: summary?.risk || '',
     rewardDeltas,
-    followUps: followUps.slice(0, 2),
+    followUps: compactFollowUps,
     lines,
     logText: logText || state.log?.[0]?.text || '',
-    actions: resultActions(state, recommendLoc)
+    actions: resultActions(state, recommendLoc, compactFollowUps)
   };
 }
 
@@ -1771,7 +1782,8 @@ function actionResultModal(state, action, lines, options = {}) {
       extra: options.extraRewardDeltas || []
     }),
     logText: state.log?.[0]?.text || '',
-    recommendLoc: context.locId || action?.loc || ''
+    recommendLoc: context.locId || action?.loc || '',
+    followUps: action?.followUps || []
   });
 }
 

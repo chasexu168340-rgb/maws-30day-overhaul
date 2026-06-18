@@ -420,7 +420,10 @@ export const ACTIONS = {
     { id: 'fatty_today_advice', name: '问今日建议', icon: '问', time: 15, sp: 0, desc: '问刘胖子今天先别犯哪种蠢。建议很短，但够你少冲一次。', type: 'simple', npc: 'fatty', noDurationOptions: true, dailyGate: 'fatty_advice', flags: { fatty_advice_seen: true }, gain: { jud: 1, rel_fatty: 1 } },
     { id: 'father_incense', name: '给父亲上香', icon: '香', time: 20, sp: 0, desc: '把香插稳，不把今天的急劲带到父亲面前。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_incense', flags: { father_incense_seen: true }, gain: { calm: 1 }, maw: { fatherMemory: 1 } },
     { id: 'father_self_check', name: '对父亲自省', icon: '省', time: 15, sp: 0, desc: '在旧照片前承认一句：有些动作不是勇，是莽。', type: 'simple', npc: 'father', noDurationOptions: true, dailyGate: 'father_self_check', flags: { father_self_check_seen: true }, gain: { jud: 1, calm: 1 }, maw: { fatherMemory: 1 } },
-    { id: 'review', name: '视频复盘', icon: '复', time: 45, sp: 0, desc: '分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。', type: 'simple', gain: { jud: 1, calm: 4, skill: 'jab', xp: 4, insight: 1 } },
+    { id: 'review', name: '视频复盘', icon: '复', time: 45, sp: 0, desc: '分析最近战斗，把“我刚才怎么飞出去的”整理成判断和技能细节。', type: 'simple', gain: { jud: 1, calm: 4, skill: 'jab', xp: 4, insight: 1 }, followUps: [
+      { label: '去点技能树', action: 'setTab', params: { tab: 'skills' }, className: 'primary' },
+      { label: '找刘胖子再看一遍', action: 'doAction', params: { id: 'fatty_review_together' }, className: 'ghost' }
+    ] },
     { id: 'shadow', name: '影子拳节拍', icon: '影', time: 50, sp: 12, desc: '轻训练，练直拳回收和步法节奏。影子不会还手，但它也不会夸你。', type: 'simple', gain: { skill: 'dodge', xp: 6, boxing: 4, fatigue: 6, fitXp: 2, insight: 1 } },
     { id: 'idle_blank', name: '发呆放空', icon: '空', time: 15, sp: 0, desc: '不刷视频，不加练，只让脑子从热度里退出来一点。可能想起父亲、写下几句日记，或收到朋友消息。', type: 'idle', noDurationOptions: true, gain: { calm: 1, fatigue: -1 } },
     { id: 'read_notes', name: '看训练笔记', icon: '本', time: 20, sp: 0, desc: '翻几页自己挨过的错，不把复盘变成新一轮硬练。笔记有用，但不能替你出汗。', type: 'idle', noDurationOptions: true, gain: { jud: 1, calm: 1 } },

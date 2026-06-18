@@ -32,6 +32,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass removes debug-style battle recipe copy from the player-facing combat log.
 - Auto-filled combat plans now log a readable tactical sentence, for example `战术配方：压迫自动补入【推搡 -> 野路挥拳】...`, instead of leaking `PLAN触发` / `comboSlot` / `planSlot`.
 - Wave15 combat recipe smoke now asserts the tactical line is visible and debug slot fields stay out of player feedback.
+- Current pass connects the early `视频复盘` action to concrete follow-up choices: players can jump directly to the skill tree or ask 刘胖子 to review again from the result modal.
+- Result settlement modals now render bounded `followUps` as real actions, instead of storing them as unused metadata.
+- Wave15 smoke now asserts the video-review result exposes both next-step buttons.
 
 ## Validation
 
@@ -51,4 +54,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Run full validation, then commit and push the combat recipe readability pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the video-review follow-up pass on `codex/skillopt-optimization-pass`.

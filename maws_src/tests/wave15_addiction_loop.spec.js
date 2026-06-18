@@ -121,6 +121,8 @@ async function earnInsightThroughReview(page) {
     await durationChoice.click();
   }
   await expect(page.locator('.maws-modal')).toContainText('洞察点');
+  await expect(page.locator('.maws-modal button[data-action="setTab"][data-tab="skills"]'), 'video review should offer a direct skill-tree next step').toContainText('去点技能树');
+  await expect(page.locator('.maws-modal button[data-action="doAction"][data-id="fatty_review_together"]'), 'video review should offer a follow-up review with Fatty').toContainText('找刘胖子');
   const after = await page.evaluate(() => Number(window.MAWS_STORE.state.player.insightPoints || 0));
   expect(after, 'video review should naturally grant Insight before skill-tree purchase').toBeGreaterThan(before);
   await page.locator('button[data-action="closeModal"]').click();
