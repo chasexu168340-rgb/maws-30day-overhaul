@@ -3085,6 +3085,12 @@ function npcLine(npc) {
 
 function npcMemory(state, npc) {
   if (npc === 'fatty') {
+    if (state.flags?.reviewed_day3_store_show_form) {
+      return {
+        key: 'reviewed_day3_store_show_form',
+        line: '刘胖子把那段复盘翻到第三遍：祖传架势可以留着当标题，下一次先把脚下和退路摆明白。'
+      };
+    }
     if (state.combatMemory?.lastEnemy === 'E01' || state.flags?.main_5) {
       return {
         key: 'park_check_review',
@@ -3105,6 +3111,12 @@ function npcMemory(state, npc) {
     }
   }
   if (npc === 'xiaoman') {
+    if (state.flags?.reviewed_day3_store_show_form) {
+      return {
+        key: 'reviewed_day3_store_show_form',
+        line: '小满看了你一眼：刘胖子复盘都复盘到货架了。今天别摆祖传架势，先帮我把薯片放稳。'
+      };
+    }
     if (state.flags?.day3_store_show_form) {
       return {
         key: 'day3_store_show_form',

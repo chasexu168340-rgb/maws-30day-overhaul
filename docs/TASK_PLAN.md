@@ -45,6 +45,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Memory-aware review writes a `reviewed_<memoryKey>` flag, so follow-up review is a real state transition rather than a prettier toast.
 - Compact settlement modals now prefer `modal.lead` over generic "completed" text, while still showing reward chips.
 - Wave15 smoke now asserts the remembered Day 3 line, reward chips, skill-tree next step, and persisted memory-review flag.
+- Current pass makes reviewed memories surface later in scene interaction: after 刘胖子 reviews the Day 3 store mistake, 小满's store menu reacts to the reviewed memory instead of replaying only the original incident line.
+- Reviewed Day 3 memory now has higher NPC memory priority for 刘胖子 and 小满, creating a small `event -> review -> later banter` chain.
+- Wave15 smoke now asserts the post-review 小满 scene menu line.
 
 ## Validation
 
@@ -60,8 +63,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target one small event follow-up choice or next-day NPC banter surfacing, using the same audit -> patch -> gate loop.
+- The next likely pass should target one small event follow-up choice or a low-risk early fun target, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation, then commit and push the NPC memory review pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the reviewed-memory scene banter pass on `codex/skillopt-optimization-pass`.

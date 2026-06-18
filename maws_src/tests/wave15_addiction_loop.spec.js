@@ -255,6 +255,16 @@ test('video review follow-up can chain into Fatty review and back to skill tree'
   await expect(modal.locator('button[data-action="setTab"][data-tab="skills"]'), 'Fatty review should keep the growth path visible').toContainText('去点技能树');
   expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.reviewed_day3_store_show_form)), 'Fatty review should persist that this memory was reviewed').toBe(true);
 
+  await page.locator('button[data-action="closeModal"]').click();
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.loc = 'store';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'xiaoman' } };
+    store.emit();
+  });
+  const xiaomanMenu = page.locator('.maws-npc-menu').filter({ hasText: '小满' });
+  await expect(xiaomanMenu, 'reviewed memory should surface later in Xiaoman scene interaction').toContainText('刘胖子复盘都复盘到货架了');
+
   expect(errors).toEqual([]);
 });
 
