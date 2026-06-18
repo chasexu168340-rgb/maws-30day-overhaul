@@ -48,6 +48,10 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass makes reviewed memories surface later in scene interaction: after 刘胖子 reviews the Day 3 store mistake, 小满's store menu reacts to the reviewed memory instead of replaying only the original incident line.
 - Reviewed Day 3 memory now has higher NPC memory priority for 刘胖子 and 小满, creating a small `event -> review -> later banter` chain.
 - Wave15 smoke now asserts the post-review 小满 scene menu line.
+- Current pass adds a bounded low-risk early fun target: `E00 嘴硬路人`, a fully untrained, external-bluster opponent for starter wild skills.
+- Park now features `嘴硬路人试手` as the primary local action before the E01 check, with tiny rewards and a daily gate so it does not become a grind loop.
+- The existing E01 `开放验货局` remains intact as the trained baseline; this pass does not weaken E01 or change combat formulas.
+- Wave15 smoke now walks the visible park action -> event notebook confirmation -> E00 battle path.
 
 ## Validation
 
@@ -63,8 +67,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target one small event follow-up choice or a low-risk early fun target, using the same audit -> patch -> gate loop.
+- The next likely pass should target one small event follow-up choice or E00 outcome feedback, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation, then commit and push the reviewed-memory scene banter pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the low-risk E00 early fun target pass on `codex/skillopt-optimization-pass`.

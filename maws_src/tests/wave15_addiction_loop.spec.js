@@ -268,6 +268,41 @@ test('video review follow-up can chain into Fatty review and back to skill tree'
   expect(errors).toEqual([]);
 });
 
+test('park exposes a low-risk E00 fun target before the E01 check', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.loc = 'park';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+  });
+
+  const primaryActionArea = page.locator('.maws-actions-primary');
+  const e00Action = primaryActionArea.locator('button[data-action="doAction"][data-id="mouthy_passer_tryout"]');
+  await expect(e00Action, 'park should expose a low-risk target for starter wild skills').toBeVisible();
+  await expect(e00Action.locator('xpath=ancestor::article[1]')).toContainText('嘴硬路人试手');
+  await expect(e00Action.locator('xpath=ancestor::article[1]')).toContainText('低风险试手');
+  await e00Action.click();
+  await expect(page.locator('.maws-modal')).toContainText('嘴硬路人试手');
+  await page.locator('.maws-modal button[data-action="resolveEventNotebook"][data-id="resolve"]').click();
+
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await expect(page.locator('.maws-combat-ui')).toContainText('嘴硬路人');
+  const combatState = await page.evaluate(() => ({
+    enemyId: window.MAWS_STORE.state.combat?.enemyId,
+    tags: window.MAWS_STORE.state.combat?.enemy?.tags || [],
+    dailyGate: Boolean(window.MAWS_STORE.state.daily?.npcActionGates?.mouthy_passer_tryout)
+  }));
+  expect(combatState).toMatchObject({
+    enemyId: 'E00',
+    dailyGate: true
+  });
+  expect(combatState.tags).toContain('完全没练过');
+
+  expect(errors).toEqual([]);
+});
+
 test('combat plan mode exposes at least three tactical recipe modes', async ({ page }) => {
   const errors = await loadGame(page);
 

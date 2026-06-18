@@ -602,7 +602,9 @@ function renderRecommendations(model) {
 
 function renderMap(model) {
   const currentActions = model.actions || [];
-  const featuredAction = currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length) || currentActions[0];
+  const featuredAction = currentActions.find((action) => action.featured && !action.disabled)
+    || currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length)
+    || currentActions[0];
   const primaryAction = featuredAction ? renderActionCard(featuredAction) : '';
   const secondaryActions = currentActions.filter((action) => action !== featuredAction).map(renderActionCard).join('');
   const recommendations = renderRecommendations(model);

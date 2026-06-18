@@ -397,6 +397,7 @@ export const ITEMS = {
 };
 
 export const ENEMIES = {
+  E00: { name: '嘴硬路人', icon: '嘴', risk: '低', tags: ['完全没练过', '外强中干', '受击易慌'], hp: 64, sp: 58, posture: 46, morale: 82, calm: 28, stats: { str: 34, end: 34, spd: 36, tec: 22, tou: 32, bal: 30, rea: 28, jud: 24 }, skills: ['wild_swing', 'push_away', 'talkdown', 'retreat'], ai: 'brawler', preferredRange: 'mid', aiProfile: { patience: 14, pressure: 66, grapple: 0, counter: 4, dirty: 6 }, reward: { money: 12, fame: 8 } },
   E01: { name: '半年拳击新人', icon: '拳', risk: '低', tags: ['正经训练', '拳距稳定', '基础可靠'], hp: 92, sp: 88, posture: 72, morale: 68, calm: 58, stats: { str: 42, end: 48, spd: 56, tec: 52, tou: 45, bal: 48, rea: 50, jud: 42 }, skills: ['jab', 'straight', 'guard', 'retreat'], ai: 'boxer', preferredRange: 'mid', aiProfile: { patience: 72, pressure: 32, grapple: 0, counter: 28, dirty: 0 }, reward: { money: 60, fame: 20 } },
   E02: { name: '公园推手大爷', icon: '掌', risk: '低', tags: ['近身控制', '平衡好', '速度偏低'], hp: 82, sp: 94, posture: 86, morale: 60, calm: 72, stats: { str: 38, end: 55, spd: 34, tec: 54, tou: 45, bal: 70, rea: 42, jud: 62 }, skills: ['advance', 'grip', 'offbalance', 'palm', 'guard'], ai: 'pushhand', preferredRange: 'close', aiProfile: { patience: 68, pressure: 56, grapple: 42, counter: 22, dirty: 0 }, reward: { money: 45, fame: 24 } },
   E03: { name: '流量大师学徒', icon: '玄', risk: '中', tags: ['外强中干', '话术高', '受击易崩'], hp: 76, sp: 78, posture: 62, morale: 88, calm: 48, stats: { str: 35, end: 38, spd: 42, tec: 40, tou: 35, bal: 38, rea: 39, jud: 45 }, skills: ['mystic', 'palm', 'talkdown', 'retreat'], ai: 'mystic', preferredRange: 'mid', aiProfile: { patience: 36, pressure: 42, grapple: 4, counter: 12, dirty: 18 }, reward: { money: 65, fame: 38 } },
@@ -457,6 +458,7 @@ export const ACTIONS = {
     { id: 'afterwork_mobility', name: '收工拉伸', icon: '松', time: 35, sp: 0, desc: '在工棚边活动肩髋，降低硬活后的僵硬。别让明天的你骂今天的你。', type: 'simple', gain: { fitXp: 2, fatigue: -8, calm: 3 } }
   ],
   park: [
+    { id: 'mouthy_passer_tryout', name: '嘴硬路人试手', icon: '嘴', time: 35, sp: 8, desc: '低风险试手。对方没练过，但嘴上很满，适合用野路挥拳和推搡确认自己不是纸糊的。每日一次，别把菜鸡当进步。', type: 'battle', enemy: 'E00', risk: 1, dailyGate: 'mouthy_passer_tryout', featured: true },
     { id: 'spar_rookie', name: '开放验货局', icon: '验', time: 60, sp: 12, desc: '和拳击新人低风险切磋。适合确认动作能不能离开教程区。', type: 'battle', enemy: 'E01', risk: 1 },
     { id: 'observe_park', name: '围观不插手', icon: '看', time: 40, sp: 0, desc: '观察别人出招，提升判断。站远点也能学，前提是别站成裁判。', type: 'simple', gain: { jud: 1, calm: 3, auth: 1 } },
     { id: 'park_short_walk', name: '绕场短走', icon: '走', time: 20, sp: 0, desc: '不插手也不围上去，只绕着场边走一圈，把呼吸和脚步找回来。', type: 'idle', noDurationOptions: true, gain: { calm: 1, fatigue: -1 } },
