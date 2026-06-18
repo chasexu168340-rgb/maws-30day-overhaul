@@ -105,11 +105,47 @@ function actionVisibleSummary(action = {}) {
 const rewardLabelAliases = {
   money: '现金',
   cash: '现金',
+  time: '时间',
+  sp: '体力',
+  hp: '生命',
+  jud: '判断',
+  tec: '技巧',
+  str: '力量',
+  agi: '敏捷',
+  tou: '抗打',
+  heat: '热度',
+  insight: '洞察',
+  skillTreeInsight: '洞察',
   calm: '冷静',
   misread: '误判',
   relation: '关系',
   relationship: '关系',
+  rel_xiaoman: '小满关系',
+  rel_fatty: '刘胖子关系',
+  rel_coach_liang: '梁教练关系',
   skill: '技能'
+};
+
+const rewardKindWeight = {
+  skill: 0,
+  relation: 1,
+  item: 2,
+  money: 3,
+  gain: 4,
+  risk: 5,
+  cost: 8,
+  time: 9
+};
+
+const rewardKindMarks = {
+  skill: 'NEW',
+  relation: 'LINK',
+  item: '包',
+  money: '¥',
+  risk: '!',
+  cost: '-',
+  time: '时',
+  gain: '+'
 };
 
 function rewardChipKind(label = '', text = '', group = '') {
@@ -159,7 +195,15 @@ function rewardChipFromLine(line) {
     ? `${delta > 0 ? '+' : ''}${delta}`
     : String(line.value ?? line.text ?? '').trim();
   if (!value) return null;
-  return { label, value, text: line.text || `${label} ${value}`, kind: kind === 'skill' ? 'gain' : kind };
+  return {
+    label,
+    value,
+    text: line.text || `${label} ${value}`,
+    kind: kind === 'skill' ? 'gain' : kind,
+    icon: line.icon,
+    tone: line.tone,
+    priority: Number.isFinite(Number(line.priority)) ? Number(line.priority) : null
+  };
 }
 
 function collectRewardChips(modal = {}, limit = 5) {
@@ -184,12 +228,24 @@ function collectRewardChips(modal = {}, limit = 5) {
     seen.add(key);
     chips.push(chip);
   });
-  return chips
+  const sorted = chips
     .sort((a, b) => {
-      const weight = { skill: 0, relation: 1, gain: 2, risk: 3 };
-      return (weight[a.kind] ?? 4) - (weight[b.kind] ?? 4);
-    })
-    .slice(0, limit);
+      const aWeight = Number.isFinite(a.priority) ? a.priority : (rewardKindWeight[a.kind] ?? 6);
+      const bWeight = Number.isFinite(b.priority) ? b.priority : (rewardKindWeight[b.kind] ?? 6);
+      return aWeight - bWeight;
+    });
+  const selected = sorted.slice(0, limit);
+  ['cost', 'time'].forEach((kind) => {
+    const required = sorted.find((chip) => chip.kind === kind);
+    if (!required || selected.some((chip) => chip === required)) return;
+    if (selected.length < limit) selected.push(required);
+    else if (selected.length) selected[selected.length - 1] = required;
+  });
+  return selected.sort((a, b) => sorted.indexOf(a) - sorted.indexOf(b));
+}
+
+function rewardChipMark(chip = {}) {
+  return chip.icon || rewardKindMarks[chip.kind] || '+';
 }
 
 function renderRewardChips(chips = [], className = '') {
@@ -197,8 +253,8 @@ function renderRewardChips(chips = [], className = '') {
   return `
     <div class="maws-reward-chips ${className}">
       ${chips.map((chip) => `
-        <span class="maws-reward-chip ${esc(chip.kind)}">
-          <i>${chip.kind === 'skill' ? 'NEW' : chip.kind === 'relation' ? 'LINK' : chip.kind === 'risk' ? '!' : '+'}</i>
+        <span class="maws-reward-chip ${esc(chip.kind)} ${esc(chip.tone || '')}" title="${esc(chip.text || `${chip.label} ${chip.value}`)}">
+          <i>${esc(rewardChipMark(chip))}</i>
           <b>${esc(chip.label)}</b>
           <strong>${esc(chip.value)}</strong>
         </span>
@@ -748,6 +804,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
       </article>
     `;
   }
+  const detailsOpen = skill.equipped ? ' open' : '';
   return `
     <article class="maws-skill ${skill.equipped || skill.selected ? 'active' : ''} ${!learned ? 'locked' : ''} ${disabled ? 'disabled' : ''}">
       ${assetIcon(skill.assetKey, '', 'maws-skill-art')}
@@ -757,7 +814,7 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
         <span>${esc(learned ? `熟练度 ${round(skill.state?.p)}%` : sourceText)}</span>
         <span>${esc(learned ? (skill.equipped ? '已装备' : '可装备') : '待解锁')}</span>
       </div>
-      <details class="maws-fold maws-skill-fold">
+      <details class="maws-fold maws-skill-fold"${detailsOpen}>
         <summary>${learned ? '长描述 / 完整数值' : '解锁详情 / 完整数值'}</summary>
         <p>${esc(skill.desc)}</p>
         ${renderSkillUnlock(skill, unlock, learned)}

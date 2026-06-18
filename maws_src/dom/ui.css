@@ -5478,9 +5478,36 @@
     linear-gradient(110deg, #bdf7dd, #6df1c7 58%, #fff3d2 58%);
 }
 
+.maws-reward-chip.money {
+  background:
+    linear-gradient(110deg, #fff3d2, #f6d36c 58%, #bdf7dd 58%);
+}
+
+.maws-reward-chip.item {
+  background:
+    linear-gradient(110deg, #e8f0ff, #b9ccff 58%, #fff3d2 58%);
+}
+
 .maws-reward-chip.risk {
   background:
     linear-gradient(110deg, #ffb657, #ff6b3d);
+}
+
+.maws-reward-chip.cost,
+.maws-reward-chip.time {
+  background:
+    linear-gradient(110deg, #2b2d33, #4b4f59 62%, #fff3d2 62%);
+  color: #fff3d2;
+}
+
+.maws-reward-chip.cost b,
+.maws-reward-chip.time b {
+  color: rgba(255, 243, 210, 0.78);
+}
+
+.maws-reward-chip.cost strong,
+.maws-reward-chip.time strong {
+  color: #ffffff;
 }
 
 .maws-reward-stack {

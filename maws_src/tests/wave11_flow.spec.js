@@ -168,6 +168,10 @@ test('action reward modal uses visible reward chips without turning small result
   const rewardChips = page.locator('.maws-modal .maws-reward-chips.hero .maws-reward-chip');
   expect(await rewardChips.count(), 'reward chips should be surfaced in the result modal').toBeGreaterThan(0);
   await expect(rewardChips.first()).toBeVisible();
+  const timeChip = page.locator('.maws-modal .maws-reward-chip.time').first();
+  await expect(timeChip, 'time cost should be a structured reward chip, not buried prose').toBeVisible();
+  await expect(timeChip, 'time cost chip should not read like a positive gain').not.toContainText('+');
+  await expect(timeChip).toContainText(/时间\s*-\d+/);
 
   const compactStats = await page.locator('.maws-modal section').first().evaluate((section) => {
     const visibleDirectTextBlocks = Array.from(section.querySelectorAll('p, li, .maws-result-summary > div, .maws-settle-line'))
