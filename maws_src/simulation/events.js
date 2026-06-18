@@ -160,6 +160,58 @@ export const EVENT_RULES = deepFreeze([
     weights: { earlyDay: 5, lowAuth: 0.8, homeIdle: 2.8, combatMemory: 0.5 }
   },
   {
+    id: 'e00_review_video',
+    title: '嘴硬路人之后，先把录像看完',
+    loc: 'home',
+    desc: '这场风险不高，但刚好适合停一停：看清自己哪里收不回来，再去找更硬的尺子。',
+    eventNotebook: {
+      reason: 'E00 复盘窗口',
+      entry: '出租屋里，手机画面停在你和嘴硬路人的那一拍。对方确实没练过，可你的手也确实有几次留在外面，像忘了回家。',
+      beats: [
+        '你把“赢没赢”先放到旁边，只看动作有没有回来。',
+        '刘胖子发来一句：低风险不是免检。',
+        '这不是惩罚，是把小问题留在小场面里处理。'
+      ],
+      actionLabel: '做一次复盘',
+      actionText: '花一点时间，把这场低风险试手拆成能带去下一场的判断。',
+      outcome: '你把一次不重的试手，整理成下一场少犯错的清单。'
+    },
+    action: 'review',
+    npc: 'fatty',
+    kind: 'dialog',
+    base: 88,
+    cooldownKey: 'e00_review_followup',
+    tags: ['E00复盘', '低压推荐'],
+    when: { minDay: 1, maxDay: 7, flag: 'e00_wild_tryout_review', notFlag: 'e00_wild_tryout_win' },
+    weights: { earlyDay: 4, homeIdle: 1.5, combatMemory: 0.8 }
+  },
+  {
+    id: 'e00_win_e01_check',
+    title: '嘴硬路人之后，去验真正拳距',
+    loc: 'park',
+    desc: '能压住没练过的人是一回事。下一道尺子是半年拳击新人：不要求 KO，只看动作会不会散。',
+    eventNotebook: {
+      reason: '从爽点回到验货',
+      entry: '公园风比刚才冷一点。嘴硬路人给了你一点信心，但 E01 的站距不会陪你演节目。',
+      beats: [
+        '野路子能把没练过的人顶回去。',
+        '真正的拳距会问另一个问题：你出完以后还能不能回来。',
+        '这次不是为了把人打倒，是看看自己有没有资格继续往拳馆走。'
+      ],
+      actionLabel: '接 E01 验货',
+      actionText: '把刚才的爽感带进更真实的距离里，但别把它当毕业证。',
+      outcome: '你把“能打普通人”的兴奋，拿去碰了一下更硬的标准。'
+    },
+    action: 'spar_rookie',
+    enemy: 'E01',
+    kind: 'battle',
+    base: 90,
+    cooldownKey: 'e00_win_e01_followup',
+    tags: ['E00后续', '拳距验货'],
+    when: { minDay: 1, maxDay: 7, flag: 'e00_wild_tryout_win' },
+    weights: { earlyDay: 4, lowFatigue: 1.1, combatMemory: 0.5, injuries: -3.5 }
+  },
+  {
     id: 'early_boxing_visit',
     title: '去拳馆看看，先不急着上台',
     loc: 'metro_station',
@@ -734,6 +786,8 @@ function passesRule(rule, factors) {
   if (when.minFatigue != null && fatigue < when.minFatigue) return false;
   if (when.maxFatigue != null && fatigue > when.maxFatigue) return false;
   if (when.minInjuries != null && factors.injuries < when.minInjuries) return false;
+  if (when.flag && !state.flags?.[when.flag]) return false;
+  if (when.notFlag && state.flags?.[when.notFlag]) return false;
   if (when.requiresLastEnemy && !memory.lastEnemy) return false;
   if (when.minRiskWins != null && number(memory.riskWins) < when.minRiskWins) return false;
   if (when.lastResult && memory.lastResult !== when.lastResult) return false;

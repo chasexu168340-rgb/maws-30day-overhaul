@@ -307,7 +307,32 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
+    store.state.loc = 'home';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+  });
+  const reviewCard = page.locator('.maws-recommend-card').filter({ hasText: '嘴硬路人之后，先把录像看完' });
+  await expect(reviewCard, 'E00 review outcome should recommend a concrete video review follow-up').toBeVisible();
+  await reviewCard.locator('button[data-action="takeOpportunity"][data-id="e00_review_video"]').click();
+  await expect(page.locator('.maws-modal')).toContainText('嘴硬路人之后，先把录像看完');
+  await expect(page.locator('.maws-modal')).toContainText('低风险不是免检');
+  await expect(page.locator('.maws-modal')).toContainText('做一次复盘');
+  await page.locator('.maws-modal button[data-action="closeModal"]').click();
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
     store.state.flags.e00_wild_tryout_win = true;
+    store.state.flags.e00_wild_tryout_review = false;
+    store.state.loc = 'park';
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
+    store.emit();
+  });
+  const e01Card = page.locator('.maws-recommend-card').filter({ hasText: '嘴硬路人之后，去验真正拳距' });
+  await expect(e01Card, 'E00 win should recommend moving from fun target to E01 check').toBeVisible();
+  await expect(e01Card.locator('button[data-action="takeOpportunity"][data-id="e00_win_e01_check"]')).toContainText('开打');
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
     store.state.loc = 'home';
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: { characterId: 'fatty' } };
     store.emit();

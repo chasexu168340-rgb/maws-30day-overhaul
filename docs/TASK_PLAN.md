@@ -59,6 +59,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current pass makes E00 win-side memory visible in NPC banter: after `e00_wild_tryout_win`, 刘胖子 can joke that beating a mouthy passer is not a boxing-gym diploma.
 - E00 win memory now has high priority in `npcMemory()`, so it is not buried behind older Day 3 / Day 5 memories.
 - Wave15 smoke now asserts the post-E00 Fatty scene menu banter.
+- Current pass adds compact E00 follow-up opportunity cards: review outcomes recommend `视频复盘`, while win outcomes recommend moving from the mouthy passer to the E01 park check.
+- Opportunity rules now support small flag gates (`flag` / `notFlag`) so result-specific follow-ups can be data-driven without UI text parsing.
+- Wave15 smoke now asserts both E00 follow-up recommendations from the visible recommendation cards.
 
 ## Validation
 
@@ -74,8 +77,8 @@ SkillOpt-style optimization pass for the current playable slice.
 
 - This is a bounded SkillOpt optimization series, not a claim that the whole game is fully optimized.
 - Generated moodboard files under `outputs/` are local creative artifacts and are intentionally not part of the code commit.
-- The next likely pass should target one small event follow-up choice or a compact E00 win/review opportunity card, using the same audit -> patch -> gate loop.
+- The next likely pass should target one small event follow-up choice or combat-feedback feel patch, using the same audit -> patch -> gate loop.
 
 ## Next Step
 
-Run full validation, then commit and push the E00 NPC banter pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the E00 follow-up opportunity pass on `codex/skillopt-optimization-pass`.
