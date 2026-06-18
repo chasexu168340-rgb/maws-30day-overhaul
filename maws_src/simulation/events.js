@@ -255,6 +255,11 @@ export const EVENT_RULES = deepFreeze([
     npc: 'coach',
     kind: 'dialog',
     base: 96,
+    flags: { park_check_jab_source_seen: true },
+    resultDialogue: '你把刺拳来源写进路线：Day 9 拳馆开放后，先做沙包连击，不再把“找软目标”当进步。',
+    rewardDeltas: [
+      { key: 'route_jab_bag', label: '刺拳路线', delta: 1, kind: 'gain', icon: '路', tone: 'good' }
+    ],
     cooldownKey: 'park_check_jab_source',
     tags: ['刺拳提示', '沙包连击', '成长路线'],
     when: {

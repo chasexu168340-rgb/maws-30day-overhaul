@@ -1884,6 +1884,15 @@ function markOpportunityCooldown(state, card = {}) {
   state.daily.opportunityCooldowns[key] = true;
 }
 
+function applyOpportunityFlags(state, flags = {}) {
+  if (!flags || typeof flags !== 'object') return;
+  state.flags ||= {};
+  Object.entries(flags).forEach(([key, value]) => {
+    if (!key) return;
+    state.flags[key] = value === undefined ? true : value;
+  });
+}
+
 function resolveEventNotebook(state) {
   const modal = state.ui.modal;
   if (!modal || modal.type !== 'eventNotebook') {
@@ -1928,14 +1937,19 @@ function resolveEventNotebook(state) {
     markOpportunityCooldown(state, card);
     const before = snapshotState(state);
     if (card.npc) state.relations[card.npc] = (state.relations[card.npc] || 0) + 1;
+    applyOpportunityFlags(state, card.flags);
     const settlementLinesForCard = settlementLines(before, snapshotState(state));
+    const resultText = card.resultDialogue || card.result || card.eventNotebook?.outcome || card.desc;
     state.ui.modal = dialogueModal({
       title: card.title,
       npc: card.npc,
-      body: card.desc,
-      lines: card.dialogue || [{ speaker: card.title, text: card.desc }],
+      body: resultText,
+      lines: card.dialogue || [{ speaker: card.title, text: resultText }],
       settlementLines: settlementLinesForCard,
-      rewardDeltas: rewardDeltasFromSettlement(settlementLinesForCard, state, { source: 'eventNotebook' }),
+      rewardDeltas: rewardDeltasFromSettlement(settlementLinesForCard, state, {
+        source: 'eventNotebook',
+        extra: card.rewardDeltas || []
+      }),
       actionLabel: '记下'
     });
     addLog(state, `处理待办：${card.title}`);

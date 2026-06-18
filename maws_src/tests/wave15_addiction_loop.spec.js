@@ -396,6 +396,11 @@ test('Day 5 park check review persists as Fatty memory and growth prompt', async
   await expect(jabSourceNotebook, 'jab-source recommendation should open a readable event notebook').toContainText('拳馆 · 沙包连击');
   await expect(jabSourceNotebook).toContainText('Day 9');
   await expect(jabSourceNotebook).toContainText('刺拳来源不是开局白送');
+  await jabSourceNotebook.locator('button[data-action="resolveEventNotebook"][data-id="resolve"]').click();
+  const jabSourceResult = page.locator('.maws-modal').filter({ hasText: '刺拳路线' });
+  await expect(jabSourceResult, 'jab-source confirmation should resolve with a visible route reward').toContainText('Day 9 拳馆开放后');
+  await expect(jabSourceResult.locator('.maws-reward-chip').filter({ hasText: '刺拳路线' })).toBeVisible();
+  expect(await page.evaluate(() => Boolean(window.MAWS_STORE.state.flags.park_check_jab_source_seen)), 'jab-source route should persist after confirmation').toBe(true);
 
   await page.evaluate(() => {
     const store = window.MAWS_STORE;

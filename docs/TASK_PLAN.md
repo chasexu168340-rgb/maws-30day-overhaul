@@ -72,6 +72,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Current growth-path pass adds a post-review opportunity card: after Day 5/E01 park-check review, `公园验货之后，把刺拳来源记住` points the player toward `Day 9 / 拳馆 · 沙包连击 / 刺拳`.
 - The card is a route prompt only: it does not open boxing early, does not alter starter skills, and does not change combat formulas.
 - Wave15 smoke now verifies Day 5 mainline -> E01 objective pass -> 技术复盘 -> jab-source recommendation -> event notebook -> Fatty memory.
+- Current event-memory pass makes dialog opportunity confirmations capable of writing scoped flags and structured reward deltas.
+- The post-E01 jab-source card now persists `park_check_jab_source_seen` and shows a visible `刺拳路线` reward chip after the player confirms it.
+- Wave15 smoke now verifies the full route: E01 review -> jab-source notebook -> confirmation result -> persisted route flag -> Fatty memory.
 
 ## Validation
 
@@ -91,4 +94,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Commit and push the post-E01 jab-source recommendation pass on `codex/skillopt-optimization-pass`.
+Commit and push the event-memory route confirmation pass on `codex/skillopt-optimization-pass`.
