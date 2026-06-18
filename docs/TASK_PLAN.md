@@ -29,6 +29,9 @@ SkillOpt-style optimization pass for the current playable slice.
 - Reward-chip pass committed and pushed as `e2a619e`.
 - Current pass adds a bounded NPC memory follow-up: 小满/刘胖子 can reference the Day 3 convenience-store choices and Day 5 park check in the scene interaction menu.
 - Scene NPC menus now keep a remembered follow-up visible within the compact 3-button cap when a memory exists.
+- Current pass removes debug-style battle recipe copy from the player-facing combat log.
+- Auto-filled combat plans now log a readable tactical sentence, for example `战术配方：压迫自动补入【推搡 -> 野路挥拳】...`, instead of leaking `PLAN触发` / `comboSlot` / `planSlot`.
+- Wave15 combat recipe smoke now asserts the tactical line is visible and debug slot fields stay out of player feedback.
 
 ## Validation
 
@@ -48,4 +51,4 @@ SkillOpt-style optimization pass for the current playable slice.
 
 ## Next Step
 
-Run `git diff --check`, commit and push the NPC memory follow-up pass on `codex/skillopt-optimization-pass`.
+Run full validation, then commit and push the combat recipe readability pass on `codex/skillopt-optimization-pass`.

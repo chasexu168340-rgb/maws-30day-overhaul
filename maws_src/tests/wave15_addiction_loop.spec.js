@@ -303,6 +303,9 @@ test('Day 5 combat recipe produces readable tactical feedback', async ({ page })
 
   expect(feedback.planMode, 'recipe plan mode should be active').not.toBe('manual');
   expect(readableLines.length, 'Day 5 recipe feedback should contain readable tactical sentences').toBeGreaterThan(0);
+  expect(text, 'auto-filled combat recipe should explain the tactical plan in player-facing language').toMatch(/战术配方.+自动补入/);
+  expect(text, 'combat recipe feedback should name the pressure recipe actions').toMatch(/推搡.+野路挥拳/);
+  expect(text, 'combat feedback should not leak internal plan slot debug fields').not.toMatch(/comboSlot|planSlot|PLAN触发/);
   expect(text.trim(), 'combat feedback should not be only a combo placeholder').not.toBe('触发 combo');
   expect(text, 'purchased skill-tree node should surface in the next combat feedback').toContain('技能树反馈');
 

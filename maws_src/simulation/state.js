@@ -2976,7 +2976,7 @@ export class GameStore {
         const stepLogs = result.steps.flatMap((step) => Array.isArray(step.log) ? step.log : step.log ? [step.log] : []);
         const feedbackLine = s.combat?.lastWindow?.feedback?.text || '';
         const perkFeedback = skillTreeCombatFeedback(s, previousCombat.playerQueue || []);
-        const planLine = planFill ? `PLAN触发：${planFill.label}（${planFill.mode}）自动填入本窗口建议队列：${planQueueNames(planFill.queue)}。${planFill.feedback || ''} comboSlot=${planFill.comboSlot || 'empty'}，planSlot=${planFill.planSlot || 'empty'}。` : '';
+        const planLine = planFillLogLine(planFill);
         if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, planLine, feedbackLine, ...perkFeedback, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
         if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 1) {
           finishBattle(s, 'first_wind');
@@ -3345,6 +3345,16 @@ function combatPlanMode(id) {
 
 function planQueueNames(queue = []) {
   return queue.map((id) => SKILLS[id]?.name || id).join(' -> ');
+}
+
+function planFillLogLine(planFill) {
+  if (!planFill?.queue?.length) return '';
+  const queueNames = planQueueNames(planFill.queue);
+  const summary = String(planFill.feedback || '').trim();
+  const sourceNote = planFill.source === 'planMode'
+    ? '这是当前计划给本窗口补的 1-2 招。'
+    : '原配方有动作暂时用不了，先用可执行动作稳住。';
+  return `战术配方：${planFill.label}自动补入【${queueNames}】。${summary} ${sourceNote}`.trim();
 }
 
 function queueAdvice(queue, plan) {
