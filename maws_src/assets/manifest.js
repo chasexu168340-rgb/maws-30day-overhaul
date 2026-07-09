@@ -1,5 +1,53 @@
+export const PIXEL_ART_CONTRACT = Object.freeze({
+  baseResolution: Object.freeze({ width: 480, height: 270 }),
+  palette: 'maws-urban-32',
+  artVersion: 'legacy-v1',
+  statusValues: Object.freeze(['final', 'fallback', 'legacy'])
+});
+
+const logicalSizeFor = (src, type) => {
+  if (type === 'spritesheet' || src.includes('/sprites/')) return { width: 96, height: 144, unit: 'frame' };
+  if (src.includes('/backgrounds/') || src.includes('/imagegen_city_map/')) return { width: 480, height: 270, unit: 'scene' };
+  if (src.includes('/characters_clean/')) return { width: 96, height: 144, unit: 'standee' };
+  if (src.includes('/portraits/')) return { width: 96, height: 96, unit: 'portrait' };
+  if (src.includes('/skillCards/')) return { width: 192, height: 128, unit: 'card' };
+  if (src.includes('/items/')) return { width: 64, height: 64, unit: 'icon' };
+  if (src.includes('/icons/')) return { width: 32, height: 32, unit: 'icon' };
+  if (src.includes('/vfx/')) return { width: 64, height: 64, unit: 'effect' };
+  if (src.includes('/ui/')) return { width: 128, height: 64, unit: 'ui' };
+  return { width: 32, height: 32, unit: 'pixel' };
+};
+
+const bundleFor = (src, tags = []) => {
+  const locations = ['home', 'metro_station', 'store', 'worksite', 'park', 'boxing', 'wuguan', 'mma', 'gym', 'physio', 'street'];
+  const location = locations.find((id) => tags.includes(id));
+  if (location) return `location:${location}`;
+  if (src.includes('/imagegen_city_map/') || tags.includes('city-map')) return 'core:city';
+  if (tags.includes('player') || tags.includes('nav') || tags.includes('resource') || src.includes('/ui/')) return 'core';
+  if (tags.includes('enemy') || tags.includes('combat') || src.includes('/sprites/') || src.includes('/vfx/')) return 'combat:shared';
+  if (src.includes('/portraits/')) return 'dialogue';
+  if (src.includes('/skillCards/')) return 'skills';
+  if (src.includes('/items/')) return 'inventory';
+  return 'core';
+};
+
 const entry = (src, meta = {}) => {
-  const { w, h, type, transparent, anchor, pixelArt, ...rest } = meta;
+  const {
+    w,
+    h,
+    type,
+    transparent,
+    anchor,
+    pixelArt,
+    logicalSize,
+    palette,
+    bundle,
+    artVersion,
+    status,
+    tags = [],
+    ...rest
+  } = meta;
+  const resolvedPixelArt = Boolean(pixelArt);
   return {
     src,
     path: src,
@@ -9,7 +57,13 @@ const entry = (src, meta = {}) => {
     height: h ?? rest.height,
     transparent: Boolean(transparent),
     anchor: anchor || null,
-    pixelArt: Boolean(pixelArt),
+    pixelArt: resolvedPixelArt,
+    logicalSize: logicalSize || logicalSizeFor(src, type),
+    palette: palette || (resolvedPixelArt ? PIXEL_ART_CONTRACT.palette : null),
+    bundle: bundle || bundleFor(src, tags),
+    artVersion: artVersion || (src.includes('/pixel_v2/') ? 'pixel-v2' : PIXEL_ART_CONTRACT.artVersion),
+    status: status || (src.includes('/pixel_v2/') ? 'final' : tags.includes('fallback') ? 'fallback' : 'legacy'),
+    tags,
     ...rest
   };
 };
@@ -24,6 +78,7 @@ const shenzhenDay = (file, tags = []) => entry(`assets/imagegen_shenzhen_sun/bac
 const cityMap = (file, tags = []) => entry(`assets/imagegen_city_map/${file}`, {
   w: 1672,
   h: 941,
+  pixelArt: true,
   tags: [...tags, 'city-map', 'imagegen']
 });
 
@@ -212,6 +267,10 @@ export function flattenManifest(manifest = ASSET_MANIFEST) {
     });
   });
   return rows;
+}
+
+export function manifestEntriesForBundle(bundle, manifest = ASSET_MANIFEST) {
+  return flattenManifest(manifest).filter(({ entry: asset }) => asset.bundle === bundle);
 }
 
 export function assetPath(key) {

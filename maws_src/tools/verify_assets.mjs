@@ -2,12 +2,39 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
-import { ASSET_MANIFEST, assetPath, flattenManifest } from '../assets/manifest.js';
+import { ASSET_MANIFEST, PIXEL_ART_CONTRACT, assetPath, flattenManifest } from '../assets/manifest.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..', '..');
 
 const requiredGroups = ['backgrounds', 'characters', 'sprites', 'portraits', 'items', 'icons', 'skillCards', 'ui', 'vfx'];
+const requireFinalDay1To9 = process.argv.includes('--require-final-day1-9') || process.env.MAWS_REQUIRE_FINAL_DAY1_9 === '1';
+const day1To9FinalKeys = [
+  'bg.city.map.day',
+  'bg.city.map.night',
+  'bg.metro_station.day',
+  'bg.metro_station.night',
+  'bg.home.day',
+  'bg.home.night',
+  'bg.store.day',
+  'bg.store.night',
+  'bg.store.rain',
+  'bg.worksite.day',
+  'bg.worksite.night',
+  'bg.worksite.dusk',
+  'bg.park.day',
+  'bg.park.night',
+  'bg.boxing.day',
+  'bg.boxing.night',
+  'fighter.player',
+  'fighter.enemy.boxer',
+  'scene.npc.fatty',
+  'scene.npc.xiaoman',
+  'scene.npc.worker',
+  'scene.npc.coach',
+  'anim.fighter.player',
+  'anim.fighter.enemy.boxer'
+];
 const legacyKeys = [
   'bg.home.night',
   'bg.store.rain',
@@ -151,6 +178,21 @@ function assertSpritesheet(group, key, value, full, src) {
   if (edgeOpaque > Math.max(24, Math.floor(opaque * 0.004))) errors.push(`${group}.${key} has possible edge background residue`);
 }
 
+function assertPixelContract(group, key, value, src) {
+  if (!value.pixelArt) errors.push(`${group}.${key} must declare pixelArt: true`);
+  const logical = value.logicalSize;
+  if (!logical || !Number.isFinite(logical.width) || logical.width <= 0 || !Number.isFinite(logical.height) || logical.height <= 0) {
+    errors.push(`${group}.${key} missing positive logicalSize`);
+  }
+  if (!value.palette) errors.push(`${group}.${key} missing palette`);
+  if (!value.bundle || typeof value.bundle !== 'string') errors.push(`${group}.${key} missing bundle`);
+  if (!value.artVersion || typeof value.artVersion !== 'string') errors.push(`${group}.${key} missing artVersion`);
+  if (!PIXEL_ART_CONTRACT.statusValues.includes(value.status)) errors.push(`${group}.${key} has invalid status: ${value.status}`);
+  if (value.status === 'final' && !src.startsWith('assets/pixel_v2/')) {
+    errors.push(`${group}.${key} is final but not versioned under assets/pixel_v2: ${src}`);
+  }
+}
+
 for (const group of requiredGroups) {
   if (!ASSET_MANIFEST[group]) errors.push(`missing group: ${group}`);
 }
@@ -180,7 +222,8 @@ for (const group of requiredGroups) {
       path.join(root, 'assets', 'generated'),
       path.join(root, 'assets', 'imagegen_pixel'),
       path.join(root, 'assets', 'imagegen_shenzhen_sun'),
-      path.join(root, 'assets', 'imagegen_city_map')
+      path.join(root, 'assets', 'imagegen_city_map'),
+      path.join(root, 'assets', 'pixel_v2')
     ];
     if (!allowedAssetRoots.some((assetRoot) => full.startsWith(assetRoot))) {
       errors.push(`${group}.${key} points outside allowed asset roots: ${src}`);
@@ -197,8 +240,22 @@ for (const group of requiredGroups) {
       if (!png) errors.push(`${group}.${key} is not a PNG: ${src}`);
       else if (png.width <= 0 || png.height <= 0) errors.push(`${group}.${key} has invalid PNG dimensions: ${src}`);
     }
+    assertPixelContract(group, key, value, src);
     assertSpritesheet(group, key, value, full, src);
   }
+}
+
+if (requireFinalDay1To9) {
+  const rowsByKey = new Map(rows.map((row) => [row.key, row]));
+  day1To9FinalKeys.forEach((key) => {
+    const row = rowsByKey.get(key);
+    if (!row) {
+      errors.push(`Day1-9 final art key missing: ${key}`);
+      return;
+    }
+    if (row.entry.status !== 'final') errors.push(`Day1-9 art is not final: ${key} (${row.entry.status})`);
+    if (!row.path.startsWith('assets/pixel_v2/')) errors.push(`Day1-9 final art is outside assets/pixel_v2: ${key}`);
+  });
 }
 
 if (errors.length) {

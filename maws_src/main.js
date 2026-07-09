@@ -23,8 +23,9 @@ const config = {
     height: window.innerHeight
   },
   render: {
-    antialias: true,
-    pixelArt: false
+    antialias: false,
+    pixelArt: true,
+    roundPixels: true
   },
   scene: [
     new BootScene(store),

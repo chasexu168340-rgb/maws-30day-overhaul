@@ -4,40 +4,44 @@
 
 ## Current Task
 
-SkillOpt-style ordinary action reward-feedback polish for the current playable slice.
+Day 1-9 retro-pixel vertical slice: establish a truthful pixel runtime and asset contract before combat recipes and final art production.
 
 ## Scope
 
-- Continue the audit -> patch -> validate loop from the first playable scene into ordinary action/event result feedback.
-- Improve reward/result readability without changing systems, combat formulas, economy, starter skills, save keys, asset structure, or broad UI architecture.
-- No CLI workers are running for this pass.
-- Future CLI workers must use `gpt-5.5` with high reasoning by default.
-- CLI workers must not generate images, sprite sheets, moodboards, or visual assets; image generation belongs in the current Codex session only.
+- Keep the existing Phaser + DOM architecture.
+- Use a 480x270 logical scene grid and version final art under `assets/pixel_v2/`.
+- Preserve existing manifest keys so gameplay code does not need an asset-key migration.
+- Treat `E:\SteamLibrary\steamapps\common\Bruisers Steam Demo 0.1` as an experience reference only; do not copy its code, text, audio, or art.
+- Image generation belongs to the current Codex session. CLI workers must not generate images.
 
 ## Current Result
 
-- Audited an ordinary Day 1 duration-action result modal with a rendered screenshot.
-- Found the highest-impact issue: reward chips existed, but the reward area still read like a wide empty information box instead of a compact payoff burst.
-- Kept existing reward data and settlement behavior intact; no economy, combat, story, save, or asset changes.
-- `renderRewardChips()` now emits a cleaner list/listitem structure with a reward-count CSS variable for layout control.
-- `.maws-reward-chips.hero` now lays out as a centered compact reward burst: five chips can fit in one desktop row, and low-count rewards shrink instead of leaving a giant empty box.
-- Strengthened `wave13_first_look.spec.js` to wait for the reward-pop animation, assert reward-list semantics, constrain reward-burst height, and verify each reward chip surfaces a clear value.
+- Phaser now renders with antialiasing disabled, pixel-art sampling enabled, and rounded pixel positions.
+- DOM-rendered game images and the Phaser canvas use nearest-neighbor image rendering.
+- Every manifest entry now exposes `logicalSize`, `palette`, `bundle`, `artVersion`, and `status` metadata.
+- Asset bundles distinguish core, city, location, combat, dialogue, skill, and inventory content without changing existing runtime keys.
+- Asset verification now validates the pixel contract and supports an explicit `--require-final-day1-9` release gate.
+- Existing assets remain honestly marked `legacy` or `fallback`; no old image is labeled as final pixel art.
+- The Bruisers reference install was identified as a packaged GameMaker build. Its mechanics and presentation will be evaluated through play and visible behavior rather than asset extraction.
 
 ## Validation
 
 - Passed:
-  - `npx playwright test maws_src/tests/wave13_first_look.spec.js --grep "ordinary action reward" --browser=chromium --reporter=line`
-  - `npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line`
-  - `npm run check:full`
-  - `npm run test:playtest`
+  - `npm run build`
+  - `node maws_src/tools/verify_assets.mjs`
+  - `npx playwright test maws_src/tests/phaser-smoke.spec.js --browser=chromium --reporter=line` (6 passed)
   - `git diff --check`
+- Expected release-gate failure:
+  - `node maws_src/tools/verify_assets.mjs --require-final-day1-9`
+  - Reason: Day 1-9 still uses legacy/fallback art outside `assets/pixel_v2/`.
 
 ## Risks
 
-- The worker guard only applies to the unified pipeline script. Manually launched CLI windows still need the same model/image-generation instruction in their prompt or launcher.
-- This is a reward feedback polish pass, not a full modal redesign or new VFX/audio payoff system.
+- Responsive Phaser sizing still uses the current resize strategy; integer-scale presentation needs screenshot validation before changing scale behavior.
+- Bundle metadata is ready, but runtime lazy loading has not been switched on yet.
+- The final Day 1-9 art gate cannot pass until the generated art is reviewed, normalized, integrated, and marked final.
 - Generated screenshots under `outputs/` are local audit artifacts and must remain uncommitted.
 
 ## Next Step
 
-Commit and push the ordinary action reward-feedback polish on `codex/skillopt-optimization-pass`.
+Commit and push the pixel runtime/asset contract, audit Bruisers for transferable loop and feedback principles, then implement the data-driven 1-2 action combat recipe slice.

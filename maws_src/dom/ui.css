@@ -16,6 +16,12 @@
   pointer-events: none;
 }
 
+#game-root canvas,
+.maws-ui img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .maws-ui {
   width: 100%;
   height: 100%;
@@ -71,7 +77,7 @@
   object-fit: contain;
   vertical-align: middle;
   margin-right: 6px;
-  image-rendering: auto;
+  image-rendering: pixelated;
 }
 
 .maws-meter-icon {
@@ -2019,7 +2025,7 @@
 }
 
 .maws-scene-character.player.standee img {
-  image-rendering: auto;
+  image-rendering: pixelated;
 }
 
 .maws-scene-character.player figcaption {
@@ -5093,7 +5099,7 @@
     drop-shadow(0 8px 10px rgba(0, 0, 0, 0.46))
     saturate(0.96)
     contrast(1.04);
-  image-rendering: auto;
+  image-rendering: pixelated;
 }
 
 .maws-scene-character.player {
@@ -5124,7 +5130,7 @@
 
 .maws-scene-character.placeholder-npc img {
   height: var(--npc-stage-height);
-  image-rendering: auto;
+  image-rendering: pixelated;
 }
 
 .maws-scene-character.portrait,
