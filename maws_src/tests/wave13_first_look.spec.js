@@ -157,11 +157,34 @@ async function expectClickableAboveBottomNav(page, locator, label) {
   expect(target.bottom, `${label} should stay above bottom nav`).toBeLessThanOrEqual(nav.top + 1);
 }
 
+async function expectSceneCharacterImagesReady(page, label) {
+  await expect.poll(async () => page.locator('.maws-scene-character img').evaluateAll((images) => ({
+    count: images.length,
+    ready: images.filter((image) => image.complete && image.naturalWidth > 16 && image.naturalHeight > 16).length,
+    highPriority: images.filter((image) => image.getAttribute('loading') === 'eager'
+      && image.getAttribute('fetchpriority') === 'high'
+      && image.getAttribute('decoding') === 'sync').length
+  })), {
+    message: `${label} scene character images should decode before first-look capture`,
+    timeout: 2000
+  }).toEqual({ count: 2, ready: 2, highPriority: 2 });
+  const images = await page.locator('.maws-scene-character img').evaluateAll((nodes) => nodes.map((image) => ({
+    width: image.naturalWidth,
+    height: image.naturalHeight
+  })));
+  expect(images.length, `${label} should render scene character image assets`).toBeGreaterThanOrEqual(2);
+  images.forEach((image) => {
+    expect(image.width, `${label} scene character image should not be a zero-width placeholder`).toBeGreaterThan(16);
+    expect(image.height, `${label} scene character image should not be a zero-height placeholder`).toBeGreaterThan(16);
+  });
+}
+
 test('rental home first look opens with reachable main CTA and no horizontal overflow', async ({ page }) => {
   const errors = await loadGame(page, MOBILE);
 
   await expect(page.locator('.maws-scene')).toBeVisible();
   await expect(page.locator('.maws-scene-character').first()).toBeVisible();
+  await expectSceneCharacterImagesReady(page, '390x844 rental home');
   const navBox = await visibleBox(page, '.maws-nav');
   expect(navBox.top, 'bottom nav should remain fully visible').toBeGreaterThanOrEqual(0);
   expect(navBox.bottom, 'bottom nav should remain fully inside mobile viewport').toBeLessThanOrEqual(navBox.viewportHeight + 1);
@@ -193,6 +216,7 @@ test('rental home first look opens with reachable main CTA and no horizontal ove
 test('clicking a scene character opens interaction menu or clear feedback', async ({ page }) => {
   const errors = await loadGame(page, DESKTOP);
 
+  await expectSceneCharacterImagesReady(page, 'desktop rental home');
   const character = page.locator('.maws-scene-character.actionable:not(.player)').first();
   await expect(character).toBeVisible();
   await character.click();

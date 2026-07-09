@@ -358,10 +358,10 @@ function renderSceneInteractionMenu(menu) {
 function renderSceneCharacter(character, actions = []) {
   const src = character.assetKey ? assetPath(character.assetKey) : null;
   const placeholderClass = character.assetKey?.startsWith('scene.npc.') ? 'placeholder-npc' : '';
-  const loadAttrs = character.side === 'player' ? 'loading="eager" fetchpriority="high"' : 'loading="eager"';
+  const loadAttrs = 'loading="eager" fetchpriority="high" decoding="sync"';
   const interaction = sceneCharacterInteraction(character, actions);
   const art = src
-    ? `<img src="${esc(src)}" alt="" ${loadAttrs} decoding="async" />`
+    ? `<img src="${esc(src)}" alt="" ${loadAttrs} />`
     : `<span class="maws-scene-token">${esc(character.icon || character.name?.slice(0, 1) || '?')}</span>`;
   return `
     <figure class="maws-scene-character ${esc(character.side || 'npc')} ${esc(character.kind || 'portrait')} ${placeholderClass} ${interaction.actionable ? 'actionable' : 'inspectable'}" role="button" tabindex="0" aria-label="${esc(interaction.label)}" ${interaction.attrs}>
