@@ -490,6 +490,96 @@ test('combat plan mode exposes at least three tactical recipe modes', async ({ p
   expect(errors).toEqual([]);
 });
 
+test('combat recipes queue manually and award first insight only once', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  const initial = await page.evaluate(async () => {
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'startBattle', enemyId: 'E01' });
+    const { buildRenderModel, createNewState, migrateSave } = await import('/maws_src/simulation/state.js');
+    const model = buildRenderModel(store.state);
+    const legacy = createNewState('worker');
+    delete legacy.player.combatRecipeLoadout;
+    delete legacy.combatMemory.recipeFirsts;
+    const migrated = migrateSave(legacy);
+    return {
+      loadout: [...store.state.player.combatRecipeLoadout],
+      recipes: model.combat.recipes.map((item) => ({ id: item.id, available: item.available })),
+      boxing: model.combatRecipes.find((item) => item.id === 'boxing_one_two'),
+      migrated: {
+        loadout: migrated.player.combatRecipeLoadout,
+        recipeFirsts: migrated.combatMemory.recipeFirsts
+      }
+    };
+  });
+
+  expect(initial.loadout).toEqual(['wild_pressure', 'guard_counter']);
+  expect(initial.recipes).toHaveLength(2);
+  expect(initial.recipes.find((item) => item.id === 'wild_pressure')?.available).toBe(true);
+  expect(initial.boxing.unlocked, 'boxing one-two must not be gifted before Day 9 training').toBe(false);
+  expect(initial.boxing.unavailableReason).toContain('Day 9');
+  expect(initial.migrated.loadout).toEqual(['wild_pressure', 'guard_counter']);
+  expect(initial.migrated.recipeFirsts).toEqual({});
+
+  const pressureRecipe = page.locator('button[data-action="queueCombatRecipe"][data-id="wild_pressure"]');
+  await expect(pressureRecipe).toBeVisible();
+  await expect(pressureRecipe).toContainText('推搡 → 野路挥拳');
+  const beforeQueue = await page.evaluate(() => Number(window.MAWS_STORE.state.player.insightPoints || 0));
+  await pressureRecipe.click();
+  const queued = await page.evaluate((before) => {
+    const store = window.MAWS_STORE;
+    return {
+      before,
+      after: Number(store.state.player.insightPoints || 0),
+      phase: store.state.combat.phase,
+      queue: [...store.state.combat.playerQueue],
+      activeRecipeId: store.state.combat.activeRecipeId
+    };
+  }, beforeQueue);
+
+  expect(queued.queue).toEqual(['push_away', 'wild_swing']);
+  expect(queued.activeRecipeId).toBe('wild_pressure');
+  expect(queued.phase, 'queuing a recipe must not auto-confirm the combat window').toBe('planning');
+  expect(queued.after, 'queuing alone must not grant insight').toBe(queued.before);
+
+  const first = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'confirmBattle' });
+    const recipeFx = (store.state.combat?.steps || [])
+      .flatMap((step) => step.fx || [])
+      .find((fx) => fx.recipeId === 'wild_pressure');
+    return {
+      points: Number(store.state.player.insightPoints || 0),
+      first: store.state.combatMemory.recipeFirsts?.wild_pressure || null,
+      reward: store.state.combat?.lastRecipeReward || null,
+      fx: recipeFx || null
+    };
+  });
+
+  expect(first.points).toBe(queued.before + 1);
+  expect(first.first?.enemyId).toBe('E01');
+  expect(first.reward).toMatchObject({ recipeId: 'wild_pressure', insight: 1 });
+  expect(first.fx).toMatchObject({
+    recipeId: 'wild_pressure',
+    recipeStage: 2,
+    impactTier: 'recipe',
+    vfxKey: 'combat.recipe.wild_pressure',
+    paletteFlash: 'red-gold'
+  });
+  expect(first.fx.hitstopMs).toBeGreaterThan(0);
+  expect(first.fx.shake).toBeGreaterThan(0);
+
+  const repeated = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const before = Number(store.state.player.insightPoints || 0);
+    store.dispatch({ type: 'queueCombatRecipe', recipeId: 'wild_pressure' });
+    store.dispatch({ type: 'confirmBattle' });
+    return { before, after: Number(store.state.player.insightPoints || 0) };
+  });
+  expect(repeated.after, 'recipe insight must not be farmable').toBe(repeated.before);
+  expect(errors).toEqual([]);
+});
+
 test('Day 5 combat recipe produces readable tactical feedback', async ({ page }) => {
   const errors = await loadGame(page);
 

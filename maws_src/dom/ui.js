@@ -1028,6 +1028,19 @@ function renderCombat(model) {
     { mode: mode.id },
     `maws-plan-mode-option ${combat.planMode === mode.id ? 'active' : ''} ${combat.phase === 'auto' ? 'disabled' : ''}`
   )).join('');
+  const combatRecipes = (combat.recipes || []).slice(0, 2);
+  const recipeChips = combatRecipes.map((recipe) => {
+    const actionNames = (recipe.actions || []).map((action) => action.name || action.id).join(' → ');
+    const status = recipe.available
+      ? (recipe.firstCompleted ? '已掌握 · 排入队列' : '首次完成 +1 洞察')
+      : recipe.unavailableReason || '当前不可用';
+    return btn(
+      `<em>配方</em><strong>${esc(recipe.name)}</strong><small>${esc(actionNames)}</small><span>${esc(status)}</span>`,
+      'queueCombatRecipe',
+      { id: recipe.id },
+      `maws-combat-recipe-chip ${combat.activeRecipeId === recipe.id ? 'active' : ''} ${combat.phase === 'auto' || !recipe.available ? 'disabled' : ''}`
+    );
+  }).join('');
   const equippedCards = (model.equipSkills || []).filter((slot) => slot.skill).map((slot, index) => ({
     id: slot.id,
     ...slot.skill,
@@ -1039,7 +1052,7 @@ function renderCombat(model) {
   }));
   const selectedCards = equippedCards.filter((skill) => skill.selected);
   const standbyCards = equippedCards.filter((skill) => !skill.selected);
-  const visibleCardLimit = Math.max(4, Math.min(6, equippedCards.length || 4));
+  const visibleCardLimit = Math.max(2, Math.min(6 - combatRecipes.length, equippedCards.length || 4));
   const windowCards = [...selectedCards, ...standbyCards].slice(0, Math.max(1, visibleCardLimit));
   const windowIds = new Set(windowCards.map((skill) => skill.id));
   const drawerCards = equippedCards.filter((skill) => !windowIds.has(skill.id));
@@ -1051,15 +1064,17 @@ function renderCombat(model) {
     btn('<strong>攻身</strong><small>稳妥目标</small>', 'setTarget', { target: 'body' }, `maws-combat-command-chip ${combat.target === 'body' ? 'active' : ''}`),
     btn('<strong>读招</strong><small>悬停看详情</small>', 'toast', { text: '悬停或聚焦指令卡查看完整数值与描述。' }, 'maws-combat-command-chip')
   ].slice(0, Math.max(0, 4 - windowCards.length)).join('');
-  const windowCommandHtml = windowCardHtml + commandFillers;
+  const windowCommandHtml = recipeChips + windowCardHtml + commandFillers;
   const logs = (combat.log || []).slice(0, 7).map((line) => `<li>${esc(line)}</li>`).join('');
   const feedback = combat.lastWindow?.feedback;
   const perkPulse = (combat.log || []).find((line) => /^技能树反馈/.test(String(line || '')));
+  const recipeReward = combat.lastRecipeReward;
   const feedbackPanel = `
     <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
       <b>窗口反馈</b>
       <span>${esc(feedback?.text || '先读意图，再放 1-2 张动作卡。')}</span>
       ${perkPulse ? `<small>${esc(perkPulse)}</small>` : ''}
+      ${recipeReward ? `<small class="maws-recipe-reward">首次完成 ${esc(recipeReward.label)} · 洞察 +${esc(recipeReward.insight)}</small>` : ''}
     </aside>`;
   const lastWindow = combat.lastWindow
     ? `上个窗口 ${esc(combat.lastWindow.duration)}秒 · ${esc(combat.lastWindow.stepCount || 0)}个动作 · ${esc(combat.lastWindow.pressure || '交换')}`
@@ -1086,7 +1101,7 @@ function renderCombat(model) {
           <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>本窗口动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
         <div class="maws-combat-window-cards">
-          <b>指令栏 · 选 ${esc(queueLimit)} 招入队</b>
+          <b>战术配方 + 指令栏 · 选 ${esc(queueLimit)} 招入队</b>
           <div class="maws-card-grid combat focus">${windowCommandHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
         </div>
         <details class="maws-fold maws-tactics-drawer">
@@ -1519,6 +1534,7 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'clearSkills') store.dispatch({ type: 'clearSkills' });
   else if (action === 'setTarget') store.dispatch({ type: 'setTarget', target: dataset.target });
   else if (action === 'setCombatPlan') store.dispatch({ type: 'setCombatPlan', planMode: dataset.mode });
+  else if (action === 'queueCombatRecipe') store.dispatch({ type: 'queueCombatRecipe', recipeId: dataset.id });
   else if (action === 'confirmBattle') store.dispatch({ type: 'confirmBattle' });
   else if (action === 'surrender') store.dispatch({ type: 'surrender' });
   else if (action === 'postReview') store.dispatch({ type: 'postReview', kind: dataset.kind });

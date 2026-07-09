@@ -1,3 +1,5 @@
+import { COMBAT_RECIPES } from '../content/data.js';
+
 const COMBAT_TUNING = Object.freeze({
   version: "4.0-hard-comic",
   enemyScalePerDay: 0.009,
@@ -21,13 +23,20 @@ const COMBAT_TUNING = Object.freeze({
   roundLimit: 12
 });
 
-const COMBO_RULES = Object.freeze([
-  { id: "boxing_one_two", from: "jab", to: "straight", hit: 0.06, risk: 0.03, spRefund: 3, label: "1-2节奏", log: "连段反馈：刺拳先把距离点出来，直拳接上时手路顺了半拍。" },
-  { id: "wild_one_two", from: "push_away", to: "wild_swing", hit: 0.05, risk: 0.02, spRefund: 2, label: "推开挥击", log: "连段反馈：你先用推搡抢到一拍空间，野路挥拳砸过去时对方脚下乱了。" },
-  { id: "guard_counter", from: "guard", toType: "strike", hit: 0.05, risk: 0.04, spRefund: 2, label: "防反", log: "连段反馈：抱架把脸收住以后，你终于不是闭眼换拳，反击稳了一点。" },
-  { id: "pull_and_tag", from: "retreat", toType: "strike", hit: 0.04, risk: 0.03, spRefund: 2, label: "拉开点打", log: "连段反馈：后撤让拳头有了路，你点回去那一下没有站在原地赌。" },
-  { id: "cool_exit", from: "talkdown", to: "retreat", hit: 0, risk: 0.05, spRefund: 4, label: "降温撤离", log: "连段反馈：话先慢下来，脚再退出来，冲突没有继续往上烧。" }
-]);
+const recipe = (id) => COMBAT_RECIPES[id];
+
+const COMBO_RULES = Object.freeze(Object.values(COMBAT_RECIPES).map((item) => ({
+  id: item.id,
+  from: item.actions[0],
+  to: item.actions[1],
+  hit: item.bonus.hit,
+  risk: item.bonus.risk,
+  spRefund: item.bonus.spRefund,
+  label: item.name,
+  log: item.feedback.complete,
+  vfxKey: item.vfx.key,
+  paletteFlash: item.vfx.paletteFlash
+})));
 
 const PLAN_MODES = Object.freeze({
   manual: {
@@ -40,56 +49,33 @@ const PLAN_MODES = Object.freeze({
     id: "safe",
     label: "稳守",
     desc: "不熟悉敌人时，先抱架，再打一拍粗糙反击。",
-    queue: [["guard", "wild_swing"], ["guard", "retreat"]],
-    feedback: {
-      summary: "稳守配方：先把脸和重心收回来，再用一拳确认对方反应。",
-      actions: {
-        guard: "你先把架子收紧，没有急着赌拳。",
-        wild_swing: "你没有完全看懂对方，但这一拳让他不敢直接压进。",
-        retreat: "你没有赢拳，但赢了出口。"
-      }
-    }
+    recipeId: "guard_counter",
+    queue: [[...recipe("guard_counter").actions], ["guard", "retreat"]],
+    feedback: recipe("guard_counter").feedback
   },
   pressure: {
     id: "pressure",
     label: "压迫",
     desc: "打没练过的人时，先抢空间，再接野路挥拳。",
-    queue: [["push_away", "wild_swing"]],
-    feedback: {
-      summary: "压迫配方：先用推搡抢到一拍，再把对方脚步打乱。",
-      actions: {
-        push_away: "你用推搡抢到一拍，肩膀先顶住，对方没法舒服地压进来。",
-        wild_swing: "对方脚下乱了，你趁他重心还没找回来，补上一记野路挥拳。"
-      }
-    }
+    recipeId: "wild_pressure",
+    queue: [[...recipe("wild_pressure").actions]],
+    feedback: recipe("wild_pressure").feedback
   },
   exit: {
     id: "exit",
     label: "脱离",
     desc: "街头风险高时，先降温，再后撤找出口。",
-    queue: [["talkdown", "retreat"]],
-    feedback: {
-      summary: "脱离配方：先把火压下去，再把出口拿回来。",
-      actions: {
-        talkdown: "你先把话说慢，冲突没有继续升温。",
-        retreat: "你没有赢拳，但赢了出口。"
-      }
-    }
+    recipeId: "cool_exit",
+    queue: [[...recipe("cool_exit").actions]],
+    feedback: recipe("cool_exit").feedback
   },
   probe: {
     id: "probe",
     label: "试探",
     desc: "不确定对方路数时，先退看一拍，或抱架后轻推试反应。",
-    queue: [["retreat", "wild_swing"], ["guard", "push_away"]],
-    feedback: {
-      summary: "试探配方：先让对方多走一步，你再决定打还是退。",
-      actions: {
-        retreat: "你先退半步，把对方的追法看清楚。",
-        wild_swing: "你用一记粗拳试他的反应，对方脚下乱了一下。",
-        guard: "你把架势摆稳，先观察对方怎么进来。",
-        push_away: "你轻推试距，知道这半步能不能抢。"
-      }
-    }
+    recipeId: "pull_and_tag",
+    queue: [[...recipe("pull_and_tag").actions], ["guard", "push_away"]],
+    feedback: recipe("pull_and_tag").feedback
   }
 });
 
@@ -316,6 +302,7 @@ export function suggestCombatQueue(state) {
       source: "planMode",
       planMode: mode,
       planLabel: PLAN_MODES[mode].label,
+      recipeId: PLAN_MODES[mode].recipeId || null,
       feedback: planFeedback(mode),
       forced: false
     };
@@ -342,6 +329,7 @@ export function suggestCombatQueue(state) {
     source: "equipSkills",
     planMode: mode,
     planLabel: PLAN_MODES[mode].label,
+    recipeId: null,
     feedback: queue.length ? planFeedback(mode) : "",
     forced: false
   };
@@ -410,10 +398,18 @@ export function chooseEnemyResponse(context, rng = Math.random) {
 export function resolveCombatExchange(state, selectedActions, rng = Math.random) {
   const combatState = normalizeCombatState(state);
   const actions = normalizeActions(selectedActions);
+  const matchedRecipe = recipeForActions(actions);
   const steps = [];
   const resting = actions.length === 0;
 
   resetCombo(combatState);
+  combatState.activeRecipeId = matchedRecipe?.id || null;
+  combatState.recipeProgress = {
+    recipeId: matchedRecipe?.id || null,
+    stage: 0,
+    total: matchedRecipe?.actions?.length || 0,
+    completed: false
+  };
 
   if (resting) {
     const restStep = resolveRest(combatState);
@@ -1247,6 +1243,10 @@ function normalizeCombatState(input) {
     lastEnemyResponse: source.lastEnemyResponse || source.enemyPlan || null,
     currentEnemyResponse: source.currentEnemyResponse || null,
     planMode: PLAN_MODES[source.planMode] ? source.planMode : "manual",
+    activeRecipeId: COMBAT_RECIPES[source.activeRecipeId] ? source.activeRecipeId : null,
+    recipeProgress: source.recipeProgress && typeof source.recipeProgress === "object"
+      ? clonePlain(source.recipeProgress)
+      : { recipeId: null, stage: 0, total: 0, completed: false },
     lastPlanFill: source.lastPlanFill || null,
     planSlot: source.planSlot || null,
     comboSlot: source.comboSlot || null,
@@ -1372,6 +1372,11 @@ function suggestedPlanQueue(mode, prefer) {
   return [];
 }
 
+function recipeForActions(actions = []) {
+  if (!Array.isArray(actions) || actions.length !== 2) return null;
+  return Object.values(COMBAT_RECIPES).find((item) => item.actions.every((id, index) => actions[index] === id)) || null;
+}
+
 function planFeedback(mode) {
   const plan = PLAN_MODES[mode] || PLAN_MODES.manual;
   return plan.feedback?.summary || plan.desc || "";
@@ -1379,6 +1384,8 @@ function planFeedback(mode) {
 
 function recipeActionFeedback(combatState, id, actionIndex) {
   const fill = combatState.lastPlanFill;
+  const active = COMBAT_RECIPES[combatState.activeRecipeId] || null;
+  if (active?.actions?.[actionIndex] === id) return active.feedback?.actions?.[id] || "";
   if (!fill?.queue?.length || fill.queue[actionIndex] !== id) return "";
   const plan = PLAN_MODES[fill.mode || combatState.planMode] || null;
   return plan?.feedback?.actions?.[id] || "";
@@ -1422,12 +1429,27 @@ function applyComboRefund(combatState, combo, log, fx, id) {
   if (refund > 0) {
     combatState.player.sp = clamp(combatState.player.sp + refund, 0, combatState.player.spMax);
   }
+  combatState.activeRecipeId = combo.id;
+  combatState.recipeProgress = { recipeId: combo.id, stage: 2, total: 2, completed: true };
   log.push(`${combo.log}${refund ? ` 体力返还+${refund}。` : ""}`);
-  fx.push(makeFx(combatState, "guard", "player", 0, combo.label, id, { icon: "COMBO" }));
+  fx.push(makeFx(combatState, "guard", "player", 0, combo.label, id, {
+    icon: "COMBO",
+    recipeId: combo.id,
+    recipeStage: 2,
+    impactTier: "recipe",
+    vfxKey: combo.vfxKey,
+    hitstopMs: 90,
+    shake: 0.4,
+    paletteFlash: combo.paletteFlash
+  }));
 }
 
 function rememberComboAction(combatState, id) {
   combatState._lastComboAction = id;
+  const active = COMBAT_RECIPES[combatState.activeRecipeId];
+  if (active?.actions?.[0] === id && !combatState.recipeProgress?.completed) {
+    combatState.recipeProgress = { recipeId: active.id, stage: 1, total: active.actions.length, completed: false };
+  }
 }
 
 function styleBonus(combatState, key, scale = 0.001) {
@@ -1570,6 +1592,16 @@ function makeFx(combatState, type, actor, damage, label, skillId, extra = {}) {
 
   const blocked = /削|格挡|抱架|防下/.test(label || "");
   const critical = damage >= 24 || type === "break";
+  const impactTier = extra.impactTier || (type === "miss" ? "miss" : type === "break" ? "break" : blocked ? "guard" : critical ? "heavy" : type === "hit" ? "normal" : "utility");
+  const impactDefaults = {
+    miss: { hitstopMs: 0, shake: 0, paletteFlash: "none" },
+    utility: { hitstopMs: 28, shake: 0.08, paletteFlash: "white" },
+    guard: { hitstopMs: 45, shake: 0.14, paletteFlash: "white" },
+    normal: { hitstopMs: 60, shake: 0.24, paletteFlash: "red" },
+    heavy: { hitstopMs: 100, shake: 0.5, paletteFlash: "red-gold" },
+    break: { hitstopMs: 140, shake: 0.72, paletteFlash: "gold-white" },
+    recipe: { hitstopMs: 90, shake: 0.4, paletteFlash: "gold" }
+  }[impactTier] || { hitstopMs: 28, shake: 0.08, paletteFlash: "white" };
   return {
     type,
     actor,
@@ -1586,7 +1618,14 @@ function makeFx(combatState, type, actor, damage, label, skillId, extra = {}) {
     damageKind: type === "break" ? "break" : blocked ? "blocked" : critical ? "heavy" : type,
     blocked,
     critical,
-    icon: extra.icon || fxIcon(type, label, damage)
+    icon: extra.icon || fxIcon(type, label, damage),
+    recipeId: extra.recipeId || null,
+    recipeStage: Number(extra.recipeStage || 0),
+    impactTier,
+    vfxKey: extra.vfxKey || `combat.${impactTier}`,
+    hitstopMs: Number(extra.hitstopMs ?? impactDefaults.hitstopMs),
+    shake: Number(extra.shake ?? impactDefaults.shake),
+    paletteFlash: extra.paletteFlash || impactDefaults.paletteFlash
   };
 }
 

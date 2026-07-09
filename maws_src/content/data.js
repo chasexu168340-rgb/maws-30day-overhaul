@@ -156,6 +156,94 @@ export const LOC_UNLOCKS = {
 
 export const INITIAL_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 
+export const COMBAT_RECIPES = Object.freeze({
+  wild_pressure: Object.freeze({
+    id: 'wild_pressure',
+    name: '抢拍压迫',
+    planMode: 'pressure',
+    actions: Object.freeze(['push_away', 'wild_swing']),
+    unlock: Object.freeze({ day: 1, skills: Object.freeze(['push_away', 'wild_swing']) }),
+    bonus: Object.freeze({ hit: 0.05, risk: 0.02, spRefund: 2 }),
+    feedback: Object.freeze({
+      summary: '先用推搡抢到一拍，再把对方脚步打乱。',
+      actions: Object.freeze({
+        push_away: '你用推搡抢到一拍，肩膀先顶住，对方没法舒服地压进来。',
+        wild_swing: '对方脚下乱了，你趁他重心还没找回来，补上一记野路挥拳。'
+      }),
+      complete: '连段反馈：你先抢到一拍空间，野路挥拳落下时，对方脚下乱了。'
+    }),
+    vfx: Object.freeze({ key: 'combat.recipe.wild_pressure', paletteFlash: 'red-gold' })
+  }),
+  guard_counter: Object.freeze({
+    id: 'guard_counter',
+    name: '抱架反击',
+    planMode: 'safe',
+    actions: Object.freeze(['guard', 'wild_swing']),
+    unlock: Object.freeze({ day: 1, skills: Object.freeze(['guard', 'wild_swing']) }),
+    bonus: Object.freeze({ hit: 0.05, risk: 0.04, spRefund: 2 }),
+    feedback: Object.freeze({
+      summary: '先把脸和重心收回来，再用一拳确认对方反应。',
+      actions: Object.freeze({
+        guard: '你先把架子收紧，没有急着赌拳。',
+        wild_swing: '抱架让你看清了来路，这一拳不再只是闭眼换拳。'
+      }),
+      complete: '连段反馈：抱架把脸收住以后，你终于不是闭眼换拳，反击稳了一点。'
+    }),
+    vfx: Object.freeze({ key: 'combat.recipe.guard_counter', paletteFlash: 'gold' })
+  }),
+  cool_exit: Object.freeze({
+    id: 'cool_exit',
+    name: '降温脱离',
+    planMode: 'exit',
+    actions: Object.freeze(['talkdown', 'retreat']),
+    unlock: Object.freeze({ day: 1, skills: Object.freeze(['talkdown', 'retreat']) }),
+    bonus: Object.freeze({ hit: 0, risk: 0.05, spRefund: 4 }),
+    feedback: Object.freeze({
+      summary: '先把火压下去，再把出口拿回来。',
+      actions: Object.freeze({
+        talkdown: '你先把话说慢，冲突没有继续升温。',
+        retreat: '你没有赢拳，但赢了出口。'
+      }),
+      complete: '连段反馈：话先慢下来，脚再退出来，冲突没有继续往上烧。'
+    }),
+    vfx: Object.freeze({ key: 'combat.recipe.cool_exit', paletteFlash: 'cool' })
+  }),
+  pull_and_tag: Object.freeze({
+    id: 'pull_and_tag',
+    name: '拉开点打',
+    planMode: 'probe',
+    actions: Object.freeze(['retreat', 'mystic']),
+    unlock: Object.freeze({ day: 1, skills: Object.freeze(['retreat', 'mystic']) }),
+    bonus: Object.freeze({ hit: 0.04, risk: 0.03, spRefund: 2 }),
+    feedback: Object.freeze({
+      summary: '先退看一拍，再用旧招试出对方的追法。',
+      actions: Object.freeze({
+        retreat: '你先退半步，把对方的追法看清楚。',
+        mystic: '距离拉开以后，旧招终于有了落点，不再站在原地赌。'
+      }),
+      complete: '连段反馈：后撤让拳头有了路，你点回去那一下没有站在原地赌。'
+    }),
+    vfx: Object.freeze({ key: 'combat.recipe.pull_and_tag', paletteFlash: 'ink-gold' })
+  }),
+  boxing_one_two: Object.freeze({
+    id: 'boxing_one_two',
+    name: '拳击一二',
+    planMode: null,
+    actions: Object.freeze(['jab', 'straight']),
+    unlock: Object.freeze({ day: 9, skills: Object.freeze(['jab', 'straight']) }),
+    bonus: Object.freeze({ hit: 0.06, risk: 0.03, spRefund: 3 }),
+    feedback: Object.freeze({
+      summary: '刺拳先碰距离，直拳沿着同一条线接进去。',
+      actions: Object.freeze({
+        jab: '刺拳先点到距离，对方的抱架被迫回应。',
+        straight: '直拳沿着刺拳留下的线接进去，出拳和回收连成了一件事。'
+      }),
+      complete: '连段反馈：刺拳先把距离点出来，直拳接上时手路顺了半拍。'
+    }),
+    vfx: Object.freeze({ key: 'combat.recipe.boxing_one_two', paletteFlash: 'gold-white' })
+  })
+});
+
 export const LOC_POS = {
   home: [1, 6], park: [2, 3], store: [2, 5], metro_station: [3, 5], worksite: [4, 1], boxing: [4, 6],
   wuguan: [6, 4], mma: [5, 8], sanda_gym: [6, 6], karate_dojo: [7, 5], taekwondo_club: [7, 7],

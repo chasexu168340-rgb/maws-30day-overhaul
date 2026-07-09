@@ -7,6 +7,107 @@
   pointer-events: none;
 }
 
+/* Day 1-9 tactical recipes share the command bar instead of covering the stage. */
+.maws-combat-recipe-chip {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 3px;
+  min-width: 0;
+  min-height: 96px;
+  height: 96px;
+  max-height: 96px;
+  padding: 7px;
+  border: 3px solid rgba(255, 243, 210, 0.72);
+  background: rgba(10, 10, 13, 0.96);
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: inset 5px 0 0 var(--maws-red, #df2f35), 3px 3px 0 rgba(0, 0, 0, 0.9);
+  text-align: left;
+  white-space: normal;
+}
+
+.maws-combat-recipe-chip em,
+.maws-combat-recipe-chip strong,
+.maws-combat-recipe-chip small,
+.maws-combat-recipe-chip span {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maws-combat-recipe-chip em {
+  color: var(--maws-red-light, #ff5a5f);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.maws-combat-recipe-chip strong {
+  font-size: 14px;
+  line-height: 1.05;
+}
+
+.maws-combat-recipe-chip small {
+  color: rgba(255, 243, 210, 0.78);
+  font-size: 10px;
+  line-height: 1.15;
+}
+
+.maws-combat-recipe-chip span {
+  color: var(--maws-gold, #ffd941);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.maws-combat-recipe-chip:hover,
+.maws-combat-recipe-chip:focus-visible,
+.maws-combat-recipe-chip.active {
+  border-color: var(--maws-gold, #ffd941);
+  box-shadow: inset 5px 0 0 var(--maws-gold, #ffd941), 3px 3px 0 rgba(0, 0, 0, 0.9);
+  transform: translateY(-1px);
+}
+
+.maws-combat-recipe-chip.disabled {
+  opacity: 0.48;
+}
+
+.maws-recipe-reward {
+  color: var(--maws-gold, #ffd941) !important;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #050506;
+}
+
+@media (max-width: 760px) {
+  .maws-combat-recipe-chip {
+    flex: 0 0 132px;
+    min-width: 132px;
+    min-height: 90px;
+    height: 90px;
+    max-height: 90px;
+  }
+}
+
+@media (max-width: 430px) {
+  .maws-combat-recipe-chip {
+    flex-basis: 126px;
+    min-width: 126px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .maws-combat-recipe-chip {
+    min-height: 90px;
+    height: 90px;
+    max-height: 90px;
+  }
+}
+
 #maws-ui-root * {
   box-sizing: border-box;
 }
@@ -7529,4 +7630,29 @@
     line-height: 1.28;
     box-shadow: 4px 4px 0 #050506;
   }
+}
+
+/* Keep recipe commands visually distinct from individual white action cards. */
+#maws-ui-root.maws-ui .maws-combat-recipe-chip {
+  border-color: rgba(255, 243, 210, 0.72);
+  background: #0a0a0d;
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: inset 5px 0 0 var(--maws-red, #df2f35), 3px 3px 0 #050506;
+}
+
+#maws-ui-root.maws-ui .maws-combat-recipe-chip strong {
+  color: var(--maws-paper, #fff3d2);
+}
+
+#maws-ui-root.maws-ui .maws-combat-recipe-chip small {
+  color: rgba(255, 243, 210, 0.78);
+}
+
+#maws-ui-root.maws-ui .maws-combat-recipe-chip:hover,
+#maws-ui-root.maws-ui .maws-combat-recipe-chip:focus-visible,
+#maws-ui-root.maws-ui .maws-combat-recipe-chip.active {
+  border-color: var(--maws-gold, #ffd941);
+  background: #131014;
+  color: var(--maws-paper, #fff3d2);
+  box-shadow: inset 5px 0 0 var(--maws-gold, #ffd941), 3px 3px 0 #050506;
 }

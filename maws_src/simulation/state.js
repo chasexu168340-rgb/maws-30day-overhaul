@@ -1,5 +1,6 @@
 import {
   ACTIONS,
+  COMBAT_RECIPES,
   DOW,
   ENEMIES,
   FATHER_DIARY,
@@ -141,14 +142,101 @@ const TRAINING_TEMPLATE_LABELS = {
 const COMBAT_QUEUE_LIMIT = 2;
 const COMBAT_PLAN_MODES = Object.freeze([
   { id: 'manual', label: '手动', desc: '玩家自己排本窗口动作。' },
-  { id: 'safe', label: '稳守', desc: '优先抱架，再找一次反击或拉开。' },
-  { id: 'pressure', label: '压迫', desc: '先推开抢空间，再接一记野路挥拳。' },
-  { id: 'exit', label: '脱离', desc: '先降温，再后撤离开冲突。' },
-  { id: 'probe', label: '试探', desc: '先退看一拍，或抱架后推搡试距。' }
+  { id: 'safe', label: '稳守', recipeId: 'guard_counter', desc: COMBAT_RECIPES.guard_counter.feedback.summary },
+  { id: 'pressure', label: '压迫', recipeId: 'wild_pressure', desc: COMBAT_RECIPES.wild_pressure.feedback.summary },
+  { id: 'exit', label: '脱离', recipeId: 'cool_exit', desc: COMBAT_RECIPES.cool_exit.feedback.summary },
+  { id: 'probe', label: '试探', recipeId: 'pull_and_tag', desc: COMBAT_RECIPES.pull_and_tag.feedback.summary }
 ]);
 const DEFAULT_COMBAT_PLAN_MODE = 'manual';
+const DEFAULT_COMBAT_RECIPE_LOADOUT = Object.freeze(['wild_pressure', 'guard_counter']);
 const STARTER_EQUIP_SKILLS = ['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown'];
 const MICRO_ACTION_IDS = new Set(['idle_blank', 'read_notes', 'scroll_short_video', 'message_friend', 'simple_stretch']);
+
+function combatRecipeById(recipeId) {
+  return COMBAT_RECIPES[recipeId] || null;
+}
+
+function normalizeCombatRecipes(state) {
+  state.player ||= {};
+  const hasLoadout = Array.isArray(state.player.combatRecipeLoadout);
+  const source = hasLoadout ? state.player.combatRecipeLoadout : DEFAULT_COMBAT_RECIPE_LOADOUT;
+  state.player.combatRecipeLoadout = [...new Set(source.filter((id) => combatRecipeById(id)))].slice(0, 2);
+  state.combatMemory ||= {};
+  state.combatMemory.recipeFirsts = state.combatMemory.recipeFirsts && typeof state.combatMemory.recipeFirsts === 'object'
+    ? state.combatMemory.recipeFirsts
+    : {};
+  return state.player.combatRecipeLoadout;
+}
+
+function combatRecipeUnlockReason(state, definition) {
+  if (!definition) return '未知战术配方';
+  const day = Math.max(1, Number(definition.unlock?.day || 1));
+  if (Number(state.day || 1) < day) return `Day ${day} 后开放`;
+  const missing = (definition.unlock?.skills || []).filter((id) => !state.unlocked?.[id]);
+  if (missing.length) return `还没学会：${missing.map((id) => SKILLS[id]?.name || id).join('、')}`;
+  return '';
+}
+
+function combatRecipeAvailability(state, definition, { requireLoadout = true } = {}) {
+  const unlockReason = combatRecipeUnlockReason(state, definition);
+  if (unlockReason) return { available: false, reason: unlockReason };
+  const loadout = normalizeCombatRecipes(state);
+  if (requireLoadout && !loadout.includes(definition.id)) return { available: false, reason: '先把这个配方装进战术槽' };
+  const missingEquip = definition.actions.filter((id) => !(state.equipSkills || []).includes(id));
+  if (missingEquip.length) return { available: false, reason: `指令栏未装备：${missingEquip.map((id) => SKILLS[id]?.name || id).join('、')}` };
+  if (!state.combat) return { available: true, reason: '' };
+  if (state.combat.phase === 'auto') return { available: false, reason: '当前交换窗口还没结束' };
+
+  let distance = state.combat.distance || 'mid';
+  let sp = Number(state.player?.sp || 0);
+  for (const actionId of definition.actions) {
+    const skill = SKILLS[actionId];
+    if (!skill) return { available: false, reason: `动作缺失：${actionId}` };
+    if (!skill.dist.includes(distance)) return { available: false, reason: `${skill.name}不适合当前${distance === 'far' ? '远' : distance === 'close' ? '近' : '中'}距离` };
+    if (sp < Number(skill.sp || 0)) return { available: false, reason: `体力不足，至少还差 ${Math.ceil(Number(skill.sp || 0) - sp)}` };
+    sp -= Number(skill.sp || 0);
+    if (actionId === 'retreat') distance = distance === 'close' ? 'mid' : 'far';
+    if (actionId === 'advance') distance = distance === 'far' ? 'mid' : 'close';
+  }
+  return { available: true, reason: '' };
+}
+
+function combatRecipeForQueue(queue = []) {
+  if (!Array.isArray(queue) || queue.length !== 2) return null;
+  return Object.values(COMBAT_RECIPES).find((definition) => definition.actions.every((id, index) => queue[index] === id)) || null;
+}
+
+function combatRecipeModels(state) {
+  normalizeCombatRecipes(state);
+  const loadout = state.player.combatRecipeLoadout;
+  return Object.values(COMBAT_RECIPES).map((definition) => {
+    const availability = combatRecipeAvailability(state, definition);
+    return {
+      ...definition,
+      actions: definition.actions.map((id) => ({ id, name: SKILLS[id]?.name || id })),
+      equipped: loadout.includes(definition.id),
+      unlocked: !combatRecipeUnlockReason(state, definition),
+      available: availability.available,
+      unavailableReason: availability.reason,
+      firstCompleted: Boolean(state.combatMemory.recipeFirsts?.[definition.id])
+    };
+  });
+}
+
+function awardFirstRecipeInsight(state) {
+  const progress = state.combat?.recipeProgress;
+  const definition = combatRecipeById(progress?.completed ? progress.recipeId : null);
+  if (!definition) return null;
+  normalizeCombatRecipes(state);
+  if (state.combatMemory.recipeFirsts[definition.id]) return null;
+  state.combatMemory.recipeFirsts[definition.id] = { day: state.day, enemyId: state.combat.enemyId };
+  addInsight(state, 1);
+  const reward = { recipeId: definition.id, label: definition.name, insight: 1 };
+  state.combat.lastRecipeReward = reward;
+  state.combat.log = [`首次完成【${definition.name}】：洞察点 +1。`, ...(state.combat.log || [])].slice(0, 12);
+  addLog(state, `第一次完成战术配方【${definition.name}】，洞察点 +1。`);
+  return reward;
+}
 
 export function fmtTime(totalMinutes) {
   const m = Math.floor(totalMinutes % 1440);
@@ -468,6 +556,7 @@ export function createNewState(origin = 'worker') {
       fatigue: 10,
       fitXp: 0,
       insightPoints: 0,
+      combatRecipeLoadout: [...DEFAULT_COMBAT_RECIPE_LOADOUT],
       money: o.money,
       fame: 0,
       face: 45,
@@ -484,7 +573,7 @@ export function createNewState(origin = 'worker') {
     skillTree: { unlocked: {} },
     log: [],
     eventLog: [],
-    combatMemory: { fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recent: [] },
+    combatMemory: { fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recipeFirsts: {}, recent: [] },
     maw: createDefaultMaw(),
     unlocked: Object.fromEntries(INITIAL_SKILLS.filter((id) => SKILLS[id]).map((id) => [id, 1])),
     equipSkills: [...STARTER_EQUIP_SKILLS],
@@ -494,6 +583,7 @@ export function createNewState(origin = 'worker') {
     if (state.unlocked[id]) state.skillState[id] = { p: id === 'mystic' ? 5 : 16, use: 0, retrain: 0, zhus: [] };
   });
   normalizeSkillTree(state);
+  normalizeCombatRecipes(state);
   updateMawProgress(state);
   recalcVitals(state);
   addLog(state, '第1天，你决定用30天搞清楚：什么是能用的武术。');
@@ -534,14 +624,16 @@ export function migrateSave(input) {
     if (s.unlocked[id] && !s.skillState[id]) s.skillState[id] = { p: 10, use: 0, retrain: 0, zhus: [] };
   });
   s.combatMemory = {
-    fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recent: [],
+    fights: 0, wins: 0, losses: 0, riskWins: 0, lastEnemy: null, lastResult: null, lastTags: [], enemyNotes: {}, styleWins: {}, recipeFirsts: {}, recent: [],
     ...(s.combatMemory || {})
   };
   s.combatMemory.enemyNotes ||= {};
   s.combatMemory.styleWins ||= {};
+  s.combatMemory.recipeFirsts ||= {};
   s.combatMemory.recent ||= [];
   s.maw = createDefaultMaw(s.maw);
   normalizeSkillTree(s);
+  normalizeCombatRecipes(s);
   updateMawProgress(s);
   recalcVitals(s);
   return s;
@@ -2166,6 +2258,9 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     clock: 0,
     playerQueue: [],
     planMode: DEFAULT_COMBAT_PLAN_MODE,
+    activeRecipeId: null,
+    recipeProgress: { recipeId: null, stage: 0, total: 0, completed: false },
+    lastRecipeReward: null,
     planSlot: null,
     comboSlot: null,
     lastPlanFill: null,
@@ -2990,12 +3085,53 @@ export class GameStore {
       startBattle(s, action.enemyId);
     } else if (action.type === 'openFatherDiary') {
       s.ui.modal = fatherDiaryModal(s);
+    } else if (action.type === 'toggleCombatRecipe') {
+      const definition = combatRecipeById(action.recipeId);
+      normalizeCombatRecipes(s);
+      const unlockReason = combatRecipeUnlockReason(s, definition);
+      if (!definition || unlockReason) {
+        s.ui.toast = unlockReason || '未知战术配方';
+      } else if (s.player.combatRecipeLoadout.includes(definition.id)) {
+        s.player.combatRecipeLoadout = s.player.combatRecipeLoadout.filter((id) => id !== definition.id);
+        s.ui.toast = `已卸下战术配方【${definition.name}】`;
+      } else if (s.player.combatRecipeLoadout.length >= 2) {
+        s.ui.toast = '战术配方最多装备 2 个';
+      } else {
+        s.player.combatRecipeLoadout.push(definition.id);
+        s.ui.toast = `已装备战术配方【${definition.name}】`;
+      }
+    } else if (action.type === 'queueCombatRecipe') {
+      const c = s.combat;
+      const definition = combatRecipeById(action.recipeId);
+      const availability = combatRecipeAvailability(s, definition);
+      if (!c || !definition) {
+        s.ui.toast = '当前没有可排队的战斗窗口';
+      } else if (!availability.available) {
+        s.ui.toast = availability.reason;
+      } else {
+        c.selected = [...definition.actions];
+        c.playerQueue = [...definition.actions];
+        c.activeRecipeId = definition.id;
+        c.recipeProgress = { recipeId: definition.id, stage: 0, total: definition.actions.length, completed: false };
+        c.planMode = definition.planMode || 'manual';
+        c.lastPlanFill = {
+          mode: c.planMode,
+          label: definition.name,
+          recipeId: definition.id,
+          queue: [...definition.actions],
+          source: 'recipe',
+          feedback: definition.feedback.summary
+        };
+        s.ui.toast = `已排入【${definition.name}】，确认后执行`;
+      }
     } else if (action.type === 'selectSkill') {
       const c = s.combat;
       const skill = SKILLS[action.skillId];
       if (c && skill && c.phase !== 'auto' && (c.selected || []).length < COMBAT_QUEUE_LIMIT) {
         c.selected.push(action.skillId);
         c.playerQueue = [...c.selected];
+        c.activeRecipeId = null;
+        c.recipeProgress = { recipeId: null, stage: 0, total: 0, completed: false };
       } else if (c && skill && c.phase !== 'auto') {
         s.ui.toast = `每回合最多 ${COMBAT_QUEUE_LIMIT} 张动作卡`;
       }
@@ -3003,6 +3139,8 @@ export class GameStore {
       if (s.combat && s.combat.phase !== 'auto') {
         s.combat.selected = [];
         s.combat.playerQueue = [];
+        s.combat.activeRecipeId = null;
+        s.combat.recipeProgress = { recipeId: null, stage: 0, total: 0, completed: false };
       }
     } else if (action.type === 'cycleTarget') {
       const c = s.combat;
@@ -3014,6 +3152,8 @@ export class GameStore {
       const c = s.combat;
       if (c && c.phase !== 'auto' && combatPlanMode(action.planMode).id === action.planMode) {
         c.planMode = action.planMode;
+        c.activeRecipeId = null;
+        c.recipeProgress = { recipeId: null, stage: 0, total: 0, completed: false };
         c.lastPlanFill = null;
       }
     } else if (action.type === 'confirmBattle') {
@@ -3023,17 +3163,26 @@ export class GameStore {
         const playerPickedQueue = c.selected?.length ? [...c.selected] : [];
         const planMode = combatPlanMode(previousCombat.planMode);
         const suggestion = playerPickedQueue.length || planMode.id === 'manual' ? null : suggestCombatQueue(toCombatInput({ ...s, combat: previousCombat }));
+        const selectedRecipe = combatRecipeForQueue(playerPickedQueue);
+        const queuedRecipeFill = selectedRecipe && previousCombat.lastPlanFill?.recipeId === selectedRecipe.id
+          ? clone(previousCombat.lastPlanFill)
+          : null;
         const planFill = !playerPickedQueue.length && suggestion?.queue?.length ? {
           mode: planMode.id,
           label: planMode.label,
           queue: [...suggestion.queue],
           reason: suggestion.reason,
           source: suggestion.source,
+          recipeId: suggestion.recipeId || null,
           feedback: suggestion.feedback || '',
           planSlot: previousCombat.planSlot || null,
           comboSlot: previousCombat.comboSlot || null
-        } : null;
+        } : queuedRecipeFill;
         previousCombat.playerQueue = playerPickedQueue.length ? playerPickedQueue : (planFill?.queue?.length ? [...planFill.queue] : ['guard']);
+        previousCombat.lastRecipeReward = null;
+        const queuedRecipe = combatRecipeForQueue(previousCombat.playerQueue);
+        previousCombat.activeRecipeId = queuedRecipe?.id || null;
+        previousCombat.recipeProgress = { recipeId: queuedRecipe?.id || null, stage: 0, total: queuedRecipe?.actions?.length || 0, completed: false };
         previousCombat.lastPlanFill = planFill;
         const plannedCombat = { ...c, playerQueue: previousCombat.playerQueue, selected: c.selected?.length ? [...c.selected] : [] };
         const plannedState = { ...s, combat: plannedCombat };
@@ -3042,6 +3191,7 @@ export class GameStore {
         const result = resolveCombatExchange(toCombatInput({ ...s, combat: previousCombat }), previousCombat.playerQueue);
         result.combatState.steps = result.steps;
         mergeCombatResult(s, previousCombat, result.combatState);
+        awardFirstRecipeInsight(s);
         const stepLogs = result.steps.flatMap((step) => Array.isArray(step.log) ? step.log : step.log ? [step.log] : []);
         const feedbackLine = s.combat?.lastWindow?.feedback?.text || '';
         const perkFeedback = skillTreeCombatFeedback(s, previousCombat.playerQueue || []);
@@ -3500,8 +3650,11 @@ function planFillLogLine(planFill) {
   const summary = String(planFill.feedback || '').trim();
   const sourceNote = planFill.source === 'planMode'
     ? '这是当前计划给本窗口补的 1-2 招。'
-    : '原配方有动作暂时用不了，先用可执行动作稳住。';
-  return `战术配方：${planFill.label}自动补入【${queueNames}】。${summary} ${sourceNote}`.trim();
+    : planFill.source === 'recipe'
+      ? '队列已经排好，仍由你确认这个窗口。'
+      : '原配方有动作暂时用不了，先用可执行动作稳住。';
+  const verb = planFill.source === 'recipe' ? '已排入' : '自动补入';
+  return `战术配方：${planFill.label}${verb}【${queueNames}】。${summary} ${sourceNote}`.trim();
 }
 
 function queueAdvice(queue, plan) {
@@ -3675,6 +3828,7 @@ function dailyDirectorModel(state, mainEvent, opportunities = []) {
 export function buildRenderModel(state) {
   if (!state) return { boot: true, origins: ORIGINS };
   normalizeSkillTree(state);
+  normalizeCombatRecipes(state);
   const p = state.player;
   const stats = derivedStats(state);
   const fit = fitBonus(p);
@@ -3684,6 +3838,7 @@ export function buildRenderModel(state) {
   const timeOfDay = timeOfDayKey(state.time);
   const backgroundKey = locationBackgroundKey(state.loc, timeOfDay);
   const combatInput = state.combat ? toCombatInput(state) : null;
+  const recipeModels = combatRecipeModels(state);
   const selectedCount = state.combat?.selected?.length || 0;
   const skillPreview = (id) => {
     if (!id || !combatInput) return null;
@@ -3799,6 +3954,7 @@ export function buildRenderModel(state) {
     styleRules: STYLE_RULES,
     skillUnlocks: skillUnlocksModel(state),
     skillTree: skillTreeModel(state),
+    combatRecipes: recipeModels,
     skills: Object.entries(SKILLS).map(([id, skill]) => ({
       id,
       ...skill,
@@ -3828,6 +3984,8 @@ export function buildRenderModel(state) {
       planModes: COMBAT_PLAN_MODES,
       planMode: combatPlanMode(state.combat.planMode).id,
       planLabel: combatPlanMode(state.combat.planMode).label,
+      recipes: recipeModels.filter((item) => item.equipped),
+      activeRecipe: recipeModels.find((item) => item.id === state.combat.activeRecipeId) || null,
       planSlot: state.combat.planSlot || null,
       comboSlot: state.combat.comboSlot || null,
       enemyTell: combatPlanningRead(state, combatInput),

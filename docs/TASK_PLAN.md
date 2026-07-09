@@ -4,44 +4,46 @@
 
 ## Current Task
 
-Day 1-9 retro-pixel vertical slice: establish a truthful pixel runtime and asset contract before combat recipes and final art production.
+Day 1-9 retro-pixel vertical slice: data-driven tactical recipes and readable combat feedback.
 
 ## Scope
 
-- Keep the existing Phaser + DOM architecture.
-- Use a 480x270 logical scene grid and version final art under `assets/pixel_v2/`.
-- Preserve existing manifest keys so gameplay code does not need an asset-key migration.
-- Treat `E:\SteamLibrary\steamapps\common\Bruisers Steam Demo 0.1` as an experience reference only; do not copy its code, text, audio, or art.
-- Image generation belongs to the current Codex session. CLI workers must not generate images.
+- Keep manual 1-2 action queues; recipe controls may fill a queue but never confirm it.
+- Preserve starter skills, E01 strength, economy, save key/version, and existing combat damage formulas.
+- Use Bruisers only as a loop/consequence reference; do not copy packaged assets, code, text, audio, characters, or UI.
+- Keep generated screenshots under `outputs/` untracked.
 
 ## Current Result
 
-- Phaser now renders with antialiasing disabled, pixel-art sampling enabled, and rounded pixel positions.
-- DOM-rendered game images and the Phaser canvas use nearest-neighbor image rendering.
-- Every manifest entry now exposes `logicalSize`, `palette`, `bundle`, `artVersion`, and `status` metadata.
-- Asset bundles distinguish core, city, location, combat, dialogue, skill, and inventory content without changing existing runtime keys.
-- Asset verification now validates the pixel contract and supports an explicit `--require-final-day1-9` release gate.
-- Existing assets remain honestly marked `legacy` or `fallback`; no old image is labeled as final pixel art.
-- The Bruisers reference install was identified as a packaged GameMaker build. Its mechanics and presentation will be evaluated through play and visible behavior rather than asset extraction.
+- Added five data-driven `COMBAT_RECIPES`: wild pressure, guard counter, cool exit, pull and tag, and Day 9 boxing one-two.
+- New saves equip two starter recipe shortcuts; old saves migrate to the same two-slot loadout and initialize `combatMemory.recipeFirsts`.
+- Added backward-compatible `combat.activeRecipeId`, `combat.recipeProgress`, and `combatMemory.recipeFirsts` state.
+- Recipe buttons fill the current two-action queue and leave the final confirm action to the player.
+- First completion grants one Insight once; repeating the recipe cannot farm Insight.
+- Every combat FX now exposes impact tier, VFX key, hit-stop, shake, palette flash, and optional recipe metadata.
+- The combat command bar shows two compact black/red/gold recipe commands plus four common action cards; remaining actions stay in the tactical drawer.
+- Added a concise Bruisers reference document that maps career consequence density to MAWS without changing MAWS into a direct-control boxing game.
+- Desktop and delayed mobile screenshots confirm the combat stage remains visible; mobile character foot anchoring remains a later visual-art issue.
 
 ## Validation
 
 - Passed:
-  - `npm run build`
-  - `node maws_src/tools/verify_assets.mjs`
-  - `npx playwright test maws_src/tests/phaser-smoke.spec.js --browser=chromium --reporter=line` (6 passed)
+  - `npm run check:full` (build, asset verification, 6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npx playwright test maws_src/tests/wave15_addiction_loop.spec.js --browser=chromium --reporter=line` (9 passed)
+  - `node maws_src/tools/sim_day5_park_check.mjs` (worker/fan/student all 4/4 objective pass)
   - `git diff --check`
-- Expected release-gate failure:
-  - `node maws_src/tools/verify_assets.mjs --require-final-day1-9`
-  - Reason: Day 1-9 still uses legacy/fallback art outside `assets/pixel_v2/`.
+- Visual audit artifacts:
+  - `outputs/combat-recipes-desktop-v2.png`
+  - `outputs/combat-recipes-mobile-delayed.png`
 
 ## Risks
 
-- Responsive Phaser sizing still uses the current resize strategy; integer-scale presentation needs screenshot validation before changing scale behavior.
-- Bundle metadata is ready, but runtime lazy loading has not been switched on yet.
-- The final Day 1-9 art gate cannot pass until the generated art is reviewed, normalized, integrated, and marked final.
-- Generated screenshots under `outputs/` are local audit artifacts and must remain uncommitted.
+- Final Day 1-9 art is still legacy/fallback; `verify_assets.mjs --require-final-day1-9` must continue to fail until real `assets/pixel_v2/` replacements exist.
+- Combat recipe VFX metadata is ready, but Phaser still needs to consume hit-stop, shake, and palette-flash values visually.
+- Mobile battle standees load correctly after the Phaser first frame, but their feet sit too high against the current background perspective.
+- Runtime bundle metadata exists, but lazy bundle loading is not yet enabled.
 
 ## Next Step
 
-Commit and push the pixel runtime/asset contract, audit Bruisers for transferable loop and feedback principles, then implement the data-driven 1-2 action combat recipe slice.
+Commit and push this recipe batch, then implement Day 8 three-tier measurement and Day 9 diary/training routing before generating final pixel art.
