@@ -370,6 +370,7 @@ const FINAL_OBJECTIVES = {
 };
 
 const PARK_CHECK_OBJECTIVE_IDS = ['parkSurviveWindow1', 'parkGuardPressure', 'parkRetreatSpace', 'parkNoMoraleCollapse'];
+const FIRST_WIND_OBJECTIVE_IDS = ['firstWindReadTell', 'firstWindProtect', 'firstWindRecipe'];
 
 const PARK_CHECK_OBJECTIVES = {
   parkSurviveWindow1: {
@@ -394,9 +395,28 @@ const PARK_CHECK_OBJECTIVES = {
   }
 };
 
+const FIRST_WIND_OBJECTIVES = {
+  firstWindReadTell: {
+    label: '读懂一次敌人提示',
+    short: '读招',
+    desc: '根据敌人提示选中一次有效反制，不靠猜。'
+  },
+  firstWindProtect: {
+    label: '护住自己一拍',
+    short: '自保',
+    desc: '成功使用抱架或后撤，把这一拍的风险压下来。'
+  },
+  firstWindRecipe: {
+    label: '完成有效战术配方',
+    short: '配方',
+    desc: '完整执行一组两招配方，第二招没有直接失败。'
+  }
+};
+
 const COMBAT_OBJECTIVES = {
   ...FINAL_OBJECTIVES,
-  ...PARK_CHECK_OBJECTIVES
+  ...PARK_CHECK_OBJECTIVES,
+  ...FIRST_WIND_OBJECTIVES
 };
 
 const REFORGED_SKILLS = new Set([
@@ -451,6 +471,7 @@ function createDefaultMaw(existing = {}) {
     reforge: bounded(source.reforge, 0),
     truthRevealed: Boolean(source.truthRevealed),
     firstWindDone: Boolean(source.firstWindDone),
+    firstWindResult: source.firstWindResult && typeof source.firstWindResult === 'object' ? clone(source.firstWindResult) : null,
     diaryRead: Boolean(source.diaryRead),
     forms,
     modules,
@@ -912,13 +933,17 @@ function applyStoryFlags(state, flags = {}) {
 }
 
 function fatherDiaryModal(state, lines = []) {
+  const nextAction = MAIN_EVENTS[9]?.nextAction || null;
   return {
     type: 'fatherDiary',
     title: FATHER_DIARY.title,
     body: FATHER_DIARY.subtitle,
     entries: FATHER_DIARY.entries,
+    page: 0,
+    pageCount: FATHER_DIARY.entries.length,
     closing: FATHER_DIARY.closing,
     read: Boolean(state.maw?.diaryRead),
+    nextAction,
     lines
   };
 }
@@ -2230,9 +2255,14 @@ function finishTrainingMini(state, gradeId, result = {}) {
 
 function startBattle(state, enemyId, main = false, meta = {}) {
   const def = ENEMIES[enemyId] || ENEMIES.E01;
+  const script = meta.script || def.script || null;
   const dailySpBefore = state.player.sp;
   const battleSp = clamp(Math.max(state.player.sp, Math.round(state.player.spMax * 0.72)), 30, state.player.spMax);
-  const objectives = Array.isArray(meta.objectives) ? [...meta.objectives] : (main && state.day === 5 && enemyId === 'E01' ? [...PARK_CHECK_OBJECTIVE_IDS] : []);
+  const objectives = Array.isArray(meta.objectives)
+    ? [...meta.objectives]
+    : script === 'first_wind'
+      ? [...FIRST_WIND_OBJECTIVE_IDS]
+      : (main && state.day === 5 && enemyId === 'E01' ? [...PARK_CHECK_OBJECTIVE_IDS] : []);
   state.player.sp = battleSp;
   state.ui.modal = null;
   state.ui.selectedTravel = null;
@@ -2242,8 +2272,8 @@ function startBattle(state, enemyId, main = false, meta = {}) {
   state.combat = {
     enemyId,
     main,
-    script: meta.script || def.script || null,
-    objectiveSet: main && state.day === 5 && enemyId === 'E01' ? 'park_check' : (objectives.length ? 'final' : null),
+    script,
+    objectiveSet: script === 'first_wind' ? 'first_wind' : (main && state.day === 5 && enemyId === 'E01' ? 'park_check' : (objectives.length ? 'final' : null)),
     objectivePassCount: main && state.day === 5 && enemyId === 'E01' ? 2 : null,
     objectives,
     objectiveProgress: Object.fromEntries(objectives.map((id) => [id, Boolean(state.maw?.objectives?.[id])])),
@@ -2594,6 +2624,28 @@ function updateCombatObjectives(state, previousCombat, combat, steps = []) {
   const protectedActions = ['guard', 'sprawl', 'dodge', 'retreat', 'dirtyescape'];
   const straightActions = ['straight', 'karate_reverse_punch', 'jab'];
 
+  if (combat.objectiveSet === 'first_wind') {
+    const counters = counterSkillsForPlan(previousCombat?.enemyTell);
+    if (playerActions.some((id) => counters.includes(id))) {
+      mark('firstWindReadTell', '你看见了提示，并用对得上的动作接住这一拍。');
+    }
+    if (playerSteps.some((step) => ['guard', 'retreat'].includes(stepActionId(step)) && step.result?.ok)) {
+      mark('firstWindProtect', '你没有急着证明，先用抱架或后撤护住了自己。');
+    }
+    const completedRecipe = COMBAT_RECIPES[combat.recipeProgress?.completed ? combat.recipeProgress.recipeId : ''];
+    const recipeFinish = completedRecipe
+      ? [...playerSteps].reverse().find((step) => stepActionId(step) === completedRecipe.actions[completedRecipe.actions.length - 1])
+      : null;
+    const recipeEffective = Boolean(recipeFinish?.result?.ok)
+      && recipeFinish.result?.hit !== false
+      && recipeFinish.result?.success !== false;
+    if (completedRecipe && recipeEffective) {
+      mark('firstWindRecipe', `你完整做出【${completedRecipe.name}】，第二招没有直接散掉。`);
+    }
+    combat.objectiveNotes = combat.objectiveNotes.slice(0, 5);
+    return;
+  }
+
   if (combat.objectiveSet === 'park_check') {
     if (Number(combat.windowCount || 0) >= 1 && state.player.hp > 0) {
       mark('parkSurviveWindow1', '你撑过了公园验货的第一个窗口。');
@@ -2674,34 +2726,76 @@ function finalObjectiveTier(count) {
   };
 }
 
+function firstWindTier(count) {
+  if (count >= 3) {
+    return {
+      key: 'reassessed',
+      title: '让对方重新估量',
+      lead: '你没赢，但三把尺子都量出了答案。',
+      body: '第三个窗口结束时，对方第一次停了一拍。不是怕你，是确认你已经开始看懂。'
+    };
+  }
+  if (count >= 2) {
+    return {
+      key: 'steady',
+      title: '稳住了',
+      lead: '你没有追着证明，先把能做对的两件事做对。',
+      body: '差距还在，但你能从提示里做出选择。现实没有放水，你也没有散掉。'
+    };
+  }
+  return {
+    key: 'measured',
+    title: '被量出差距',
+    lead: '这不是菜，是一把终于有刻度的尺子。',
+    body: '对方只用三个窗口告诉你：距离、回收和判断还没有连成一件事。'
+  };
+}
+
 function finishFirstWindBattle(state, reason = 'first_wind') {
   const combat = state.combat;
   state.maw = createDefaultMaw(state.maw);
+  const objectives = finalObjectiveList(combat);
+  const completed = objectives.filter((item) => item.done).length;
+  const tier = firstWindTier(completed);
   const before = snapshotState(state);
-  recordCombatOutcome(state, false, 'first_wind');
+  applyMainlineMawEffects(state, MAIN_EVENTS[state.day]);
+  recordCombatOutcome(state, false, `measure_${tier.key}`);
   state.maw.chapter = 'broken';
   state.maw.firstWindDone = true;
+  state.maw.firstWindResult = { tier: tier.key, completed, total: objectives.length, day: state.day };
   state.flags.needFatherDiary = true;
+  state.flags[`first_wind_${tier.key}`] = true;
   state.flags[`main_${state.day}`] = true;
   state.daily.mainDone = true;
-  addInsight(state, 2);
+  state.player.morale = clamp(state.player.morale + (completed >= 2 ? 2 : -2), 0, 100);
+  state.player.calm = clamp(state.player.calm + (completed >= 2 ? 3 : 1), 0, 100);
+  addInsight(state, Math.max(1, completed));
   const targetSp = Math.round(state.player.spMax * 0.66);
   state.player.sp = clamp(Math.max(combat.dailySpBefore || 0, targetSp), 0, state.player.spMax);
-  addLog(state, '一阵风之后，你知道旧招名接不住真实拳距。第9天，该回家翻开父亲日记。');
+  addLog(state, `一阵风：${tier.title}（${completed}/${objectives.length}）。第9天，该回家翻开父亲日记。`);
   const lines = settlementLines(before, snapshotState(state));
   state.ui.modal = {
     type: 'battleResult',
-    title: '一阵风之后',
+    title: `一阵风 · ${tier.title}`,
     body: [
-      '沉默拳击手没有陪你演一招成名。第一个窗口结束时，你已经明白：问题不在输赢，而在你一直把误判当成神功。',
-      '误判被清账，祖传信念被打碎一角。父亲留下的东西，可能不在招名里。',
+      tier.body,
+      `目标完成：${completed}/${objectives.length}。问题被量出来以后，下一步就不再靠猜。`,
+      '第9天回家翻开父亲日记，再去拳馆把刺拳和回收练成真东西。',
       `日常体力已恢复到 ${Math.round(state.player.sp)}/${Math.round(state.player.spMax)}。`
     ].join('\n'),
-    lead: '你被第一波真实拳距打醒了。',
+    objectiveLines: objectives.map((item) => ({
+      label: item.label,
+      desc: item.desc,
+      done: item.done,
+      status: item.done ? '完成' : '未完成'
+    })),
+    lead: tier.lead,
     rewardDeltas: rewardDeltasFromSettlement(lines, state, { source: 'battle' }),
     lines,
     win: false,
-    reason
+    reason: tier.key,
+    tier: tier.key,
+    sourceReason: reason
   };
   state.combat = null;
   state.ui.tab = 'map';
@@ -2807,12 +2901,13 @@ function recordCombatOutcome(state, win, reason = 'normal') {
   const combat = state.combat;
   const e = combat.enemy;
   const cm = state.combatMemory;
+  const measurement = String(reason || '').startsWith('measure_');
   cm.fights += 1;
-  if (win) cm.wins += 1;
-  else cm.losses += 1;
+  if (!measurement && win) cm.wins += 1;
+  else if (!measurement) cm.losses += 1;
   if (reason === 'riskwin') cm.riskWins += 1;
   cm.lastEnemy = combat.enemyId;
-  cm.lastResult = reason === 'riskwin' ? 'riskwin' : win ? 'win' : 'loss';
+  cm.lastResult = measurement ? reason : reason === 'riskwin' ? 'riskwin' : win ? 'win' : 'loss';
   cm.lastTags = e.tags || [];
   cm.enemyNotes[combat.enemyId] = { day: state.day, result: cm.lastResult, rounds: combat.round, ai: e.ai, hpLeft: Math.round(e.hp), playerHp: Math.round(state.player.hp) };
   cm.recent.unshift({ day: state.day, enemy: e.name, result: cm.lastResult, rounds: combat.round });
@@ -3025,9 +3120,11 @@ export class GameStore {
         if (main.choices?.length) {
           s.ui.modal = storyChoiceModal(s, main);
         } else if (main.enemy) {
-          applyMainlineMawEffects(s, main);
-          s.flags[`main_${s.day}`] = true;
-          s.daily.mainDone = true;
+          if (main.script !== 'first_wind') {
+            applyMainlineMawEffects(s, main);
+            s.flags[`main_${s.day}`] = true;
+            s.daily.mainDone = true;
+          }
           startBattle(s, main.enemy, true, { script: main.script, objectives: main.objectives });
         } else {
           const before = snapshotState(s);
@@ -3085,6 +3182,26 @@ export class GameStore {
       startBattle(s, action.enemyId);
     } else if (action.type === 'openFatherDiary') {
       s.ui.modal = fatherDiaryModal(s);
+    } else if (action.type === 'turnFatherDiaryPage') {
+      const modal = s.ui.modal;
+      if (modal?.type === 'fatherDiary') {
+        const maxPage = Math.max(0, Number(modal.pageCount || modal.entries?.length || 1) - 1);
+        modal.page = clamp(Number(modal.page || 0) + Number(action.delta || 0), 0, maxPage);
+      }
+    } else if (action.type === 'openDiaryTrainingRoute') {
+      const route = s.ui.modal?.type === 'fatherDiary' ? s.ui.modal.nextAction : MAIN_EVENTS[9]?.nextAction;
+      if (!route?.loc) {
+        s.ui.toast = '拳馆路线还没有接好';
+      } else if (s.loc === route.loc) {
+        s.ui.modal = null;
+        s.ui.tab = 'map';
+        s.ui.toast = `下一步：${route.label || '去练刺拳'}`;
+      } else {
+        s.ui.selectedTravel = route.loc;
+        s.ui.modal = { type: 'travel', loc: route.loc, allowLocked: true, focusActionId: route.actionId || null };
+        s.ui.cityMapOpen = false;
+        s.ui.toast = `下一步：${route.label || '去练刺拳'}`;
+      }
     } else if (action.type === 'toggleCombatRecipe') {
       const definition = combatRecipeById(action.recipeId);
       normalizeCombatRecipes(s);
@@ -3197,7 +3314,7 @@ export class GameStore {
         const perkFeedback = skillTreeCombatFeedback(s, previousCombat.playerQueue || []);
         const planLine = planFillLogLine(planFill);
         if (s.combat) s.combat.log = [`自动窗口 ${s.combat.windowCount}（${s.combat.lastWindow?.duration || 10}秒，${s.combat.lastWindow?.pressure || '交换'}）结束，重新调整。`, planLine, feedbackLine, ...perkFeedback, ...stepLogs, ...(s.combat.log || [])].filter(Boolean).slice(0, 12);
-        if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 1) {
+        if (s.combat?.main && s.combat.script === 'first_wind' && Number(s.combat.windowCount || 0) >= 3) {
           finishBattle(s, 'first_wind');
         } else if (s.combat?.objectiveSet === 'park_check' && finalObjectiveList(s.combat).filter((item) => item.done).length >= Number(s.combat.objectivePassCount || 2)) {
           finishBattle(s, 'objective_pass');

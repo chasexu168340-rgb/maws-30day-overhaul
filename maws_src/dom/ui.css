@@ -3734,6 +3734,68 @@
   font-weight: 900;
 }
 
+.maws-diary-current {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  min-height: 190px;
+  padding: clamp(18px, 3vw, 34px);
+  border: 3px solid #2d2418;
+  background: #eee0bb;
+  color: #17130d;
+  box-shadow: inset 8px 0 0 var(--maws-red, #df2f35), 6px 6px 0 #050506;
+}
+
+.maws-diary-current strong {
+  color: #8d2229;
+  font-size: 13px;
+}
+
+.maws-diary-current p {
+  margin: 0;
+  max-width: 42em;
+  color: #17130d;
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 800;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.maws-diary-current small {
+  padding-top: 9px;
+  border-top: 2px solid rgba(45, 36, 24, 0.35);
+  color: #4c3a24;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.maws-diary-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.maws-diary-controls button {
+  min-width: 112px;
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .maws-diary-current {
+    min-height: 210px;
+    padding: 18px;
+  }
+
+  .maws-diary-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .maws-diary-controls button {
+    min-width: 0;
+  }
+}
+
 .maws-combat-planner {
   display: grid;
   gap: 7px;
@@ -7655,4 +7717,46 @@
   background: #131014;
   color: var(--maws-paper, #fff3d2);
   box-shadow: inset 5px 0 0 var(--maws-gold, #ffd941), 3px 3px 0 #050506;
+}
+
+#maws-ui-root .maws-objective-strip.measurement {
+  position: fixed;
+  top: clamp(108px, 17vh, 168px);
+  left: clamp(12px, 3vw, 34px);
+  z-index: 6;
+  display: grid;
+  width: min(520px, 48vw);
+  padding: 7px 9px;
+  border: 3px solid #050506;
+  background: rgba(5, 5, 6, 0.88);
+  box-shadow: inset 5px 0 0 var(--maws-red, #df2f35), 5px 5px 0 rgba(0, 0, 0, 0.84);
+  pointer-events: none;
+}
+
+#maws-ui-root .maws-objective-strip.measurement > div {
+  flex-wrap: nowrap;
+}
+
+#maws-ui-root .maws-objective-strip.measurement span {
+  flex: 1 1 0;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  #maws-ui-root .maws-objective-strip.measurement {
+    top: 146px;
+    left: 8px;
+    width: calc(100% - 16px);
+    padding: 5px 7px;
+  }
+
+  #maws-ui-root .maws-objective-strip.measurement > b {
+    font-size: 10px;
+  }
+
+  #maws-ui-root .maws-objective-strip.measurement span {
+    padding: 3px 4px;
+    font-size: 10px;
+  }
 }

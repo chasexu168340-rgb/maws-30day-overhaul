@@ -6,6 +6,7 @@
     "serve:game": "node scripts/serve_maws.mjs --port 5174 --open",
     "test:smoke": "playwright test maws_src/tests/phaser-smoke.spec.js --browser=chromium --reporter=line",
     "test:playtest": "playwright test maws_src/tests/day1_day7_playtest.spec.js --browser=chromium --reporter=line",
+    "test:day1-9": "playwright test maws_src/tests/day1_day9_vertical_slice.spec.js --browser=chromium --reporter=line",
     "check": "npm run build",
     "check:full": "npm run build && npm run test:smoke"
   },

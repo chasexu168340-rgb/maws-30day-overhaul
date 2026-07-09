@@ -1006,9 +1006,9 @@ function renderCombat(model) {
       <p>${esc(tell.failure || '')}</p>
       <ol>${tellTips}</ol>
     </div>` : '';
-  const objectives = (combat.objectiveList || []).length ? `
-    <div class="maws-objective-strip">
-      <b>终战目标</b>
+  const objectiveStrip = (combat.objectiveList || []).length ? `
+    <div class="maws-objective-strip ${combat.objectiveSet === 'first_wind' ? 'measurement' : ''}">
+      <b>${combat.objectiveSet === 'first_wind' ? '三窗口测量' : '终战目标'}</b>
       <div>
         ${(combat.objectiveList || []).map((objective) => `
           <span class="${objective.done ? 'done' : ''}" title="${esc(objective.desc || '')}"><i>${objective.done ? '✓' : '·'}</i> ${esc(objective.short || objective.label)}</span>
@@ -1016,6 +1016,8 @@ function renderCombat(model) {
       </div>
     </div>
   ` : '';
+  const measurementObjectives = combat.objectiveSet === 'first_wind' ? objectiveStrip : '';
+  const objectives = combat.objectiveSet === 'first_wind' ? '' : objectiveStrip;
   const targetControls = ['head', 'body', 'leg'].map((target) => btn(
     targetText(target),
     'setTarget',
@@ -1091,6 +1093,7 @@ function renderCombat(model) {
         <div>${meter(combat.enemy?.name || '对手', combat.enemy?.hp, combat.enemy?.hpMax)}${meter('体力', combat.enemy?.sp, combat.enemy?.spMax)}${meter('架势', combat.enemy?.posture, combat.enemy?.postureMax)}</div>
       </div>
       ${feedbackPanel}
+      ${measurementObjectives}
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
           <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)} · 本窗口 ${esc(queueIds.length)}/${esc(queueLimit)} 槽</span><small>${phaseNote}</small></div>
@@ -1266,7 +1269,11 @@ function renderDialogueModal(modal) {
 }
 
 function renderFatherDiaryModal(modal) {
-  const entries = (modal.entries || []).map((entry) => `
+  const sourceEntries = modal.entries || [];
+  const page = Math.max(0, Math.min(Number(modal.page || 0), Math.max(0, sourceEntries.length - 1)));
+  const current = sourceEntries[page] || {};
+  const isLast = page >= Math.max(0, sourceEntries.length - 1);
+  const entries = sourceEntries.map((entry) => `
     <article class="maws-diary-entry">
       <strong>${esc(entry.date || '')}</strong>
       <p>${esc(entry.text || '')}</p>
@@ -1276,18 +1283,30 @@ function renderFatherDiaryModal(modal) {
   const lead = modalBodyLines(modal.body)[0] || modal.closing || '旧纸页里只留下能立刻用上的线索。';
   return renderModalShell(modal, `
     <header class="maws-rpg-title">
-      <small>旧纸页</small>
+      <small>旧纸页 ${esc(page + 1)}/${esc(sourceEntries.length || 1)}</small>
       <h2>${esc(modal.title || '父亲日记')}</h2>
     </header>
     <p class="maws-diary-lead">${esc(lead)}</p>
+    <article class="maws-diary-current" aria-live="polite">
+      <strong>${esc(current.date || '')}</strong>
+      <p>${esc(current.text || '')}</p>
+      ${isLast && modal.closing ? `<small>${esc(modal.closing)}</small>` : ''}
+    </article>
+    <div class="maws-diary-controls">
+      ${btn('上一页', 'turnFatherDiaryPage', { delta: -1 }, page <= 0 ? 'disabled' : 'ghost')}
+      ${!isLast
+        ? btn('下一页', 'turnFatherDiaryPage', { delta: 1 }, 'primary')
+        : modal.nextAction
+          ? btn(modal.nextAction.label || '去拳馆练刺拳', 'openDiaryTrainingRoute', {}, 'primary')
+          : ''}
+    </div>
     <details class="maws-fold maws-modal-fold">
-      <summary>日记全文</summary>
+      <summary>回看全部日记 / 结算</summary>
       <div class="maws-modal-body">${renderModalBody(modal.body)}</div>
       <div class="maws-diary-pages">${entries}</div>
-      ${modal.closing ? `<p class="maws-diary-closing">${esc(modal.closing)}</p>` : ''}
       ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
     </details>
-    <div class="maws-modal-actions">${btn('合上日记', 'closeModal', {}, 'primary')}</div>
+    <div class="maws-modal-actions">${btn('合上日记', 'closeModal', {}, 'dark')}</div>
   `, 'diary');
 }
 
@@ -1519,6 +1538,8 @@ function dispatchFromDataset(store, dataset) {
   else if (action === 'answerTraining') store.dispatch({ type: 'answerTraining', optionId: dataset.id });
   else if (action === 'finishTraining') store.dispatch({ type: 'finishTraining', grade: dataset.grade });
   else if (action === 'openFatherDiary') store.dispatch({ type: 'openFatherDiary' });
+  else if (action === 'turnFatherDiaryPage') store.dispatch({ type: 'turnFatherDiaryPage', delta: Number(dataset.delta || 0) });
+  else if (action === 'openDiaryTrainingRoute') store.dispatch({ type: 'openDiaryTrainingRoute' });
   else if (action === 'saveGame') store.dispatch({ type: 'saveGame' });
   else if (action === 'openCityMap') store.dispatch({ type: 'openCityMap' });
   else if (action === 'closeCityMap') store.dispatch({ type: 'closeCityMap' });

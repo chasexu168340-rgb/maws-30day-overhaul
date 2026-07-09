@@ -1157,29 +1157,37 @@ export const MAIN_EVENTS = {
     title: '一阵风',
     loc: 'boxing',
     enemy: 'E10',
-    desc: '你违背父亲遗训，第一次去证明茂家拳。现实没有配合演出。',
+    shortDesc: '这不是菜，是一把量出差距的尺子。',
+    sceneSummary: '沉默拳击手不追着打倒你，只用三个窗口量你的距离、判断和回收。',
+    hook: '今天的目标：看懂一拍，护住一拍。',
+    desc: '沉默拳击手答应陪你走三个窗口。目标不是 KO，是看见提示、护住自己，再完成一次有效配方。',
     kind: 'scriptedBattle',
     script: 'first_wind',
+    objectives: ['firstWindReadTell', 'firstWindProtect', 'firstWindRecipe'],
     eventNotebook: {
       reason: '现实清账',
-      entry: '拳馆灯光很硬，擂台边没有家里的香灰味。你带着父亲那句遗训上去，却把它理解成了必须赢。',
+      entry: '拳馆灯光很硬，擂台边没有家里的香灰味。对方说只走三个窗口，不算输赢，只看你能不能看懂。',
       beats: [
-        '你试图用茂家拳证明自己，对面没有配合你的节奏，也没有给招名留面子。',
-        '每一次打空都比嘲笑更直白，每一次停在原地都像把答案交给对方。',
-        '现实像一阵风，把你吹得站不稳。'
+        '第一把尺子量读招：对方肩膀一动，你能不能先看见。',
+        '第二把尺子量自保：抱架或后撤，先别把脸交出去。',
+        '第三把尺子量结构：两招能不能互相帮忙，而不是各打各的。'
       ],
-      actionLabel: '上台面对',
-      actionText: '这次不靠气势解释，先让现实把问题指出来。',
-      outcome: '输不只是比分，它让你第一次怀疑自己到底在练什么。'
+      actionLabel: '上台量一量',
+      actionText: '不追 KO，先完成三个能看见的目标。',
+      outcome: '这不是羞辱，是一把终于有刻度的尺子。'
     }
   },
   9: {
     title: '父亲日记',
     loc: 'home',
     npc: 'father',
+    shortDesc: '旧纸页里没有绝招，只有一条底线。',
+    sceneSummary: '你把日记一页页读完，第一次没有急着找能赢人的那句。',
+    hook: '今天的目标：读完，再去学刺拳。',
     desc: '旧箱子里有一本日记。它没有绝招，但有父亲没有说出口的真话。',
     kind: 'diary',
     script: 'father_diary',
+    nextAction: { loc: 'boxing', actionId: 'bag', label: '去拳馆练刺拳' },
     eventNotebook: {
       reason: '父亲线揭示',
       entry: '旧箱子有潮味，父亲的日记压在最底下。封皮起了毛，字迹却比你记忆里的拳谱更直接。',
