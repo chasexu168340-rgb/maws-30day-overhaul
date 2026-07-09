@@ -4,7 +4,7 @@
 
 ## Current Task
 
-SkillOpt-style optimization pass for the current MAWS playable slice.
+Day 1-Day 9 retro-pixel vertical slice: produce and integrate the first reviewed `pixel_v2` art batch without changing existing runtime asset keys.
 
 ## Current Staging Baseline
 
@@ -21,20 +21,19 @@ The player-facing target remains: the player clicks something, the game responds
 
 ## Current Pass
 
-1. Use SkillOpt-style rollout/audit evidence from the current worktree and rendered screenshots.
-2. Pick one high-impact player-facing issue instead of broad speculative redesign.
-3. Completed first-scene polish: Day 1 rental-room mobile HUD, toast, scene info, character click feedback, and bottom nav no longer fight for the same vertical space.
-4. Completed ordinary reward-feedback polish: result reward chips now render as a compact centered payoff burst instead of a wide empty information box.
-5. Strengthened Wave13 first-look tests around mobile nav geometry, toast placement, reachable CTA, NPC click feedback, compact reward chips, reward-burst geometry, time modal fit, and Day 5 combat HUD.
-6. Keep screenshots in local `outputs/` or `test-results/` only; do not commit generated audit artifacts.
+1. Pixel runtime and manifest metadata contracts are active.
+2. Tactical recipes, Day 8 measurement, and Day 9 diary-to-training handoff are implemented and pushed.
+3. `docs/design/PIXEL_V2_STYLE_BIBLE.md` is the canonical art source for palette, proportions, environment staging, dimensions, and final-art review.
+4. Generate images only in the current Codex session; do not use CLI workers for image content.
+5. First production batch: art-direction keyframe, Lu Xiaoxian reference, rental-room scene, then reviewed runtime integration under `assets/pixel_v2/`.
+6. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
-- Full 30-day implementation.
+- Day 10-Day 30 art and content coverage.
 - Full skill-tree economy.
-- Day 8/9 emotional beat implementation.
 - Broad enemy or combat formula rewrites.
-- New asset pipeline work.
+- Three.js or framework migration.
 
 ## Read First
 
@@ -47,17 +46,20 @@ The player-facing target remains: the player clicks something, the game responds
 
 ## Validation
 
-- Targeted optimization check:
-  - `npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line`
-- Full gate before merge:
+- Asset gate:
+  - `node maws_src/tools/verify_assets.mjs`
+- Runtime gates:
   - `npm run check:full`
   - `npm run test:playtest`
+  - `npm run test:day1-9`
   - `git diff --check`
 
 ## Do Not Do
 
-- Do not implement full 30 days, full skill tree, Day 8/9, more UI panels, broad enemy rewrites, or save key/version changes during this bounded pass.
+- Do not implement full 30 days, full skill tree, more UI panels, broad enemy rewrites, or save key/version changes during this bounded pass.
 - Do not give `jab` / `advance` as new starter skills.
+- Do not mark legacy or fallback art as `final`; final art must be reviewed and live under `assets/pixel_v2/`.
+- Do not extract, trace, or copy Bruisers assets, code, text, audio, or exact layouts.
 - Do not let multiple workers edit the same UI files concurrently.
 - Do not start CLI workers unless the user explicitly asks for workers.
 - If CLI workers are explicitly requested, use `gpt-5.5` with high reasoning by default and keep QA after implementation branches are pushed or merged.
