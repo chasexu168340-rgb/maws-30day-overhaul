@@ -44,8 +44,9 @@ The player-facing target remains: the player clicks something, the game responds
 21. Father memory now has final 96x144 scene and 96x96 portrait assets; Day 1 dialogue resolves Lu/father identities correctly and the three-character desktop stage stays clear of the right action rail.
 22. `bg.home.day` is now a final 480x270/32-color/41KB `pixel_v2` background with an open cast lane and Day 1 story anchors; final background verification now enforces dimensions, indexed palette size, and the 180KB budget.
 23. The Pixel V2 scene shell removes the red player backplate and blurred-glass panels, uses hard contact shadows, caps immediate recommendations at two, and keeps compact lower-corner rails on desktop with 44px mobile action targets.
-24. Next production batch: replace Day 2-Day 4 metro/store/worksite backgrounds, then continue the UI replacement across boot, city-map, and non-scene surfaces.
-25. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+24. Day 2-Day 4 now use final metro/store/worksite `pixel_v2` daytime backgrounds; strict visual coverage includes Day 2 metro and existing Day 3/4 desktop/mobile screenshots.
+25. Next production batch: replace boxing day and reachable Day 1-Day 9 night variants, then continue the UI replacement across boot and city-map surfaces.
+26. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 

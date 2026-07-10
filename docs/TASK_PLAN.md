@@ -26,6 +26,8 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - Phaser 4 tint handling uses the current `setTint + TintModes.FILL` API, so the new feedback produces no deprecation warning.
 - `bg.park.day` is the first reviewed runtime replacement under `assets/pixel_v2/`: exact 480x270, 32-color indexed PNG, 45KB, clear two-fighter staging lanes, and no baked characters.
 - `bg.home.day` now uses a reviewed 480x270, 32-color indexed `pixel_v2` rental-room background at 41KB, with an open three-character floor lane, father-memory shelf, training notes, and no baked people.
+- `bg.metro_station.day`, `bg.store.day`, and `bg.worksite.day` now use reviewed 480x270/32-color `pixel_v2` backgrounds at roughly 41KB, 40KB, and 49KB.
+- Day 2-4 environment anchors are explicit in the live art: metro screen doors and exit direction, convenience-store CCTV/counter/shelf edge, and worksite scaffold/materials with a clear labor lane.
 - Final `pixel_v2` backgrounds now fail asset verification unless they are exact 480x270 indexed PNGs with at most 32 palette entries and stay within the 180KB budget.
 - The map scene shell now uses hard pixel borders and solid panels without blurred glass, removes the red player spotlight/backplate, and replaces soft radial character glows with compact hard contact shadows.
 - The scene info block now shows one current hook instead of repeating location/recommendation rows; immediate recommendations are capped at two while secondary actions remain folded.
@@ -143,6 +145,12 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - Director + Wave 12 + Pixel V2 combined gate (26 passed)
   - Pixel V2 strict visual gate (19 passed with scene-shell assertions)
   - `git diff --check`
+- Passed after the Day 2-Day 4 environment replacement:
+  - `npm run check:full` (104 manifest entries, 6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (21 passed, including Day 2 metro and Day 3/4 desktop/mobile runtime screenshots)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
@@ -155,4 +163,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Generate and integrate the Day 2-Day 4 metro, convenience-store, and worksite backgrounds, then continue the UI replacement across boot, city map, and non-scene surfaces.
+Generate and integrate the remaining Day 1-Day 9 daytime/night scene backgrounds, beginning with boxing day and the reachable night variants, then continue the UI replacement across boot and city-map surfaces.

@@ -28,6 +28,9 @@ const MIME = {
 
 const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.home.day',
+  'backgrounds:bg.metro_station.day',
+  'backgrounds:bg.store.day',
+  'backgrounds:bg.worksite.day',
   'backgrounds:bg.park.day',
   'characters:fighter.player',
   'characters:scene.npc.father_memory',
@@ -177,6 +180,18 @@ async function showDay3Store(page) {
     store.state.day = 3;
     store.state.time = 600;
     store.state.loc = 'store';
+    store.emit();
+  });
+  await expect(page.locator('.maws-scene')).toBeVisible();
+  await page.waitForTimeout(500);
+}
+
+async function showDay2Metro(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 2;
+    store.state.time = 600;
+    store.state.loc = 'metro_station';
     store.emit();
   });
   await expect(page.locator('.maws-scene')).toBeVisible();
@@ -607,6 +622,17 @@ for (const viewport of VIEWPORTS) {
     await expectCombatGeometry(page, viewport);
     await expectScreenshotHasPixels(page, `day8-${viewport.name}.png`, `Day 8 ${viewport.name}`);
     expect(violations, `Day 8 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 2 metro ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await showDay2Metro(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.metro_station.day'
+    ], `Day 2 metro ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 2 metro ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day2-metro-${viewport.name}.png`, `Day 2 metro ${viewport.name}`);
+    expect(violations, `Day 2 metro ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 store ${viewport.name} visual/runtime contract`, async ({ page }) => {
