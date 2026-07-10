@@ -58,6 +58,9 @@ The player-facing target remains: the player clicks something, the game responds
 35. Browser coverage proves Day 1 first look stays under 3MB and Day 5/Day 8 combat increments stay around 290KB under the 1.2MB gate.
 36. The Day 1-Day 9 Pixel V2 vertical slice has passed strict assets, runtime, playtest, responsive, visual, animation, and network gates. Day 10-Day 30 art remains explicitly deferred legacy/fallback work.
 37. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+38. E06 now uses a final 28-frame Pixel V2 grappling strip and matching standee with entry, shot, takedown/control, sprawl, hurt, and escape rows.
+39. Grappling contact runs on a readable 380ms approach while ordinary strikes remain 260ms; impact audio/VFX follow the actual contact point.
+40. `slice_combat_motion_atlas.ps1` accepts optional per-frame target heights so standing and ground poses can share one 96x144 contract without shrinking the whole fighter.
 
 ## Deferred Larger Work
 

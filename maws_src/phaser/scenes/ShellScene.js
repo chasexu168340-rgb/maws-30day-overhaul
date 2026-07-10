@@ -590,7 +590,18 @@ export class ShellScene extends PhaserScene {
     const sprite = actor?.sprite;
     if (!actor?.animKey || !sprite?.active || !sprite.scene || typeof sprite.play !== 'function') return;
     const requestedKey = `${actor.animKey}.${name}`;
-    const fallbackName = ({ guard: 'vfx', retreat: 'vfx', advance: 'attack', heavy: 'attack' })[name] || name;
+    const fallbackName = ({
+      guard: 'vfx',
+      retreat: 'vfx',
+      advance: 'attack',
+      heavy: 'attack',
+      entry: 'advance',
+      shot: 'attack',
+      takedown: 'heavy',
+      control: 'heavy',
+      sprawl: 'guard',
+      escape: 'retreat'
+    })[name] || name;
     const key = this.anims?.exists?.(requestedKey) ? requestedKey : `${actor.animKey}.${fallbackName}`;
     if (!this.anims?.exists?.(key)) return;
     sprite.play(key, restart);
@@ -667,18 +678,19 @@ export class ShellScene extends PhaserScene {
       const delay = stepDelay + fxIndex * 90;
       const isImpact = fx.type === 'hit' || fx.type === 'break';
       const isContactRead = fx.type === 'guard' || fx.type === 'miss';
-      const impactDelay = isImpact ? delay + 260 : isContactRead ? delay + 160 : delay;
+      const contactMs = this.combatContactMs(step, fx);
+      const impactDelay = isImpact ? delay + contactMs : isContactRead ? delay + 160 : delay;
       if (fx.type === 'hit' || fx.type === 'break') {
         const semanticAnim = this.actionAnimName(step);
         this.delayedFighterAnim(actor, semanticAnim === 'idle' ? 'attack' : semanticAnim, delay);
         this.delayedFighterAnim(target, 'hurt', impactDelay);
-        this.animateAttack(actor, target, delay, fx);
+        this.animateAttack(actor, target, delay, { ...fx, contactMs });
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
         const semanticAnim = this.actionAnimName(step);
         this.delayedFighterAnim(actor, fx.type === 'guard' && semanticAnim !== 'idle' ? semanticAnim : fx.type === 'guard' ? 'guard' : 'attack', delay);
         const opposingTarget = fighters[actorSide === 'player' ? 'enemy' : 'player'] || target;
-        if (fx.type === 'miss') this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0 });
+        if (fx.type === 'miss') this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0, contactMs });
         this.animateStep(actor, opposingTarget, delay, fx);
       }
       this.playCombatSfx(fx, impactDelay);
@@ -693,12 +705,23 @@ export class ShellScene extends PhaserScene {
   actionAnimName(step) {
     const type = step.action?.type;
     const id = step.action?.id || '';
-    if (['wild_swing', 'mystic', 'push_away', 'palm', 'takedown', 'sidecontrol'].includes(id)) return 'heavy';
-    if (type === 'strike' || type === 'grapple' || ['jab', 'straight', 'lowkick'].includes(id)) return 'attack';
-    if (['guard', 'sprawl', 'rest'].includes(id)) return 'guard';
-    if (['retreat', 'dodge', 'escape', 'dirtyescape'].includes(id)) return 'retreat';
     if (id === 'advance') return 'advance';
+    if (id === 'grip') return 'entry';
+    if (id === 'takedown') return 'takedown';
+    if (id === 'sidecontrol') return 'control';
+    if (id === 'sprawl') return 'sprawl';
+    if (['retreat', 'dodge', 'escape', 'dirtyescape'].includes(id)) return 'escape';
+    if (['wild_swing', 'mystic', 'push_away', 'palm'].includes(id)) return 'heavy';
+    if (type === 'strike' || type === 'grapple' || ['jab', 'straight', 'lowkick'].includes(id)) return type === 'grapple' ? 'shot' : 'attack';
+    if (['guard', 'rest'].includes(id)) return 'guard';
     return 'idle';
+  }
+
+  combatContactMs(step, fx = {}) {
+    const id = fx.skillId || step?.action?.id || '';
+    const type = step?.action?.type || '';
+    if (['grip', 'takedown', 'sidecontrol'].includes(id) || ['grapple', 'ground'].includes(type)) return 380;
+    return 260;
   }
 
   delayedFighterAnim(actor, name, delay) {
@@ -716,11 +739,12 @@ export class ShellScene extends PhaserScene {
     const travel = Math.max(36, Math.min(Number(actor.maxAdvance || 220), gap - contactGap));
     const minHitstop = fx.type === 'miss' ? 0 : 70;
     const hitstopMs = Math.max(minHitstop, Math.min(220, Number(fx.hitstopMs || 0)));
+    const contactMs = Math.max(220, Math.min(460, Number(fx.contactMs || 260)));
     this.tweens.add({
       targets: actor.sprite,
       x: actor.x + dir * travel,
       y: actor.y - 6,
-      duration: 260,
+      duration: contactMs,
       hold: hitstopMs,
       yoyo: true,
       ease: 'Quad.easeOut',
@@ -730,7 +754,7 @@ export class ShellScene extends PhaserScene {
       this.tweens.add({
         targets: actor.shadow,
         x: dir * travel,
-        duration: 260,
+        duration: contactMs,
         hold: hitstopMs,
         yoyo: true,
         ease: 'Quad.easeOut',
@@ -738,7 +762,7 @@ export class ShellScene extends PhaserScene {
       });
     }
     const shake = Math.max(0, Math.min(1, Number(fx.shake || 0)));
-    if (shake > 0) this.shakeCamera(delay + 260, 0.0015 + shake * 0.006, 90 + hitstopMs);
+    if (shake > 0) this.shakeCamera(delay + contactMs, 0.0015 + shake * 0.006, 90 + hitstopMs);
   }
 
   animateStep(actor, target, delay, fx) {

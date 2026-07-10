@@ -4,45 +4,44 @@
 
 ## Current Task
 
-Rebuild the live UI around a restrained, scene-first martial ledger so the player sees decisions instead of a wall of text.
+Replace E06's static boxing-like fallback with the first production grappling motion contract.
 
 ## Scope
 
-- Changed DOM presentation and focused first-look tests only.
-- Kept combat formulas, economy, story content, state/save contracts, and asset keys unchanged.
-- Preserved all existing actions and secondary information behind progressive disclosure.
+- Generated imagery only in the current Codex session.
+- Replaced the E06 standee and sprite strip while preserving existing runtime asset keys.
+- Added animation semantics and contact timing only; combat formulas, stats, economy, story, and save contracts remain unchanged.
+- Reference games remain clean-room principle references; no protected code or assets were extracted or copied.
 
 ## Current Result
 
-- Day 1 mobile first look now gives most of the viewport to the pixel scene and cast.
-- The HUD uses a single compact icon/value row on mobile instead of repeated resource labels.
-- The scene command rail exposes at most two decisions plus one `更多` drawer; locations, opportunities, long descriptions, and full values remain available inside it.
-- Location and daily-mainline copy is no longer repeated across the scene and command rail.
-- Mobile navigation is icon-first while preserving accessible button text.
-- Combat keeps the stage dominant and defaults to intent, distance, target, queue, compact commands, and execute.
-- Full combat rules, window coaching, and the seven-line recap are closed by default.
-- Combat command art is at least 52px wide and retains the Pixel V2 bitmap chrome.
-- Reward and duration modals remain compact and retain structured reward chips.
+- E06 now uses a final 28-frame 96x144 Pixel V2 strip and matching standee.
+- Authored rows cover wrestling idle, entry/level change, shot, takedown/control, sprawl, hurt, and technical escape.
+- E06 stands on the left and faces screen-right; the player remains on the right and faces screen-left.
+- Grappling actions map to dedicated `entry`, `shot`, `takedown`, `control`, `sprawl`, and `escape` semantics.
+- Fighters without those aliases fall back to their existing generic advance/attack/heavy/guard/retreat ranges.
+- Grappling contact now takes 380ms versus 260ms for ordinary strikes, and impact audio/VFX remain aligned to contact.
+- Browser sampling proves the authored E06 frame ranges play and the sprite travels more than 70px into contact.
+- The atlas slicer supports optional per-frame target heights, keeping standing and grounded grappling poses at believable relative scale.
 
 ## Validation
 
-- `npm run check:full`: passed (build, 142 assets, 6 Chromium smoke tests).
+- `node maws_src/tools/verify_assets.mjs`: passed (142 manifest entries).
+- `npm run check:full`: passed (build + 6 Chromium smoke tests).
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
-- `npx playwright test maws_src/tests/wave13_first_look.spec.js --browser=chromium --reporter=line`: passed (5 tests).
-- Full `pixel_v2_visual.spec.js`: passed (35 tests).
-- Final targeted Day 1 mobile visual contract: passed.
-- Desktop/mobile screenshots were reviewed for scene share, command density, command-art size, and overflow.
+- Full `pixel_v2_visual.spec.js`: passed (38 tests).
+- E06 desktop/mobile screenshots were reviewed for scale, alpha edges, stage placement, orientation, and overflow.
 - `git diff --check`: passed.
 
 ## Risks
 
-- The CSS still contains historical wave overrides; this pass intentionally adds a final bounded layer instead of restructuring the stylesheet.
-- Secondary ledger pages remain information-rich when expanded, by design.
-- Final tactile polish still needs menu open/close motion and controller focus transitions; this pass does not add new animation systems.
+- E06 ground control still represents the acting grappler only; paired-body throw animation is not yet implemented.
+- E07 weapon and E18 boss still use legacy motion strips.
+- Grappling uses synthesized prototype contact audio rather than final recorded mat/body foley.
 
 ## Next Step
 
-1. Human-play Day 1-Day 5 and note any decision that still requires reading more than one short line before acting.
-2. Apply the same compact hierarchy to the skill-tree purchase flow without hiding prerequisites or costs.
-3. Resume the first grappling-specific motion contract only after the new combat HUD is accepted in hand play.
+1. Add a paired-contact takedown presentation so the defender reacts spatially to successful E06 throws.
+2. Generate the E07 weapon-threat motion contract with distance-first retreat and disarm-avoidance reads.
+3. Add final grappling contact, mat impact, and scramble audio after the paired-body timing is stable.

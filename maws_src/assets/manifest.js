@@ -240,6 +240,16 @@ const FULL_MOTION_28 = Object.freeze({
   vfx: { start: 12, end: 15, frameRate: 7, repeat: 0 }
 });
 
+const GRAPPLER_MOTION_28 = Object.freeze({
+  ...FULL_MOTION_28,
+  entry: { start: 4, end: 7, frameRate: 6, repeat: 0 },
+  shot: { start: 8, end: 11, frameRate: 6, repeat: 0 },
+  takedown: { start: 12, end: 15, frameRate: 6, repeat: 0 },
+  control: { start: 12, end: 15, frameRate: 6, repeat: 0 },
+  sprawl: { start: 16, end: 19, frameRate: 6, repeat: 0 },
+  escape: { start: 24, end: 27, frameRate: 6, repeat: 0 }
+});
+
 export const ASSET_MANIFEST = {
   backgrounds: {
     'bg.city.map.day': pixelV2Background('bg_city_map_day.png', ['day', 'shenzhen', 'city-map']),
@@ -276,7 +286,7 @@ export const ASSET_MANIFEST = {
     'fighter.enemy.untrained': pixelV2Character('fighter_enemy_untrained.png', ['enemy', 'untrained', 'day3', 'e00']),
     'fighter.enemy.beginner': pixelV2Character('fighter_enemy_beginner.png', ['enemy', 'boxing', 'beginner', 'day5']),
     'fighter.enemy.silent': pixelV2Character('fighter_enemy_silent.png', ['enemy', 'boxing', 'silent', 'day8']),
-    'fighter.enemy.grappler': cleanCharacter('fighter_enemy_grappler.png', ['enemy', 'grappling']),
+    'fighter.enemy.grappler': pixelV2Character('fighter_enemy_grappler.png', ['enemy', 'grappling', 'e06']),
     'fighter.enemy.weapon': cleanCharacter('fighter_enemy_weapon.png', ['enemy', 'weapon']),
     'fighter.enemy.boss': cleanCharacter('fighter_enemy_boss.png', ['enemy', 'boss']),
     'scene.npc.fatty': pixelV2Character('scene_npc_fatty.png', ['scene', 'npc', 'fatty', 'home', 'day1']),
@@ -295,7 +305,7 @@ export const ASSET_MANIFEST = {
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained_v3.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00', 'full-motion'], 1.1, FULL_MOTION_28),
     'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner_v3.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5', 'full-motion'], 1, FULL_MOTION_28),
     'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent_v3.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8', 'full-motion'], 0.98, FULL_MOTION_28),
-    'anim.fighter.enemy.grappler': fighterSprite('anim_fighter_enemy_grappler.png', 'fighter.enemy.grappler', ['enemy', 'grappling']),
+    'anim.fighter.enemy.grappler': pixelV2FighterSprite('anim_fighter_enemy_grappler_v3.png', 'fighter.enemy.grappler', ['enemy', 'grappling', 'e06', 'full-motion'], 1, GRAPPLER_MOTION_28),
     'anim.fighter.enemy.weapon': fighterSprite('anim_fighter_enemy_weapon.png', 'fighter.enemy.weapon', ['enemy', 'weapon']),
     'anim.fighter.enemy.boss': fighterSprite('anim_fighter_enemy_boss.png', 'fighter.enemy.boss', ['enemy', 'boss'])
   },

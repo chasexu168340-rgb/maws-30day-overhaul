@@ -228,6 +228,19 @@ async function startDay5(page) {
   await page.waitForTimeout(900);
 }
 
+async function startE06(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 10;
+    store.state.time = 960;
+    store.state.loc = 'mma';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E06' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
 async function startDay3FunTarget(page) {
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
@@ -1004,6 +1017,81 @@ test('pixel_v2 silent boxer strip advances through real attack frames in Phaser'
   expect(violations, 'silent-boxer animation should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape motion', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE06(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.grappler');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = {
+      sprite: enemy,
+      animKey: 'anim.fighter.enemy.grappler',
+      isAnimated: true,
+      x: enemy?.x || 0,
+      y: enemy?.y || 0,
+      maxAdvance: 260,
+      displayWidth: enemy?.displayWidth || 96
+    };
+    const target = {
+      sprite: player,
+      x: player?.x || 0,
+      y: player?.y || 0,
+      displayWidth: player?.displayWidth || 96
+    };
+    const frames = [];
+    const xPositions = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) {
+        frames.push(Number(enemy.frame.name));
+        xPositions.push(Number(enemy.x || 0));
+      }
+    }, 24);
+    const play = async (name, wait = 760) => {
+      scene.playFighterAnim(actor, name, true);
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    };
+    await play('entry');
+    scene.playFighterAnim(actor, 'takedown', true);
+    scene.animateAttack(actor, target, 0, { contactMs: 380, hitstopMs: 80, shake: 0 });
+    await new Promise((resolve) => setTimeout(resolve, 980));
+    await play('sprawl');
+    await play('escape');
+    clearInterval(timer);
+    return {
+      frames,
+      xPositions,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      playerFlipX: Boolean(player?.flipX),
+      contactMs: scene.combatContactMs({ action: { id: 'takedown', type: 'grapple' } }),
+      strikeContactMs: scene.combatContactMs({ action: { id: 'jab', type: 'strike' } }),
+      semantics: {
+        grip: scene.actionAnimName({ action: { id: 'grip', type: 'grapple' } }),
+        takedown: scene.actionAnimName({ action: { id: 'takedown', type: 'grapple' } }),
+        sprawl: scene.actionAnimName({ action: { id: 'sprawl', type: 'defense' } }),
+        escape: scene.actionAnimName({ action: { id: 'escape', type: 'ground' } })
+      }
+    };
+  });
+
+  expect(playback.enemyX, 'E06 should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'left-side E06 source art should face screen-right').toBe(false);
+  expect(playback.playerFlipX, 'right-side player should face screen-left').toBe(true);
+  expect(playback.semantics).toEqual({ grip: 'entry', takedown: 'takedown', sprawl: 'sprawl', escape: 'escape' });
+  expect(playback.contactMs, 'grappling contact should be slower and readable').toBe(380);
+  expect(playback.contactMs).toBeGreaterThan(playback.strikeContactMs);
+  expect(playback.frames.some((frame) => frame >= 4 && frame <= 7), `entry frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 12 && frame <= 15), `takedown frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 16 && frame <= 19), `sprawl frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 24 && frame <= 27), `escape frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(Math.max(...playback.xPositions) - Math.min(...playback.xPositions), 'E06 should travel into contact instead of grappling in place').toBeGreaterThan(70);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e06-grappler-motion-desktop.png'), fullPage: true });
+  expect(violations, 'E06 grappler motion should not emit warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
@@ -1289,5 +1377,35 @@ for (const viewport of VIEWPORTS) {
     await expectCombatGeometry(page, viewport);
     await expectScreenshotHasPixels(page, `day3-e00-${viewport.name}.png`, `Day 3 E00 ${viewport.name}`);
     expect(violations, `Day 3 E00 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E06 grappler ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startE06(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.mma.night',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.grappler'
+    ], `E06 grappler ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E06 grappler ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.grappler');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return {
+        enemyX: enemy?.x || 0,
+        playerX: player?.x || 0,
+        enemyFlipX: Boolean(enemy?.flipX),
+        enemyFrameWidth: enemy?.frame?.width || 0,
+        enemyFrameHeight: enemy?.frame?.height || 0
+      };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    expect(sides.enemyFrameWidth).toBe(96);
+    expect(sides.enemyFrameHeight).toBe(144);
+    await expectScreenshotHasPixels(page, `e06-grappler-${viewport.name}.png`, `E06 grappler ${viewport.name}`);
+    expect(violations, `E06 grappler ${viewport.name} console warnings/errors`).toEqual([]);
   });
 }

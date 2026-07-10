@@ -9,7 +9,8 @@ param(
     [int]$FrameWidth = 96,
     [int]$FrameHeight = 144,
     [int]$RowOverlap = 38,
-    [int]$AlphaThreshold = 8
+    [int]$AlphaThreshold = 8,
+    [string]$TargetHeights = ''
 )
 
 Set-StrictMode -Version Latest
@@ -101,6 +102,16 @@ if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
 if ($Columns -le 0 -or $Rows -le 0 -or $FrameWidth -le 0 -or $FrameHeight -le 0) {
     throw 'Grid and frame dimensions must be positive.'
 }
+$targetHeightList = @()
+if (-not [string]::IsNullOrWhiteSpace($TargetHeights)) {
+    $targetHeightList = @($TargetHeights.Split(',') | ForEach-Object { [int]$_.Trim() })
+    if ($targetHeightList.Count -ne ($Columns * $Rows)) {
+        throw "TargetHeights must contain exactly $($Columns * $Rows) comma-separated values."
+    }
+    if ($targetHeightList | Where-Object { $_ -le 0 -or $_ -gt ($FrameHeight - 4) }) {
+        throw "Each target height must be between 1 and $($FrameHeight - 4)."
+    }
+}
 
 $loaded = [System.Drawing.Bitmap]::FromFile($sourcePath)
 $sourceBitmap = $loaded.Clone(
@@ -149,8 +160,12 @@ try {
                 foreach ($point in $component.Pixels) {
                     $isolated.SetPixel($point.X - $bounds.X, $point.Y - $bounds.Y, $sourceBitmap.GetPixel($point.X, $point.Y))
                 }
-                $drawWidth = [Math]::Max(1, [Math]::Round($bounds.Width * $scale))
-                $drawHeight = [Math]::Max(1, [Math]::Round($bounds.Height * $scale))
+                $frameScale = $scale
+                if ($targetHeightList.Count -gt 0) {
+                    $frameScale = [Math]::Min(($FrameWidth - 4) / $bounds.Width, $targetHeightList[$index] / $bounds.Height)
+                }
+                $drawWidth = [Math]::Max(1, [Math]::Round($bounds.Width * $frameScale))
+                $drawHeight = [Math]::Max(1, [Math]::Round($bounds.Height * $frameScale))
                 $targetX = $index * $FrameWidth + [Math]::Floor(($FrameWidth - $drawWidth) / 2)
                 $targetY = $FrameHeight - $drawHeight - 2
                 $target = [System.Drawing.Rectangle]::new($targetX, $targetY, $drawWidth, $drawHeight)
@@ -181,6 +196,7 @@ try {
         frameWidth = $FrameWidth
         frameHeight = $FrameHeight
         rowOverlap = $RowOverlap
+        targetHeights = if ($targetHeightList.Count -gt 0) { $targetHeightList } else { $null }
         sourceCell = "${cellWidth}x${cellHeight}"
         scale = [Math]::Round($scale, 4)
     } | ConvertTo-Json
