@@ -228,6 +228,19 @@ async function startDay5(page) {
   await page.waitForTimeout(900);
 }
 
+async function startE05(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 12;
+    store.state.time = 960;
+    store.state.loc = 'boxing';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E05' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
 async function startE06(page) {
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
@@ -1047,6 +1060,50 @@ test('pixel_v2 silent boxer strip advances through real attack frames in Phaser'
   expect(violations, 'silent-boxer animation should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E05 sparring partner uses distinct boxing, kick, guard, dodge, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE05(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.boxer');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.boxer', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 520));
+    };
+    for (const name of ['advance', 'jab', 'straight', 'lowkick', 'guard', 'dodge', 'hurt']) await play(name);
+    clearInterval(timer);
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: ['jab', 'straight', 'lowkick', 'guard', 'dodge'].map((id) => scene.fighterActionAnimName({ action: { id, type: id === 'guard' || id === 'dodge' ? 'defense' : 'strike' } }, actor)),
+      timings: ['jab', 'straight', 'lowkick'].map((id) => scene.combatContactMs({ action: { id, type: 'strike' } }))
+    };
+  });
+
+  expect(playback.enemyX, 'E05 should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'E05 source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['jab', 'straight', 'lowkick', 'guard', 'dodge']);
+  expect(playback.timings).toEqual([240, 280, 310]);
+  for (const [start, end, label] of [[4, 7, 'advance'], [8, 11, 'jab'], [12, 15, 'straight'], [16, 19, 'low kick'], [20, 23, 'guard'], [24, 27, 'dodge'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e05-sparring-motion-desktop.png'), fullPage: true });
+  expect(violations, 'E05 sparring motion should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape motion', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startE06(page);
@@ -1732,6 +1789,28 @@ for (const viewport of VIEWPORTS) {
     expect(commandArt.rendering, 'combat command art should use hard pixel scaling').toMatch(/pixelated|crisp-edges/);
     await expectScreenshotHasPixels(page, `day5-${viewport.name}.png`, `Day 5 ${viewport.name}`);
     expect(violations, `Day 5 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E05 sparring ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startE05(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.boxing.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.boxer'
+    ], `E05 sparring ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E05 sparring ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.boxer');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e05-sparring-${viewport.name}.png`, `E05 sparring ${viewport.name}`);
+    expect(violations, `E05 sparring ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 E00 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
