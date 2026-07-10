@@ -696,7 +696,11 @@ for (const viewport of VIEWPORTS) {
     ];
 
     for (const tab of tabs) {
-      await page.locator(`button[data-action="setTab"][data-tab="${tab.id}"]`).click();
+      const tabButton = page.locator(`button[data-action="setTab"][data-tab="${tab.id}"]`);
+      if (!await tabButton.isVisible()) {
+        await page.locator('.maws-system-menu > summary').click();
+      }
+      await tabButton.click();
       const surface = page.locator(tab.selector);
       await expect(surface).toBeVisible();
       await expect(surface).toContainText(tab.label);

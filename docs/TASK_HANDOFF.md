@@ -69,6 +69,9 @@ The player-facing target remains: the player clicks something, the game responds
 46. E18 now uses a final 36-frame, 128x144 Pixel V2 hybrid strip and matching standee with distinct boxing, front-kick, clinch, takedown, sprawl, hurt, and escape rows.
 47. E18 front-kick contact is presented at 300ms and grappling contact remains 380ms; browser tests cover both contact approaches plus desktop/mobile combat.
 48. The generic E05 boxer and broader post-Day9 enemy set remain on legacy/fallback motion contracts.
+49. The main DOM interface now uses a focused scene-first shell: compact HUD, five persistent destinations, one system menu, at most two immediate scene commands, and one optional action drawer.
+50. Action rows expose only an icon, name, and short cost/reward line by default; management ledgers use 60px Pixel V2 art and compact text, while full descriptions remain opt-in.
+51. Responsive/browser contracts now enforce five primary tabs, no more than two visible scene commands, hidden-until-open utility navigation, 44px mobile controls, bitmap panel frames, and modal-over-navigation layering.
 
 ## Deferred Larger Work
 

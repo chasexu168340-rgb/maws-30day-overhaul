@@ -475,9 +475,10 @@ function renderBoot(model) {
 
 function renderHud(model) {
   const resources = primaryHudResources(model.resources || []).map(renderHudChip).join('');
+  const place = [model.time, model.loc?.name].filter(Boolean).join(' · ');
   return `
     <header class="maws-hud maws-hud-compact">
-      <div><strong>${esc(model.dayText)}</strong><span>${esc(model.phase)}</span></div>
+      <div><strong>${esc(model.dayText)}</strong><span>${esc(place || model.phase)}</span></div>
       <div class="maws-resource-row">${resources}</div>
     </header>
   `;
@@ -486,20 +487,32 @@ function renderHud(model) {
 function renderNav(model) {
   const debugEnabled = typeof window !== 'undefined'
     && new URLSearchParams(window.location.search || '').get('debug') === '1';
-  const tabs = (model.tabs || []).filter((tab) => debugEnabled || tab.id !== 'check').map((tab) => {
+  const availableTabs = (model.tabs || []).filter((tab) => debugEnabled || tab.id !== 'check');
+  const renderTab = (tab, extraClass = '') => {
     const action = tab.id === 'map' ? 'openCityMap' : 'setTab';
     const params = tab.id === 'map' ? {} : { tab: tab.id };
     return btn(
       `<span>${assetIcon(tab.assetKey, tab.icon)}</span>${esc(tab.label)}`,
       action,
       params,
-      `maws-tab ${model.tab === tab.id ? 'active' : ''}`
+      `maws-tab ${extraClass} ${model.tab === tab.id ? 'active' : ''}`
     );
-  }).join('');
+  };
+  const primaryIds = new Set(['map', 'profile', 'skills', 'bag', 'npc']);
+  if (debugEnabled) primaryIds.add('check');
+  const primaryTabs = availableTabs.filter((tab) => primaryIds.has(tab.id)).map((tab) => renderTab(tab)).join('');
+  const utilityTabs = availableTabs.filter((tab) => !primaryIds.has(tab.id)).map((tab) => renderTab(tab, 'utility')).join('');
   return `
-    <nav class="maws-nav">
-      <div>${tabs}</div>
-      <aside>${btn('睡觉', 'doAction', { id: 'sleep' }, 'dark')}${btn('保存', 'saveGame', {}, 'dark')}</aside>
+    <nav class="maws-nav" aria-label="主导航">
+      <div class="maws-nav-primary">${primaryTabs}</div>
+      <details class="maws-system-menu">
+        <summary aria-label="打开系统菜单"><span>菜单</span><b>+</b></summary>
+        <div class="maws-system-menu-panel">
+          ${utilityTabs}
+          ${btn('睡觉', 'doAction', { id: 'sleep' }, 'dark utility-action')}
+          ${btn('保存', 'saveGame', {}, 'dark utility-action')}
+        </div>
+      </details>
     </nav>
   `;
 }
@@ -543,12 +556,12 @@ function renderActionCard(action) {
   `;
   return `
     <article class="maws-action ${action.disabled ? 'disabled' : ''}">
+      <span class="maws-action-icon" aria-hidden="true">${esc(action.icon || '·')}</span>
       <div class="maws-action-core">
-        <strong>${esc(action.icon)} ${esc(action.name)}</strong>
-        ${hasDuration ? '<small class="maws-duration-tag">可调时长</small>' : ''}
+        <strong>${esc(action.name)}</strong>
         ${visibleSummary.length ? `<div class="maws-action-visible-summary">${visibleSummary.map((part) => `<span>${esc(part)}</span>`).join('')}</div>` : ''}
         <details class="maws-fold maws-action-detail">
-          <summary>长描述 / 完整数值</summary>
+          <summary>${hasDuration ? '投入与详情' : '查看详情'}</summary>
           ${details}
         </details>
       </div>
@@ -619,7 +632,7 @@ function renderSceneCommand(command) {
   if (!command) return '';
   const meta = (command.meta || []).filter(Boolean).slice(0, 1);
   return btn(
-    `<span class="maws-command-mark">${esc(command.mark || '行动')}</span><strong>${esc(command.label)}</strong>${meta.length ? `<small>${esc(meta[0])}</small>` : ''}`,
+    `<span class="maws-command-mark">${esc(command.mark || '行动')}</span><strong>${esc(command.label)}</strong>${meta.length ? `<small>${esc(meta[0])}</small>` : ''}<i aria-hidden="true">›</i>`,
     command.action,
     command.params || {},
     `maws-scene-command-button ${command.primary ? 'primary' : 'ghost'} ${command.disabled ? 'disabled' : ''}`
@@ -713,7 +726,7 @@ function renderMap(model) {
           ${interactionMenu}
         </div>
         <footer class="maws-scene-command maws-action-rail maws-action-rail-main">
-          <div class="maws-scene-command-head">${btn('城市', 'openCityMap', {}, 'tiny maws-map-open')}</div>
+          <div class="maws-scene-command-head">${btn('地图', 'openCityMap', {}, 'tiny maws-map-open')}</div>
           <div class="maws-actions-primary maws-scene-quick-actions">
             ${quickCommands.map(renderSceneCommand).join('') || '<p class="maws-empty">现在没有必须处理的事。</p>'}
           </div>

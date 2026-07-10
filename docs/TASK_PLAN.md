@@ -4,23 +4,23 @@
 
 ## Current Task
 
-Replace E18's legacy static boss fallback with a readable mixed boxing/grappling motion contract.
+Rebuild the main DOM interface around a restrained, scene-first hierarchy so the player no longer reads a wall of equally weighted text.
 
 ## Scope
 
-- Generated E18 imagery only in the current Codex session.
-- Preserved E18 combat values, AI decisions, story, economy, and save contracts.
-- Added actor-specific motion semantics and readable contact timing without changing combat formulas.
-- External games remain clean-room principle references; no protected code or assets were extracted or copied.
+- Changed DOM presentation, responsive layout, navigation grouping, action-card density, and matching browser contracts.
+- Preserved Phaser scenes, combat formulas, economy, story data, save keys, and runtime asset structure.
+- Reused the existing Pixel V2 bitmap frames, buttons, tabs, icons, and item art rather than replacing them with vector/web styling.
 
 ## Current Result
 
-- E18 now uses a final 36-frame Pixel V2 strip with 128x144 frames and a matching standee.
-- Motion rows cover idle, advance, boxing, front kick, clinch entry, takedown, sprawl, hurt, and escape.
-- Actor-specific semantics keep the boss's boxing, kick, clinch, takedown, sprawl, guard, and escape visually distinct.
-- Front-kick contact takes 300ms and grappling contact remains 380ms, so both reads are visible before resolution.
-- The production strip is RGBA, 4608x144, and about 150KB after palette-conscious compression.
-- Desktop/mobile and contact screenshots confirm left-side enemy orientation, readable scale, movement, and no horizontal overflow.
+- The HUD is a compact upper-left strip containing day, time, location, and four core resources.
+- The persistent navigation now exposes five high-frequency destinations; shop, log, sleep, save, and debug tools live in one explicit system menu.
+- The scene keeps at most two immediate commands and a single `more` drawer for local actions, opportunities, locations, and long descriptions.
+- Local actions now read as icon-first rows with one short cost/reward line; full prose and numbers stay behind `details`.
+- Management pages use 60px Pixel V2 item art and compact index rows with restrained 12px titles.
+- Mobile keeps two immediate actions, 44px controls, a full-width bottom navigation, and a menu that opens above content without blocking modals.
+- Modal, navigation, drawer, and toast layers now have explicit z-index ownership.
 
 ## Validation
 
@@ -29,16 +29,17 @@ Replace E18's legacy static boss fallback with a readable mixed boxing/grappling
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
 - Full `pixel_v2_visual.spec.js`: passed (47 tests).
+- Desktop and 390x844 scene, bag, shop, and dialogue screenshots were reviewed.
 - `git diff --check`: passed.
 
 ## Risks
 
-- Grappling interaction remains coordinated at runtime rather than authored as a paired two-character sheet.
-- E18 still uses synthesized generic impact audio rather than dedicated kick, clinch, and mat-contact foley.
-- The generic E05 boxer and broader post-Day9 enemy set still use legacy/fallback motion contracts.
+- `ui.css` still contains historical Wave sections; the final focused-shell layer intentionally overrides them. A separate cleanup should only happen with screenshot parity tests in place.
+- The city map and combat retain their existing specialized layouts; this pass did not redesign their information architecture.
+- Desktop system-menu discoverability relies on the visible `menu` control and should be human-playtested with first-time players.
 
 ## Next Step
 
-1. Rebuild the main UI around a restrained scene-first hierarchy with less default text.
-2. Replace the generic E05 boxer motion contract after the UI pass is accepted.
-3. Add dedicated kick, cloth-grab, and mat-contact audio after motion timing is accepted.
+1. Human-play Day1-Day5 at desktop and phone sizes, measuring whether players find shop/log without instruction.
+2. Consolidate obsolete historical CSS only after screenshot parity proves no visual regression.
+3. Continue the remaining E05/post-Day9 motion asset replacement after the UI hierarchy is accepted.

@@ -200,6 +200,12 @@ for (const viewport of VIEWPORTS) {
     const errors = await loadGame(page, viewport);
 
     await expectNoHorizontalOverflow(page, `${viewport.name} map`);
+    await expect(page.locator('.maws-nav-primary .maws-tab')).toHaveCount(5);
+    expect(await page.locator('.maws-scene-command-button:visible').count()).toBeLessThanOrEqual(2);
+    await expect(page.locator('.maws-system-menu-panel')).toBeHidden();
+    await page.locator('.maws-system-menu > summary').click();
+    await expect(page.locator('.maws-system-menu-panel')).toBeVisible();
+    await page.locator('.maws-system-menu > summary').click();
 
     await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
     await expect(page.locator('.maws-skill').first()).toBeVisible();
