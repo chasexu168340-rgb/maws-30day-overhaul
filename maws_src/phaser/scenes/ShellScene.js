@@ -20,6 +20,7 @@ const BG_BY_LOC = {
 };
 
 const FIGHTER_BY_ENEMY = {
+  E00: 'fighter.enemy.untrained',
   E01: 'fighter.enemy.beginner',
   E05: 'fighter.enemy.boxer',
   E10: 'fighter.enemy.silent',
@@ -31,6 +32,7 @@ const FIGHTER_BY_ENEMY = {
 const ANIM_BY_FIGHTER = {
   'fighter.player': 'anim.fighter.player',
   'fighter.enemy.boxer': 'anim.fighter.enemy.boxer',
+  'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
   'fighter.enemy.silent': 'anim.fighter.enemy.silent',
   'fighter.enemy.grappler': 'anim.fighter.enemy.grappler',

@@ -35,6 +35,9 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - Day 5 E01 now uses independent final `fighter.enemy.beginner` and `anim.fighter.enemy.beginner` assets instead of the shared legacy boxer.
 - E01's reviewed gray-shirt/red-glove set is exact 96x144 / 1536x144, with idle, jab/straight, hurt, and guard rows; the strip stays under the 500KB fighter budget.
 - Pixel V2 tests prove E01 attack-frame playback and cover Day 5 desktop/mobile combat geometry and screenshots.
+- E00 now uses independent final `fighter.enemy.untrained` and `anim.fighter.enemy.untrained` assets: rust jacket, bare hands, poor guard, unstable shove/swing, hurt, and retreat rows.
+- E00's reviewed standee/strip are exact 96x144 / 1536x144 and 7KB / 112KB; its silhouette and stance visibly separate an untrained target from E01.
+- Pixel V2 tests prove E00 attack-frame playback and cover the optional Day 3 fun target on desktop/mobile.
 - Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
@@ -59,12 +62,18 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 candidate visual gate (10 passed, including E01 live attack frames and Day 5 desktop/mobile screenshots)
   - `git diff --check`
+- Passed after the independent E00 integration:
+  - `npm run check:full` (101 manifest entries, 6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 candidate visual gate (13 passed, including E00 live attack frames and Day 3 E00 desktop/mobile screenshots)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- E00 still has no independent runtime standee/strip, so the early low-risk fun target is the next combat-art gap.
+- Day 1-9 scene standees and portraits still use legacy art, including the separate scene `fighter.player` key.
 - The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
@@ -72,4 +81,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Generate and review E00's independent action master. After the early combat set is independent, generate full-size Lu/NPC scene standees and portraits before the broad UI skin replacement.
+Generate and review Lu's full-size scene standee and portrait, then Liu Pangzi, Xiaoman, the worker, Coach Liang, and the father-memory set before the broad UI skin replacement.

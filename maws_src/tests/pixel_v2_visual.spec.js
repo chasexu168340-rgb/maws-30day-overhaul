@@ -30,9 +30,11 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.home.day',
   'backgrounds:bg.park.day',
   'characters:fighter.player',
+  'characters:fighter.enemy.untrained',
   'characters:fighter.enemy.beginner',
   'characters:fighter.enemy.silent',
   'sprites:anim.fighter.player',
+  'sprites:anim.fighter.enemy.untrained',
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent'
 ];
@@ -143,6 +145,19 @@ async function startDay5(page) {
     store.state.loc = 'park';
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: 'E01' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startDay3FunTarget(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 3;
+    store.state.time = 960;
+    store.state.loc = 'park';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E00' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
@@ -360,6 +375,44 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
   expect(violations, 'player animation should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 untrained target strip advances through real attack frames in Phaser', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay3FunTarget(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const game = window.MAWS_GAME;
+    window.__pixelV2UntrainedFrameNames = [];
+    window.__pixelV2UntrainedFrameTimer = setInterval(() => {
+      const scene = game.scene.getScene('ShellScene');
+      const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.untrained');
+      if (sprite?.frame?.name !== undefined) window.__pixelV2UntrainedFrameNames.push(Number(sprite.frame.name));
+    }, 32);
+
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'guard' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+
+  await page.waitForFunction(
+    () => (window.__pixelV2UntrainedFrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    null,
+    { timeout: 3000 }
+  );
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'untrained-target-attack-desktop.png'), fullPage: true });
+  await page.waitForTimeout(850);
+
+  const samples = await page.evaluate(() => {
+    clearInterval(window.__pixelV2UntrainedFrameTimer);
+    return window.__pixelV2UntrainedFrameNames || [];
+  });
+
+  expect(samples.length, 'Phaser should expose untrained-target animation frame samples').toBeGreaterThan(6);
+  expect(new Set(samples).size, 'untrained-target sprite should advance beyond a static frame').toBeGreaterThan(2);
+  expect(samples.some((frame) => frame >= 4 && frame <= 7), `untrained target should enter attack frames; sampled ${samples.join(',')}`).toBe(true);
+  expect(violations, 'untrained-target animation should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 beginner boxer strip advances through real attack frames in Phaser', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startDay5(page);
@@ -477,5 +530,19 @@ for (const viewport of VIEWPORTS) {
     await expectCombatGeometry(page, viewport);
     await expectScreenshotHasPixels(page, `day5-${viewport.name}.png`, `Day 5 ${viewport.name}`);
     expect(violations, `Day 5 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 3 E00 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startDay3FunTarget(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.park.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.untrained'
+    ], `Day 3 E00 ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 3 E00 ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    await expectScreenshotHasPixels(page, `day3-e00-${viewport.name}.png`, `Day 3 E00 ${viewport.name}`);
+    expect(violations, `Day 3 E00 ${viewport.name} console warnings/errors`).toEqual([]);
   });
 }

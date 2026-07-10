@@ -27,6 +27,7 @@ const day1To9FinalKeys = [
   'bg.boxing.day',
   'bg.boxing.night',
   'fighter.player',
+  'fighter.enemy.untrained',
   'fighter.enemy.beginner',
   'fighter.enemy.silent',
   'scene.npc.fatty',
@@ -34,6 +35,7 @@ const day1To9FinalKeys = [
   'scene.npc.worker',
   'scene.npc.coach',
   'anim.fighter.player',
+  'anim.fighter.enemy.untrained',
   'anim.fighter.enemy.beginner',
   'anim.fighter.enemy.silent'
 ];

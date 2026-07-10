@@ -32,8 +32,9 @@ The player-facing target remains: the player clicks something, the game responds
 9. Day 8 now uses an independent final E10 standee/strip; browser tests prove both player and E10 attack ranges play in real combat and capture both mid-action screenshots.
 10. Guard FX targeting/tinting is corrected and concise Chinese combat cues replace English debug-style labels.
 11. Day 5 E01 now uses an independent final beginner-boxer standee/strip; browser tests prove its attack frames and cover desktop/mobile Day 5 screenshots.
-12. Next production batch: independent E00 action master, followed by Lu/NPC scene standees and portraits.
-13. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+12. E00 now uses an independent final untrained-target standee/strip; browser tests prove its attack frames and cover desktop/mobile Day 3 optional combat screenshots.
+13. Next production batch: Lu's scene standee/portrait, then Liu Pangzi, Xiaoman, the worker, Coach Liang, and father memory.
+14. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
