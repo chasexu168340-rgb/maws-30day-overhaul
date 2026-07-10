@@ -10,6 +10,8 @@ Build a coherent Day 1-Day 9 urban martial-arts slice on a 480x270 logical canva
 
 Bruisers is a design reference for preparation, distance, and consequences carrying into the next fight. Do not extract, trace, reproduce, or imitate its code, assets, text, characters, audio, or exact layouts. MAWS keeps its own Chinese-city setting, tactical queue combat, and black/red/gold visual identity.
 
+Karate Master 2: Knock Down Blow is a secondary reference for joining work, training, injury, rules, and fights into one martial-arts life loop. Its high/mid/low attack reads, standing guard versus back-step defense, counter timing, and distance-based recovery may inform MAWS feedback and tactical recipes. Do not extract or copy its packaged assets, executable data, code, text, audio, characters, exact controls, or exact presentation.
+
 ## Visual Grammar
 
 - Native scene grid: 480x270 pixels. Scale only by integer multiples where the viewport permits.

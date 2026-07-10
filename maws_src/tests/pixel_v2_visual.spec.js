@@ -27,6 +27,8 @@ const MIME = {
 };
 
 const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
+  'backgrounds:bg.city.map.day',
+  'backgrounds:bg.city.map.night',
   'backgrounds:bg.home.day',
   'backgrounds:bg.home.night',
   'backgrounds:bg.metro_station.day',
@@ -667,6 +669,51 @@ for (const viewport of VIEWPORTS) {
     await expectNoHorizontalOverflow(page, `Day 2 metro ${viewport.name}`);
     await expectScreenshotHasPixels(page, `day2-metro-${viewport.name}.png`, `Day 2 metro ${viewport.name}`);
     expect(violations, `Day 2 metro ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`city map ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await page.locator('button[data-action="openCityMap"]').first().click();
+    await expect(page.locator('.maws-city-overlay')).toBeVisible();
+    await expect(page.locator('.maws-city-marker').first()).toBeVisible();
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.city.map.day',
+      'backgrounds:bg.city.map.night'
+    ], `city map ${viewport.name}`);
+    const geometry = await page.evaluate(() => {
+      const overlay = document.querySelector('.maws-city-overlay');
+      const sheet = document.querySelector('.maws-city-sheet');
+      const head = document.querySelector('.maws-city-sheet-head');
+      const map = document.querySelector('.maws-city-map');
+      const hud = document.querySelector('.maws-hud');
+      const mapRect = map.getBoundingClientRect();
+      const sheetRect = sheet.getBoundingClientRect();
+      const headRect = head.getBoundingClientRect();
+      return {
+        aspect: mapRect.width / mapRect.height,
+        sheetHeight: sheetRect.height,
+        expectedSheetHeight: mapRect.height + headRect.height,
+        overlayZ: Number.parseInt(getComputedStyle(overlay).zIndex, 10),
+        hudZ: Number.parseInt(getComputedStyle(hud).zIndex, 10),
+        hudVisibility: getComputedStyle(hud).visibility,
+        visibleMarkers: Array.from(document.querySelectorAll('.maws-city-marker')).filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        }).length
+      };
+    });
+    expect(geometry.aspect, 'city-map image and marker plane should keep the authored 16:9 geometry').toBeGreaterThan(1.76);
+    expect(geometry.aspect, 'city-map image and marker plane should keep the authored 16:9 geometry').toBeLessThan(1.79);
+    expect(geometry.sheetHeight, 'city-map sheet should not retain an empty legacy min-height').toBeLessThanOrEqual(geometry.expectedSheetHeight + 8);
+    expect(geometry.overlayZ, 'city-map modal should cover the persistent HUD').toBeGreaterThan(geometry.hudZ);
+    expect(geometry.hudVisibility, 'city-map modal should suppress the persistent HUD').toBe('hidden');
+    expect(geometry.visibleMarkers, 'city map should expose reachable nodes').toBeGreaterThanOrEqual(3);
+    if (viewport.name === 'mobile') {
+      expect(geometry.visibleMarkers, 'mobile map should hide locked-node clutter').toBeLessThanOrEqual(5);
+    }
+    await expectNoHorizontalOverflow(page, `city map ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `city-map-${viewport.name}.png`, `city map ${viewport.name}`);
+    expect(violations, `city map ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 store ${viewport.name} visual/runtime contract`, async ({ page }) => {

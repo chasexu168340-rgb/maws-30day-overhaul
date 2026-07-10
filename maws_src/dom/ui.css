@@ -8391,3 +8391,186 @@
     min-height: 44px;
   }
 }
+
+/* Pixel V2 city map: preserve the authored 16:9 route geometry under DOM markers. */
+#maws-ui-root .maws-city-overlay {
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(5, 5, 6, 0.86);
+  backdrop-filter: none;
+}
+
+#maws-ui-root:has(.maws-city-overlay) .maws-hud {
+  visibility: hidden;
+}
+
+#maws-ui-root .maws-city-sheet {
+  width: min(calc(100vw - 64px), calc((100vh - 136px) * 1.7777778));
+  height: auto;
+  min-height: 0;
+  max-height: calc(100vh - 32px);
+  max-width: 1180px;
+  padding: 0;
+  border: 3px solid rgba(243, 226, 185, 0.62);
+  background: #0a0a0d;
+  box-shadow: 6px 6px 0 #050506;
+  overflow: visible;
+}
+
+#maws-ui-root .maws-city-sheet-head {
+  min-height: 48px;
+  padding: 6px 8px 6px 12px;
+  border: 0;
+  border-bottom: 3px solid var(--maws-gold, #f2c94c);
+  background: #0a0a0d;
+  color: var(--maws-paper, #f3e2b9);
+  box-shadow: none;
+  clip-path: none;
+}
+
+#maws-ui-root .maws-city-sheet-head b {
+  font-size: 18px;
+  text-shadow: 2px 2px 0 #050506;
+}
+
+#maws-ui-root .maws-city-sheet-head > span {
+  color: var(--maws-gold, #f2c94c);
+  font-size: 13px;
+}
+
+#maws-ui-root .maws-city-sheet-head button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 2px solid #050506;
+  background: var(--maws-paper, #f3e2b9);
+  color: #050506;
+  box-shadow: 2px 2px 0 #050506;
+  clip-path: none;
+}
+
+#maws-ui-root .maws-city-map {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  background-size: 100% 100%;
+  background-position: 50% 50%;
+  image-rendering: pixelated;
+}
+
+#maws-ui-root .maws-city-map-shade {
+  background: rgba(5, 5, 6, 0.08);
+}
+
+#maws-ui-root .maws-city-map-title {
+  left: 10px;
+  top: 10px;
+  padding: 5px 8px;
+  border: 2px solid rgba(243, 226, 185, 0.48);
+  background: rgba(10, 10, 13, 0.88);
+  box-shadow: 3px 3px 0 #050506;
+  clip-path: none;
+}
+
+#maws-ui-root .maws-city-marker {
+  min-width: 44px;
+  min-height: 38px;
+  padding: 4px 7px;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: rgba(243, 226, 185, 0.94);
+  color: #0a0a0d;
+  box-shadow: 3px 3px 0 rgba(5, 5, 6, 0.88);
+  clip-path: none;
+}
+
+#maws-ui-root .maws-city-marker:hover,
+#maws-ui-root .maws-city-marker:focus-visible {
+  border-color: var(--maws-gold, #f2c94c);
+  outline: 2px solid #050506;
+  outline-offset: 2px;
+  transform: translate(-50%, -50%);
+}
+
+#maws-ui-root .maws-city-marker.active {
+  border-color: #050506;
+  background: var(--maws-red, #d92f3a);
+  color: #fff;
+  box-shadow: 3px 3px 0 #050506;
+}
+
+#maws-ui-root .maws-city-marker.locked,
+#maws-ui-root .maws-city-marker.disabled {
+  background: #7c858c;
+  color: #18191f;
+  opacity: 0.9;
+}
+
+#maws-ui-root .maws-city-marker-icon {
+  min-width: 18px;
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  #maws-ui-root .maws-city-overlay {
+    padding: 8px;
+  }
+
+  #maws-ui-root .maws-city-sheet {
+    width: min(calc(100vw - 16px), calc((100vh - 124px) * 1.7777778));
+    height: auto;
+    min-height: 0;
+    max-height: calc(100vh - 16px);
+    max-width: none;
+  }
+
+  #maws-ui-root .maws-city-sheet-head {
+    min-height: 44px;
+    padding: 4px 6px 4px 9px;
+  }
+
+  #maws-ui-root .maws-city-sheet-head b {
+    font-size: 16px;
+  }
+
+  #maws-ui-root .maws-city-sheet-head button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  #maws-ui-root .maws-city-map-title {
+    left: 5px;
+    top: 5px;
+    padding: 3px 5px;
+    font-size: 11px;
+  }
+
+  #maws-ui-root .maws-city-marker {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 2px;
+  }
+
+  #maws-ui-root .maws-city-marker b,
+  #maws-ui-root .maws-city-marker small {
+    display: none;
+  }
+
+  #maws-ui-root .maws-city-marker-icon {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  #maws-ui-root .maws-city-marker.locked,
+  #maws-ui-root .maws-city-marker.disabled {
+    display: none;
+  }
+}

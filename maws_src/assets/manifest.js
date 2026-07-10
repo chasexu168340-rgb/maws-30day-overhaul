@@ -172,8 +172,8 @@ const pixelV2FighterSprite = (file, sourceKey, tags = [], displayScale = 1) => e
 
 export const ASSET_MANIFEST = {
   backgrounds: {
-    'bg.city.map.day': cityMap('bg_city_map_day.png', ['day', 'shenzhen']),
-    'bg.city.map.night': cityMap('bg_city_map_night.png', ['night', 'shenzhen']),
+    'bg.city.map.day': pixelV2Background('bg_city_map_day.png', ['day', 'shenzhen', 'city-map']),
+    'bg.city.map.night': pixelV2Background('bg_city_map_night.png', ['night', 'shenzhen', 'city-map']),
     'bg.metro_station.day': pixelV2Background('bg_metro_station_day.png', ['metro_station', 'day']),
     'bg.metro_station.night': pixelV2Background('bg_metro_station_night.png', ['metro_station', 'night']),
     'bg.home.day': pixelV2Background('bg_home_day.png', ['home', 'day']),
