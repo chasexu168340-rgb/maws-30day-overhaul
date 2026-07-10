@@ -198,6 +198,15 @@ test('rental home first look opens with reachable main CTA and no horizontal ove
   await expect(page.locator('.maws-today-rail')).toHaveCount(0);
   await expect(page.locator('.maws-command-drawer')).not.toHaveAttribute('open', '');
   expect(await page.locator('.maws-scene-quick-actions > button').count(), 'default scene should expose no more than two decisions').toBeLessThanOrEqual(2);
+  const firstLookDensity = await page.locator('.maws-action-rail-main').evaluate((rail) => ({
+    visibleText: Array.from(rail.querySelectorAll('strong, small, summary'))
+      .filter((node) => node.getBoundingClientRect().height > 0 && !node.closest('details:not([open])'))
+      .map((node) => node.textContent.replace(/\s+/g, ' ').trim())
+      .filter(Boolean),
+    openDetails: rail.querySelectorAll('details[open]').length
+  }));
+  expect(firstLookDensity.visibleText.length, 'first look should keep command copy sparse').toBeLessThanOrEqual(7);
+  expect(firstLookDensity.openDetails, 'secondary actions should stay closed by default').toBe(0);
 
   const firstLook = await page.evaluate(() => {
     const state = window.MAWS_STORE.state;
@@ -367,6 +376,8 @@ test('Day 5 combat HUD exposes 4-6 compact command/action cards, a 1-2 slot queu
   const queueCount = await page.locator('.maws-queue-slot').count();
   expect(queueCount, 'combat queue should keep one or two slots').toBeGreaterThanOrEqual(1);
   expect(queueCount, 'combat queue should keep one or two slots').toBeLessThanOrEqual(2);
+  await expect(page.locator('details.maws-combat-feedback')).not.toHaveAttribute('open', '');
+  await expect(page.locator('details.maws-combat-side-log')).not.toHaveAttribute('open', '');
 
   const selectableCards = page.locator('.maws-skill.combat-card:not(.disabled) button[data-action="selectSkill"]');
   await expect(selectableCards.first()).toBeVisible();

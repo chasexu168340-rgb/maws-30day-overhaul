@@ -436,7 +436,7 @@ function resourceIconKey(label) {
 function renderHudChip([label, value, icon]) {
   const displayLabel = label === '热度' ? '风险' : label;
   const className = label === '热度' ? 'maws-chip risk' : 'maws-chip';
-  return `<span class="${className}">${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b>${esc(value)}</span>`;
+  return `<span class="${className}" title="${esc(displayLabel)} ${esc(value)}">${assetIcon(resourceIconKey(label), icon)}<b>${esc(displayLabel)}</b><strong>${esc(value)}</strong></span>`;
 }
 
 function primaryHudResources(resources = []) {
@@ -617,9 +617,9 @@ function renderRecommendations(model, limit = 2) {
 
 function renderSceneCommand(command) {
   if (!command) return '';
-  const meta = (command.meta || []).filter(Boolean).slice(0, 2);
+  const meta = (command.meta || []).filter(Boolean).slice(0, 1);
   return btn(
-    `<span class="maws-command-mark">${esc(command.mark || '行动')}</span><strong>${esc(command.label)}</strong>${meta.length ? `<small>${meta.map((part) => esc(part)).join(' · ')}</small>` : ''}`,
+    `<span class="maws-command-mark">${esc(command.mark || '行动')}</span><strong>${esc(command.label)}</strong>${meta.length ? `<small>${esc(meta[0])}</small>` : ''}`,
     command.action,
     command.params || {},
     `maws-scene-command-button ${command.primary ? 'primary' : 'ghost'} ${command.disabled ? 'disabled' : ''}`
@@ -707,22 +707,18 @@ function renderMap(model) {
             <h2>${esc(model.loc?.name)}</h2>
           </div>
           <div class="maws-scene-agenda" aria-label="今日主线">
-            <span>今日</span><strong>${esc(mainTitle)}</strong>
-            <small>${esc(model.mainEvent?.locName || scene.openText || '')}</small>
+            <span>今日要事</span><strong>${esc(mainTitle)}</strong>
           </div>
           <div class="maws-scene-cast ${(scene.characters || []).length >= 3 ? 'three-up' : ''}">${characters}</div>
           ${interactionMenu}
         </div>
         <footer class="maws-scene-command maws-action-rail maws-action-rail-main">
-          <div class="maws-scene-command-head">
-            <span><b>${esc(model.loc?.name)}</b><small>${esc(scene.openText || '')}</small></span>
-            ${btn('城市', 'openCityMap', {}, 'tiny maws-map-open')}
-          </div>
+          <div class="maws-scene-command-head">${btn('城市', 'openCityMap', {}, 'tiny maws-map-open')}</div>
           <div class="maws-actions-primary maws-scene-quick-actions">
             ${quickCommands.map(renderSceneCommand).join('') || '<p class="maws-empty">现在没有必须处理的事。</p>'}
           </div>
           <details class="maws-command-drawer">
-            <summary>更多行动 <span>${esc(drawerActions.length + (model.opportunities || []).length)}项</span></summary>
+            <summary>更多 <span>${esc(drawerActions.length + (model.opportunities || []).length)}</span></summary>
             <div class="maws-command-drawer-body">
               <section><header><b>当前地点</b><span>${esc(drawerActions.length)}项</span></header><div class="maws-actions">${allActions || '<p class="maws-empty">其他行动暂时没有。</p>'}</div></section>
               <section><header><b>城中机会</b><span>${esc((model.opportunities || []).length)}条</span></header>${recommendations}</section>
@@ -1080,7 +1076,6 @@ function renderCombat(model) {
   const phaseLabel = combat.phase === 'auto' ? '自动交换中' : '暂停调整';
   const queueLimit = combat.queueLimit || 2;
   const queueIds = combat.playerQueue?.length ? combat.playerQueue : combat.selected || [];
-  const queue = queueIds.map((id) => SKILLS[id]?.name || id).join(' -> ') || '未选择，默认抱架';
   const queueSlots = Array.from({ length: queueLimit }, (_, index) => {
     const id = queueIds[index];
     return `<span class="maws-queue-slot ${id ? 'filled' : ''}"><i>${index + 1}</i>${esc(id ? SKILLS[id]?.name || id : '待选')}</span>`;
@@ -1135,7 +1130,7 @@ function renderCombat(model) {
     `maws-target-option ${combat.target === target ? 'active' : ''}`
   )).join('');
   const planControls = (combat.planModes || []).map((mode) => btn(
-    `<strong>${esc(mode.label || mode.id)}</strong><small>${esc(mode.id)}</small>`,
+    `<strong>${esc(mode.label || mode.id)}</strong>`,
     'setCombatPlan',
     { mode: mode.id },
     `maws-plan-mode-option ${combat.planMode === mode.id ? 'active' : ''} ${combat.phase === 'auto' ? 'disabled' : ''}`
@@ -1190,13 +1185,14 @@ function renderCombat(model) {
       <small>${esc(prepLabels.length ? `备战：${prepLabels.join(' / ')}` : fightRule.priority || '无额外备战')}</small>
     </details>` : '';
   const feedbackPanel = `
-    <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
-      <b>窗口反馈</b>
-      <span>${esc(feedback?.text || '先读意图，再放 1-2 张动作卡。')}</span>
-      ${fightIdentity}
-      ${perkPulse ? `<small>${esc(perkPulse)}</small>` : ''}
-      ${recipeReward ? `<small class="maws-recipe-reward">首次完成 ${esc(recipeReward.label)} · 洞察 +${esc(recipeReward.insight)}</small>` : ''}
-    </aside>`;
+    <details class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
+      <summary><b>战况</b><span>${esc(feedback?.text || '先读意图，再排 1-2 招。')}</span></summary>
+      <div class="maws-combat-feedback-detail">
+        ${fightIdentity}
+        ${perkPulse ? `<small>${esc(perkPulse)}</small>` : ''}
+        ${recipeReward ? `<small class="maws-recipe-reward">首次完成 ${esc(recipeReward.label)} · 洞察 +${esc(recipeReward.insight)}</small>` : ''}
+      </div>
+    </details>`;
   const lastWindow = combat.lastWindow
     ? `上个窗口 ${esc(combat.lastWindow.duration)}秒 · ${esc(combat.lastWindow.stepCount || 0)}个动作 · ${esc(combat.lastWindow.pressure || '交换')}`
     : '';
@@ -1215,15 +1211,15 @@ function renderCombat(model) {
       ${measurementObjectives}
       <div class="maws-combat-dock">
         <div class="maws-combat-planner">
-          <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>战斗钟 ${esc(combat.clock || 0)}秒 · 窗口 ${esc(combat.windowCount || 0)} · 本窗口 ${esc(queueIds.length)}/${esc(queueLimit)} 槽</span><small>${phaseNote}</small></div>
+          <div class="maws-combat-phase"><b>${esc(phaseLabel)}</b><span>${esc(combat.clock || 0)}秒 · 第${esc((combat.windowCount || 0) + 1)}窗</span><small>${phaseNote}</small></div>
           <div class="maws-plan-mode-control" role="group" aria-label="战斗计划模式">${planControls}</div>
           ${objectives}
           ${enemyRead}
           <div class="maws-target-control" role="group" aria-label="攻击目标">${targetControls}</div>
-          <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>本窗口动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div><small>${esc(queue)}</small>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
+          <div class="maws-combat-queue" style="--queue-limit:${esc(queueLimit)}"><b>动作队列 <em>${esc(queueIds.length)}/${esc(queueLimit)}</em></b><div class="maws-queue-slots">${queueSlots}</div>${btn('清空', 'clearSkills', {}, 'tiny')}</div>
         </div>
         <div class="maws-combat-window-cards">
-          <b>战术配方 + 指令栏 · 选 ${esc(queueLimit)} 招入队</b>
+          <b>本窗口指令</b>
           <div class="maws-card-grid combat focus">${windowCommandHtml || '<p class="maws-empty">先装备技能，再选择本窗口动作。</p>'}</div>
         </div>
         <details class="maws-fold maws-tactics-drawer">
@@ -1231,10 +1227,10 @@ function renderCombat(model) {
           <div class="maws-card-grid combat">${drawerCardHtml || '<p class="maws-empty">没有更多可用动作。</p>'}</div>
         </details>
         <aside class="maws-combat-side-panel">
-          <div class="maws-combat-side-log maws-combat-log-toggle">
-            <b>复盘</b>
+          <details class="maws-combat-side-log maws-combat-log-toggle">
+            <summary>复盘</summary>
             <ol>${logs || '<li>等待第一轮交换。</li>'}</ol>
-          </div>
+          </details>
           <div class="maws-combat-actions">${btn(combat.phase === 'auto' ? '结算中' : '执行 1-2 招', 'confirmBattle', {}, combat.phase === 'auto' ? 'disabled' : 'primary')}${btn('认输', 'surrender', {}, 'dark')}</div>
         </aside>
       </div>
