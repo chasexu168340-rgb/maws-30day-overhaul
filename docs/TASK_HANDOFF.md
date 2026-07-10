@@ -42,8 +42,9 @@ The player-facing target remains: the player clicks something, the game responds
 19. Dialogue lookup prefers dedicated portraits, and the Day 4 worker line now carries an explicit `npc: worker` identity.
 20. Coach Liang now has final 96x144 scene standee and 96x96 portrait assets; Day 9 boxing desktop/mobile screenshots verify final-scale mitt silhouettes.
 21. Father memory now has final 96x144 scene and 96x96 portrait assets; Day 1 dialogue resolves Lu/father identities correctly and the three-character desktop stage stays clear of the right action rail.
-22. Next production batch: replace `bg.home.day`, then start the broad UI scene-shell replacement without changing the current state/data contracts.
-23. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+22. `bg.home.day` is now a final 480x270/32-color/41KB `pixel_v2` background with an open cast lane and Day 1 story anchors; final background verification now enforces dimensions, indexed palette size, and the 180KB budget.
+23. Next production batch: remove the red player spotlight and replace the broad scene-shell information walls without changing current state/data contracts.
+24. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 

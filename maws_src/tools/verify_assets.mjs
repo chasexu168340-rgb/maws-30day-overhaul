@@ -85,7 +85,7 @@ function readPng(file, decode = false) {
   if (data.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') return null;
   let offset = 8;
   const idat = [];
-  const info = { width: 0, height: 0, bitDepth: 0, colorType: 0, pixels: null };
+  const info = { width: 0, height: 0, bitDepth: 0, colorType: 0, paletteColors: 0, pixels: null };
   while (offset < data.length) {
     const length = data.readUInt32BE(offset);
     const type = data.subarray(offset + 4, offset + 8).toString('ascii');
@@ -96,6 +96,8 @@ function readPng(file, decode = false) {
       info.height = chunk.readUInt32BE(4);
       info.bitDepth = chunk[8];
       info.colorType = chunk[9];
+    } else if (type === 'PLTE') {
+      info.paletteColors = chunk.length / 3;
     } else if (type === 'IDAT' && decode) {
       idat.push(chunk);
     } else if (type === 'IEND') {
@@ -204,6 +206,23 @@ function assertPixelContract(group, key, value, src) {
   }
 }
 
+function assertFinalPixelV2Image(group, key, value, full, src, stat) {
+  if (value.status !== 'final' || !src.startsWith('assets/pixel_v2/')) return;
+  if (group !== 'backgrounds') return;
+
+  const png = readPng(full, false);
+  if (!png) return;
+  if (png.width !== 480 || png.height !== 270) {
+    errors.push(`${group}.${key} final background must be 480x270, got ${png.width}x${png.height}`);
+  }
+  if (png.colorType !== 3 || png.paletteColors < 1 || png.paletteColors > 32) {
+    errors.push(`${group}.${key} final background must be indexed PNG with 1-32 colors`);
+  }
+  if (stat.size > 180 * 1024) {
+    errors.push(`${group}.${key} final background exceeds 180KB budget: ${stat.size} bytes`);
+  }
+}
+
 for (const group of requiredGroups) {
   if (!ASSET_MANIFEST[group]) errors.push(`missing group: ${group}`);
 }
@@ -252,6 +271,7 @@ for (const group of requiredGroups) {
       else if (png.width <= 0 || png.height <= 0) errors.push(`${group}.${key} has invalid PNG dimensions: ${src}`);
     }
     assertPixelContract(group, key, value, src);
+    assertFinalPixelV2Image(group, key, value, full, src, stat);
     assertSpritesheet(group, key, value, full, src);
   }
 }

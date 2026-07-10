@@ -176,7 +176,7 @@ export const ASSET_MANIFEST = {
     'bg.city.map.night': cityMap('bg_city_map_night.png', ['night', 'shenzhen']),
     'bg.metro_station.day': cityMap('bg_city_map_day.png', ['metro_station', 'day', 'fallback', 'city-map']),
     'bg.metro_station.night': cityMap('bg_city_map_night.png', ['metro_station', 'night', 'fallback', 'city-map']),
-    'bg.home.day': shenzhenDay('bg_home_sun.png', ['home']),
+    'bg.home.day': pixelV2Background('bg_home_day.png', ['home', 'day']),
     'bg.home.night': pixelBackground('bg_home_night.png', ['home', 'night']),
     'bg.store.day': shenzhenDay('bg_store_sun.png', ['store']),
     'bg.store.night': pixelBackground('bg_store_rain.png', ['store', 'night', 'rain']),
