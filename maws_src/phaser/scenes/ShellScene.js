@@ -1,5 +1,5 @@
 ﻿import { ACTIONS, ITEMS, LOCS, ORIGINS, SKILLS, TABS, TRAVEL_TUNING } from '../../content/data.js';
-import { ASSET_MANIFEST } from '../../assets/manifest.js';
+import { ASSET_MANIFEST, assetEntry, assetPath } from '../../assets/manifest.js';
 import { buildRenderModel, fmtTime } from '../../simulation/state.js';
 import { bar, button, clear, label, polyPanel, smallTag, UI, wrapLines } from '../ui/p5ui.js';
 
@@ -85,6 +85,9 @@ export class ShellScene extends PhaserScene {
     this.scroll = {};
     this.lastRenderedStepCount = 0;
     this.lastRenderedStepHash = '';
+    this.runtimeLoadPending = false;
+    this.runtimeLoadKeys = [];
+    this.runtimeFailedKeys = new Set();
   }
 
   init(data) {
@@ -117,6 +120,18 @@ export class ShellScene extends PhaserScene {
   render() {
     clear(this.root);
     this.model = buildRenderModel(this.store.state);
+    const required = this.runtimeAssetKeys(this.model);
+    const missing = required.filter((key) => !this.hasTexture(key));
+    const failed = missing.filter((key) => this.runtimeFailedKeys.has(key));
+    if (failed.length) {
+      this.renderAssetLoadError(failed);
+      return;
+    }
+    if (missing.length) {
+      this.queueRuntimeAssets(missing);
+      this.renderAssetLoading(missing);
+      return;
+    }
     if (this.model.boot) this.renderTitle();
     else if (this.model.combat) this.renderCombat();
     else {
@@ -149,6 +164,79 @@ export class ShellScene extends PhaserScene {
     const shade = this.add.graphics().setDepth(2);
     shade.fillStyle(0x000000, w < 620 ? 0.18 : 0.08).fillRect(0, 0, ...Object.values(this.size()));
     this.root.add(shade);
+  }
+
+  combatBackgroundKey(combat = {}) {
+    if (combat.enemyId === 'E07') return 'bg.store.rain';
+    if (combat.enemyId === 'E06') return 'bg.mma.night';
+    if (combat.enemyId === 'E18') return 'bg.boxing.night';
+    return 'bg.park.day';
+  }
+
+  runtimeAssetKeys(model = {}) {
+    if (model.boot) return ['bg.street.night'];
+    if (!model.combat) return [model.locationScene?.backgroundKey || fallbackBackgroundKey(model)].filter(Boolean);
+    const enemyKey = FIGHTER_BY_ENEMY[model.combat.enemyId] || 'fighter.enemy.boxer';
+    return [
+      this.combatBackgroundKey(model.combat),
+      'fighter.player',
+      enemyKey,
+      ANIM_BY_FIGHTER['fighter.player'],
+      ANIM_BY_FIGHTER[enemyKey],
+      ...Object.values(VFX_BY_IMPACT)
+    ].filter(Boolean);
+  }
+
+  queueRuntimeAssets(keys = []) {
+    if (this.runtimeLoadPending || !this.load) return;
+    const pending = [...new Set(keys)].filter((key) => !this.hasTexture(key) && !this.runtimeFailedKeys.has(key));
+    if (!pending.length) return;
+    this.runtimeLoadPending = true;
+    this.runtimeLoadKeys = pending;
+    pending.forEach((key) => {
+      const entry = assetEntry(key);
+      const path = assetPath(key);
+      if (!entry || !path) {
+        this.runtimeFailedKeys.add(key);
+        return;
+      }
+      if (entry.type === 'spritesheet') {
+        this.load.spritesheet(key, path, { frameWidth: entry.frameWidth, frameHeight: entry.frameHeight });
+      } else {
+        this.load.image(key, path);
+      }
+    });
+    this.load.once('loaderror', (file) => {
+      if (file?.key) this.runtimeFailedKeys.add(file.key);
+    });
+    this.load.once('complete', () => {
+      this.runtimeLoadPending = false;
+      this.runtimeLoadKeys = [];
+      if (this.scene?.isActive?.() !== false) this.render();
+    });
+    this.load.start();
+  }
+
+  renderAssetLoading(keys = []) {
+    const { w, h } = this.size();
+    const plateW = Math.min(460, w - 36);
+    const x = Math.round((w - plateW) / 2);
+    const y = Math.round(h * 0.42);
+    const backdrop = this.add.graphics().setDepth(4);
+    backdrop.fillStyle(0x17181d, 1).fillRect(0, 0, w, h);
+    backdrop.fillStyle(0xd92f3a, 1).fillRect(x, y, 5, 96);
+    backdrop.lineStyle(3, 0x0a0a0d, 1).strokeRect(x, y, plateW, 96);
+    this.track(backdrop);
+    this.track(label(this, x + 24, y + 18, '正在布置场地', { size: w < 620 ? 22 : 28, color: '#f3e2b9', depth: 8 }));
+    this.track(label(this, x + 24, y + 57, `载入 ${keys.length} 项像素资源`, { size: 13, color: '#f2c94c', depth: 8, stroke: false }));
+  }
+
+  renderAssetLoadError(keys = []) {
+    const { w, h } = this.size();
+    const backdrop = this.add.graphics().setDepth(4);
+    backdrop.fillStyle(0x17181d, 1).fillRect(0, 0, w, h);
+    this.track(backdrop);
+    this.track(label(this, 24, Math.round(h * 0.46), `资源载入失败：${keys.join(' / ')}`, { size: 18, color: '#f3e2b9', depth: 8 }));
   }
 
   drawBackground(key) {
@@ -419,7 +507,7 @@ export class ShellScene extends PhaserScene {
   renderCombat() {
     const { w, h } = this.size();
     const c = this.model.combat;
-    const bg = c.enemyId === 'E07' ? 'bg.store.rain' : c.enemyId === 'E06' ? 'bg.mma.night' : c.enemyId === 'E18' ? 'bg.boxing.night' : 'bg.park.day';
+    const bg = this.combatBackgroundKey(c);
     this.drawBackground(bg);
     const mobile = w < 620;
     const fighters = this.renderCombatFighters(c, w, h, mobile);

@@ -4,6 +4,7 @@ import { mkdir, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { ASSET_MANIFEST } from '../assets/manifest.js';
+import { BOOT_ASSET_KEYS } from '../phaser/scenes/BootScene.js';
 
 const ROOT = process.cwd();
 const ENTRY = '/maws_30day_overhaul_v3.html';
@@ -328,6 +329,16 @@ function pathsForManifestKeys(keys) {
   return keys.map((key) => ({ key, path: byId.get(key) || '' }));
 }
 
+async function requestAssetBytes(requestPaths = []) {
+  let bytes = 0;
+  for (const requestPath of [...new Set(requestPaths)]) {
+    const clean = decodeURIComponent(requestPath).replace(/^\/+/, '');
+    if (!clean.startsWith('assets/')) continue;
+    bytes += (await stat(path.join(ROOT, clean))).size;
+  }
+  return bytes;
+}
+
 async function expectManifestImagesDecode(page, keys, label) {
   const assets = pathsForManifestKeys(keys);
   expect(assets.filter((asset) => asset.path), `${label} manifest sample paths`).toHaveLength(keys.length);
@@ -535,6 +546,57 @@ test('Pixel V2 core icons, inventory, and early skill art decode and render', as
   const itemSources = await page.locator('.maws-bag-ledger img[src*="assets/pixel_v2/items/"]').count();
   expect(itemSources, 'inventory should consume reviewed Pixel V2 item art').toBeGreaterThanOrEqual(1);
   expect(violations, 'compact art integration should not emit warnings/errors').toEqual([]);
+});
+
+test('Boot and Day 1-9 combat loads stay inside image budgets without blank fighters', async ({ page }) => {
+  const requested = [];
+  page.on('requestfinished', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (/^\/assets\/.+\.(png|jpe?g|webp)$/i.test(pathname)) requested.push(pathname);
+  });
+  const violations = await loadGame(page, DESKTOP);
+  await page.waitForTimeout(350);
+
+  const bootRows = manifestRows().filter((row) => BOOT_ASSET_KEYS.includes(row.key));
+  expect(bootRows.map((row) => row.key).sort(), 'Boot must only preload its explicit core keys').toEqual([...BOOT_ASSET_KEYS].sort());
+  const firstLookBytes = await requestAssetBytes(requested);
+  expect(firstLookBytes, `Day 1 first-look image bytes: ${firstLookBytes}`).toBeLessThanOrEqual(3 * 1024 * 1024);
+
+  await page.locator('button[data-action="openCityMap"]').first().click();
+  await expect(page.locator('.maws-city-map')).toBeVisible();
+  await expect(page.locator('.maws-city-map')).toHaveCSS('background-image', /bg_city_map_day\.png/);
+  await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'closeCityMap' }));
+
+  const beforeDay5 = new Set(requested);
+  await startDay5(page);
+  await page.waitForFunction(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const keys = scene?.root?.list?.filter((item) => item?.texture?.key).map((item) => item.texture.key) || [];
+    return keys.includes('anim.fighter.player') && keys.includes('anim.fighter.enemy.beginner');
+  }, null, { timeout: 5000 });
+  const day5Delta = requested.filter((item) => !beforeDay5.has(item));
+  const day5Bytes = await requestAssetBytes(day5Delta);
+  expect(day5Bytes, `Day 5 combat incremental image bytes: ${day5Bytes}`).toBeLessThanOrEqual(1.2 * 1024 * 1024);
+
+  const beforeDay8 = new Set(requested);
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.combat = null;
+    store.state.modal = null;
+    store.state.day = 8;
+    store.state.loc = 'boxing';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E10' });
+  });
+  await page.waitForFunction(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const keys = scene?.root?.list?.filter((item) => item?.texture?.key).map((item) => item.texture.key) || [];
+    return keys.includes('anim.fighter.player') && keys.includes('anim.fighter.enemy.silent');
+  }, null, { timeout: 5000 });
+  const day8Delta = requested.filter((item) => !beforeDay8.has(item));
+  const day8Bytes = await requestAssetBytes(day8Delta);
+  expect(day8Bytes, `Day 8 combat incremental image bytes: ${day8Bytes}`).toBeLessThanOrEqual(1.2 * 1024 * 1024);
+  expect(violations, 'lazy image loading should not emit warnings/errors').toEqual([]);
 });
 
 for (const viewport of VIEWPORTS) {

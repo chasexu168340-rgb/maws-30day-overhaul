@@ -170,3 +170,10 @@ Reject an asset when any item is true:
 - Skill-card art is 192x128 transparent RGBA PNG. Use one readable action, at most one opponent silhouette, and preserve body proportions with nearest-neighbor contain fitting; budget 120KB.
 - Small assets use the same ink, bone, brick-red, muted-gold, cyan, and olive family as scenes. Avoid fantasy rarity colors, glossy loot rendering, microscopic linework, and text baked into images.
 - Navigation icons must remain distinguishable without their labels. Skill art must show distance and commitment before decoration.
+
+## Runtime Loading Contract
+
+- Boot preloads only textures required before the first state transition. The Day 1 title/home set must stay below 3MB; the current reviewed set is below 100KB.
+- DOM images may rely on native eager/lazy image loading. Phaser must explicitly load the current scene background and the current combat background, player, opponent, and shared feedback textures before drawing them.
+- A missing texture produces a readable Pixel V2 loading or error plate, never a blank fighter, white rectangle, or silent fallback to the wrong location.
+- Each location/combat increment must stay below 1.2MB. Browser tests record real local image requests and verify the final display list contains both combat sprites.

@@ -91,6 +91,9 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
 - Six starter wild-kit moves and the first formal/route skills now have final 192x128 action art, including the previously artless wild swing, shove, mystic palm, retreat, and talkdown entries.
 - The deterministic preparation tool now supports chroma cleanup for icon/item/skill-card sources, transparent nearest-neighbor contain fitting, and a configurable inset so 32px silhouettes keep safe transparent corners.
 - Strict final-art verification now enforces exact dimensions, RGBA transparency, corner alpha, and per-asset budgets for VFX, icons, items, and skill cards.
+- Phaser Boot no longer preloads the full ~15MB manifest. Its explicit title/home set is 89.5KB, while scene backgrounds and the current combat background/fighters/VFX load only before they are needed.
+- The runtime loader shows a hard-edged pixel loading plate until every required texture exists, reports failed keys instead of rendering blank actors, and preserves the existing queue/state flow.
+- Browser budget coverage opens Day 1, the city map, Day 5/E01, and Day 8/E10; Day 5 and Day 8 combat increments are about 290KB each and remain below the 1.2MB gate.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -213,17 +216,25 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 strict visual gate (30 passed, including live nav/item/skill-art consumption)
   - `git diff --check`
+- Passed after the Pixel V2 runtime-loading release gate:
+  - Boot explicit Phaser image set: 89.5KB (budget 3MB)
+  - Day 5 combat set: 289.6KB; Day 8 combat set: 284.3KB (budget 1.2MB each)
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual/network gate (31 passed)
+  - `node maws_src/tools/verify_assets.mjs --require-final-day1-9` (125 manifest entries)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
-- Current VFX textures remain legacy and will be replaced after the first background/standee batch.
-- Non-scene profile/skills/bag/shop/log panels still include older generic card styling and need a later focused pass after combat VFX.
-- Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
-- The final release gate still needs final-art desktop/mobile shots for Day 1, 2, and 3; Day 5 coverage is now active.
+- Day 10-Day 30 locations, characters, later enemies, and later-route skills still include explicit legacy/fallback art. They are not part of the completed Day 1-Day 9 release slice and must not be described as final.
+- The current audio layer has not yet received a matching Pixel V2 combat/UI sound pass.
+- `outputs/` contains local generation sources and visual-review screenshots and remains intentionally untracked.
 
 ## Next Step
 
-1. Audit BootScene bundle loading against the 3MB core and 1.2MB location budgets; keep only truly core assets in boot and load location/combat bundles before use.
-2. Add a browser network-budget gate and verify Day 1, city travel, Day 5, and Day 8 never show a blank texture during bundle transitions.
-3. Re-run the release gates and complete the Day 1-9 vertical-slice checkpoint before starting Day 10-30 art replacement.
+1. Human-review the final Day 1, Day 3, skills, bag, Day 5, Day 8, and Day 9 screenshots as the Day 1-Day 9 acceptance gate.
+2. After acceptance, begin Day 10-Day 30 replacement in bounded location groups, starting with wuguan/MMA/gym/physio and their scene identities.
+3. Keep the same asset dimensions, lazy-load contract, mobile/desktop screenshot gates, and principle-only reference boundary for every later batch.

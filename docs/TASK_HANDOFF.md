@@ -54,8 +54,10 @@ The player-facing target remains: the player clicks something, the game responds
 31. Profile, skills, bag, shop, and log now use one final Pixel V2 ledger language, hide raw data identifiers, retain useful information before details, and pass desktop/mobile screenshots with 44px mobile actions.
 32. Core resource/navigation icons, Day 1-9 inventory objects, six starter moves, and the first formal/route skills now use final Pixel V2 art; strict verification enforces their exact dimensions, alpha corners, and budgets.
 33. The asset preparation tool supports chroma-key cleanup plus nearest-neighbor contain fitting and insets for icons/items/skill cards without distorting action silhouettes.
-34. Next production batch: audit BootScene bundle loading against the core/location budgets and add a no-blank-transition network gate before declaring the Day 1-9 slice complete.
-35. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+34. Phaser Boot now preloads only the explicit 89.5KB street/home set; current location and combat textures load on demand behind a pixel loading plate, with failed keys shown instead of blank fighters.
+35. Browser coverage proves Day 1 first look stays under 3MB and Day 5/Day 8 combat increments stay around 290KB under the 1.2MB gate.
+36. The Day 1-Day 9 Pixel V2 vertical slice has passed strict assets, runtime, playtest, responsive, visual, animation, and network gates. Day 10-Day 30 art remains explicitly deferred legacy/fallback work.
+37. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
