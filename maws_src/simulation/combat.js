@@ -1607,7 +1607,7 @@ function makeFx(combatState, type, actor, damage, label, skillId, extra = {}) {
     actor,
     who: actor,
     fromSide: actor,
-    toSide: actor === "player" ? "enemy" : "player",
+    toSide: type === "guard" ? actor : actor === "player" ? "enemy" : "player",
     damage,
     dmg: damage,
     label,

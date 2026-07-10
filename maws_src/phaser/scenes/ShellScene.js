@@ -22,6 +22,7 @@ const BG_BY_LOC = {
 const FIGHTER_BY_ENEMY = {
   E01: 'fighter.enemy.boxer',
   E05: 'fighter.enemy.boxer',
+  E10: 'fighter.enemy.silent',
   E06: 'fighter.enemy.grappler',
   E07: 'fighter.enemy.weapon',
   E18: 'fighter.enemy.boss'
@@ -30,6 +31,7 @@ const FIGHTER_BY_ENEMY = {
 const ANIM_BY_FIGHTER = {
   'fighter.player': 'anim.fighter.player',
   'fighter.enemy.boxer': 'anim.fighter.enemy.boxer',
+  'fighter.enemy.silent': 'anim.fighter.enemy.silent',
   'fighter.enemy.grappler': 'anim.fighter.enemy.grappler',
   'fighter.enemy.weapon': 'anim.fighter.enemy.weapon',
   'fighter.enemy.boss': 'anim.fighter.enemy.boss'
@@ -553,7 +555,7 @@ export class ShellScene extends PhaserScene {
     if (!fxList.length) return;
     fxList.forEach((fx, fxIndex) => {
       const actorSide = fx.fromSide || fx.actor || step.actor || 'player';
-      const targetSide = fx.toSide || (actorSide === 'player' ? 'enemy' : 'player');
+      const targetSide = fx.toSide || (fx.type === 'guard' ? actorSide : actorSide === 'player' ? 'enemy' : 'player');
       const actor = fighters[actorSide] || fighters.player;
       const target = fighters[targetSide] || fighters.enemy;
       const delay = index * 135 + fxIndex * 70;
@@ -652,8 +654,11 @@ export class ShellScene extends PhaserScene {
       this.flashCombatPalette(paletteColor, impactTier);
       if (target.sprite.setTint) {
         target.sprite.setTint(paletteColor);
-        if (target.sprite.setTintMode && globalThis.Phaser?.TintModes?.FILL !== undefined) {
-          target.sprite.setTintMode(globalThis.Phaser.TintModes.FILL);
+        const tintMode = ['heavy', 'break', 'recipe'].includes(impactTier)
+          ? globalThis.Phaser?.TintModes?.FILL
+          : globalThis.Phaser?.TintModes?.MULTIPLY;
+        if (target.sprite.setTintMode && tintMode !== undefined) {
+          target.sprite.setTintMode(tintMode);
         }
       }
       const tintDuration = Math.max(55, Math.min(190, Number(fx.hitstopMs || 0) + 45));
@@ -701,10 +706,10 @@ export class ShellScene extends PhaserScene {
     const icon = String(fx.icon || '').toUpperCase();
     const label = String(fx.label || '');
     if (fx.impactTier === 'recipe' || fx.recipeId) return { text: '配方成立', color: '#f2c94c', size: 28 };
-    if (icon === 'MISS' || fx.type === 'miss') return { text: 'MISS', color: '#d8d2c3', size: 28 };
-    if (icon === 'GUARD' || fx.blocked || fx.damageKind === 'blocked') return { text: 'GUARD', color: '#4bd7ff', size: 26 };
-    if (icon === 'HEAVY' || fx.damageKind === 'heavy' || fx.critical) return { text: 'HEAVY', color: '#ffd84a', size: 30 };
-    if (icon === 'DOWN' || /TAKEDOWN/i.test(label)) return { text: 'TAKEDOWN', color: '#ff1745', size: 30 };
+    if (icon === 'MISS' || fx.type === 'miss') return { text: '打空', color: '#d8d2c3', size: 28 };
+    if (icon === 'GUARD' || fx.blocked || fx.damageKind === 'blocked') return { text: '架住', color: '#4bd7ff', size: 26 };
+    if (icon === 'HEAVY' || fx.damageKind === 'heavy' || fx.critical) return { text: '重击', color: '#ffd84a', size: 30 };
+    if (icon === 'DOWN' || /TAKEDOWN/i.test(label)) return { text: '摔倒', color: '#ff1745', size: 30 };
     if (icon === 'BREAK' || icon === '!' || fx.type === 'break' || /眩|BREAK/i.test(label)) return { text: '眩晕', color: '#ff6b35', size: 28 };
     return null;
   }

@@ -25,6 +25,8 @@ param(
     [string]$ChromaColor = '#00FF00',
     [ValidateRange(0, 255)]
     [int]$ChromaTolerance = 12,
+    [ValidateRange(0, 32)]
+    [int]$RemoveSpecksBelow = 0,
 
     [switch]$ValidateOnly,
     [switch]$Force
@@ -362,12 +364,69 @@ function Invoke-ChromaKeyCleanup {
         for ($x = 0; $x -lt $Bitmap.Width; $x++) {
             $pixel = $Bitmap.GetPixel($x, $y)
             if (Test-ChromaMatch -Pixel $pixel -Key $KeyColor -Tolerance $Tolerance) {
-                $Bitmap.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(0, $pixel.R, $pixel.G, $pixel.B))
+                $Bitmap.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(0, 0, 0, 0))
                 $changed++
             }
         }
     }
     return $changed
+}
+
+function Remove-SmallAlphaComponents {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Drawing.Bitmap]$Bitmap,
+        [int]$CellWidth,
+        [int]$CellHeight,
+        [int]$CellCount,
+        [int]$MinimumPixels
+    )
+
+    if ($MinimumPixels -le 1) { return 0 }
+    $removed = 0
+    for ($cell = 0; $cell -lt $CellCount; $cell++) {
+        $originX = $cell * $CellWidth
+        $visited = New-Object 'bool[]' ($CellWidth * $CellHeight)
+        for ($localY = 0; $localY -lt $CellHeight; $localY++) {
+            for ($localX = 0; $localX -lt $CellWidth; $localX++) {
+                $startIndex = $localY * $CellWidth + $localX
+                if ($visited[$startIndex]) { continue }
+                $visited[$startIndex] = $true
+                if ($Bitmap.GetPixel($originX + $localX, $localY).A -le 8) { continue }
+
+                $queue = [System.Collections.Generic.Queue[int]]::new()
+                $component = [System.Collections.Generic.List[int]]::new()
+                $queue.Enqueue($startIndex)
+                while ($queue.Count -gt 0) {
+                    $index = $queue.Dequeue()
+                    $component.Add($index)
+                    $x = $index % $CellWidth
+                    $y = [Math]::Floor($index / $CellWidth)
+                    for ($dy = -1; $dy -le 1; $dy++) {
+                        for ($dx = -1; $dx -le 1; $dx++) {
+                            if ($dx -eq 0 -and $dy -eq 0) { continue }
+                            $nextX = $x + $dx
+                            $nextY = $y + $dy
+                            if ($nextX -lt 0 -or $nextX -ge $CellWidth -or $nextY -lt 0 -or $nextY -ge $CellHeight) { continue }
+                            $nextIndex = $nextY * $CellWidth + $nextX
+                            if ($visited[$nextIndex]) { continue }
+                            $visited[$nextIndex] = $true
+                            if ($Bitmap.GetPixel($originX + $nextX, $nextY).A -gt 8) { $queue.Enqueue($nextIndex) }
+                        }
+                    }
+                }
+
+                if ($component.Count -ge $MinimumPixels) { continue }
+                foreach ($index in $component) {
+                    $x = $index % $CellWidth
+                    $y = [Math]::Floor($index / $CellWidth)
+                    $Bitmap.SetPixel($originX + $x, $y, [System.Drawing.Color]::FromArgb(0, 0, 0, 0))
+                    $removed++
+                }
+            }
+        }
+    }
+    return $removed
 }
 
 if ($ChromaKey -and $Type -notin @('standee', 'combat-strip')) {
@@ -507,6 +566,19 @@ try {
         Resize-NearestNeighbor -SourceBitmap $sourceBitmap -TargetWidth $targetSize.Width -TargetHeight $targetSize.Height
     }
 
+    $speckPixelsCleared = 0
+    if ($RemoveSpecksBelow -gt 1) {
+        $cellWidth = if ($Type -eq 'combat-strip') { $FrameWidth } else { $preparedBitmap.Width }
+        $cellHeight = if ($Type -eq 'combat-strip') { $FrameHeight } else { $preparedBitmap.Height }
+        $cellCount = if ($Type -eq 'combat-strip') { $FrameCount } else { 1 }
+        $speckPixelsCleared = Remove-SmallAlphaComponents `
+            -Bitmap $preparedBitmap `
+            -CellWidth $cellWidth `
+            -CellHeight $cellHeight `
+            -CellCount $cellCount `
+            -MinimumPixels $RemoveSpecksBelow
+    }
+
     if ($Type -eq 'standee' -and -not (Test-TransparentBorder -Bitmap $preparedBitmap)) {
         $warnings.Add('standee output does not have a fully transparent 1px border')
     }
@@ -533,6 +605,7 @@ try {
             tolerance = $ChromaTolerance
             pixelsCleared = $chromaPixelsCleared
         }
+        speckPixelsCleared = $speckPixelsCleared
         sourceStats = $sourceStats
         outputStats = $outputStats
         standeeTransparentBorder = if ($Type -eq 'standee') { Test-TransparentBorder -Bitmap $preparedBitmap } else { $null }

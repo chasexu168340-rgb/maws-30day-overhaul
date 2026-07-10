@@ -54,10 +54,13 @@ pwsh -ExecutionPolicy Bypass -File scripts/prepare_pixel_v2_assets.ps1 `
   -GridColumns 4 -GridRows 4 `
   -TrimGridRemainder `
   -ChromaKey -ChromaColor '#20F015' -ChromaTolerance 70 `
+  -RemoveSpecksBelow 3 `
   -OutputName anim_fighter_player.png
 ```
 
 Frame order is row-major. The tool uses one global content scale, centers each opaque silhouette, and locks every frame to the same two-pixel bottom safety line. Pass `-PreserveCellFraming` only when a reviewed master already has exact per-frame camera framing.
+
+`-RemoveSpecksBelow` is opt-in. It removes isolated alpha components smaller than the supplied pixel count inside each final frame; use it only after enlarged frame review confirms the pixels are generation residue rather than intentional pixel clusters.
 
 The MAWS 16-frame contract is idle `0-3`, attack `4-7`, hurt `8-11`, and guard/utility `12-15`.
 

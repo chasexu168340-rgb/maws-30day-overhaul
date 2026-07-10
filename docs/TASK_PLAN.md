@@ -29,6 +29,10 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - The player strip supplies real idle `0-3`, wild-swing attack `4-7`, hurt `8-11`, and guard/utility `12-15` animations; Phaser uses a manifest display scale without stretching individual frame content.
 - Asset preparation now supports 4x4 generated action masters, small grid remainder trimming, 32-bit ARGB chroma cleanup, global silhouette normalization, and row-major repacking.
 - `pixel_v2_visual.spec.js` reads the live Phaser frame index and proves a real `wild_swing` enters attack frames; it also saves `outputs/pixel_v2_visual/player-attack-desktop.png` at the observed attack frame.
+- Day 8 now uses independent `fighter.enemy.silent` and `anim.fighter.enemy.silent` keys instead of falling back to E01's legacy boxer.
+- E10's reviewed assets are exact 96x144 standee / 1536x144 strip, transparent, 8KB / 123KB, with live idle, compact straight, hurt, and guard playback.
+- Pixel V2 tests also wait for E10 attack frames and save `outputs/pixel_v2_visual/silent-boxer-attack-desktop.png` at the observed punch frame.
+- Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -42,12 +46,16 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - Passed after the player animation integration:
   - `npm run check:full` (build, verifier, 6 Chromium smoke tests)
   - Pixel V2 candidate visual gate (6 passed, including live frame playback)
+- Passed after the independent E10 integration:
+  - `npm run check:full` (97 manifest entries, 6 Chromium smoke tests)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 candidate visual gate (7 passed, including player and E10 live attack frames)
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- E01/E10 still share the legacy boxer strip, whose transparent bottom margin makes the opponent float beside the grounded player animation.
+- E01 still uses the legacy shared boxer standee/strip; Day 5 has not yet reached the same animation and grounding quality as Day 8.
 - The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
@@ -55,4 +63,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Generate and review the E01/E10 action masters using the same 16-frame contract, add independent runtime keys instead of sharing one legacy boxer, then generate the full-size Lu scene standee/portrait.
+Generate and review E01's independent action master for Day 5, then E00. After the early combat set is independent, generate full-size Lu/NPC scene standees and portraits before the broad UI skin replacement.

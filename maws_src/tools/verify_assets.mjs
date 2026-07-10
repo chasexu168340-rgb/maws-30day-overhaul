@@ -28,12 +28,14 @@ const day1To9FinalKeys = [
   'bg.boxing.night',
   'fighter.player',
   'fighter.enemy.boxer',
+  'fighter.enemy.silent',
   'scene.npc.fatty',
   'scene.npc.xiaoman',
   'scene.npc.worker',
   'scene.npc.coach',
   'anim.fighter.player',
-  'anim.fighter.enemy.boxer'
+  'anim.fighter.enemy.boxer',
+  'anim.fighter.enemy.silent'
 ];
 const legacyKeys = [
   'bg.home.night',

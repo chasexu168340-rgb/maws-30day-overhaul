@@ -105,6 +105,17 @@ const cleanCharacter = (file, tags = []) => entry(`assets/imagegen_pixel/charact
   tags: [...tags, 'cleaned', 'pixel']
 });
 
+const pixelV2Character = (file, tags = []) => entry(`assets/pixel_v2/characters/${file}`, {
+  w: 96,
+  h: 144,
+  transparent: true,
+  anchor: { x: 0.5, y: 1 },
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  tags: [...tags, 'pixel-v2', 'pixel']
+});
+
 const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pixel/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
@@ -126,14 +137,14 @@ const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pix
   tags: [...tags, 'combat', 'sprite-strip', 'replaceable-base', 'pixel']
 });
 
-const pixelV2FighterSprite = (file, sourceKey, tags = []) => entry(`assets/pixel_v2/sprites/${file}`, {
+const pixelV2FighterSprite = (file, sourceKey, tags = [], displayScale = 1) => entry(`assets/pixel_v2/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
   w: 1536,
   h: 144,
   frameWidth: 96,
   frameHeight: 144,
-  displayScale: 1.28,
+  displayScale,
   transparent: true,
   anchor: { x: 0.5, y: 1 },
   pixelArt: true,
@@ -182,6 +193,7 @@ export const ASSET_MANIFEST = {
   characters: {
     'fighter.player': cleanCharacter('fighter_player.png', ['player', 'standing']),
     'fighter.enemy.boxer': cleanCharacter('fighter_enemy_boxer.png', ['enemy', 'boxing']),
+    'fighter.enemy.silent': pixelV2Character('fighter_enemy_silent.png', ['enemy', 'boxing', 'silent', 'day8']),
     'fighter.enemy.grappler': cleanCharacter('fighter_enemy_grappler.png', ['enemy', 'grappling']),
     'fighter.enemy.weapon': cleanCharacter('fighter_enemy_weapon.png', ['enemy', 'weapon']),
     'fighter.enemy.boss': cleanCharacter('fighter_enemy_boss.png', ['enemy', 'boss']),
@@ -195,8 +207,9 @@ export const ASSET_MANIFEST = {
     'scene.npc.chen': cleanCharacter('scene_npc_chen.png', ['scene', 'npc', 'chen', 'boss'])
   },
   sprites: {
-    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player.png', 'fighter.player', ['player']),
+    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player.png', 'fighter.player', ['player'], 1.28),
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
+    'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8'], 0.98),
     'anim.fighter.enemy.grappler': fighterSprite('anim_fighter_enemy_grappler.png', 'fighter.enemy.grappler', ['enemy', 'grappling']),
     'anim.fighter.enemy.weapon': fighterSprite('anim_fighter_enemy_weapon.png', 'fighter.enemy.weapon', ['enemy', 'weapon']),
     'anim.fighter.enemy.boss': fighterSprite('anim_fighter_enemy_boss.png', 'fighter.enemy.boss', ['enemy', 'boss'])

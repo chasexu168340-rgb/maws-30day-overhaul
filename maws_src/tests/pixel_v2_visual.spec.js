@@ -31,8 +31,10 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.park.day',
   'characters:fighter.player',
   'characters:fighter.enemy.boxer',
+  'characters:fighter.enemy.silent',
   'sprites:anim.fighter.player',
-  'sprites:anim.fighter.enemy.boxer'
+  'sprites:anim.fighter.enemy.boxer',
+  'sprites:anim.fighter.enemy.silent'
 ];
 
 let server;
@@ -345,6 +347,44 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
   expect(violations, 'player animation should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 silent boxer strip advances through real attack frames in Phaser', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay8(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const game = window.MAWS_GAME;
+    window.__pixelV2EnemyFrameNames = [];
+    window.__pixelV2EnemyFrameTimer = setInterval(() => {
+      const scene = game.scene.getScene('ShellScene');
+      const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.silent');
+      if (sprite?.frame?.name !== undefined) window.__pixelV2EnemyFrameNames.push(Number(sprite.frame.name));
+    }, 32);
+
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'guard' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+
+  await page.waitForFunction(
+    () => (window.__pixelV2EnemyFrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    null,
+    { timeout: 3000 }
+  );
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'silent-boxer-attack-desktop.png'), fullPage: true });
+  await page.waitForTimeout(850);
+
+  const samples = await page.evaluate(() => {
+    clearInterval(window.__pixelV2EnemyFrameTimer);
+    return window.__pixelV2EnemyFrameNames || [];
+  });
+
+  expect(samples.length, 'Phaser should expose silent-boxer animation frame samples').toBeGreaterThan(6);
+  expect(new Set(samples).size, 'silent-boxer sprite should advance beyond a static frame').toBeGreaterThan(2);
+  expect(samples.some((frame) => frame >= 4 && frame <= 7), `silent boxer should enter attack frames; sampled ${samples.join(',')}`).toBe(true);
+  expect(violations, 'silent-boxer animation should not emit warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
@@ -366,7 +406,7 @@ for (const viewport of VIEWPORTS) {
     await expectManifestImagesDecode(page, [
       'backgrounds:bg.park.day',
       'sprites:anim.fighter.player',
-      'sprites:anim.fighter.enemy.boxer'
+      'sprites:anim.fighter.enemy.silent'
     ], `Day 8 ${viewport.name}`);
     await expectNoHorizontalOverflow(page, `Day 8 ${viewport.name}`);
     await expectCombatGeometry(page, viewport);
