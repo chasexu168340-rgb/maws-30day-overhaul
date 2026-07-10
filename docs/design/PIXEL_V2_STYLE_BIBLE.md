@@ -162,3 +162,11 @@ Reject an asset when any item is true:
 - Color remains semantic and restrained: brick red for damage, muted gold for mastery/break, cyan for defense/interaction, bone white for timing. No blur, soft bloom, continuous gradients, or full-screen particle fog.
 - VFX supports existing hit-stop, shake, palette flash, and queue results; it must never obscure both fighters or replace readable combat text.
 - Attack targets read high/mid/low. Defensive language distinguishes standing guard from back-step defense, while distance labels explain whether the window favors recovery, exchange, or escape.
+
+## Compact Asset Contract
+
+- Core/resource/navigation icons are 32x32 transparent RGBA PNGs with a two-pixel safe inset and a 32KB budget.
+- Inventory objects are 64x64 transparent RGBA PNGs with practical contemporary silhouettes and an 80KB budget.
+- Skill-card art is 192x128 transparent RGBA PNG. Use one readable action, at most one opponent silhouette, and preserve body proportions with nearest-neighbor contain fitting; budget 120KB.
+- Small assets use the same ink, bone, brick-red, muted-gold, cyan, and olive family as scenes. Avoid fantasy rarity colors, glossy loot rendering, microscopic linework, and text baked into images.
+- Navigation icons must remain distinguishable without their labels. Skill art must show distance and commitment before decoration.

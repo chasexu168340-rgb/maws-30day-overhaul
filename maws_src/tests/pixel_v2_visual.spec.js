@@ -67,7 +67,34 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'vfx:combat.break',
   'vfx:combat.recipe',
   'vfx:combat.utility',
-  'vfx:vfx.scene.click'
+  'vfx:vfx.scene.click',
+  'icons:icon.money',
+  'icons:icon.hp',
+  'icons:icon.sp',
+  'icons:icon.posture',
+  'icons:icon.nav.map',
+  'icons:icon.nav.profile',
+  'icons:icon.nav.skills',
+  'icons:icon.nav.bag',
+  'icons:icon.nav.shop',
+  'icons:icon.nav.npc',
+  'icons:icon.nav.log',
+  'items:item.rice',
+  'items:item.drink',
+  'items:item.band',
+  'items:item.gloves',
+  'items:item.shoes',
+  'items:item.mouth',
+  'items:item.notebook',
+  'skillCards:skill.wild_swing',
+  'skillCards:skill.push_away',
+  'skillCards:skill.mystic',
+  'skillCards:skill.guard',
+  'skillCards:skill.retreat',
+  'skillCards:skill.talkdown',
+  'skillCards:skill.jab',
+  'skillCards:skill.straight',
+  'skillCards:skill.dodge'
 ];
 
 let server;
@@ -475,6 +502,39 @@ test('Pixel V2 combat and scene feedback textures decode and appear at runtime',
   expect(liveKeys.some((key) => /^combat\.(normal|heavy|guard|miss|break|recipe|utility)$/.test(key)), `live VFX keys: ${liveKeys.join(', ')}`).toBe(true);
   await expectScreenshotHasPixels(page, 'combat-vfx-readability-desktop.png', 'combat VFX readability');
   expect(violations, 'Pixel V2 feedback should not emit warnings/errors').toEqual([]);
+});
+
+test('Pixel V2 core icons, inventory, and early skill art decode and render', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  const compactAssets = [
+    'icons:icon.money', 'icons:icon.fame', 'icons:icon.auth', 'icons:icon.heat',
+    'icons:icon.fitXp', 'icons:icon.hp', 'icons:icon.sp', 'icons:icon.posture',
+    'icons:icon.nav.map', 'icons:icon.nav.profile', 'icons:icon.nav.skills', 'icons:icon.nav.bag',
+    'icons:icon.nav.shop', 'icons:icon.nav.npc', 'icons:icon.nav.log', 'icons:icon.nav.check',
+    'items:item.rice', 'items:item.drink', 'items:item.band', 'items:item.gloves',
+    'items:item.shoes', 'items:item.mouth', 'items:item.notebook', 'items:item.training_kit',
+    'skillCards:skill.wild_swing', 'skillCards:skill.push_away', 'skillCards:skill.mystic',
+    'skillCards:skill.guard', 'skillCards:skill.retreat', 'skillCards:skill.talkdown',
+    'skillCards:skill.jab', 'skillCards:skill.straight', 'skillCards:skill.advance',
+    'skillCards:skill.dodge', 'skillCards:skill.lowkick', 'skillCards:skill.takedown',
+    'skillCards:skill.sprawl', 'skillCards:skill.palm', 'skillCards:skill.dirtyescape',
+    'skillCards:skill.recipe.guard_counter'
+  ];
+  await expectManifestImagesDecode(page, compactAssets, 'Pixel V2 compact assets');
+
+  const navSources = await page.locator('.maws-nav img').evaluateAll((images) => images.map((image) => image.getAttribute('src') || ''));
+  expect(navSources.length, 'navigation should render icon images').toBeGreaterThanOrEqual(7);
+  expect(navSources.every((src) => src.includes('assets/pixel_v2/icons/')), `navigation sources: ${navSources.join(', ')}`).toBe(true);
+
+  await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
+  const starterArt = page.locator('.maws-move-library .maws-skill-art[src*="assets/pixel_v2/skillCards/"]');
+  await expect(starterArt.first()).toBeVisible();
+  expect(await starterArt.count(), 'skill library should consume reviewed Pixel V2 card art').toBeGreaterThanOrEqual(9);
+
+  await page.locator('button[data-action="setTab"][data-tab="bag"]').click();
+  const itemSources = await page.locator('.maws-bag-ledger img[src*="assets/pixel_v2/items/"]').count();
+  expect(itemSources, 'inventory should consume reviewed Pixel V2 item art').toBeGreaterThanOrEqual(1);
+  expect(violations, 'compact art integration should not emit warnings/errors').toEqual([]);
 });
 
 for (const viewport of VIEWPORTS) {

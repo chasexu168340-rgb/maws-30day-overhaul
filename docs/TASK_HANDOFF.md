@@ -52,8 +52,10 @@ The player-facing target remains: the player clicks something, the game responds
 29. Final 64x64 Pixel V2 hit/heavy/guard/miss/break/recipe/utility VFX are live; scene-character clicks use a dedicated contact texture, and strict verification enforces their size, alpha corners, and budget.
 30. Combat targets now read high/mid/low, distance text states its tactical use, and enemy reads distinguish standing guard, back-step defense, and counter windows without changing formulas.
 31. Profile, skills, bag, shop, and log now use one final Pixel V2 ledger language, hide raw data identifiers, retain useful information before details, and pass desktop/mobile screenshots with 44px mobile actions.
-32. Next production batch: replace legacy core navigation/resource icons, Day 1-9 inventory art, and first-route skill-card art with reviewed Pixel V2 assets and strict dimension/alpha/budget gates.
-33. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+32. Core resource/navigation icons, Day 1-9 inventory objects, six starter moves, and the first formal/route skills now use final Pixel V2 art; strict verification enforces their exact dimensions, alpha corners, and budgets.
+33. The asset preparation tool supports chroma-key cleanup plus nearest-neighbor contain fitting and insets for icons/items/skill cards without distorting action silhouettes.
+34. Next production batch: audit BootScene bundle loading against the core/location budgets and add a no-blank-transition network gate before declaring the Day 1-9 slice complete.
+35. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 

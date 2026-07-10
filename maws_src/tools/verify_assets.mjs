@@ -54,7 +54,47 @@ const day1To9FinalKeys = [
   'combat.break',
   'combat.recipe',
   'combat.utility',
-  'vfx.scene.click'
+  'vfx.scene.click',
+  'icon.money',
+  'icon.fame',
+  'icon.auth',
+  'icon.heat',
+  'icon.fitXp',
+  'icon.hp',
+  'icon.sp',
+  'icon.posture',
+  'icon.nav.map',
+  'icon.nav.profile',
+  'icon.nav.skills',
+  'icon.nav.bag',
+  'icon.nav.shop',
+  'icon.nav.npc',
+  'icon.nav.log',
+  'icon.nav.check',
+  'item.rice',
+  'item.drink',
+  'item.band',
+  'item.gloves',
+  'item.shoes',
+  'item.mouth',
+  'item.notebook',
+  'item.training_kit',
+  'skill.wild_swing',
+  'skill.push_away',
+  'skill.mystic',
+  'skill.guard',
+  'skill.retreat',
+  'skill.talkdown',
+  'skill.jab',
+  'skill.straight',
+  'skill.advance',
+  'skill.dodge',
+  'skill.lowkick',
+  'skill.takedown',
+  'skill.sprawl',
+  'skill.palm',
+  'skill.dirtyescape',
+  'skill.recipe.guard_counter'
 ];
 const legacyKeys = [
   'bg.home.night',
@@ -218,16 +258,23 @@ function assertPixelContract(group, key, value, src) {
 
 function assertFinalPixelV2Image(group, key, value, full, src, stat) {
   if (value.status !== 'final' || !src.startsWith('assets/pixel_v2/')) return;
-  if (group !== 'backgrounds' && group !== 'vfx') return;
+  const transparentSpecs = {
+    vfx: { width: 64, height: 64, budget: 64 * 1024, label: 'VFX' },
+    icons: { width: 32, height: 32, budget: 32 * 1024, label: 'icon' },
+    items: { width: 64, height: 64, budget: 80 * 1024, label: 'item' },
+    skillCards: { width: 192, height: 128, budget: 120 * 1024, label: 'skill card' }
+  };
+  const transparentSpec = transparentSpecs[group];
+  if (group !== 'backgrounds' && !transparentSpec) return;
 
-  const png = readPng(full, group === 'vfx');
+  const png = readPng(full, Boolean(transparentSpec));
   if (!png) return;
-  if (group === 'vfx') {
-    if (png.width !== 64 || png.height !== 64) {
-      errors.push(`${group}.${key} final VFX must be 64x64, got ${png.width}x${png.height}`);
+  if (transparentSpec) {
+    if (png.width !== transparentSpec.width || png.height !== transparentSpec.height) {
+      errors.push(`${group}.${key} final ${transparentSpec.label} must be ${transparentSpec.width}x${transparentSpec.height}, got ${png.width}x${png.height}`);
     }
     if (png.colorType !== 6 || !png.pixels) {
-      errors.push(`${group}.${key} final VFX must be an RGBA PNG`);
+      errors.push(`${group}.${key} final ${transparentSpec.label} must be an RGBA PNG`);
       return;
     }
     const corners = [
@@ -236,8 +283,8 @@ function assertFinalPixelV2Image(group, key, value, full, src, stat) {
       alphaAt(png, 0, png.height - 1),
       alphaAt(png, png.width - 1, png.height - 1)
     ];
-    if (corners.some((alpha) => alpha > 12)) errors.push(`${group}.${key} final VFX must have transparent corners`);
-    if (stat.size > 64 * 1024) errors.push(`${group}.${key} final VFX exceeds 64KB budget: ${stat.size} bytes`);
+    if (corners.some((alpha) => alpha > 12)) errors.push(`${group}.${key} final ${transparentSpec.label} must have transparent corners`);
+    if (stat.size > transparentSpec.budget) errors.push(`${group}.${key} final ${transparentSpec.label} exceeds ${Math.round(transparentSpec.budget / 1024)}KB budget: ${stat.size} bytes`);
     return;
   }
   if (png.width !== 480 || png.height !== 270) {

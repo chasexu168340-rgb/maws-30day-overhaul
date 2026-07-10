@@ -137,6 +137,39 @@ const pixelV2Vfx = (file, tags = []) => entry(`assets/pixel_v2/vfx/${file}`, {
   tags: [...tags, 'vfx', 'pixel-v2', 'pixel']
 });
 
+const pixelV2Icon = (file, tags = []) => entry(`assets/pixel_v2/icons/${file}`, {
+  w: 32,
+  h: 32,
+  transparent: true,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  bundle: 'core',
+  tags: [...tags, 'icon', 'pixel-v2', 'pixel']
+});
+
+const pixelV2Item = (file, tags = []) => entry(`assets/pixel_v2/items/${file}`, {
+  w: 64,
+  h: 64,
+  transparent: true,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  bundle: 'inventory',
+  tags: [...tags, 'item', 'pixel-v2', 'pixel']
+});
+
+const pixelV2SkillCard = (file, tags = []) => entry(`assets/pixel_v2/skillCards/${file}`, {
+  w: 192,
+  h: 128,
+  transparent: true,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  bundle: 'skills',
+  tags: [...tags, 'skill-card', 'pixel-v2', 'pixel']
+});
+
 const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pixel/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
@@ -254,42 +287,50 @@ export const ASSET_MANIFEST = {
     'portrait.enemy.weapon': entry('assets/imagegen_pixel/portraits/portrait_enemy_weapon.png', { w: 512, h: 512, pixelArt: true, tags: ['enemy', 'weapon', 'pixel'] })
   },
   items: {
-    'item.rice': entry('assets/imagegen_pixel/items/item_rice.png', { w: 256, h: 256, pixelArt: true, tags: ['food', 'pixel'] }),
-    'item.drink': entry('assets/imagegen_pixel/items/item_drink.png', { w: 256, h: 256, pixelArt: true, tags: ['drink', 'pixel'] }),
-    'item.band': entry('assets/imagegen_pixel/items/item_band.png', { w: 256, h: 256, pixelArt: true, tags: ['medicine', 'pixel'] }),
-    'item.gloves': entry('assets/imagegen_pixel/items/item_gloves.png', { w: 256, h: 256, pixelArt: true, tags: ['equipment', 'hand', 'pixel'] }),
-    'item.shoes': entry('assets/imagegen_pixel/items/item_shoes.png', { w: 256, h: 256, pixelArt: true, tags: ['equipment', 'foot', 'pixel'] }),
-    'item.mouth': entry('assets/imagegen_pixel/items/item_mouth.png', { w: 256, h: 256, pixelArt: true, tags: ['equipment', 'head', 'pixel'] }),
-    'item.notebook': entry('assets/imagegen_pixel/items/item_notebook.png', { w: 256, h: 256, pixelArt: true, tags: ['equipment', 'accessory', 'pixel'] })
+    'item.rice': pixelV2Item('item_rice.png', ['food', 'store', 'day1-9']),
+    'item.drink': pixelV2Item('item_drink.png', ['drink', 'store', 'day1-9']),
+    'item.band': pixelV2Item('item_band.png', ['medicine', 'store', 'day1-9']),
+    'item.gloves': pixelV2Item('item_gloves.png', ['equipment', 'hand', 'boxing', 'day1-9']),
+    'item.shoes': pixelV2Item('item_shoes.png', ['equipment', 'foot', 'day1-9']),
+    'item.mouth': pixelV2Item('item_mouth.png', ['equipment', 'head', 'boxing', 'day1-9']),
+    'item.notebook': pixelV2Item('item_notebook.png', ['equipment', 'accessory', 'father', 'day1-9']),
+    'item.training_kit': pixelV2Item('item_training_kit.png', ['training', 'recovery', 'day1-9'])
   },
   icons: {
-    'icon.money': entry('assets/imagegen_pixel/icons/icon_money.png', { w: 128, h: 128, pixelArt: true, tags: ['resource', 'pixel'] }),
-    'icon.fame': entry('assets/imagegen_pixel/icons/icon_fame.png', { w: 128, h: 128, pixelArt: true, tags: ['resource', 'pixel'] }),
-    'icon.auth': entry('assets/imagegen_pixel/icons/icon_auth.png', { w: 128, h: 128, pixelArt: true, tags: ['resource', 'pixel'] }),
-    'icon.heat': entry('assets/imagegen_pixel/icons/icon_heat.png', { w: 128, h: 128, pixelArt: true, tags: ['resource', 'pixel'] }),
-    'icon.fitXp': entry('assets/imagegen_pixel/icons/icon_fitxp.png', { w: 128, h: 128, pixelArt: true, tags: ['resource', 'pixel'] }),
-    'icon.hp': entry('assets/imagegen_pixel/icons/icon_hp.png', { w: 128, h: 128, pixelArt: true, tags: ['combat', 'resource', 'pixel'] }),
-    'icon.sp': entry('assets/imagegen_pixel/icons/icon_sp.png', { w: 128, h: 128, pixelArt: true, tags: ['combat', 'resource', 'pixel'] }),
-    'icon.posture': entry('assets/imagegen_pixel/icons/icon_posture.png', { w: 128, h: 128, pixelArt: true, tags: ['combat', 'resource', 'pixel'] }),
-    'icon.nav.map': entry('assets/imagegen_pixel/icons/icon_nav_map.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.profile': entry('assets/imagegen_pixel/icons/icon_nav_profile.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.skills': entry('assets/imagegen_pixel/icons/icon_nav_skills.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.bag': entry('assets/imagegen_pixel/icons/icon_nav_bag.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.shop': entry('assets/imagegen_pixel/icons/icon_nav_shop.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.npc': entry('assets/imagegen_pixel/icons/icon_nav_npc.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.log': entry('assets/imagegen_pixel/icons/icon_nav_log.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] }),
-    'icon.nav.check': entry('assets/imagegen_pixel/icons/icon_nav_check.png', { w: 128, h: 128, pixelArt: true, tags: ['nav', 'pixel'] })
+    'icon.money': pixelV2Icon('icon_money.png', ['resource', 'money']),
+    'icon.fame': pixelV2Icon('icon_fame.png', ['resource', 'fame']),
+    'icon.auth': pixelV2Icon('icon_auth.png', ['resource', 'authenticity']),
+    'icon.heat': pixelV2Icon('icon_heat.png', ['resource', 'risk']),
+    'icon.fitXp': pixelV2Icon('icon_fitxp.png', ['resource', 'conditioning']),
+    'icon.hp': pixelV2Icon('icon_hp.png', ['combat', 'resource', 'health']),
+    'icon.sp': pixelV2Icon('icon_sp.png', ['combat', 'resource', 'stamina']),
+    'icon.posture': pixelV2Icon('icon_posture.png', ['combat', 'resource', 'posture']),
+    'icon.nav.map': pixelV2Icon('icon_nav_map.png', ['nav', 'map']),
+    'icon.nav.profile': pixelV2Icon('icon_nav_profile.png', ['nav', 'profile']),
+    'icon.nav.skills': pixelV2Icon('icon_nav_skills.png', ['nav', 'skills']),
+    'icon.nav.bag': pixelV2Icon('icon_nav_bag.png', ['nav', 'bag']),
+    'icon.nav.shop': pixelV2Icon('icon_nav_shop.png', ['nav', 'shop']),
+    'icon.nav.npc': pixelV2Icon('icon_nav_npc.png', ['nav', 'npc']),
+    'icon.nav.log': pixelV2Icon('icon_nav_log.png', ['nav', 'log']),
+    'icon.nav.check': pixelV2Icon('icon_nav_check.png', ['nav', 'check'])
   },
   skillCards: {
-    'skill.jab': entry('assets/imagegen_pixel/skillCards/skill_jab.png', { w: 384, h: 256, pixelArt: true, tags: ['boxing', 'strike', 'pixel'] }),
-    'skill.straight': entry('assets/imagegen_pixel/skillCards/skill_straight.png', { w: 384, h: 256, pixelArt: true, tags: ['boxing', 'strike', 'pixel'] }),
-    'skill.guard': entry('assets/imagegen_pixel/skillCards/skill_guard.png', { w: 384, h: 256, pixelArt: true, tags: ['defense', 'pixel'] }),
-    'skill.dodge': entry('assets/imagegen_pixel/skillCards/skill_dodge.png', { w: 384, h: 256, pixelArt: true, tags: ['footwork', 'pixel'] }),
-    'skill.lowkick': entry('assets/imagegen_pixel/skillCards/skill_lowkick.png', { w: 384, h: 256, pixelArt: true, tags: ['mma', 'kick', 'pixel'] }),
-    'skill.takedown': entry('assets/imagegen_pixel/skillCards/skill_takedown.png', { w: 384, h: 256, pixelArt: true, tags: ['mma', 'grapple', 'pixel'] }),
-    'skill.sprawl': entry('assets/imagegen_pixel/skillCards/skill_sprawl.png', { w: 384, h: 256, pixelArt: true, tags: ['mma', 'defense', 'pixel'] }),
-    'skill.palm': entry('assets/imagegen_pixel/skillCards/skill_palm.png', { w: 384, h: 256, pixelArt: true, tags: ['traditional', 'strike', 'pixel'] }),
-    'skill.dirtyescape': entry('assets/imagegen_pixel/skillCards/skill_dirtyescape.png', { w: 384, h: 256, pixelArt: true, tags: ['street', 'escape', 'pixel'] })
+    'skill.wild_swing': pixelV2SkillCard('skill_wild_swing.png', ['street', 'strike', 'starter']),
+    'skill.push_away': pixelV2SkillCard('skill_push_away.png', ['street', 'utility', 'starter']),
+    'skill.mystic': pixelV2SkillCard('skill_mystic.png', ['traditional', 'strike', 'starter']),
+    'skill.guard': pixelV2SkillCard('skill_guard.png', ['defense', 'starter']),
+    'skill.retreat': pixelV2SkillCard('skill_retreat.png', ['street', 'footwork', 'starter']),
+    'skill.talkdown': pixelV2SkillCard('skill_talkdown.png', ['street', 'deescalation', 'starter']),
+    'skill.jab': pixelV2SkillCard('skill_jab.png', ['boxing', 'strike', 'day9']),
+    'skill.straight': pixelV2SkillCard('skill_straight.png', ['boxing', 'strike', 'day9']),
+    'skill.advance': pixelV2SkillCard('skill_advance.png', ['footwork', 'planned']),
+    'skill.dodge': pixelV2SkillCard('skill_dodge.png', ['footwork', 'home']),
+    'skill.lowkick': pixelV2SkillCard('skill_lowkick.png', ['mma', 'kick']),
+    'skill.takedown': pixelV2SkillCard('skill_takedown.png', ['mma', 'grapple']),
+    'skill.sprawl': pixelV2SkillCard('skill_sprawl.png', ['mma', 'defense']),
+    'skill.palm': pixelV2SkillCard('skill_palm.png', ['traditional', 'strike']),
+    'skill.dirtyescape': pixelV2SkillCard('skill_dirtyescape.png', ['street', 'escape']),
+    'skill.recipe.guard_counter': pixelV2SkillCard('skill_guard_counter.png', ['recipe', 'guard-counter'])
   },
   ui: {
     'ui.panel.black': entry('assets/imagegen_pixel/ui/ui_panel_black.png', { w: 512, h: 256, pixelArt: true, tags: ['panel', 'pixel'] }),

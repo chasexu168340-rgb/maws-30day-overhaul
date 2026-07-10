@@ -28,6 +28,10 @@ param(
     [ValidateRange(0, 32)]
     [int]$RemoveSpecksBelow = 0,
 
+    [switch]$PreserveAspectFit,
+    [ValidateRange(0, 32)]
+    [int]$InsetPixels = 0,
+
     [switch]$ValidateOnly,
     [switch]$Force
 )
@@ -248,6 +252,47 @@ function Resize-NearestNeighbor {
     return $targetBitmap
 }
 
+function Resize-NearestNeighborContain {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Drawing.Bitmap]$SourceBitmap,
+        [int]$TargetWidth,
+        [int]$TargetHeight,
+        [int]$Inset = 0
+    )
+
+    $contentWidth = [Math]::Max(1, $TargetWidth - ($Inset * 2))
+    $contentHeight = [Math]::Max(1, $TargetHeight - ($Inset * 2))
+    $scale = [Math]::Min($contentWidth / $SourceBitmap.Width, $contentHeight / $SourceBitmap.Height)
+    $drawWidth = [Math]::Max(1, [int][Math]::Floor($SourceBitmap.Width * $scale))
+    $drawHeight = [Math]::Max(1, [int][Math]::Floor($SourceBitmap.Height * $scale))
+    $offsetX = $Inset + [int][Math]::Floor(($contentWidth - $drawWidth) / 2)
+    $offsetY = $Inset + [int][Math]::Floor(($contentHeight - $drawHeight) / 2)
+    $targetBitmap = New-Object System.Drawing.Bitmap $TargetWidth, $TargetHeight, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $graphics = [System.Drawing.Graphics]::FromImage($targetBitmap)
+    try {
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        $graphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
+        $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighSpeed
+        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
+        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
+        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::None
+        $graphics.DrawImage(
+            $SourceBitmap,
+            (New-Object System.Drawing.Rectangle $offsetX, $offsetY, $drawWidth, $drawHeight),
+            0,
+            0,
+            $SourceBitmap.Width,
+            $SourceBitmap.Height,
+            [System.Drawing.GraphicsUnit]::Pixel
+        )
+    }
+    finally {
+        $graphics.Dispose()
+    }
+    return $targetBitmap
+}
+
 function Convert-CombatGridToStrip {
     param(
         [Parameter(Mandatory = $true)]
@@ -429,8 +474,8 @@ function Remove-SmallAlphaComponents {
     return $removed
 }
 
-if ($ChromaKey -and $Type -notin @('standee', 'combat-strip', 'portrait', 'vfx')) {
-    throw '-ChromaKey is only supported for standee, combat-strip, portrait, and vfx assets.'
+if ($ChromaKey -and $Type -notin @('standee', 'combat-strip', 'portrait', 'skill-card', 'item', 'icon', 'vfx')) {
+    throw '-ChromaKey is only supported for transparent character, card, item, icon, and vfx assets.'
 }
 
 if ($FrameCount -le 0 -or $FrameWidth -le 0 -or $FrameHeight -le 0 -or $GridColumns -le 0 -or $GridRows -le 0) {
@@ -562,6 +607,9 @@ try {
             -AllowGridTrim ([bool]$TrimGridRemainder) `
             -NormalizeContent (-not [bool]$PreserveCellFraming)
     }
+    elseif ($PreserveAspectFit) {
+        Resize-NearestNeighborContain -SourceBitmap $sourceBitmap -TargetWidth $targetSize.Width -TargetHeight $targetSize.Height -Inset $InsetPixels
+    }
     else {
         Resize-NearestNeighbor -SourceBitmap $sourceBitmap -TargetWidth $targetSize.Width -TargetHeight $targetSize.Height
     }
@@ -592,7 +640,7 @@ try {
         output = $outputPath
         type = $Type
         resize = [ordered]@{
-            method = 'nearest-neighbor'
+            method = if ($PreserveAspectFit) { 'nearest-neighbor-contain' } else { 'nearest-neighbor' }
             sourceWidth = $sourceBitmap.Width
             sourceHeight = $sourceBitmap.Height
             targetWidth = $targetSize.Width

@@ -86,6 +86,11 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
 - The profile is an in-world character status book; skills are an equipped-move strip plus growth routes and source-aware move library; bag/shop/log are an equipment rack, purchase board, and paired memory timeline.
 - Raw skill-tree identifiers and English route labels are no longer exposed; routes, node kinds, skill references, and status labels render as natural Chinese.
 - Desktop and 390x844 browser coverage now visits all five non-scene surfaces, captures screenshots, rejects horizontal overflow, and requires at least 44px mobile actions.
+- All 16 core resource/navigation icons now use final 32x32 Pixel V2 RGBA art; the HUD and bottom navigation no longer reference the 128px legacy icon set.
+- The seven live inventory objects plus a training-kit reserve now use final 64x64 city-life Pixel V2 art; bag/shop screenshots consume the new rice ball and sports drink at runtime.
+- Six starter wild-kit moves and the first formal/route skills now have final 192x128 action art, including the previously artless wild swing, shove, mystic palm, retreat, and talkdown entries.
+- The deterministic preparation tool now supports chroma cleanup for icon/item/skill-card sources, transparent nearest-neighbor contain fitting, and a configurable inset so 32px silhouettes keep safe transparent corners.
+- Strict final-art verification now enforces exact dimensions, RGBA transparency, corner alpha, and per-asset budgets for VFX, icons, items, and skill cards.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -201,6 +206,13 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 strict visual gate (29 passed, including five desktop and five mobile ledger screenshots)
   - `git diff --check`
+- Passed after the Pixel V2 compact-art replacement:
+  - `node maws_src/tools/verify_assets.mjs --require-final-day1-9` (125 manifest entries)
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (30 passed, including live nav/item/skill-art consumption)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
@@ -212,6 +224,6 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
 
 ## Next Step
 
-1. Replace the legacy core navigation/resource icons, Day 1-9 inventory art, and first-route skill-card art with reviewed Pixel V2 assets generated in the current session.
-2. Enforce exact icon/item/card dimensions, alpha borders, palette discipline, and file budgets in the asset verifier.
-3. Re-run strict assets and visual browser gates, review the real profile/skills/bag/shop screenshots, then commit and push the art batch.
+1. Audit BootScene bundle loading against the 3MB core and 1.2MB location budgets; keep only truly core assets in boot and load location/combat bundles before use.
+2. Add a browser network-budget gate and verify Day 1, city travel, Day 5, and Day 8 never show a blank texture during bundle transitions.
+3. Re-run the release gates and complete the Day 1-9 vertical-slice checkpoint before starting Day 10-30 art replacement.
