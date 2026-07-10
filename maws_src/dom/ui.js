@@ -667,7 +667,7 @@ function renderMap(model) {
               <p>${esc(model.loc?.desc)}</p>
             </details>
           </div>
-          <div class="maws-scene-cast">${characters}</div>
+          <div class="maws-scene-cast ${(scene.characters || []).length >= 3 ? 'three-up' : ''}">${characters}</div>
           ${interactionMenu}
         </div>
         <aside class="maws-action-rail maws-action-rail-main">

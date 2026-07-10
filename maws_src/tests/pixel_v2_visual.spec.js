@@ -30,6 +30,7 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.home.day',
   'backgrounds:bg.park.day',
   'characters:fighter.player',
+  'characters:scene.npc.father_memory',
   'characters:fighter.enemy.untrained',
   'characters:fighter.enemy.beginner',
   'characters:fighter.enemy.silent',
@@ -38,6 +39,7 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent',
   'portraits:portrait.player',
+  'portraits:portrait.father',
   'portraits:portrait.fatty',
   'portraits:portrait.xiaoman',
   'portraits:portrait.worker',
@@ -538,16 +540,30 @@ for (const viewport of VIEWPORTS) {
     await expect(page.locator('.maws-scene')).toBeVisible();
     await expect(page.locator('.maws-scene-character img').first()).toBeVisible();
     await expect(page.locator('.maws-scene-character:has(img[src*="scene_npc_fatty.png"])')).not.toHaveClass(/placeholder-npc/);
+    await expect(page.locator('.maws-scene-character:has(img[src*="scene_npc_father_memory.png"])')).not.toHaveClass(/placeholder-npc/);
     await expectVisibleImagesDecode(page, `Day 1 ${viewport.name}`);
     await expectManifestImagesDecode(page, [
       'backgrounds:bg.home.day',
       'characters:fighter.player',
       'characters:scene.npc.fatty',
+      'characters:scene.npc.father_memory',
       'portraits:portrait.player',
+      'portraits:portrait.father',
       'portraits:portrait.fatty'
     ], `Day 1 ${viewport.name}`);
     await expectNoHorizontalOverflow(page, `Day 1 ${viewport.name}`);
+    if (viewport.name === 'desktop') {
+      const fatherBox = await box(page, '.maws-scene-character:has(img[src*="scene_npc_father_memory.png"])');
+      expect(fatherBox.right, 'Day 1 father should stay left of the desktop action rail').toBeLessThanOrEqual(viewport.width - 280);
+    }
     await expectScreenshotHasPixels(page, `day1-${viewport.name}.png`, `Day 1 ${viewport.name}`);
+
+    await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'startMainEvent' }));
+    await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_player.png"]')).toBeVisible();
+    await page.locator('button[data-action="advanceDialogue"]').click();
+    await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_father.png"]')).toBeVisible();
+    await expectNoHorizontalOverflow(page, `Day 1 father dialogue ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day1-father-dialogue-${viewport.name}.png`, `Day 1 father dialogue ${viewport.name}`);
     expect(violations, `Day 1 ${viewport.name} console warnings/errors`).toEqual([]);
   });
 

@@ -948,13 +948,22 @@ function fatherDiaryModal(state, lines = []) {
   };
 }
 
+const DIALOGUE_SPEAKER_IDS = Object.freeze({
+  '陆小闲': 'player',
+  '工友': 'worker',
+  '父亲': 'father'
+});
+
 function npcIdBySpeaker(speaker) {
   if (!speaker) return '';
+  if (DIALOGUE_SPEAKER_IDS[speaker]) return DIALOGUE_SPEAKER_IDS[speaker];
   return Object.entries(NPCS).find(([, npc]) => npc.name === speaker || npc.icon === speaker)?.[0] || '';
 }
 
 function dialogueAssetFor(npcId) {
   return ({
+    player: 'portrait.player',
+    father: 'portrait.father',
     fatty: 'portrait.fatty',
     coach: 'portrait.coach',
     master: 'portrait.master',
@@ -966,7 +975,8 @@ function dialogueAssetFor(npcId) {
 
 function normalizeDialogueLine(entry, fallback = {}) {
   const raw = typeof entry === 'string' ? { text: entry } : (entry || {});
-  const npcId = raw.npc || fallback.npc || npcIdBySpeaker(raw.speaker);
+  const speakerNpcId = npcIdBySpeaker(raw.speaker);
+  const npcId = raw.npc || speakerNpcId || (!raw.speaker ? fallback.npc : '');
   const npc = NPCS[npcId] || {};
   return {
     speaker: raw.speaker || npc.name || fallback.speaker || fallback.title || '对话',
@@ -3562,6 +3572,7 @@ const ENEMY_SCENE_ASSETS = {
 
 const NPC_SCENE_ASSETS = {
   fatty: { assetKey: 'scene.npc.fatty', kind: 'standee' },
+  father: { assetKey: 'scene.npc.father_memory', kind: 'standee' },
   xiaoman: { assetKey: 'scene.npc.xiaoman', kind: 'standee' },
   worker: { assetKey: 'scene.npc.worker', kind: 'standee' },
   coach: { assetKey: 'scene.npc.coach', kind: 'standee' },

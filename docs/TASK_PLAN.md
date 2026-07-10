@@ -55,6 +55,10 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - `scene.npc.coach` now uses a reviewed 96x144 Liang standee with precise coaching stance, raised/low focus mitts, tracksuit stripe, whistle, and grounded shoes.
 - `portrait.coach` now uses a matching reviewed 96x96 portrait; the prior placeholder face is no longer live.
 - Day 9 boxing desktop/mobile screenshots verify the coach at final scale with intact mitt silhouettes and no overflow.
+- `scene.npc.father_memory` now uses a reviewed 96x144 standee with gray temples, an indigo work jacket, a restrained notebook pose, and the same two-pixel ground baseline as the live cast.
+- `portrait.father` now uses a matching reviewed 96x96 portrait; Day 1 dialogue resolves Lu and his father independently instead of inheriting the scene NPC identity.
+- Narrator lines no longer inherit the active scene NPC portrait, and Day 1 desktop/mobile screenshots cover the three-character stage plus the father dialogue page.
+- The desktop three-character cast layout reserves the right action rail and keeps all three silhouettes visible without horizontal overflow.
 - Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
@@ -114,12 +118,17 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 candidate visual gate (19 passed, including Day 9 boxing desktop/mobile screenshots and final-scale assertion)
   - `git diff --check`
+- Passed after the father-memory identity replacement:
+  - `npm run check:full` (104 manifest entries, 6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 candidate visual gate (19 passed, including Day 1 father standee/portrait, dialogue identity, desktop/mobile geometry, and screenshots)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- Father-memory scene/portrait assets remain missing.
 - The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
@@ -127,4 +136,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Generate and review the father-memory standee/portrait, then begin the Day 1-9 background and broad UI skin replacement.
+Replace the Day 1 home background, then begin the broad UI scene-shell replacement while preserving the established dialogue and combat contracts.

@@ -7946,3 +7946,19 @@
     font-size: 10px;
   }
 }
+
+@media (min-width: 1121px) {
+  .maws-scene-cast.three-up {
+    gap: clamp(18px, 2.4vw, 36px);
+    padding-inline: clamp(190px, 18vw, 280px);
+  }
+
+  .maws-scene-cast.three-up > .maws-scene-character {
+    min-width: 150px;
+    max-width: 190px;
+  }
+
+  .maws-scene-cast.three-up > .maws-scene-character.player {
+    max-width: 220px;
+  }
+}
