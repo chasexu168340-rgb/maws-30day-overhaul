@@ -164,14 +164,17 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
     day: window.MAWS_STORE.state.day,
     enemyId: window.MAWS_STORE.state.combat?.enemyId,
     main: Boolean(window.MAWS_STORE.state.combat?.main),
-    objectiveSet: window.MAWS_STORE.state.combat?.objectiveSet || ''
+    objectiveSet: window.MAWS_STORE.state.combat?.objectiveSet || '',
+    ruleSet: window.MAWS_STORE.state.combat?.ruleSet?.id || ''
   }));
   expect(dayFiveCombat).toEqual({
     day: 5,
     enemyId: 'E01',
     main: true,
-    objectiveSet: 'park_check'
+    objectiveSet: 'park_check',
+    ruleSet: 'park_check'
   });
+  await expect(page.locator('.maws-fight-rule')).toContainText('公园验货');
   const starterWildPreview = await page.evaluate(async () => {
     const { previewPlayerAction } = await import('/maws_src/simulation/combat.js');
     const state = window.MAWS_STORE.state;
@@ -266,6 +269,65 @@ test('home cooking and recovery items create one-use combat preparation', async 
   expect(battle.combatPrep.meal.label).toBe('热饭打底');
   expect(battle.combatPrep.recovery.label).toBe('关节冷敷');
   expect(battle.log.join('\n')).toContain('备战准备');
+  expect(errors).toEqual([]);
+});
+
+test('combat rules make retreat breathing and empty-queue recovery explicit', async ({ page }) => {
+  const errors = await loadGame(page);
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 5;
+    store.state.time = 420;
+    store.state.loc = 'park';
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 5 };
+    store.state.ui = { ...store.state.ui, tab: 'map', modal: null, selectedTravel: null, cityMapOpen: false };
+    delete store.state.flags.main_5;
+    store.emit();
+  });
+  await page.locator('button[data-action="startMainEvent"]').first().evaluate((button) => button.click());
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+
+  const retreat = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.combat.objectivePassCount = 99;
+    store.state.combat.distance = 'mid';
+    store.state.player.sp = 36;
+    store.state.player.posture = 36;
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'retreat' });
+    store.dispatch({ type: 'confirmBattle' });
+    const step = (store.state.combat?.steps || []).find((item) => item.actor === 'player' && item.action?.id === 'retreat');
+    return { result: step?.result, log: step?.log || [], ruleSet: store.state.combat?.ruleSet?.id };
+  });
+  expect(retreat.ruleSet).toBe('park_check');
+  expect(retreat.result?.distance).toBe('far');
+  expect(retreat.result?.recoveredSp).toBe(4);
+  expect(retreat.result?.recoveredPosture).toBe(4);
+  expect(retreat.log.join('\n')).toContain('呼吸终于赶上了脚步');
+
+  const rest = await page.evaluate(async () => {
+    const store = window.MAWS_STORE;
+    const { resolveCombatExchange } = await import('/maws_src/simulation/combat.js');
+    const input = {
+      ...structuredClone(store.state.combat),
+      day: store.state.day,
+      player: { ...structuredClone(store.state.player), sp: 30, posture: 30 },
+      skillState: structuredClone(store.state.skillState),
+      styles: structuredClone(store.state.styles),
+      equipSkills: [...store.state.equipSkills],
+      selected: [],
+      playerQueue: []
+    };
+    const result = resolveCombatExchange(input, [], () => 0.5);
+    const steps = result.steps || [];
+    const player = steps.find((item) => item.actor === 'player' && item.action?.id === 'rest');
+    const recovery = steps.find((item) => item.actor === 'system' && item.action?.id === 'recover');
+    return { player: player?.result, recovery: recovery?.result, log: recovery?.log || [] };
+  });
+  expect(rest.player?.pendingRecovery).toBe(true);
+  expect(rest.recovery?.playerRecover).toBeGreaterThanOrEqual(20);
+  expect(rest.recovery?.postureRecover).toBe(8);
+  expect(rest.log.join('\n')).toContain('喘息结算');
   expect(errors).toEqual([]);
 });
 

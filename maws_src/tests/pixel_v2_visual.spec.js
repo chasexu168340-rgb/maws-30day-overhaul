@@ -699,10 +699,23 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
     const store = window.MAWS_STORE;
     const game = window.MAWS_GAME;
     window.__pixelV2FrameNames = [];
+    window.__pixelV2XPositions = [];
+    const initialScene = game.scene.getScene('ShellScene');
+    const initialPlayer = initialScene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const initialEnemy = initialScene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.silent');
+    window.__pixelV2SideLayout = {
+      playerX: initialPlayer?.x || 0,
+      enemyX: initialEnemy?.x || 0,
+      playerFlipX: Boolean(initialPlayer?.flipX),
+      enemyFlipX: Boolean(initialEnemy?.flipX)
+    };
     window.__pixelV2FrameTimer = setInterval(() => {
       const scene = game.scene.getScene('ShellScene');
       const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
-      if (sprite?.frame?.name !== undefined) window.__pixelV2FrameNames.push(Number(sprite.frame.name));
+      if (sprite?.frame?.name !== undefined) {
+        window.__pixelV2FrameNames.push(Number(sprite.frame.name));
+        window.__pixelV2XPositions.push(Number(sprite.x || 0));
+      }
     }, 32);
 
     store.dispatch({ type: 'clearSkills' });
@@ -723,6 +736,8 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
     const store = window.MAWS_STORE;
     return {
       frameNames: window.__pixelV2FrameNames || [],
+      xPositions: window.__pixelV2XPositions || [],
+      sideLayout: window.__pixelV2SideLayout || {},
       steps: (store.state.combat?.steps || []).map((step) => ({
         actor: step.actor,
         id: step.action?.id || null,
@@ -731,11 +746,44 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
     };
   });
   const samples = playback.frameNames;
+  const xRange = playback.xPositions.length ? Math.max(...playback.xPositions) - Math.min(...playback.xPositions) : 0;
 
   expect(samples.length, 'Phaser should expose player animation frame samples').toBeGreaterThan(6);
   expect(new Set(samples).size, 'player sprite should advance beyond a static frame').toBeGreaterThan(2);
   expect(samples.some((frame) => frame >= 4 && frame <= 7), `player sprite should enter the pixel_v2 attack range; sampled ${samples.join(',')}; steps ${JSON.stringify(playback.steps)}`).toBe(true);
+  expect(playback.sideLayout.playerX, 'player should begin on the right side').toBeGreaterThan(playback.sideLayout.enemyX);
+  expect(playback.sideLayout.playerFlipX, 'right-side player should face left').toBe(true);
+  expect(playback.sideLayout.enemyFlipX, 'left-side enemy should face right').toBe(false);
+  expect(xRange, 'player attack should travel toward the opponent instead of animating in place').toBeGreaterThan(70);
   expect(violations, 'player animation should not emit warnings/errors').toEqual([]);
+});
+
+test('combat distance changes the real Phaser fighter spacing', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay8(page);
+  const spacing = await page.evaluate(async () => {
+    const store = window.MAWS_STORE;
+    const game = window.MAWS_GAME;
+    const read = () => {
+      const scene = game.scene.getScene('ShellScene');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.silent');
+      return { playerX: player?.x || 0, enemyX: enemy?.x || 0, gap: Math.abs((player?.x || 0) - (enemy?.x || 0)) };
+    };
+    store.state.combat.distance = 'far';
+    store.emit();
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const far = read();
+    store.state.combat.distance = 'close';
+    store.emit();
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const close = read();
+    return { far, close };
+  });
+  expect(spacing.far.playerX).toBeGreaterThan(spacing.far.enemyX);
+  expect(spacing.close.playerX).toBeGreaterThan(spacing.close.enemyX);
+  expect(spacing.far.gap, 'far range should visibly separate the fighters').toBeGreaterThan(spacing.close.gap + 180);
+  expect(violations, 'distance layout should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ page }) => {
@@ -746,10 +794,15 @@ test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ p
     const store = window.MAWS_STORE;
     const game = window.MAWS_GAME;
     window.__pixelV2DefenseFrames = [];
+    window.__pixelV2DefenseX = [];
+    window.__pixelV2RetreatStart = 0;
     window.__pixelV2DefenseTimer = setInterval(() => {
       const scene = game.scene.getScene('ShellScene');
       const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
-      if (sprite?.frame?.name !== undefined) window.__pixelV2DefenseFrames.push(Number(sprite.frame.name));
+      if (sprite?.frame?.name !== undefined) {
+        window.__pixelV2DefenseFrames.push(Number(sprite.frame.name));
+        window.__pixelV2DefenseX.push(Number(sprite.x || 0));
+      }
     }, 24);
     store.dispatch({ type: 'clearSkills' });
     store.dispatch({ type: 'selectSkill', skillId: 'guard' });
@@ -761,6 +814,7 @@ test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ p
   await page.waitForTimeout(900);
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
+    window.__pixelV2RetreatStart = (window.__pixelV2DefenseX || []).length;
     store.dispatch({ type: 'clearSkills' });
     store.dispatch({ type: 'selectSkill', skillId: 'retreat' });
     store.dispatch({ type: 'confirmBattle' });
@@ -774,6 +828,7 @@ test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ p
     const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
     return {
       frames: window.__pixelV2DefenseFrames || [],
+      retreatX: (window.__pixelV2DefenseX || []).slice(window.__pixelV2RetreatStart || 0),
       scaleX: Math.abs(sprite?.scaleX || 0),
       scaleY: Math.abs(sprite?.scaleY || 0)
     };
@@ -781,6 +836,7 @@ test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ p
 
   expect(playback.frames.some((frame) => frame >= 16 && frame <= 19), `guard frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
   expect(playback.frames.some((frame) => frame >= 20 && frame <= 23), `retreat frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(Math.max(...playback.retreatX) - Math.min(...playback.retreatX), 'retreat should move the player into the new distance instead of animating in place').toBeGreaterThan(24);
   expect(Math.abs(playback.scaleX - playback.scaleY), 'pixel fighters should use uniform scale without width distortion').toBeLessThan(0.001);
   expect(violations, 'semantic player animations should not emit warnings/errors').toEqual([]);
 });

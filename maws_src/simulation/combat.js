@@ -16,7 +16,10 @@ const COMBAT_TUNING = Object.freeze({
   counterBonus: 0.08,
   lowSpRecover: 16,
   turnSpRecover: 10,
-  restSpRecover: 24,
+  restSpRecover: 12,
+  restPostureRecover: 8,
+  retreatSpRecover: 4,
+  retreatPostureRecover: 4,
   enemyTurnSpRecover: 7,
   minChipDmg: 3,
   blockSpDrain: 4,
@@ -651,8 +654,8 @@ function resolveRest(combatState) {
   return {
     actor: "player",
     action: { id: "rest", name: "喘息/过回合", type: "rest" },
-    result: { ok: true, resting: true, defense: combatState.playerBuff.def },
-    log: ["你选择喘息，稳住呼吸并恢复体能。"],
+    result: { ok: true, resting: true, pendingRecovery: true, defense: combatState.playerBuff.def },
+    log: ["你选择喘息，没有抢攻。先护住自己，等交换结束把呼吸收回来。"],
     fx
   };
 }
@@ -725,6 +728,19 @@ function resolvePlayerAction(combatState, id, rng, actionIndex = 0) {
     addFeelLines();
     log.push(id === "dirtyescape" ? "你选择夺路撤离，风险降低。" : `你后撤拉开，距离变为【${distText(combatState.distance)}】。`);
 
+    let recoveredSp = 0;
+    let recoveredPosture = 0;
+    if (id === "retreat" && combatState.distance === "far") {
+      const beforeSp = player.sp;
+      const beforePosture = player.posture;
+      player.sp = clamp(player.sp + COMBAT_TUNING.retreatSpRecover, 0, player.spMax);
+      player.posture = clamp(player.posture + COMBAT_TUNING.retreatPostureRecover, 0, player.postureMax);
+      recoveredSp = player.sp - beforeSp;
+      recoveredPosture = player.posture - beforePosture;
+      log.push(`你把距离拉到远处，体力 +${recoveredSp}，架势 +${recoveredPosture}。呼吸终于赶上了脚步。`);
+      fx.push(makeFx(combatState, "guard", "player", 0, "回气", id, { icon: "SP" }));
+    }
+
     if (id === "dirtyescape" && enemy.weapon) {
       const exitChance = clamp(0.58 + (stats.spd - 50) * 0.003 + (stats.jud - 50) * 0.003 + styleBonus(combatState, "street", 0.0015), 0.35, 0.90);
       if (rng() < exitChance) {
@@ -738,7 +754,7 @@ function resolvePlayerAction(combatState, id, rng, actionIndex = 0) {
 
     applyComboRefund(combatState, combo, log, fx, id);
     rememberComboAction(combatState, id);
-    return step("player", id, { ok: true, distance: combatState.distance, ground: combatState.ground, riskWin: combatState.finishReason === "riskwin", spCost: skill.sp, combo: combo?.id || null }, log, fx);
+    return step("player", id, { ok: true, distance: combatState.distance, ground: combatState.ground, riskWin: combatState.finishReason === "riskwin", spCost: skill.sp, recoveredSp, recoveredPosture, playerSp: player.sp, playerPosture: player.posture, combo: combo?.id || null }, log, fx);
   }
 
   if (id === "talkdown") {
@@ -1045,14 +1061,17 @@ function applyEndOfExchangeRecovery(combatState, resting, steps) {
   const playerRecover = COMBAT_TUNING.turnSpRecover + (resting ? COMBAT_TUNING.restSpRecover : 0) + Math.floor(Math.max(0, stats.end - 50) / 8);
   combatState.player.sp = clamp(combatState.player.sp + playerRecover, 0, combatState.player.spMax);
   combatState.enemy.sp = clamp(combatState.enemy.sp + COMBAT_TUNING.enemyTurnSpRecover, 0, combatState.enemy.spMax);
-  combatState.player.posture = clamp(combatState.player.posture + (resting ? 8 : 4), 0, combatState.player.postureMax);
+  const postureRecover = resting ? COMBAT_TUNING.restPostureRecover : 4;
+  combatState.player.posture = clamp(combatState.player.posture + postureRecover, 0, combatState.player.postureMax);
   combatState.enemy.posture = clamp(combatState.enemy.posture + 3, 0, combatState.enemy.postureMax);
 
-  const log = resting ? `喘息恢复 ${playerRecover} 体力。` : `回合间隙恢复 ${playerRecover} 体力。`;
+  const log = resting
+    ? `喘息结算：体力 +${playerRecover}，架势 +${postureRecover}。`
+    : `交换间隙：体力 +${playerRecover}，架势 +${postureRecover}。`;
   const recoveryStep = {
     actor: "system",
     action: { id: "recover", name: "回合恢复", type: "system" },
-    result: { playerSp: combatState.player.sp, enemySp: combatState.enemy.sp, playerRecover, enemyRecover: COMBAT_TUNING.enemyTurnSpRecover },
+    result: { playerSp: combatState.player.sp, playerPosture: combatState.player.posture, enemySp: combatState.enemy.sp, playerRecover, postureRecover, enemyRecover: COMBAT_TUNING.enemyTurnSpRecover },
     log: [log],
     fx: []
   };

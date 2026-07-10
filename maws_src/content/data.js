@@ -490,6 +490,39 @@ export const ITEMS = {
   notebook: { name: '训练笔记本', icon: '本', assetKey: 'item.notebook', cat: '训练工具', price: 90, type: 'equipment', slot: 'accessory', desc: '复盘更有条理。把挨过的打记下来，别让它白来。', eff: { jud: 2, auth: 2 } }
 };
 
+export const FIGHT_RULESETS = Object.freeze({
+  open_exchange: Object.freeze({
+    id: 'open_exchange',
+    label: '开放交换',
+    summary: '击倒、撤离或完成场景目标都可能结束冲突。',
+    priority: '先读距离，再决定要不要硬换。'
+  }),
+  street_showcase: Object.freeze({
+    id: 'street_showcase',
+    label: '低风险试招',
+    summary: '对手没受过正规训练，先验证野路子能不能站住。',
+    priority: '抢到一拍即可，不鼓励反复刷人。'
+  }),
+  park_check: Object.freeze({
+    id: 'park_check',
+    label: '公园验货',
+    summary: '完成任意两项目标即通过，不要求 KO。',
+    priority: '抱架、后撤和稳住士气都算真本事。'
+  }),
+  first_wind: Object.freeze({
+    id: 'first_wind',
+    label: '三窗口测量',
+    summary: '读懂提示、防住一拍、完成一次配方。',
+    priority: '这不是羞辱局，是把差距量出来。'
+  }),
+  weapon_exit: Object.freeze({
+    id: 'weapon_exit',
+    label: '街头撤离',
+    summary: '离开武器威胁比击倒对方更重要。',
+    priority: '降温、拉开、找到出口。'
+  })
+});
+
 export const ENEMIES = {
   E00: { name: '嘴硬路人', icon: '嘴', risk: '低', tags: ['完全没练过', '外强中干', '受击易慌'], hp: 64, sp: 58, posture: 46, morale: 82, calm: 28, stats: { str: 34, end: 34, spd: 36, tec: 22, tou: 32, bal: 30, rea: 28, jud: 24 }, skills: ['wild_swing', 'push_away', 'talkdown', 'retreat'], ai: 'brawler', preferredRange: 'mid', aiProfile: { patience: 14, pressure: 66, grapple: 0, counter: 4, dirty: 6 }, reward: { money: 12, fame: 8 } },
   E01: { name: '半年拳击新人', icon: '拳', risk: '低', tags: ['正经训练', '拳距稳定', '基础可靠'], hp: 92, sp: 88, posture: 72, morale: 68, calm: 58, stats: { str: 42, end: 48, spd: 56, tec: 52, tou: 45, bal: 48, rea: 50, jud: 42 }, skills: ['jab', 'straight', 'guard', 'retreat'], ai: 'boxer', preferredRange: 'mid', aiProfile: { patience: 72, pressure: 32, grapple: 0, counter: 28, dirty: 0 }, reward: { money: 60, fame: 20 } },

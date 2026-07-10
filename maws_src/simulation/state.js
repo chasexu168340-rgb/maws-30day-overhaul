@@ -4,6 +4,7 @@ import {
   DOW,
   ENEMIES,
   FATHER_DIARY,
+  FIGHT_RULESETS,
   GAME_VERSION,
   ITEMS,
   LOC_POS,
@@ -2326,6 +2327,15 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     : script === 'first_wind'
       ? [...FIRST_WIND_OBJECTIVE_IDS]
       : (main && state.day === 5 && enemyId === 'E01' ? [...PARK_CHECK_OBJECTIVE_IDS] : []);
+  const ruleSetId = script === 'first_wind'
+    ? 'first_wind'
+    : (main && state.day === 5 && enemyId === 'E01')
+      ? 'park_check'
+      : enemyId === 'E00'
+        ? 'street_showcase'
+        : def.weapon
+          ? 'weapon_exit'
+          : 'open_exchange';
   state.player.sp = battleSp;
   state.player.posture = clamp(state.player.posture + prepPosture, 0, state.player.postureMax);
   state.player.morale = clamp(state.player.morale + prepMorale, 0, 100);
@@ -2341,6 +2351,7 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     script,
     objectiveSet: script === 'first_wind' ? 'first_wind' : (main && state.day === 5 && enemyId === 'E01' ? 'park_check' : (objectives.length ? 'final' : null)),
     objectivePassCount: main && state.day === 5 && enemyId === 'E01' ? 2 : null,
+    ruleSet: clone(FIGHT_RULESETS[ruleSetId] || FIGHT_RULESETS.open_exchange),
     objectives,
     objectiveProgress: Object.fromEntries(objectives.map((id) => [id, Boolean(state.maw?.objectives?.[id])])),
     objectiveNotes: [],

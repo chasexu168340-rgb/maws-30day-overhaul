@@ -520,16 +520,20 @@ export class ShellScene extends PhaserScene {
     const groundY = mobile
       ? Math.min(h * 0.7, h - 240)
       : Math.min(h * 0.76, h - 170);
-    const playerX = w * (mobile ? 0.31 : 0.34);
-    const enemyX = w * (mobile ? 0.69 : 0.66);
+    const spacing = mobile
+      ? ({ far: [0.22, 0.78], mid: [0.30, 0.70], close: [0.38, 0.62], ground: [0.42, 0.58] }[c.distance] || [0.30, 0.70])
+      : ({ far: [0.24, 0.76], mid: [0.33, 0.67], close: [0.40, 0.60], ground: [0.44, 0.56] }[c.distance] || [0.33, 0.67]);
+    const enemyX = w * spacing[0];
+    const playerX = w * spacing[1];
     const enemyKey = FIGHTER_BY_ENEMY[c.enemyId] || 'fighter.enemy.boxer';
-    this.drawCombatContactShadow(playerX, groundY, fighterW);
-    this.drawCombatContactShadow(enemyX, groundY, fighterW);
-    const player = this.createCombatFighter(playerX, groundY, 'fighter.player', ANIM_BY_FIGHTER['fighter.player'], fighterW, fighterH, false);
-    const enemy = this.createCombatFighter(enemyX, groundY, enemyKey, ANIM_BY_FIGHTER[enemyKey], fighterW, fighterH, true);
+    const playerShadow = this.drawCombatContactShadow(playerX, groundY, fighterW);
+    const enemyShadow = this.drawCombatContactShadow(enemyX, groundY, fighterW);
+    const player = this.createCombatFighter(playerX, groundY, 'fighter.player', ANIM_BY_FIGHTER['fighter.player'], fighterW, fighterH, true);
+    const enemy = this.createCombatFighter(enemyX, groundY, enemyKey, ANIM_BY_FIGHTER[enemyKey], fighterW, fighterH, false);
+    const maxAdvance = mobile ? Math.round(w * 0.25) : Math.round(w * 0.24);
     return {
-      player: { ...player, x: playerX, y: groundY, hitX: playerX, hitY: groundY - player.displayHeight * 0.58 },
-      enemy: { ...enemy, x: enemyX, y: groundY, hitX: enemyX, hitY: groundY - enemy.displayHeight * 0.58 }
+      player: { ...player, shadow: playerShadow, x: playerX, y: groundY, hitX: playerX, hitY: groundY - player.displayHeight * 0.58, maxAdvance },
+      enemy: { ...enemy, shadow: enemyShadow, x: enemyX, y: groundY, hitX: enemyX, hitY: groundY - enemy.displayHeight * 0.58, maxAdvance }
     };
   }
 
@@ -540,6 +544,7 @@ export class ShellScene extends PhaserScene {
     shadow.fillStyle(0x050506, 0.28);
     shadow.fillRect(Math.round(x - fighterW * 0.19), Math.round(y - 10), Math.round(fighterW * 0.38), 4);
     this.track(shadow);
+    return shadow;
   }
 
   createCombatFighter(x, y, imageKey, animKey, w, h, flipX) {
@@ -648,30 +653,37 @@ export class ShellScene extends PhaserScene {
   playCombatStepFx(step, fighters, index, mobile) {
     const fxList = Array.isArray(step.fx) ? step.fx : step.fx ? [step.fx] : [];
     const actionActor = fighters[step.actor];
-    if (actionActor && step.action?.type !== 'system') this.playFighterAnim(actionActor, this.actionAnimName(step), true);
-    if (!fxList.length) return;
+    const stepDelay = index * 300;
+    if (!fxList.length) {
+      if (actionActor && step.action?.type !== 'system') this.delayedFighterAnim(actionActor, this.actionAnimName(step), stepDelay);
+      return;
+    }
     fxList.forEach((fx, fxIndex) => {
       const actorSide = fx.fromSide || fx.actor || step.actor || 'player';
       const targetSide = fx.toSide || (fx.type === 'guard' ? actorSide : actorSide === 'player' ? 'enemy' : 'player');
       const actor = fighters[actorSide] || fighters.player;
       const target = fighters[targetSide] || fighters.enemy;
-      const delay = index * 135 + fxIndex * 70;
+      const delay = stepDelay + fxIndex * 90;
+      const isImpact = fx.type === 'hit' || fx.type === 'break';
+      const impactDelay = isImpact ? delay + 200 : delay;
       if (fx.type === 'hit' || fx.type === 'break') {
         this.delayedFighterAnim(actor, 'attack', delay);
-        this.delayedFighterAnim(target, 'hurt', delay + 90);
-        this.delayedFighterAnim(actor, 'vfx', delay + 110);
+        this.delayedFighterAnim(target, 'hurt', impactDelay);
+        this.delayedFighterAnim(actor, 'vfx', impactDelay + 80);
         this.animateAttack(actor, target, delay, fx);
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
         const semanticAnim = this.actionAnimName(step);
         this.delayedFighterAnim(actor, fx.type === 'guard' && semanticAnim !== 'idle' ? semanticAnim : fx.type === 'guard' ? 'guard' : 'attack', delay);
-        this.animateStep(actor, target, delay, fx);
+        const opposingTarget = fighters[actorSide === 'player' ? 'enemy' : 'player'] || target;
+        if (fx.type === 'miss') this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0 });
+        this.animateStep(actor, opposingTarget, delay, fx);
       }
-      this.playImpactPresentation(fx, target, delay, mobile);
-      if ((fx.damage || fx.dmg) > 0) this.floatCombatText(target.hitX, target.hitY, `-${fx.damage || fx.dmg}`, '#ff1745', mobile ? 32 : 42, delay + 120);
+      this.playImpactPresentation(fx, target, impactDelay, mobile);
+      if ((fx.damage || fx.dmg) > 0) this.floatCombatText(target.hitX, target.hitY, `-${fx.damage || fx.dmg}`, '#ff1745', mobile ? 32 : 42, impactDelay + 40);
       const cue = this.fxCueText(fx);
-      if (cue) this.floatCombatText(target.hitX, target.hitY - (mobile ? 42 : 58), cue.text, cue.color, cue.size, delay + 80);
-      if (fx.type === 'hit' || fx.type === 'break') this.shakeTarget(target.sprite, delay, fx);
+      if (cue) this.floatCombatText(target.hitX, target.hitY - (mobile ? 42 : 58), cue.text, cue.color, cue.size, impactDelay + 20);
+      if (isImpact) this.shakeTarget(target.sprite, impactDelay, fx);
     });
   }
 
@@ -695,29 +707,73 @@ export class ShellScene extends PhaserScene {
 
   animateAttack(actor, target, delay, fx) {
     const dir = target.x > actor.x ? 1 : -1;
-    const hitstopMs = Math.max(0, Math.min(160, Number(fx.hitstopMs || 0)));
+    const gap = Math.abs(target.x - actor.x);
+    const contactGap = Math.max(52, (Number(actor.displayWidth || 80) + Number(target.displayWidth || 80)) * 0.34);
+    const travel = Math.max(36, Math.min(Number(actor.maxAdvance || 220), gap - contactGap));
+    const minHitstop = fx.type === 'miss' ? 0 : 70;
+    const hitstopMs = Math.max(minHitstop, Math.min(220, Number(fx.hitstopMs || 0)));
     this.tweens.add({
       targets: actor.sprite,
-      x: actor.x + dir * 34,
-      y: actor.y - 8,
-      duration: 80,
+      x: actor.x + dir * travel,
+      y: actor.y - 6,
+      duration: 220,
       hold: hitstopMs,
       yoyo: true,
       ease: 'Quad.easeOut',
       delay
     });
+    if (actor.shadow?.active) {
+      this.tweens.add({
+        targets: actor.shadow,
+        x: dir * travel,
+        duration: 220,
+        hold: hitstopMs,
+        yoyo: true,
+        ease: 'Quad.easeOut',
+        delay
+      });
+    }
     const shake = Math.max(0, Math.min(1, Number(fx.shake || 0)));
-    if (shake > 0) this.shakeCamera(delay + 70, 0.0015 + shake * 0.006, 60 + hitstopMs);
+    if (shake > 0) this.shakeCamera(delay + 200, 0.0015 + shake * 0.006, 90 + hitstopMs);
   }
 
   animateStep(actor, target, delay, fx) {
+    const movementId = fx.skillId || '';
+    const awayDir = actor.x > target.x ? 1 : -1;
+    const distanceMove = Math.max(26, Math.round(Number(actor.maxAdvance || 120) * 0.38));
+    if (['retreat', 'dodge', 'escape', 'dirtyescape'].includes(movementId)) {
+      this.tweens.add({
+        targets: actor.sprite,
+        x: { from: actor.x - awayDir * distanceMove, to: actor.x },
+        duration: 260,
+        ease: 'Quad.easeOut',
+        delay
+      });
+      if (actor.shadow?.active) {
+        this.tweens.add({ targets: actor.shadow, x: { from: -awayDir * distanceMove, to: 0 }, duration: 260, ease: 'Quad.easeOut', delay });
+      }
+      return;
+    }
+    if (movementId === 'advance') {
+      this.tweens.add({
+        targets: actor.sprite,
+        x: { from: actor.x + awayDir * distanceMove, to: actor.x },
+        duration: 260,
+        ease: 'Quad.easeOut',
+        delay
+      });
+      if (actor.shadow?.active) {
+        this.tweens.add({ targets: actor.shadow, x: { from: awayDir * distanceMove, to: 0 }, duration: 260, ease: 'Quad.easeOut', delay });
+      }
+      return;
+    }
     if (fx.type === 'miss') {
       const dir = target.x > actor.x ? -1 : 1;
-      this.tweens.add({ targets: target.sprite, x: target.x + dir * 22, duration: 70, yoyo: true, ease: 'Sine.easeOut', delay });
+      this.tweens.add({ targets: target.sprite, x: target.x + dir * 26, duration: 150, yoyo: true, ease: 'Sine.easeOut', delay });
       return;
     }
     const hitstopMs = Math.max(0, Math.min(100, Number(fx.hitstopMs || 0)));
-    this.tweens.add({ targets: actor.sprite, scaleX: actor.sprite.scaleX * 1.04, scaleY: actor.sprite.scaleY * 1.04, duration: 80, hold: hitstopMs, yoyo: true, ease: 'Sine.easeOut', delay });
+    this.tweens.add({ targets: actor.sprite, scaleX: actor.sprite.scaleX * 1.04, scaleY: actor.sprite.scaleY * 1.04, duration: 150, hold: hitstopMs, yoyo: true, ease: 'Sine.easeOut', delay });
   }
 
   shakeTarget(sprite, delay, fx) {

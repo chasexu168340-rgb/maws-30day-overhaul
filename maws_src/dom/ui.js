@@ -1141,10 +1141,19 @@ function renderCombat(model) {
   const feedback = combat.lastWindow?.feedback;
   const perkPulse = (combat.log || []).find((line) => /^技能树反馈/.test(String(line || '')));
   const recipeReward = combat.lastRecipeReward;
+  const prepLabels = Object.values(combat.prep || {}).filter(Boolean).map((entry) => entry.label || entry.itemName).filter(Boolean);
+  const fightRule = combat.ruleSet || {};
+  const fightIdentity = fightRule.label ? `
+    <span class="maws-fight-rule">
+      <b>${esc(fightRule.label)}</b>
+      <span>${esc(fightRule.summary || '')}</span>
+      <small>${esc(prepLabels.length ? `备战：${prepLabels.join(' / ')}` : fightRule.priority || '无额外备战')}</small>
+    </span>` : '';
   const feedbackPanel = `
     <aside class="maws-combat-feedback tone-${esc(feedback?.tone || 'neutral')}">
       <b>窗口反馈</b>
       <span>${esc(feedback?.text || '先读意图，再放 1-2 张动作卡。')}</span>
+      ${fightIdentity}
       ${perkPulse ? `<small>${esc(perkPulse)}</small>` : ''}
       ${recipeReward ? `<small class="maws-recipe-reward">首次完成 ${esc(recipeReward.label)} · 洞察 +${esc(recipeReward.insight)}</small>` : ''}
     </aside>`;

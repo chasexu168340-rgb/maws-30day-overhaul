@@ -220,9 +220,9 @@ const pixelV2FighterSprite = (file, sourceKey, tags = [], displayScale = 1, extr
   status: 'final',
   animations: {
     idle: { start: 0, end: 3, frameRate: 5, repeat: -1 },
-    attack: { start: 4, end: 7, frameRate: 12, repeat: 0 },
-    hurt: { start: 8, end: 11, frameRate: 11, repeat: 0 },
-    vfx: { start: 12, end: 15, frameRate: 9, repeat: 0 },
+    attack: { start: 4, end: 7, frameRate: 8, repeat: 0 },
+    hurt: { start: 8, end: 11, frameRate: 8, repeat: 0 },
+    vfx: { start: 12, end: 15, frameRate: 7, repeat: 0 },
     ...extraAnimations
   },
   tags: [...tags, 'combat', 'sprite-strip', 'pixel-v2', 'pixel']
@@ -280,8 +280,8 @@ export const ASSET_MANIFEST = {
   },
   sprites: {
     'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player_extended.png', 'fighter.player', ['player'], 1.28, {
-      guard: { start: 16, end: 19, frameRate: 10, repeat: 0 },
-      retreat: { start: 20, end: 23, frameRate: 10, repeat: 0 }
+      guard: { start: 16, end: 19, frameRate: 7, repeat: 0 },
+      retreat: { start: 20, end: 23, frameRate: 7, repeat: 0 }
     }),
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00'], 1.1),

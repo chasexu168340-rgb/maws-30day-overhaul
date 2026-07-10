@@ -10206,6 +10206,30 @@
   font-size: 11px !important;
 }
 
+#maws-ui-root .maws-fight-rule {
+  display: grid;
+  gap: 2px;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid #6f654d;
+}
+
+#maws-ui-root .maws-fight-rule b {
+  color: #f2c94c;
+  font-size: 10px;
+}
+
+#maws-ui-root .maws-fight-rule span,
+#maws-ui-root .maws-fight-rule small {
+  color: #eee1bf;
+  font-size: 9px !important;
+  line-height: 1.25;
+}
+
+#maws-ui-root .maws-fight-rule small {
+  color: #76d2cf;
+}
+
 #maws-ui-root .maws-combat-window-cards {
   box-sizing: border-box;
   max-height: 100%;
@@ -10343,6 +10367,48 @@
   flex: 0 0 auto;
   font-size: 8px !important;
   line-height: 1;
+}
+
+#maws-ui-root .maws-combat-card-no {
+  top: 3px;
+  right: auto;
+  bottom: auto;
+  left: 3px;
+  z-index: 4;
+  min-width: 18px;
+  padding: 2px 3px;
+  border: 1px solid #d3b75f;
+  background: #090a0c;
+  color: #f2c94c;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+}
+
+#maws-ui-root button.maws-target-option,
+#maws-ui-root button.maws-plan-mode-option {
+  padding-left: 29px !important;
+}
+
+#maws-ui-root button.maws-target-option::before,
+#maws-ui-root button.maws-plan-mode-option::before {
+  content: "" !important;
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  display: block !important;
+  width: 18px;
+  height: 18px;
+  background: var(--maws-ui-choice) center / contain no-repeat !important;
+  image-rendering: pixelated;
+  opacity: 0.26;
+  transform: translateY(-50%);
+}
+
+#maws-ui-root button.maws-target-option.active::before,
+#maws-ui-root button.maws-plan-mode-option.active::before {
+  opacity: 1;
 }
 
 #maws-ui-root .combat-card .maws-combat-card-use {
