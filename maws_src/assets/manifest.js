@@ -267,6 +267,24 @@ const WEAPON_MOTION_28 = Object.freeze({
   disengage: { start: 24, end: 27, frameRate: 6, repeat: 0 }
 });
 
+const BOSS_MOTION_36 = Object.freeze({
+  idle: { start: 0, end: 3, frameRate: 5, repeat: -1 },
+  advance: { start: 4, end: 7, frameRate: 6, repeat: 0 },
+  attack: { start: 8, end: 11, frameRate: 7, repeat: 0 },
+  boxing: { start: 8, end: 11, frameRate: 7, repeat: 0 },
+  frontkick: { start: 12, end: 15, frameRate: 6, repeat: 0 },
+  vfx: { start: 12, end: 15, frameRate: 6, repeat: 0 },
+  entry: { start: 16, end: 19, frameRate: 6, repeat: 0 },
+  clinch: { start: 16, end: 19, frameRate: 6, repeat: 0 },
+  heavy: { start: 20, end: 23, frameRate: 6, repeat: 0 },
+  takedown: { start: 20, end: 23, frameRate: 6, repeat: 0 },
+  guard: { start: 0, end: 3, frameRate: 5, repeat: 0 },
+  sprawl: { start: 24, end: 27, frameRate: 6, repeat: 0 },
+  hurt: { start: 28, end: 31, frameRate: 6, repeat: 0 },
+  retreat: { start: 32, end: 35, frameRate: 6, repeat: 0 },
+  escape: { start: 32, end: 35, frameRate: 6, repeat: 0 }
+});
+
 export const ASSET_MANIFEST = {
   backgrounds: {
     'bg.city.map.day': pixelV2Background('bg_city_map_day.png', ['day', 'shenzhen', 'city-map']),
@@ -305,7 +323,7 @@ export const ASSET_MANIFEST = {
     'fighter.enemy.silent': pixelV2Character('fighter_enemy_silent.png', ['enemy', 'boxing', 'silent', 'day8']),
     'fighter.enemy.grappler': pixelV2Character('fighter_enemy_grappler.png', ['enemy', 'grappling', 'e06']),
     'fighter.enemy.weapon': pixelV2Character('fighter_enemy_weapon.png', ['enemy', 'weapon', 'e07']),
-    'fighter.enemy.boss': cleanCharacter('fighter_enemy_boss.png', ['enemy', 'boss']),
+    'fighter.enemy.boss': pixelV2Character('fighter_enemy_boss.png', ['enemy', 'boss', 'e18']),
     'scene.npc.fatty': pixelV2Character('scene_npc_fatty.png', ['scene', 'npc', 'fatty', 'home', 'day1']),
     'scene.npc.father_memory': pixelV2Character('scene_npc_father_memory.png', ['scene', 'npc', 'father', 'memory', 'home', 'day1', 'day9']),
     'scene.npc.xiaoman': pixelV2Character('scene_npc_xiaoman.png', ['scene', 'npc', 'xiaoman', 'store', 'day3']),
@@ -324,7 +342,7 @@ export const ASSET_MANIFEST = {
     'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent_v3.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8', 'full-motion'], 0.98, FULL_MOTION_28),
     'anim.fighter.enemy.grappler': pixelV2FighterSprite('anim_fighter_enemy_grappler_v3.png', 'fighter.enemy.grappler', ['enemy', 'grappling', 'e06', 'full-motion'], 1, GRAPPLER_MOTION_28),
     'anim.fighter.enemy.weapon': pixelV2FighterSprite('anim_fighter_enemy_weapon_v3.png', 'fighter.enemy.weapon', ['enemy', 'weapon', 'e07', 'full-motion'], 1, WEAPON_MOTION_28, 128),
-    'anim.fighter.enemy.boss': fighterSprite('anim_fighter_enemy_boss.png', 'fighter.enemy.boss', ['enemy', 'boss'])
+    'anim.fighter.enemy.boss': pixelV2FighterSprite('anim_fighter_enemy_boss_v3.png', 'fighter.enemy.boss', ['enemy', 'boss', 'e18', 'full-motion', 'hybrid'], 1, BOSS_MOTION_36, 128)
   },
   portraits: {
     'portrait.player': pixelV2Portrait('portrait_player.png', ['player']),

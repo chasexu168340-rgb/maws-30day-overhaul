@@ -743,6 +743,16 @@ export class ShellScene extends PhaserScene {
       if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
       if (['retreat', 'dirtyescape'].includes(id)) return 'disengage';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.boss') {
+      if (['jab', 'straight'].includes(id)) return 'boxing';
+      if (id === 'frontkick') return 'frontkick';
+      if (id === 'advance') return 'advance';
+      if (id === 'grip') return 'clinch';
+      if (id === 'takedown') return 'takedown';
+      if (id === 'sprawl') return 'sprawl';
+      if (id === 'guard') return 'guard';
+      if (id === 'escape') return 'escape';
+    }
     return this.actionAnimName(step);
   }
 
@@ -751,6 +761,7 @@ export class ShellScene extends PhaserScene {
     const type = step?.action?.type || '';
     if (['grip', 'takedown', 'sidecontrol'].includes(id) || ['grapple', 'ground'].includes(type)) return 380;
     if (step?.result?.response?.intent === 'weapon') return 340;
+    if (id === 'frontkick') return 300;
     return 260;
   }
 

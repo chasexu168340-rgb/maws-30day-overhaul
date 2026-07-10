@@ -254,6 +254,19 @@ async function startE07(page) {
   await page.waitForTimeout(900);
 }
 
+async function startE18(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 30;
+    store.state.time = 1140;
+    store.state.loc = 'boxing';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E18' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
 async function startDay3FunTarget(page) {
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
@@ -1323,6 +1336,127 @@ test('E07 weapon strike remains readable at the contact approach frame', async (
   expect(violations, 'E07 strike contact frame should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E18 boss uses distinct boxing, kick, clinch, takedown, sprawl, hurt, and escape rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE18(page);
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.boss');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = {
+      sprite: enemy,
+      animKey: 'anim.fighter.enemy.boss',
+      isAnimated: true,
+      x: enemy?.x || 0,
+      y: enemy?.y || 0,
+      maxAdvance: 280,
+      displayWidth: enemy?.displayWidth || 128
+    };
+    const target = {
+      sprite: player,
+      x: player?.x || 0,
+      y: player?.y || 0,
+      displayWidth: player?.displayWidth || 96
+    };
+    const frames = [];
+    const xPositions = [];
+    const timer = setInterval(() => {
+      frames.push(Number(enemy?.frame?.name || 0));
+      xPositions.push(Number(enemy?.x || 0));
+    }, 24);
+    const play = async (name, wait = 720) => {
+      scene.playFighterAnim(actor, name, true);
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    };
+    await play('advance');
+    await play('boxing');
+    await play('frontkick');
+    await play('clinch');
+    scene.playFighterAnim(actor, 'takedown', true);
+    scene.animateAttack(actor, target, 0, { contactMs: 380, hitstopMs: 80, shake: 0.2 });
+    await new Promise((resolve) => setTimeout(resolve, 960));
+    await play('sprawl');
+    await play('hurt');
+    await play('escape');
+    clearInterval(timer);
+    const semantic = (id, type) => scene.fighterActionAnimName({ action: { id, type } }, actor);
+    return {
+      frames,
+      xPositions,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      flipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: {
+        jab: semantic('jab', 'strike'),
+        frontkick: semantic('frontkick', 'kick'),
+        grip: semantic('grip', 'grapple'),
+        takedown: semantic('takedown', 'grapple'),
+        sprawl: semantic('sprawl', 'defense'),
+        guard: semantic('guard', 'defense'),
+        escape: semantic('escape', 'ground')
+      },
+      frontkickMs: scene.combatContactMs({ action: { id: 'frontkick', type: 'kick' } }),
+      takedownMs: scene.combatContactMs({ action: { id: 'takedown', type: 'grapple' } })
+    };
+  });
+
+  expect(playback.enemyX).toBeLessThan(playback.playerX);
+  expect(playback.flipX).toBe(false);
+  expect(playback.frameWidth).toBe(128);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual({
+    jab: 'boxing',
+    frontkick: 'frontkick',
+    grip: 'clinch',
+    takedown: 'takedown',
+    sprawl: 'sprawl',
+    guard: 'guard',
+    escape: 'escape'
+  });
+  expect(playback.frontkickMs).toBe(300);
+  expect(playback.takedownMs).toBe(380);
+  [[4, 7], [8, 11], [12, 15], [16, 19], [20, 23], [24, 27], [28, 31], [32, 35]].forEach(([start, end]) => {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `E18 should play frames ${start}-${end}; sampled ${playback.frames.join(',')}`).toBe(true);
+  });
+  expect(Math.max(...playback.xPositions) - Math.min(...playback.xPositions)).toBeGreaterThan(60);
+  expect(violations, 'E18 hybrid motion should not emit warnings/errors').toEqual([]);
+});
+
+test('E18 front kick and takedown read as different contact approaches', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE18(page);
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.boss');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    window.__bossActor = { sprite: enemy, animKey: 'anim.fighter.enemy.boss', isAnimated: true, x: enemy.x, y: enemy.y, maxAdvance: 280, displayWidth: enemy.displayWidth || 128 };
+    window.__bossTarget = { sprite: player, x: player.x, y: player.y, displayWidth: player.displayWidth || 96 };
+    scene.playFighterAnim(window.__bossActor, 'frontkick', true);
+    scene.animateAttack(window.__bossActor, window.__bossTarget, 0, { contactMs: 300, hitstopMs: 70, shake: 0.2 });
+  });
+  await page.waitForFunction(() => {
+    const sprite = window.__bossActor?.sprite;
+    return Number(sprite?.frame?.name || 0) >= 12 && Number(sprite?.frame?.name || 0) <= 15;
+  }, null, { timeout: 2500 });
+  await page.waitForTimeout(220);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e18-frontkick-contact.png'), fullPage: true });
+  await page.waitForTimeout(720);
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    scene.playFighterAnim(window.__bossActor, 'takedown', true);
+    scene.animateAttack(window.__bossActor, window.__bossTarget, 0, { contactMs: 380, hitstopMs: 80, shake: 0.2 });
+  });
+  await page.waitForFunction(() => {
+    const sprite = window.__bossActor?.sprite;
+    return Number(sprite?.frame?.name || 0) >= 20 && Number(sprite?.frame?.name || 0) <= 23;
+  }, null, { timeout: 2500 });
+  await page.waitForTimeout(160);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e18-takedown-contact.png'), fullPage: true });
+  expect(violations, 'E18 contact screenshots should not emit warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
@@ -1668,5 +1802,35 @@ for (const viewport of VIEWPORTS) {
     expect(weapon.frameHeight).toBe(144);
     await expectScreenshotHasPixels(page, `e07-weapon-${viewport.name}.png`, `E07 weapon ${viewport.name}`);
     expect(violations, `E07 weapon ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E18 boss ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startE18(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.boxing.night',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.boss'
+    ], `E18 boss ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E18 boss ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const boss = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.boss');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return {
+        enemyX: enemy?.x || 0,
+        playerX: player?.x || 0,
+        flipX: Boolean(enemy?.flipX),
+        frameWidth: enemy?.frame?.width || 0,
+        frameHeight: enemy?.frame?.height || 0
+      };
+    });
+    expect(boss.enemyX).toBeLessThan(boss.playerX);
+    expect(boss.flipX).toBe(false);
+    expect(boss.frameWidth).toBe(128);
+    expect(boss.frameHeight).toBe(144);
+    await expectScreenshotHasPixels(page, `e18-boss-${viewport.name}.png`, `E18 boss ${viewport.name}`);
+    expect(violations, `E18 boss ${viewport.name} console warnings/errors`).toEqual([]);
   });
 }

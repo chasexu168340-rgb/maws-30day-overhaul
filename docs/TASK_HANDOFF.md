@@ -65,7 +65,10 @@ The player-facing target remains: the player clicks something, the game responds
 42. Successful takedowns coordinate attacker approach, defender fall, lateral ground travel, impact timing, and a later player `escape -> recover` animation.
 43. E07 now uses a final 28-frame, 128x144 Pixel V2 weapon strip and matching standee; the wider frame preserves the wooden-baton silhouette.
 44. E07 actor-specific semantics cover threat advance, swing/smash, miss recovery, hurt, and guarded disengage without changing boxing actions that share `straight`.
-45. Weapon contact is presented at 340ms and has desktop/mobile plus mid-strike browser evidence; E18 is the remaining legacy core fighter.
+45. Weapon contact is presented at 340ms and has desktop/mobile plus mid-strike browser evidence.
+46. E18 now uses a final 36-frame, 128x144 Pixel V2 hybrid strip and matching standee with distinct boxing, front-kick, clinch, takedown, sprawl, hurt, and escape rows.
+47. E18 front-kick contact is presented at 300ms and grappling contact remains 380ms; browser tests cover both contact approaches plus desktop/mobile combat.
+48. The generic E05 boxer and broader post-Day9 enemy set remain on legacy/fallback motion contracts.
 
 ## Deferred Larger Work
 
