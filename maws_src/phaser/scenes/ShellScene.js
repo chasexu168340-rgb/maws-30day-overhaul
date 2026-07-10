@@ -13,6 +13,7 @@ const BG_BY_LOC = {
   boxing: 'bg.boxing.day',
   wuguan: 'bg.wuguan.day',
   mma: 'bg.mma.day',
+  sanda_gym: { day: 'bg.sanda_gym.day', night: 'bg.sanda_gym.night' },
   gym: 'bg.gym.day',
   physio: 'bg.physio.day',
   metro_station: { day: 'bg.metro_station.day', night: 'bg.metro_station.night' },
@@ -26,12 +27,15 @@ const FIGHTER_BY_ENEMY = {
   E10: 'fighter.enemy.silent',
   E06: 'fighter.enemy.grappler',
   E07: 'fighter.enemy.weapon',
+  E08: 'fighter.enemy.sanda',
+  E19: 'fighter.enemy.sanda',
   E18: 'fighter.enemy.boss'
 };
 
 const ANIM_BY_FIGHTER = {
   'fighter.player': 'anim.fighter.player',
   'fighter.enemy.boxer': 'anim.fighter.enemy.boxer',
+  'fighter.enemy.sanda': 'anim.fighter.enemy.sanda',
   'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
   'fighter.enemy.silent': 'anim.fighter.enemy.silent',
@@ -171,7 +175,7 @@ export class ShellScene extends PhaserScene {
     if (combat.enemyId === 'E07') return 'bg.store.rain';
     if (combat.enemyId === 'E06') return 'bg.mma.night';
     if (combat.enemyId === 'E18') return 'bg.boxing.night';
-    return 'bg.park.day';
+    return fallbackBackgroundKey(this.model) || 'bg.park.day';
   }
 
   runtimeAssetKeys(model = {}) {
@@ -746,6 +750,15 @@ export class ShellScene extends PhaserScene {
       if (id === 'guard') return 'guard';
       if (['dodge', 'retreat'].includes(id)) return 'dodge';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.sanda') {
+      if (id === 'advance') return 'advance';
+      if (['jab', 'straight'].includes(id)) return 'boxing';
+      if (['lowkick', 'sanda_whip_kick'].includes(id)) return 'roundkick';
+      if (id === 'frontkick') return 'frontkick';
+      if (['sprawl', 'sanda_catch_throw'].includes(id)) return 'sprawl';
+      if (id === 'guard') return 'guard';
+      if (['dodge', 'retreat'].includes(id)) return 'dodge';
+    }
     if (actor?.animKey === 'anim.fighter.enemy.weapon') {
       if (id === 'advance') return 'threat';
       if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
@@ -773,6 +786,12 @@ export class ShellScene extends PhaserScene {
       if (id === 'jab') return 240;
       if (id === 'straight') return 280;
       if (id === 'lowkick') return 310;
+    }
+    if (['E08', 'E19'].includes(this.model?.combat?.enemyId)) {
+      if (['jab', 'straight'].includes(id)) return id === 'jab' ? 240 : 280;
+      if (['lowkick', 'sanda_whip_kick'].includes(id)) return 320;
+      if (id === 'frontkick') return 310;
+      if (id === 'sanda_catch_throw') return 360;
     }
     if (id === 'frontkick') return 300;
     return 260;

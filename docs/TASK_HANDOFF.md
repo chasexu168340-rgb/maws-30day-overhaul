@@ -75,6 +75,9 @@ The player-facing target remains: the player clicks something, the game responds
 52. E05 now uses a final 32-frame, 96x144 Pixel V2 sparring strip and matching standee with separate advance, jab, straight, low-kick, guard, dodge, hurt, and recovery rows.
 53. E05 actor semantics and presentation timings distinguish 240ms jab, 280ms straight, and 310ms low kick without changing combat formulas.
 54. Browser coverage now includes E05 authored-row playback plus desktop/mobile scale, orientation, asset decode, geometry, and screenshot evidence; the full Pixel V2 suite contains 50 passing tests.
+55. E08 and E19 now share a final 32-frame Pixel V2 sanda fighter with independent boxing, round-kick, front-kick, sprawl, dodge, hurt, and recovery rows.
+56. `bg.sanda_gym.day/night` are final 480x270, 32-color Pixel V2 stages; combat background routing now follows the current location unless an authored E06/E07/E18 override applies.
+57. Browser coverage includes sanda authored-row playback, day/night decode, desktop/mobile geometry and screenshots; the full Pixel V2 suite contains 53 passing tests.
 
 ## Deferred Larger Work
 

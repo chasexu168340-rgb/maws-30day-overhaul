@@ -44,6 +44,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.park.night',
   'backgrounds:bg.boxing.day',
   'backgrounds:bg.boxing.night',
+  'backgrounds:bg.sanda_gym.day',
+  'backgrounds:bg.sanda_gym.night',
   'backgrounds:bg.street.day',
   'backgrounds:bg.street.night',
   'characters:fighter.player',
@@ -237,6 +239,19 @@ async function startE05(page) {
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: 'E05' });
   });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startSanda(page, enemyId = 'E19') {
+  await page.evaluate((id) => {
+    const store = window.MAWS_STORE;
+    store.state.day = 20;
+    store.state.time = 960;
+    store.state.loc = 'sanda_gym';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: id });
+  }, enemyId);
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
 }
@@ -534,6 +549,8 @@ test('Day 1-9 pixel_v2 background variants decode in the browser', async ({ page
     'backgrounds:bg.park.night',
     'backgrounds:bg.boxing.day',
     'backgrounds:bg.boxing.night',
+    'backgrounds:bg.sanda_gym.day',
+    'backgrounds:bg.sanda_gym.night',
     'backgrounds:bg.street.day',
     'backgrounds:bg.street.night'
   ], 'Day 1-9 pixel_v2 backgrounds');
@@ -1102,6 +1119,51 @@ test('pixel_v2 E05 sparring partner uses distinct boxing, kick, guard, dodge, an
   }
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e05-sparring-motion-desktop.png'), fullPage: true });
   expect(violations, 'E05 sparring motion should not emit warnings/errors').toEqual([]);
+});
+
+test('pixel_v2 E08 and E19 sanda fighter uses distinct boxing, kick, sprawl, dodge, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startSanda(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.sanda');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.sanda', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 520));
+    };
+    for (const name of ['advance', 'boxing', 'roundkick', 'frontkick', 'sprawl', 'dodge', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticIds = ['jab', 'sanda_whip_kick', 'frontkick', 'sanda_catch_throw', 'dodge'];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticIds.map((id) => scene.fighterActionAnimName({ action: { id, type: id === 'sanda_catch_throw' ? 'grapple' : 'strike' } }, actor)),
+      timings: semanticIds.slice(0, 4).map((id) => scene.combatContactMs({ action: { id, type: id === 'sanda_catch_throw' ? 'grapple' : 'strike' } }))
+    };
+  });
+
+  expect(playback.enemyX, 'sanda fighter should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'sanda source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['boxing', 'roundkick', 'frontkick', 'sprawl', 'dodge']);
+  expect(playback.timings).toEqual([240, 320, 310, 380]);
+  for (const [start, end, label] of [[4, 7, 'advance'], [8, 11, 'boxing'], [12, 15, 'round kick'], [16, 19, 'front kick'], [20, 23, 'sprawl'], [24, 27, 'dodge'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'sanda-motion-desktop.png'), fullPage: true });
+  expect(violations, 'sanda motion should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape motion', async ({ page }) => {
@@ -1811,6 +1873,28 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e05-sparring-${viewport.name}.png`, `E05 sparring ${viewport.name}`);
     expect(violations, `E05 sparring ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E19 sanda ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startSanda(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.sanda_gym.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.sanda'
+    ], `E19 sanda ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E19 sanda ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.sanda');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e19-sanda-${viewport.name}.png`, `E19 sanda ${viewport.name}`);
+    expect(violations, `E19 sanda ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 E00 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

@@ -300,6 +300,22 @@ const BOXER_MOTION_32 = Object.freeze({
   hurt: { start: 28, end: 31, frameRate: 7, repeat: 0 }
 });
 
+const SANDA_MOTION_32 = Object.freeze({
+  idle: { start: 0, end: 3, frameRate: 5, repeat: -1 },
+  advance: { start: 4, end: 7, frameRate: 7, repeat: 0 },
+  attack: { start: 8, end: 11, frameRate: 8, repeat: 0 },
+  boxing: { start: 8, end: 11, frameRate: 8, repeat: 0 },
+  roundkick: { start: 12, end: 15, frameRate: 7, repeat: 0 },
+  heavy: { start: 12, end: 15, frameRate: 7, repeat: 0 },
+  frontkick: { start: 16, end: 19, frameRate: 7, repeat: 0 },
+  vfx: { start: 16, end: 19, frameRate: 7, repeat: 0 },
+  sprawl: { start: 20, end: 23, frameRate: 6, repeat: 0 },
+  guard: { start: 0, end: 3, frameRate: 5, repeat: 0 },
+  dodge: { start: 24, end: 27, frameRate: 7, repeat: 0 },
+  retreat: { start: 24, end: 27, frameRate: 7, repeat: 0 },
+  hurt: { start: 28, end: 31, frameRate: 7, repeat: 0 }
+});
+
 export const ASSET_MANIFEST = {
   backgrounds: {
     'bg.city.map.day': pixelV2Background('bg_city_map_day.png', ['day', 'shenzhen', 'city-map']),
@@ -318,6 +334,8 @@ export const ASSET_MANIFEST = {
     'bg.park.night': pixelV2Background('bg_park_night.png', ['park', 'night']),
     'bg.boxing.day': pixelV2Background('bg_boxing_day.png', ['boxing', 'day']),
     'bg.boxing.night': pixelV2Background('bg_boxing_night.png', ['boxing', 'night']),
+    'bg.sanda_gym.day': pixelV2Background('bg_sanda_gym_day.png', ['sanda_gym', 'day']),
+    'bg.sanda_gym.night': pixelV2Background('bg_sanda_gym_night.png', ['sanda_gym', 'night']),
     'bg.wuguan.day': shenzhenDay('bg_wuguan_sun.png', ['wuguan']),
     'bg.wuguan.night': pixelBackground('bg_wuguan_day.png', ['wuguan', 'night', 'fallback']),
     'bg.mma.day': shenzhenDay('bg_mma_sun.png', ['mma']),
@@ -333,6 +351,7 @@ export const ASSET_MANIFEST = {
   characters: {
     'fighter.player': pixelV2Character('fighter_player.png', ['player', 'standing', 'scene']),
     'fighter.enemy.boxer': pixelV2Character('fighter_enemy_boxer.png', ['enemy', 'boxing', 'sparring', 'e05']),
+    'fighter.enemy.sanda': pixelV2Character('fighter_enemy_sanda.png', ['enemy', 'sanda', 'e08', 'e19']),
     'fighter.enemy.untrained': pixelV2Character('fighter_enemy_untrained.png', ['enemy', 'untrained', 'day3', 'e00']),
     'fighter.enemy.beginner': pixelV2Character('fighter_enemy_beginner.png', ['enemy', 'boxing', 'beginner', 'day5']),
     'fighter.enemy.silent': pixelV2Character('fighter_enemy_silent.png', ['enemy', 'boxing', 'silent', 'day8']),
@@ -352,6 +371,7 @@ export const ASSET_MANIFEST = {
   sprites: {
     'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player_v3.png', 'fighter.player', ['player', 'full-motion', 'ground-reaction'], 1.28, PLAYER_MOTION_36),
     'anim.fighter.enemy.boxer': pixelV2FighterSprite('anim_fighter_enemy_boxer_v3.png', 'fighter.enemy.boxer', ['enemy', 'boxing', 'sparring', 'e05', 'full-motion'], 1.2, BOXER_MOTION_32),
+    'anim.fighter.enemy.sanda': pixelV2FighterSprite('anim_fighter_enemy_sanda_v3.png', 'fighter.enemy.sanda', ['enemy', 'sanda', 'e08', 'e19', 'full-motion'], 1.18, SANDA_MOTION_32),
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained_v3.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00', 'full-motion'], 1.1, FULL_MOTION_28),
     'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner_v3.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5', 'full-motion'], 1, FULL_MOTION_28),
     'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent_v3.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8', 'full-motion'], 0.98, FULL_MOTION_28),
