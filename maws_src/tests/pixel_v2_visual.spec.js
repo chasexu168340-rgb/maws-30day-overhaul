@@ -241,6 +241,19 @@ async function startE06(page) {
   await page.waitForTimeout(900);
 }
 
+async function startE07(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 18;
+    store.state.time = 1140;
+    store.state.loc = 'store';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E07' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
 async function startDay3FunTarget(page) {
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
@@ -1179,6 +1192,137 @@ test('successful E06 takedown drives paired player fall and technical recovery',
   expect(violations, 'paired takedown presentation should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E07 weapon threat uses readable weapon lines and miss recovery', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE07(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemySprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.weapon');
+    const playerSprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = {
+      sprite: enemySprite,
+      animKey: 'anim.fighter.enemy.weapon',
+      isAnimated: true,
+      x: enemySprite?.x || 0,
+      y: enemySprite?.y || 0,
+      maxAdvance: 280,
+      displayWidth: enemySprite?.displayWidth || 128
+    };
+    const target = {
+      sprite: playerSprite,
+      animKey: 'anim.fighter.player',
+      isAnimated: true,
+      x: playerSprite?.x || 0,
+      y: playerSprite?.y || 0,
+      maxAdvance: 260,
+      displayWidth: playerSprite?.displayWidth || 96
+    };
+    const frames = [];
+    const xPositions = [];
+    const timer = setInterval(() => {
+      if (enemySprite?.frame?.name !== undefined) {
+        frames.push(Number(enemySprite.frame.name));
+        xPositions.push(Number(enemySprite.x || 0));
+      }
+    }, 24);
+    scene.playFighterAnim(actor, 'threat', true);
+    await new Promise((resolve) => setTimeout(resolve, 760));
+    const missStep = {
+      actor: 'enemy',
+      action: { id: 'straight', type: 'strike' },
+      result: { hit: false, response: { intent: 'weapon' } },
+      fx: [{
+        type: 'miss',
+        actor: 'enemy',
+        fromSide: 'enemy',
+        toSide: 'player',
+        skillId: 'straight',
+        label: 'MISS',
+        hitstopMs: 0,
+        shake: 0
+      }]
+    };
+    scene.playCombatStepFx(missStep, { enemy: actor, player: target }, 0, false);
+    await new Promise((resolve) => setTimeout(resolve, 1180));
+    scene.playFighterAnim(actor, 'disengage', true);
+    await new Promise((resolve) => setTimeout(resolve, 760));
+    clearInterval(timer);
+    return {
+      frames,
+      xPositions,
+      enemyX: enemySprite?.x || 0,
+      playerX: playerSprite?.x || 0,
+      enemyFlipX: Boolean(enemySprite?.flipX),
+      frameWidth: enemySprite?.frame?.width || 0,
+      frameHeight: enemySprite?.frame?.height || 0,
+      contactMs: scene.combatContactMs(missStep, missStep.fx[0]),
+      semantics: {
+        advance: scene.fighterActionAnimName({ action: { id: 'advance', type: 'footwork' } }, actor),
+        strike: scene.fighterActionAnimName(missStep, actor),
+        retreat: scene.fighterActionAnimName({ action: { id: 'retreat', type: 'footwork' } }, actor)
+      }
+    };
+  });
+
+  expect(playback.enemyX).toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'left-side E07 should face screen-right').toBe(false);
+  expect(playback.frameWidth, 'weapon frames need extra horizontal room').toBe(128);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.contactMs, 'weapon contact should remain readable').toBe(340);
+  expect(playback.semantics).toEqual({ advance: 'threat', strike: 'smash', retreat: 'disengage' });
+  expect(playback.frames.some((frame) => frame >= 4 && frame <= 7), `weapon threat frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 12 && frame <= 15), `weapon strike frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 16 && frame <= 19), `weapon miss recovery frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 24 && frame <= 27), `weapon disengage frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(Math.max(...playback.xPositions) - Math.min(...playback.xPositions), 'weapon attack should travel without swinging in place').toBeGreaterThan(60);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e07-weapon-motion-desktop.png'), fullPage: true });
+  expect(violations, 'E07 weapon motion should not emit warnings/errors').toEqual([]);
+});
+
+test('E07 weapon strike remains readable at the contact approach frame', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE07(page);
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemySprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.weapon');
+    const playerSprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = {
+      sprite: enemySprite,
+      animKey: 'anim.fighter.enemy.weapon',
+      isAnimated: true,
+      x: enemySprite?.x || 0,
+      y: enemySprite?.y || 0,
+      maxAdvance: 280,
+      displayWidth: enemySprite?.displayWidth || 128
+    };
+    const target = {
+      sprite: playerSprite,
+      x: playerSprite?.x || 0,
+      y: playerSprite?.y || 0,
+      displayWidth: playerSprite?.displayWidth || 96
+    };
+    window.__weaponStrikeX = [];
+    window.__weaponStrikeFrames = [];
+    window.__weaponStrikeTimer = setInterval(() => {
+      window.__weaponStrikeX.push(Number(enemySprite?.x || 0));
+      window.__weaponStrikeFrames.push(Number(enemySprite?.frame?.name || 0));
+    }, 20);
+    scene.playFighterAnim(actor, 'smash', true);
+    scene.animateAttack(actor, target, 0, { contactMs: 340, hitstopMs: 90, shake: 0.25 });
+  });
+  await page.waitForFunction(() => (window.__weaponStrikeFrames || []).some((frame) => frame >= 12 && frame <= 15), null, { timeout: 2500 });
+  await page.waitForTimeout(150);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e07-weapon-strike-contact.png'), fullPage: true });
+  const motion = await page.evaluate(() => {
+    clearInterval(window.__weaponStrikeTimer);
+    return { frames: window.__weaponStrikeFrames || [], x: window.__weaponStrikeX || [] };
+  });
+  expect(motion.frames.some((frame) => frame >= 12 && frame <= 15)).toBe(true);
+  expect(Math.max(...motion.x) - Math.min(...motion.x)).toBeGreaterThan(45);
+  expect(violations, 'E07 strike contact frame should not emit warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
@@ -1494,5 +1638,35 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFrameHeight).toBe(144);
     await expectScreenshotHasPixels(page, `e06-grappler-${viewport.name}.png`, `E06 grappler ${viewport.name}`);
     expect(violations, `E06 grappler ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E07 weapon ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startE07(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.store.rain',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.weapon'
+    ], `E07 weapon ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E07 weapon ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const weapon = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.weapon');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return {
+        enemyX: enemy?.x || 0,
+        playerX: player?.x || 0,
+        flipX: Boolean(enemy?.flipX),
+        frameWidth: enemy?.frame?.width || 0,
+        frameHeight: enemy?.frame?.height || 0
+      };
+    });
+    expect(weapon.enemyX).toBeLessThan(weapon.playerX);
+    expect(weapon.flipX).toBe(false);
+    expect(weapon.frameWidth).toBe(128);
+    expect(weapon.frameHeight).toBe(144);
+    await expectScreenshotHasPixels(page, `e07-weapon-${viewport.name}.png`, `E07 weapon ${viewport.name}`);
+    expect(violations, `E07 weapon ${viewport.name} console warnings/errors`).toEqual([]);
   });
 }

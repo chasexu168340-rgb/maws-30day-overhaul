@@ -603,7 +603,11 @@ export class ShellScene extends PhaserScene {
       escape: 'retreat',
       fall: 'hurt',
       grounded: 'hurt',
-      recover: 'retreat'
+      recover: 'retreat',
+      threat: 'advance',
+      swing: 'attack',
+      smash: 'heavy',
+      disengage: 'retreat'
     })[name] || name;
     const key = this.anims?.exists?.(requestedKey) ? requestedKey : `${actor.animKey}.${fallbackName}`;
     if (!this.anims?.exists?.(key)) return;
@@ -696,9 +700,15 @@ export class ShellScene extends PhaserScene {
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
         const semanticAnim = this.fighterActionAnimName(step, actor);
-        this.delayedFighterAnim(actor, fx.type === 'guard' && semanticAnim !== 'idle' ? semanticAnim : fx.type === 'guard' ? 'guard' : 'attack', delay);
+        const readAnim = fx.type === 'guard'
+          ? (semanticAnim !== 'idle' ? semanticAnim : 'guard')
+          : (semanticAnim !== 'idle' ? semanticAnim : 'attack');
+        this.delayedFighterAnim(actor, readAnim, delay);
         const opposingTarget = fighters[actorSide === 'player' ? 'enemy' : 'player'] || target;
-        if (fx.type === 'miss') this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0, contactMs });
+        if (fx.type === 'miss') {
+          this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0, contactMs });
+          if (actor?.animKey === 'anim.fighter.enemy.weapon') this.delayedFighterAnim(actor, 'recover', delay + contactMs);
+        }
         this.animateStep(actor, opposingTarget, delay, fx);
       }
       this.playCombatSfx(fx, impactDelay);
@@ -728,6 +738,11 @@ export class ShellScene extends PhaserScene {
   fighterActionAnimName(step, actor) {
     const id = step.action?.id || '';
     if (actor?.animKey === 'anim.fighter.player' && id === 'escape') return 'recover';
+    if (actor?.animKey === 'anim.fighter.enemy.weapon') {
+      if (id === 'advance') return 'threat';
+      if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
+      if (['retreat', 'dirtyescape'].includes(id)) return 'disengage';
+    }
     return this.actionAnimName(step);
   }
 
@@ -735,6 +750,7 @@ export class ShellScene extends PhaserScene {
     const id = fx.skillId || step?.action?.id || '';
     const type = step?.action?.type || '';
     if (['grip', 'takedown', 'sidecontrol'].includes(id) || ['grapple', 'ground'].includes(type)) return 380;
+    if (step?.result?.response?.intent === 'weapon') return 340;
     return 260;
   }
 

@@ -63,6 +63,9 @@ The player-facing target remains: the player clicks something, the game responds
 40. `slice_combat_motion_atlas.ps1` accepts optional per-frame target heights so standing and ground poses can share one 96x144 contract without shrinking the whole fighter.
 41. The player combat strip now has 36 frames: the original 28 plus takedown fall frames 28-31 and technical recovery frames 32-35.
 42. Successful takedowns coordinate attacker approach, defender fall, lateral ground travel, impact timing, and a later player `escape -> recover` animation.
+43. E07 now uses a final 28-frame, 128x144 Pixel V2 weapon strip and matching standee; the wider frame preserves the wooden-baton silhouette.
+44. E07 actor-specific semantics cover threat advance, swing/smash, miss recovery, hurt, and guarded disengage without changing boxing actions that share `straight`.
+45. Weapon contact is presented at 340ms and has desktop/mobile plus mid-strike browser evidence; E18 is the remaining legacy core fighter.
 
 ## Deferred Larger Work
 
