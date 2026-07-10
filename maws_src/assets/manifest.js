@@ -87,6 +87,15 @@ const pixelBackground = (file, tags = []) => entry(`assets/imagegen_pixel/backgr
   tags: [...tags, 'pixel']
 });
 
+const pixelV2Background = (file, tags = []) => entry(`assets/pixel_v2/backgrounds/${file}`, {
+  w: 480,
+  h: 270,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  tags: [...tags, 'pixel-v2', 'pixel']
+});
+
 const cleanCharacter = (file, tags = []) => entry(`assets/imagegen_pixel/characters_clean/${file}`, {
   w: 512,
   h: 768,
@@ -131,7 +140,7 @@ export const ASSET_MANIFEST = {
     'bg.worksite.day': shenzhenDay('bg_worksite_sun.png', ['worksite']),
     'bg.worksite.night': pixelBackground('bg_worksite_dusk.png', ['worksite', 'night', 'dusk']),
     'bg.worksite.dusk': pixelBackground('bg_worksite_dusk.png', ['worksite', 'dusk']),
-    'bg.park.day': shenzhenDay('bg_park_sun.png', ['park']),
+    'bg.park.day': pixelV2Background('bg_park_day.png', ['park', 'day']),
     'bg.park.night': pixelBackground('bg_park_day.png', ['park', 'night', 'fallback']),
     'bg.boxing.day': shenzhenDay('bg_boxing_sun.png', ['boxing']),
     'bg.boxing.night': pixelBackground('bg_boxing_night.png', ['boxing', 'night']),

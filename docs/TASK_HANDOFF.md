@@ -27,8 +27,9 @@ The player-facing target remains: the player clicks something, the game responds
 4. Combat fighters now use bottom anchors/contact shadows, and Phaser consumes the structured hit-stop, shake, palette-flash, and pixel-VFX metadata without warnings.
 5. Combat HUD presentation is square, hard-edged, and more compact on mobile; Day 8 desktop/mobile screenshots were reviewed.
 6. Generate images only in the current Codex session; do not use CLI workers for image content.
-7. Next production batch: clean park background, Lu/E10 reference, then reviewed runtime integration under `assets/pixel_v2/`.
-8. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+7. `bg.park.day` is now a reviewed 480x270/32-color/45KB `pixel_v2` final asset and passes Day 8 desktop/mobile runtime screenshots.
+8. Next production batch: Lu Xiaoxian 16-frame action master, then E00/E01/E10 strips with exact 96x144 frames and zero bottom-margin drift.
+9. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
