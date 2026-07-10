@@ -799,7 +799,10 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
     return `
       <article class="maws-skill combat-card type-${esc(skill.style || 'neutral')} ${skill.selected ? 'active' : ''} ${disabled ? 'disabled' : ''}" ${cardAttrs} tabindex="0">
         <span class="maws-combat-card-no">${esc(no)}</span>
-        <header><strong>${esc(skill.name)}</strong><small>${skill.selected ? '已入队' : disabled ? '不可用' : esc(skill.type)}</small></header>
+        <div class="maws-combat-card-face">
+          ${assetIcon(skill.assetKey, skill.icon, 'maws-combat-card-art')}
+          <header><strong>${esc(skill.name)}</strong><small>${skill.selected ? '已入队' : disabled ? '不可用' : esc(skill.type)}</small></header>
+        </div>
         <p class="maws-combat-card-use">${useLine}</p>
         ${perkNote}
         <dl class="maws-combat-key">
@@ -934,6 +937,16 @@ function renderSkills(model) {
   `;
 }
 
+function itemPreparationSummary(item = {}) {
+  const labels = { sp: '体力', hp: '健康', fatigue: '疲劳', morale: '士气', injury: '伤病回合' };
+  const gain = Object.entries(item.gain || {}).map(([key, value]) => {
+    const amount = Number(value || 0);
+    return `${labels[key] || key}${amount > 0 ? '+' : ''}${amount}`;
+  });
+  if (item.prep?.label) gain.push(`下场：${item.prep.label}`);
+  return gain;
+}
+
 function renderBag(model) {
   const slots = (model.equipmentSlots || []).map((slot) => `
     <article class="maws-equip-slot ${slot.item ? 'filled' : ''}">
@@ -946,10 +959,16 @@ function renderBag(model) {
   `).join('');
   const items = (model.inventory || []).map((entry) => `
     <article class="maws-item">
-      <strong>${assetIcon(entry.item?.assetKey, entry.item?.icon)} ${esc(entry.item?.name)} x${esc(entry.count)}</strong>
+      <header class="maws-item-header">
+        <span class="maws-item-visual">${assetIcon(entry.item?.assetKey, entry.item?.icon)}</span>
+        <span><strong>${esc(entry.item?.name)}</strong><small>持有 ${esc(entry.count)}</small></span>
+      </header>
       <p>${esc(entry.item?.desc)}</p>
       ${entry.item?.eff ? effectChips(entry.item.eff) : ''}
-      ${btn(entry.item?.type === 'equipment' ? '装备' : '使用', 'useItem', { id: entry.id }, 'primary')}
+      ${summaryChips(itemPreparationSummary(entry.item), entry.item?.prep ? 'time' : 'gain')}
+      ${entry.item?.type === 'ingredient'
+        ? btn('回家下厨', 'toast', { text: '食材要回出租屋做成热饭，别直接生啃。' }, 'ghost')
+        : btn(entry.item?.type === 'equipment' ? '装备' : '使用', 'useItem', { id: entry.id }, 'primary')}
     </article>
   `).join('') || '<p class="maws-empty">背包里没什么能派上用场的东西。</p>';
   return `
@@ -963,7 +982,15 @@ function renderBag(model) {
 
 function renderShop(model) {
   const items = (model.shopItems || []).map((item) => `
-    <article class="maws-item"><strong>${assetIcon(item.assetKey, item.icon)} ${esc(item.name)}</strong><p>${esc(item.desc)}</p><small>￥${esc(item.price)} · 已有 ${esc(item.owned)}</small>${btn('购买', 'buyItem', { id: item.id }, item.price > model.player.money ? 'disabled' : 'primary')}</article>
+    <article class="maws-item">
+      <header class="maws-item-header">
+        <span class="maws-item-visual">${assetIcon(item.assetKey, item.icon)}</span>
+        <span><strong>${esc(item.name)}</strong><small>${esc(item.cat || '物品')} · 已有 ${esc(item.owned)}</small></span>
+      </header>
+      <p>${esc(item.desc)}</p>
+      ${summaryChips(itemPreparationSummary(item), item.prep ? 'time' : 'gain')}
+      <footer><b>￥${esc(item.price)}</b>${btn('购买', 'buyItem', { id: item.id }, item.price > model.player.money ? 'disabled' : 'primary')}</footer>
+    </article>
   `).join('');
   return `<section class="maws-panel maws-ledger-page maws-shop-board"><header class="maws-page-heading"><div><small>便利店货架</small><h2>今天买什么</h2></div><strong>现金 ￥${esc(model.player?.money || 0)}</strong><p>先补短板，别把钱花在玄学上。</p></header><div class="maws-card-grid">${items}</div></section>`;
 }
@@ -975,9 +1002,18 @@ function npcActionId(model, npcId) {
 function renderNpc(model) {
   const npcs = (model.npcs || []).map((npc) => {
     const actionId = npcActionId(model, npc.id);
-    return `<article class="maws-item"><strong>${esc(npc.icon)} ${esc(npc.name)}</strong><p>关系 ${esc(npc.relation)}</p>${btn(actionId ? '聊几句' : '去对应地点', actionId ? 'doAction' : 'toast', actionId ? { id: actionId } : { text: '去对应地点更容易聊到重点' }, actionId ? 'primary' : 'ghost')}</article>`;
+    return `
+      <article class="maws-npc-ledger-row">
+        ${assetIcon(`portrait.${npc.id}`, npc.icon, 'maws-npc-ledger-portrait')}
+        <div><strong>${esc(npc.name)}</strong><span>关系 ${esc(npc.relation)}</span><p>${esc(actionId ? '今天能聊到一点真东西。' : '换个地点，话题才接得上。')}</p></div>
+        ${btn(actionId ? '聊几句' : '查看去向', actionId ? 'doAction' : 'toast', actionId ? { id: actionId } : { text: '去对应地点更容易聊到重点' }, actionId ? 'primary' : 'ghost')}
+      </article>`;
   }).join('');
-  return `<section class="maws-panel"><div class="maws-panel-title"><h2>NPC</h2><p>关系对话仍走现有行动系统。</p></div><div class="maws-card-grid compact">${npcs}</div></section>`;
+  return `
+    <section class="maws-panel maws-ledger-page maws-npc-ledger">
+      <header class="maws-page-heading"><div><small>城市关系</small><h2>今天找谁说话</h2></div><p>关系不是名单，是会在战斗、补给和剧情里回来的选择。</p></header>
+      <section class="maws-ledger-band"><header><h3>认识的人</h3><span>${esc((model.npcs || []).length)} 人</span></header><div class="maws-npc-ledger-list">${npcs || '<p class="maws-empty">这座城还没有人记住你。</p>'}</div></section>
+    </section>`;
 }
 
 function renderLog(model) {

@@ -546,9 +546,12 @@ export class ShellScene extends PhaserScene {
     if (animKey && this.hasTexture(animKey)) {
       this.ensureFighterAnimations(animKey);
       const displayScale = Math.max(0.8, Math.min(1.5, Number(ASSET_MANIFEST.sprites?.[animKey]?.displayScale || 1)));
-      const displayWidth = Math.round(w * displayScale);
       const displayHeight = Math.round(h * displayScale);
-      const sprite = this.add.sprite(x, y, animKey, 0).setOrigin(0.5, 1).setDisplaySize(displayWidth, displayHeight).setDepth(18).setFlipX(flipX);
+      const frameWidth = Number(ASSET_MANIFEST.sprites?.[animKey]?.frameWidth || 96);
+      const frameHeight = Number(ASSET_MANIFEST.sprites?.[animKey]?.frameHeight || 144);
+      const uniformScale = displayHeight / Math.max(1, frameHeight);
+      const displayWidth = Math.round(frameWidth * uniformScale);
+      const sprite = this.add.sprite(x, y, animKey, 0).setOrigin(0.5, 1).setScale(uniformScale).setDepth(18).setFlipX(flipX);
       this.track(sprite);
       this.playFighterAnim({ sprite, animKey }, 'idle', false);
       return { sprite, animKey, imageKey, isAnimated: true, displayWidth, displayHeight };
@@ -580,7 +583,9 @@ export class ShellScene extends PhaserScene {
   playFighterAnim(actor, name, restart = true) {
     const sprite = actor?.sprite;
     if (!actor?.animKey || !sprite?.active || !sprite.scene || typeof sprite.play !== 'function') return;
-    const key = `${actor.animKey}.${name}`;
+    const requestedKey = `${actor.animKey}.${name}`;
+    const fallbackName = ['guard', 'retreat'].includes(name) ? 'vfx' : name;
+    const key = this.anims?.exists?.(requestedKey) ? requestedKey : `${actor.animKey}.${fallbackName}`;
     if (!this.anims?.exists?.(key)) return;
     sprite.play(key, restart);
     if (name !== 'idle' && sprite.once) {
@@ -658,7 +663,8 @@ export class ShellScene extends PhaserScene {
         this.animateAttack(actor, target, delay, fx);
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
-        this.delayedFighterAnim(actor, fx.type === 'guard' ? 'vfx' : 'attack', delay);
+        const semanticAnim = this.actionAnimName(step);
+        this.delayedFighterAnim(actor, fx.type === 'guard' && semanticAnim !== 'idle' ? semanticAnim : fx.type === 'guard' ? 'guard' : 'attack', delay);
         this.animateStep(actor, target, delay, fx);
       }
       this.playImpactPresentation(fx, target, delay, mobile);
@@ -673,7 +679,9 @@ export class ShellScene extends PhaserScene {
     const type = step.action?.type;
     const id = step.action?.id || '';
     if (type === 'strike' || type === 'grapple' || ['wild_swing', 'mystic', 'push_away', 'jab', 'straight', 'lowkick', 'takedown', 'palm', 'sidecontrol'].includes(id)) return 'attack';
-    if (['guard', 'dodge', 'sprawl', 'advance', 'retreat', 'escape', 'dirtyescape', 'rest'].includes(id)) return 'vfx';
+    if (['guard', 'sprawl', 'rest'].includes(id)) return 'guard';
+    if (['retreat', 'dodge', 'escape', 'dirtyescape'].includes(id)) return 'retreat';
+    if (id === 'advance') return 'attack';
     return 'idle';
   }
 

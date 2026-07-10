@@ -87,6 +87,12 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'items:item.shoes',
   'items:item.mouth',
   'items:item.notebook',
+  'items:item.egg',
+  'items:item.greens',
+  'items:item.noodles',
+  'items:item.home_meal',
+  'items:item.ice_pack',
+  'items:item.pain_gel',
   'skillCards:skill.wild_swing',
   'skillCards:skill.push_away',
   'skillCards:skill.mystic',
@@ -646,6 +652,7 @@ for (const viewport of VIEWPORTS) {
       { id: 'skills', selector: '.maws-skillbook-page', label: '招式簿' },
       { id: 'bag', selector: '.maws-bag-ledger', label: '装备架与背包' },
       { id: 'shop', selector: '.maws-shop-board', label: '今天买什么' },
+      { id: 'npc', selector: '.maws-npc-ledger', label: '今天找谁说话' },
       { id: 'log', selector: '.maws-logbook', label: '行动与记忆' }
     ];
 
@@ -662,6 +669,20 @@ for (const viewport of VIEWPORTS) {
           .map((button) => ({ text: button.textContent?.trim() || '', height: button.getBoundingClientRect().height }))
           .filter((button) => button.height < 43.5));
         expect(shortTargets, `${tab.id} visible actions should retain 44px mobile targets`).toEqual([]);
+      }
+      if (tab.id === 'bag' || tab.id === 'shop') {
+        const itemHierarchy = await surface.locator('.maws-item').first().evaluate((card) => {
+          const visual = card.querySelector('.maws-item-visual');
+          const title = card.querySelector('.maws-item-header strong');
+          return {
+            visualWidth: visual?.getBoundingClientRect().width || 0,
+            visualHeight: visual?.getBoundingClientRect().height || 0,
+            titleFont: Number.parseFloat(getComputedStyle(title).fontSize || '0')
+          };
+        });
+        expect(itemHierarchy.visualWidth, `${tab.id} item art should be a primary visual`).toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 55 : 63);
+        expect(itemHierarchy.visualHeight, `${tab.id} item art should keep a square pixel frame`).toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 55 : 63);
+        expect(itemHierarchy.titleFont, `${tab.id} item title should not overpower its art`).toBeLessThanOrEqual(12);
       }
       await expectNoHorizontalOverflow(page, `${viewport.name} ${tab.id} ledger`);
       await expectScreenshotHasPixels(page, `ledger-${tab.id}-${viewport.name}.png`, `${tab.id} ${viewport.name} ledger`);
@@ -715,6 +736,53 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
   expect(new Set(samples).size, 'player sprite should advance beyond a static frame').toBeGreaterThan(2);
   expect(samples.some((frame) => frame >= 4 && frame <= 7), `player sprite should enter the pixel_v2 attack range; sampled ${samples.join(',')}; steps ${JSON.stringify(playback.steps)}`).toBe(true);
   expect(violations, 'player animation should not emit warnings/errors').toEqual([]);
+});
+
+test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay5(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const game = window.MAWS_GAME;
+    window.__pixelV2DefenseFrames = [];
+    window.__pixelV2DefenseTimer = setInterval(() => {
+      const scene = game.scene.getScene('ShellScene');
+      const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      if (sprite?.frame?.name !== undefined) window.__pixelV2DefenseFrames.push(Number(sprite.frame.name));
+    }, 24);
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'guard' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+
+  await page.waitForFunction(() => (window.__pixelV2DefenseFrames || []).some((frame) => frame >= 16 && frame <= 19), null, { timeout: 3000 });
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'player-guard-desktop.png'), fullPage: true });
+  await page.waitForTimeout(900);
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'retreat' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+  await page.waitForFunction(() => (window.__pixelV2DefenseFrames || []).some((frame) => frame >= 20 && frame <= 23), null, { timeout: 3000 });
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'player-retreat-desktop.png'), fullPage: true });
+
+  const playback = await page.evaluate(() => {
+    clearInterval(window.__pixelV2DefenseTimer);
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    return {
+      frames: window.__pixelV2DefenseFrames || [],
+      scaleX: Math.abs(sprite?.scaleX || 0),
+      scaleY: Math.abs(sprite?.scaleY || 0)
+    };
+  });
+
+  expect(playback.frames.some((frame) => frame >= 16 && frame <= 19), `guard frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 20 && frame <= 23), `retreat frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(Math.abs(playback.scaleX - playback.scaleY), 'pixel fighters should use uniform scale without width distortion').toBeLessThan(0.001);
+  expect(violations, 'semantic player animations should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 untrained target strip advances through real attack frames in Phaser', async ({ page }) => {
@@ -899,6 +967,19 @@ for (const viewport of VIEWPORTS) {
     }
     await expectScreenshotHasPixels(page, `day1-${viewport.name}.png`, `Day 1 ${viewport.name}`);
 
+    await page.locator('.maws-scene-character:has(img[src*="scene_npc_fatty.png"])').click();
+    await expect(page.locator('.maws-npc-menu')).toBeVisible();
+    const npcMenuStyle = await page.locator('.maws-npc-menu').evaluate((node) => ({
+      borderImage: getComputedStyle(node).borderImageSource,
+      backdrop: getComputedStyle(node).backdropFilter,
+      radius: getComputedStyle(node).borderRadius
+    }));
+    expect(npcMenuStyle.borderImage, 'NPC interaction should use the bitmap panel frame').toContain('ui_frame_panel.png');
+    expect(npcMenuStyle.backdrop, 'NPC interaction should not use blurred web glass').toBe('none');
+    expect(npcMenuStyle.radius, 'NPC interaction should keep hard pixel corners').toBe('0px');
+    await expectScreenshotHasPixels(page, `day1-npc-menu-${viewport.name}.png`, `Day 1 NPC menu ${viewport.name}`);
+    await page.locator('button[data-action="closeInteractionMenu"]').click();
+
     await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'startMainEvent' }));
     await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_player.png"]')).toBeVisible();
     const dialogueStyle = await page.evaluate(() => {
@@ -1002,6 +1083,15 @@ for (const viewport of VIEWPORTS) {
     if (viewport.name === 'mobile') {
       expect(geometry.visibleMarkers, 'mobile map should hide locked-node clutter').toBeLessThanOrEqual(5);
     }
+    const firstMarker = page.locator('.maws-city-marker:not(.locked):not(.disabled)').first();
+    await firstMarker.hover();
+    const markerTip = firstMarker.locator('.maws-city-marker-tip');
+    const markerTipStyle = await markerTip.evaluate((node) => ({
+      borderImage: getComputedStyle(node).borderImageSource,
+      radius: getComputedStyle(node).borderRadius
+    }));
+    expect(markerTipStyle.borderImage, 'city marker tooltip should use the bitmap tooltip frame').toContain('ui_frame_tooltip.png');
+    expect(markerTipStyle.radius, 'city marker tooltip should use hard pixel corners').toBe('0px');
     await expectNoHorizontalOverflow(page, `city map ${viewport.name}`);
     await expectScreenshotHasPixels(page, `city-map-${viewport.name}.png`, `city map ${viewport.name}`);
     expect(violations, `city map ${viewport.name} console warnings/errors`).toEqual([]);
@@ -1070,6 +1160,14 @@ for (const viewport of VIEWPORTS) {
     ], `Day 5 ${viewport.name}`);
     await expectNoHorizontalOverflow(page, `Day 5 ${viewport.name}`);
     await expectCombatGeometry(page, viewport);
+    const commandArt = await page.locator('.maws-skill.combat-card .maws-combat-card-art').first().evaluate((image) => ({
+      width: image.getBoundingClientRect().width,
+      height: image.getBoundingClientRect().height,
+      rendering: getComputedStyle(image).imageRendering
+    }));
+    expect(commandArt.width, 'combat command art should fill the instruction face').toBeGreaterThanOrEqual(50);
+    expect(commandArt.height, 'combat command art should remain readable in the compact dock').toBeGreaterThanOrEqual(36);
+    expect(commandArt.rendering, 'combat command art should use hard pixel scaling').toMatch(/pixelated|crisp-edges/);
     await expectScreenshotHasPixels(page, `day5-${viewport.name}.png`, `Day 5 ${viewport.name}`);
     expect(violations, `Day 5 ${viewport.name} console warnings/errors`).toEqual([]);
   });

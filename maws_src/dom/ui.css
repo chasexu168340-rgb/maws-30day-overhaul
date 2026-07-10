@@ -9659,6 +9659,7 @@
 #maws-ui-root .maws-combat-side-panel,
 #maws-ui-root .maws-scene-interaction-menu,
 #maws-ui-root .maws-interaction-menu,
+#maws-ui-root .maws-npc-menu,
 #maws-ui-root .maws-reward-stack {
   border: 12px solid transparent !important;
   border-image-source: var(--maws-ui-panel) !important;
@@ -9671,6 +9672,13 @@
   background-image: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+}
+
+@media (min-width: 761px) {
+  #maws-ui-root .maws-hud {
+    width: min(760px, calc(100vw - 32px)) !important;
+    max-width: 760px !important;
+  }
 }
 
 #maws-ui-root .maws-recommend-card,
@@ -9689,6 +9697,13 @@
 #maws-ui-root .maws-combat-queue,
 #maws-ui-root .maws-plan-mode-control,
 #maws-ui-root .maws-target-control,
+#maws-ui-root .maws-event-choice,
+#maws-ui-root .maws-training-choice,
+#maws-ui-root .maws-duration-choice,
+#maws-ui-root .maws-character-bubble,
+#maws-ui-root .maws-city-marker-tip,
+#maws-ui-root .maws-training-feedback,
+#maws-ui-root .maws-training-cue,
 #maws-ui-root details.maws-fold {
   border: 8px solid transparent !important;
   border-image-source: var(--maws-ui-tooltip) !important;
@@ -9700,6 +9715,172 @@
   background: transparent !important;
   background-image: none !important;
   box-shadow: none !important;
+}
+
+#maws-ui-root .maws-toast {
+  border: 10px solid transparent !important;
+  border-image-source: var(--maws-ui-tooltip) !important;
+  border-image-slice: 13 fill !important;
+  border-image-width: 10px !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  color: #fff4d2 !important;
+  font-size: 12px !important;
+}
+
+#maws-ui-root .maws-character-bubble {
+  min-width: 64px;
+  padding: 3px 8px !important;
+  border-width: 6px !important;
+  border-image-width: 6px !important;
+  border-radius: 0 !important;
+  font-size: 10px !important;
+  line-height: 1.1;
+}
+
+#maws-ui-root .maws-city-marker-tip {
+  padding: 8px 10px !important;
+  border-width: 8px !important;
+  border-image-width: 8px !important;
+  border-radius: 0 !important;
+  font-size: 10px !important;
+}
+
+#maws-ui-root .maws-event-choice,
+#maws-ui-root .maws-training-choice,
+#maws-ui-root .maws-duration-choice {
+  position: relative;
+  padding-left: 46px !important;
+}
+
+#maws-ui-root .maws-event-choice::before,
+#maws-ui-root .maws-training-choice::before,
+#maws-ui-root .maws-duration-choice::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  width: 32px;
+  height: 32px;
+  background: var(--maws-ui-choice) center / contain no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+#maws-ui-root .maws-training-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 5px;
+  border: 8px solid transparent !important;
+  border-image-source: var(--maws-ui-panel) !important;
+  border-image-slice: 14 fill !important;
+  border-image-width: 8px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#maws-ui-root .maws-training-status span {
+  padding: 4px 6px;
+  border: 1px solid #050506;
+  background: #17191e;
+  color: #f4e7c6;
+  font-size: 10px;
+  text-align: center;
+}
+
+#maws-ui-root .maws-training-meter {
+  position: relative;
+  height: 28px;
+  border: 6px solid transparent !important;
+  border-image-source: var(--maws-ui-bar) !important;
+  border-image-slice: 6 10 fill !important;
+  border-image-width: 6px 9px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+#maws-ui-root .maws-training-meter > i {
+  display: block;
+  height: 100%;
+  border-radius: 0 !important;
+  background: #d2a936 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+#maws-ui-root .maws-npc-ledger-list {
+  display: grid;
+  gap: 7px;
+}
+
+#maws-ui-root .maws-npc-ledger-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 7px;
+  border: 8px solid transparent;
+  border-image-source: var(--maws-ui-tooltip);
+  border-image-slice: 13 fill;
+  border-image-width: 8px;
+  background: transparent;
+}
+
+#maws-ui-root .maws-npc-ledger-portrait {
+  width: 72px;
+  height: 72px;
+  border: 2px solid #050506;
+  background: #17191e;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+#maws-ui-root .maws-npc-ledger-row > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+#maws-ui-root .maws-npc-ledger-row strong {
+  color: #fff4d2;
+  font-size: 12px;
+}
+
+#maws-ui-root .maws-npc-ledger-row span,
+#maws-ui-root .maws-npc-ledger-row p {
+  margin: 0;
+  color: rgba(243, 226, 185, 0.72);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+@media (max-width: 560px) {
+  #maws-ui-root .maws-training-status {
+    grid-template-columns: 1fr;
+  }
+
+  #maws-ui-root .maws-npc-ledger-row {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  #maws-ui-root .maws-npc-ledger-portrait {
+    width: 60px;
+    height: 60px;
+  }
+
+  #maws-ui-root .maws-npc-ledger-row > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
 }
 
 #maws-ui-root button:not(.maws-city-marker):not(.maws-scene-character) {
@@ -9717,7 +9898,7 @@
   background-image: none !important;
   box-shadow: none !important;
   color: #f7ecd0 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 800;
   line-height: 1.18;
   text-shadow: 1px 1px 0 #050506;
@@ -9763,13 +9944,13 @@
 
 #maws-ui-root .maws-nav button.maws-tab {
   min-width: 64px;
-  min-height: 54px;
+  min-height: 58px;
   padding: 4px 7px 3px;
   border-image-source: var(--maws-ui-tab) !important;
   border-image-slice: 8 12 fill !important;
   border-image-width: 8px 10px !important;
   color: #ddd3ba !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   line-height: 1;
 }
 
@@ -9781,13 +9962,13 @@
 #maws-ui-root .maws-nav .maws-tab > span {
   display: grid;
   place-items: center;
-  min-height: 30px;
+  min-height: 34px;
 }
 
 #maws-ui-root .maws-nav .maws-tab .maws-asset-icon,
 #maws-ui-root .maws-nav .maws-tab .maws-fallback-icon {
-  width: 30px !important;
-  height: 30px !important;
+  width: 34px !important;
+  height: 34px !important;
   margin: 0 !important;
   object-fit: contain;
 }
@@ -9799,14 +9980,14 @@
   border-radius: 0 !important;
   background: #17191e !important;
   box-shadow: 2px 2px 0 #08090b !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   line-height: 1;
 }
 
 #maws-ui-root .maws-chip .maws-asset-icon {
-  width: 28px !important;
-  height: 28px !important;
-  flex: 0 0 28px;
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px;
 }
 
 #maws-ui-root .maws-chip b {
@@ -9868,6 +10049,7 @@
 
 #maws-ui-root .maws-modal.dialogue .maws-modal-shell,
 #maws-ui-root .maws-dialogue-box {
+  min-height: 156px !important;
   border: 14px solid transparent !important;
   border-image-source: var(--maws-ui-dialogue) !important;
   border-image-slice: 14 fill !important;
@@ -9879,18 +10061,19 @@
 }
 
 #maws-ui-root .maws-dialogue-stage {
+  grid-template-columns: 120px minmax(0, 1fr) !important;
   gap: 10px;
 }
 
 #maws-ui-root .maws-dialogue-portrait {
-  width: 96px;
-  min-width: 96px;
+  width: 120px;
+  min-width: 120px;
 }
 
 #maws-ui-root .maws-dialogue-portrait-img,
 #maws-ui-root .maws-dialogue-portrait-fallback {
-  width: 96px !important;
-  height: 96px !important;
+  width: 120px !important;
+  height: 120px !important;
   border: 3px solid #07080a !important;
   border-radius: 0 !important;
   background: #17191f !important;
@@ -9899,13 +10082,13 @@
 
 #maws-ui-root .maws-dialogue-nameplate span,
 #maws-ui-root .maws-dialogue-nameplate b {
-  font-size: 12px !important;
+  font-size: 10px !important;
 }
 
 #maws-ui-root .maws-dialogue-box > p {
   margin: 5px 0 8px;
   color: #fff8e6;
-  font-size: 17px !important;
+  font-size: 15px !important;
   font-weight: 700;
   line-height: 1.55;
   text-shadow: 1px 1px 0 #050506;
@@ -9918,17 +10101,17 @@
 #maws-ui-root .maws-dialogue-choice,
 #maws-ui-root .maws-story-choice {
   position: relative;
-  padding-left: 38px !important;
+  padding-left: 46px !important;
 }
 
 #maws-ui-root .maws-dialogue-choice::before,
 #maws-ui-root .maws-story-choice::before {
   content: "";
   position: absolute;
-  top: 12px;
-  left: 7px;
-  width: 28px;
-  height: 28px;
+  top: 9px;
+  left: 8px;
+  width: 32px;
+  height: 32px;
   background: var(--maws-ui-choice) center / contain no-repeat;
   image-rendering: pixelated;
   pointer-events: none;
@@ -9936,14 +10119,14 @@
 
 #maws-ui-root .maws-dialogue-choice strong,
 #maws-ui-root .maws-story-choice strong {
-  font-size: 13px !important;
+  font-size: 11px !important;
 }
 
 #maws-ui-root .maws-dialogue-choice p,
 #maws-ui-root .maws-story-choice p,
 #maws-ui-root .maws-modal-body,
 #maws-ui-root .maws-scene-summary {
-  font-size: 12px !important;
+  font-size: 11px !important;
   line-height: 1.45;
 }
 
@@ -9957,7 +10140,7 @@
 #maws-ui-root .maws-page-heading h2,
 #maws-ui-root .maws-ledger-hero h2,
 #maws-ui-root .maws-rpg-title h2 {
-  font-size: 28px !important;
+  font-size: 24px !important;
   line-height: 1.06;
 }
 
@@ -9980,7 +10163,7 @@
 #maws-ui-root .maws-skill strong,
 #maws-ui-root .maws-tree-node strong,
 #maws-ui-root .maws-recommend-card strong {
-  font-size: 12px !important;
+  font-size: 11px !important;
   line-height: 1.25;
 }
 
@@ -9994,7 +10177,7 @@
 #maws-ui-root .maws-skill small,
 #maws-ui-root .maws-tree-node small,
 #maws-ui-root .maws-recommend-card small {
-  font-size: 11px !important;
+  font-size: 10px !important;
   line-height: 1.38;
 }
 
@@ -10005,7 +10188,7 @@
   background: #191b20 !important;
   background-image: none !important;
   box-shadow: 2px 2px 0 #07080a !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 #maws-ui-root .maws-settle-line,
@@ -10044,7 +10227,7 @@
 #maws-ui-root .maws-combat-recipe-chip strong,
 #maws-ui-root .maws-plan-mode-option strong,
 #maws-ui-root .maws-target-option strong {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 #maws-ui-root .maws-combat-command-chip small,
@@ -10052,6 +10235,141 @@
 #maws-ui-root .maws-plan-mode-option small,
 #maws-ui-root .maws-target-option small {
   font-size: 9px !important;
+}
+
+#maws-ui-root .maws-item-header {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+}
+
+#maws-ui-root .maws-item-header > span:last-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+#maws-ui-root .maws-item-header strong,
+#maws-ui-root .maws-item-header small {
+  display: block;
+  margin: 0;
+}
+
+#maws-ui-root .maws-item-header small {
+  color: #c9bfa6;
+  font-size: 9px !important;
+}
+
+#maws-ui-root .maws-item-visual {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid #07080a;
+  background: #16191e;
+  box-shadow: 2px 2px 0 #d3b75f;
+}
+
+#maws-ui-root .maws-item-visual .maws-asset-icon,
+#maws-ui-root .maws-item-visual .maws-fallback-icon {
+  width: 60px !important;
+  height: 60px !important;
+  margin: 0 !important;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+#maws-ui-root .maws-shop-board .maws-item > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+#maws-ui-root .maws-shop-board .maws-item > footer > b {
+  color: #f2c94c;
+  font-size: 13px;
+}
+
+#maws-ui-root .maws-combat-card-face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#maws-ui-root .maws-combat-card-art {
+  width: 100% !important;
+  height: 58px !important;
+  margin: 0 !important;
+  border: 1px solid #07080a;
+  background: #15171c;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+#maws-ui-root .maws-combat-card-face header {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  left: 1px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  min-width: 0;
+  min-height: 18px;
+  padding: 2px 4px;
+  border-top: 1px solid #d3b75f;
+  background: rgba(7, 8, 10, 0.9);
+}
+
+#maws-ui-root .maws-combat-card-face header strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#maws-ui-root .maws-combat-card-face header small {
+  flex: 0 0 auto;
+  font-size: 8px !important;
+  line-height: 1;
+}
+
+#maws-ui-root .combat-card .maws-combat-card-use {
+  display: none;
+}
+
+#maws-ui-root .combat-card .maws-combat-key {
+  display: none !important;
+}
+
+#maws-ui-root .maws-skill.combat-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+
+#maws-ui-root .maws-skill.combat-card > footer {
+  position: static !important;
+  inset: auto !important;
+  width: 100%;
+  margin: 0;
+}
+
+#maws-ui-root .maws-skill.combat-card > footer button {
+  width: 100%;
+  min-height: 28px;
+  padding-block: 3px;
 }
 
 #maws-ui-root .maws-tree-node.status-available,
@@ -10087,7 +10405,7 @@
 
 @media (max-width: 560px) {
   #maws-ui-root {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   #maws-ui-root .maws-hud,
@@ -10105,20 +10423,20 @@
   #maws-ui-root button:not(.maws-city-marker):not(.maws-scene-character) {
     min-height: 44px;
     padding: 6px 9px;
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   #maws-ui-root .maws-nav button.maws-tab {
     min-width: 48px;
     min-height: 52px;
     padding: 3px 4px 2px;
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   #maws-ui-root .maws-nav .maws-tab .maws-asset-icon,
   #maws-ui-root .maws-nav .maws-tab .maws-fallback-icon {
-    width: 28px !important;
-    height: 28px !important;
+    width: 32px !important;
+    height: 32px !important;
   }
 
   #maws-ui-root .maws-chip {
@@ -10140,44 +10458,45 @@
   #maws-ui-root .maws-page-heading h2,
   #maws-ui-root .maws-ledger-hero h2,
   #maws-ui-root .maws-rpg-title h2 {
-    font-size: 23px !important;
+    font-size: 20px !important;
   }
 
   #maws-ui-root .maws-dialogue-stage {
-    grid-template-columns: 72px minmax(0, 1fr) !important;
+    grid-template-columns: 84px minmax(0, 1fr) !important;
     gap: 7px;
   }
 
   #maws-ui-root .maws-dialogue-portrait {
-    width: 72px;
-    min-width: 72px;
+    width: 84px;
+    min-width: 84px;
   }
 
   #maws-ui-root .maws-dialogue-portrait-img,
   #maws-ui-root .maws-dialogue-portrait-fallback {
-    width: 72px !important;
-    height: 72px !important;
+    width: 84px !important;
+    height: 84px !important;
   }
 
   #maws-ui-root .maws-dialogue-box {
+    min-height: 142px !important;
     border-width: 10px !important;
     border-image-width: 10px !important;
   }
 
   #maws-ui-root .maws-dialogue-box > p {
-    font-size: 16px !important;
-    line-height: 1.48;
+    font-size: 15px !important;
+    line-height: 1.45;
   }
 
   #maws-ui-root .maws-dialogue-choice,
   #maws-ui-root .maws-story-choice {
-    padding-left: 34px !important;
+    padding-left: 40px !important;
   }
 
   #maws-ui-root .maws-dialogue-choice::before,
   #maws-ui-root .maws-story-choice::before {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   #maws-ui-root .maws-combat-command-chip strong,
@@ -10185,5 +10504,30 @@
   #maws-ui-root .maws-plan-mode-option strong,
   #maws-ui-root .maws-target-option strong {
     font-size: 11px !important;
+  }
+
+  #maws-ui-root .maws-item-header {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  #maws-ui-root .maws-item-visual {
+    width: 56px;
+    height: 56px;
+  }
+
+  #maws-ui-root .maws-item-visual .maws-asset-icon,
+  #maws-ui-root .maws-item-visual .maws-fallback-icon {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  #maws-ui-root .maws-combat-card-face {
+    min-height: 52px;
+  }
+
+  #maws-ui-root .maws-combat-card-art {
+    width: 100% !important;
+    height: 52px !important;
   }
 }

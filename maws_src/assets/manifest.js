@@ -202,10 +202,12 @@ const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pix
   tags: [...tags, 'combat', 'sprite-strip', 'replaceable-base', 'pixel']
 });
 
-const pixelV2FighterSprite = (file, sourceKey, tags = [], displayScale = 1) => entry(`assets/pixel_v2/sprites/${file}`, {
+const pixelV2FighterSprite = (file, sourceKey, tags = [], displayScale = 1, extraAnimations = {}) => {
+  const frameCount = Math.max(16, ...Object.values(extraAnimations).map((animation) => Number(animation?.end || 0) + 1));
+  return entry(`assets/pixel_v2/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
-  w: 1536,
+  w: 96 * frameCount,
   h: 144,
   frameWidth: 96,
   frameHeight: 144,
@@ -220,10 +222,12 @@ const pixelV2FighterSprite = (file, sourceKey, tags = [], displayScale = 1) => e
     idle: { start: 0, end: 3, frameRate: 5, repeat: -1 },
     attack: { start: 4, end: 7, frameRate: 12, repeat: 0 },
     hurt: { start: 8, end: 11, frameRate: 11, repeat: 0 },
-    vfx: { start: 12, end: 15, frameRate: 9, repeat: 0 }
+    vfx: { start: 12, end: 15, frameRate: 9, repeat: 0 },
+    ...extraAnimations
   },
   tags: [...tags, 'combat', 'sprite-strip', 'pixel-v2', 'pixel']
 });
+};
 
 export const ASSET_MANIFEST = {
   backgrounds: {
@@ -275,7 +279,10 @@ export const ASSET_MANIFEST = {
     'scene.npc.chen': cleanCharacter('scene_npc_chen.png', ['scene', 'npc', 'chen', 'boss'])
   },
   sprites: {
-    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player.png', 'fighter.player', ['player'], 1.28),
+    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player_extended.png', 'fighter.player', ['player'], 1.28, {
+      guard: { start: 16, end: 19, frameRate: 10, repeat: 0 },
+      retreat: { start: 20, end: 23, frameRate: 10, repeat: 0 }
+    }),
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00'], 1.1),
     'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5'], 1),
@@ -305,7 +312,13 @@ export const ASSET_MANIFEST = {
     'item.shoes': pixelV2Item('item_shoes.png', ['equipment', 'foot', 'day1-9']),
     'item.mouth': pixelV2Item('item_mouth.png', ['equipment', 'head', 'boxing', 'day1-9']),
     'item.notebook': pixelV2Item('item_notebook.png', ['equipment', 'accessory', 'father', 'day1-9']),
-    'item.training_kit': pixelV2Item('item_training_kit.png', ['training', 'recovery', 'day1-9'])
+    'item.training_kit': pixelV2Item('item_training_kit.png', ['training', 'recovery', 'day1-9']),
+    'item.egg': pixelV2Item('item_egg.png', ['ingredient', 'food', 'day1-9']),
+    'item.greens': pixelV2Item('item_greens.png', ['ingredient', 'food', 'day1-9']),
+    'item.noodles': pixelV2Item('item_noodles.png', ['ingredient', 'food', 'day1-9']),
+    'item.home_meal': pixelV2Item('item_home_meal.png', ['prepared-meal', 'combat-prep', 'day1-9']),
+    'item.ice_pack': pixelV2Item('item_ice_pack.png', ['medicine', 'recovery', 'combat-prep', 'day1-9']),
+    'item.pain_gel': pixelV2Item('item_pain_gel.png', ['medicine', 'recovery', 'day1-9'])
   },
   icons: {
     'icon.money': pixelV2Icon('icon_money.png', ['resource', 'money']),

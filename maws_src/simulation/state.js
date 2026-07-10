@@ -578,6 +578,7 @@ export function createNewState(origin = 'worker') {
       fitXp: 0,
       insightPoints: 0,
       combatRecipeLoadout: [...DEFAULT_COMBAT_RECIPE_LOADOUT],
+      combatPrep: {},
       money: o.money,
       fame: 0,
       face: 45,
@@ -627,6 +628,7 @@ export function migrateSave(input) {
   s.player.face ||= 45;
   normalizeInsightPoints(s);
   s.player.injuries = Array.isArray(s.player.injuries) ? s.player.injuries : [];
+  s.player.combatPrep = s.player.combatPrep && typeof s.player.combatPrep === 'object' ? s.player.combatPrep : {};
   s.player.stats ||= clone(ORIGINS.worker.stats);
   STAT_KEYS.forEach((key) => { if (s.player.stats[key] == null) s.player.stats[key] = ORIGINS.worker.stats[key]; });
   s.styles = baseStyles(s.styles);
@@ -682,6 +684,12 @@ function dailyGateReason(state, action = {}) {
   const key = dailyGateKey(action);
   if (!key) return '';
   return state.daily?.npcActionGates?.[key] ? '今天已经做过这类轻行动' : '';
+}
+
+function craftRequirementReason(state, action = {}) {
+  if (action.type !== 'craft') return '';
+  const missing = Object.entries(action.recipe?.consumes || {}).filter(([id, count]) => Number(state.inventory?.[id] || 0) < Number(count || 0));
+  return missing.length ? `缺少 ${missing.map(([id]) => ITEMS[id]?.name || id).join('、')}` : '';
 }
 
 function markDailyGate(state, action = {}) {
@@ -1373,6 +1381,7 @@ function sleep(state, forced = false) {
   p.morale = clamp(p.morale + (forced ? -3 : 3), 0, 100);
   p.injuries.forEach((injury) => { injury.turn -= 1; });
   p.injuries = p.injuries.filter((injury) => injury.turn > 0);
+  p.combatPrep = {};
   const sleptIdle = state.loc === 'home' && Number(state.daily?.actions || 0) <= 0;
   state.day += 1;
   state.time = 420;
@@ -1604,8 +1613,18 @@ function useItem(state, id) {
   const item = ITEMS[id];
   if (!item || !state.inventory[id]) return '没有这个物品';
   if (item.type === 'equipment') return equipItem(state, id);
+  if (item.type === 'ingredient') return '这是食材，回出租屋做成热饭再吃';
   const before = snapshotState(state);
   applyGain(state, item.gain || {});
+  if (item.prep) {
+    state.player.combatPrep ||= {};
+    state.player.combatPrep[item.prep.slot || 'general'] = {
+      ...clone(item.prep),
+      itemId: id,
+      itemName: item.name,
+      day: state.day
+    };
+  }
   state.inventory[id] -= 1;
   if (state.inventory[id] <= 0) delete state.inventory[id];
   const lines = settlementLines(before, snapshotState(state));
@@ -1614,7 +1633,10 @@ function useItem(state, id) {
     lead: `${item.name}已经使用。`,
     rewardDeltas: rewardDeltasFromSettlement(lines, state, {
       source: 'item',
-      extra: [itemRewardDelta(id, -1, 'item')]
+      extra: [
+        itemRewardDelta(id, -1, 'item'),
+        item.prep ? { key: `prep_${item.prep.slot || 'general'}`, label: '下场准备', delta: 1, text: item.prep.label, kind: 'skill', tone: 'good', source: 'item' } : null
+      ].filter(Boolean)
     }),
     lines
   };
@@ -1942,6 +1964,13 @@ function executeAction(state, action, options = {}) {
     state.ui.toast = '钱不够';
     return;
   }
+  if (action.type === 'craft') {
+    const missing = Object.entries(action.recipe?.consumes || {}).filter(([id, count]) => Number(state.inventory?.[id] || 0) < Number(count || 0));
+    if (missing.length) {
+      state.ui.toast = `缺少：${missing.map(([id, count]) => `${ITEMS[id]?.name || id}×${count}`).join('、')}`;
+      return;
+    }
+  }
   if (allowNotebook && shouldOpenActionNotebook(action)) {
     state.ui.modal = eventNotebookModal(state, action, { source: 'action', actionId: action.id });
     return;
@@ -1977,6 +2006,24 @@ function executeAction(state, action, options = {}) {
       minutes: dosage ? dosage.minutes : (action.time || 30)
     }));
     addLog(state, `${NPCS[action.npc]?.name || '有人'}给了你一段建议。`);
+  } else if (action.type === 'craft') {
+    const recipe = action.recipe || {};
+    const extras = [];
+    Object.entries(recipe.consumes || {}).forEach(([id, count]) => {
+      state.inventory[id] = Number(state.inventory[id] || 0) - Number(count || 0);
+      if (state.inventory[id] <= 0) delete state.inventory[id];
+      extras.push(itemRewardDelta(id, -Number(count || 0), 'craft'));
+    });
+    Object.entries(recipe.creates || {}).forEach(([id, count]) => {
+      state.inventory[id] = Number(state.inventory[id] || 0) + Number(count || 0);
+      extras.push(itemRewardDelta(id, Number(count || 0), 'craft'));
+    });
+    addLog(state, `完成备战准备：${action.name}`);
+    state.ui.modal = actionResultModal(state, action, settlementLines(before, snapshotState(state)), {
+      ...options,
+      extraRewardDeltas: extras,
+      eventContext: { ...(options.eventContext || {}), result: '锅里冒起热气。你没有变强，只是终于没打算空着肚子证明自己。' }
+    });
   } else {
     const beforeSkillState = clone(state.skillState || {});
     const beforeMaw = createDefaultMaw(state.maw);
@@ -2268,13 +2315,21 @@ function startBattle(state, enemyId, main = false, meta = {}) {
   const def = ENEMIES[enemyId] || ENEMIES.E01;
   const script = meta.script || def.script || null;
   const dailySpBefore = state.player.sp;
-  const battleSp = clamp(Math.max(state.player.sp, Math.round(state.player.spMax * 0.72)), 30, state.player.spMax);
+  const combatPrep = clone(state.player.combatPrep || {});
+  const prepEntries = Object.values(combatPrep).filter((entry) => entry && Number(entry.day || state.day) === state.day);
+  const prepSp = prepEntries.reduce((sum, entry) => sum + Number(entry.sp || 0), 0);
+  const prepPosture = prepEntries.reduce((sum, entry) => sum + Number(entry.posture || 0), 0);
+  const prepMorale = prepEntries.reduce((sum, entry) => sum + Number(entry.morale || 0), 0);
+  const battleSp = clamp(Math.max(state.player.sp, Math.round(state.player.spMax * 0.72)) + prepSp, 30, state.player.spMax);
   const objectives = Array.isArray(meta.objectives)
     ? [...meta.objectives]
     : script === 'first_wind'
       ? [...FIRST_WIND_OBJECTIVE_IDS]
       : (main && state.day === 5 && enemyId === 'E01' ? [...PARK_CHECK_OBJECTIVE_IDS] : []);
   state.player.sp = battleSp;
+  state.player.posture = clamp(state.player.posture + prepPosture, 0, state.player.postureMax);
+  state.player.morale = clamp(state.player.morale + prepMorale, 0, 100);
+  state.player.combatPrep = {};
   state.ui.modal = null;
   state.ui.selectedTravel = null;
   state.ui.cityMapOpen = false;
@@ -2289,6 +2344,7 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     objectives,
     objectiveProgress: Object.fromEntries(objectives.map((id) => [id, Boolean(state.maw?.objectives?.[id])])),
     objectiveNotes: [],
+    prep: combatPrep,
     dailySpBefore,
     round: 1,
     exchange: 1,
@@ -2311,6 +2367,7 @@ function startBattle(state, enemyId, main = false, meta = {}) {
     selected: [],
     log: [
       `遭遇 ${def.name}。对手标签：${def.tags.join(' / ')}。`,
+      prepEntries.length ? `备战准备：${prepEntries.map((entry) => entry.label || entry.itemName).join(' / ')}。本场生效后消耗。` : '备战准备：没有额外准备。',
       `战斗体力独立结算：日常体力 ${Math.round(dailySpBefore)}，开打体力 ${Math.round(battleSp)}。`
     ],
     history: [],
@@ -3933,8 +3990,12 @@ function dailyDirectorModel(state, mainEvent, opportunities = []) {
   const remainingActions = clamp(Math.min(baselineSlots - actionsDone, anchorPending && actionsDone >= 2 ? 1 : 4), 0, 4);
   const focus = todayFocusModel(state, mainEvent);
   const idleSleepStreak = Number(state.daily?.idleSleepStreak || 0);
+  const upcomingBattle = Boolean(mainEvent?.enemy);
+  const prepReady = Object.keys(state.player?.combatPrep || {}).length > 0;
   const freeActionHint = remainingActions <= 0
     ? '今天的自由行动感已经很满了，适合收尾、恢复或睡觉。'
+    : upcomingBattle && !prepReady
+      ? '今天有实战压力。先吃顿热饭或处理轻伤，再去验货；准备不会替你打，只让状态别拖后腿。'
     : anchorPending && actionsDone >= 2
       ? `还能安排 1 个自由行动，但今日主线锚点还没处理：优先去${focus.locName || '目标地点'}。`
       : idleSleepStreak > 0
@@ -3987,7 +4048,7 @@ export function buildRenderModel(state) {
     const durationOptions = actionDosageOptions(action);
     const cheapestSp = durationOptions.length ? Math.min(...durationOptions.map((option) => option.sp)) : actionSpCost(action);
     const cheapestCost = durationOptions.length ? Math.min(...durationOptions.map((option) => option.cost)) : Number(action.cost || 0);
-    const gateReason = dailyGateReason(state, action);
+    const gateReason = dailyGateReason(state, action) || craftRequirementReason(state, action);
     return {
       ...action,
       disabled: Boolean(gateReason) || cheapestSp > p.sp || cheapestCost > p.money,
@@ -4102,7 +4163,7 @@ export function buildRenderModel(state) {
     })),
     inventory: Object.entries(state.inventory || {}).filter(([, count]) => count > 0).map(([id, count]) => ({ id, count, item: ITEMS[id] })),
     equipmentSlots,
-    shopItems: Object.entries(ITEMS).map(([id, item]) => ({ id, ...item, owned: state.inventory[id] || 0 })),
+    shopItems: Object.entries(ITEMS).filter(([, item]) => item.shop !== false).map(([id, item]) => ({ id, ...item, owned: state.inventory[id] || 0 })),
     npcs: Object.entries(NPCS).filter(([, npc]) => !npc.hidden).map(([id, npc]) => ({ id, ...npc, relation: state.relations[id] || 0 })),
     actions,
     opportunities,

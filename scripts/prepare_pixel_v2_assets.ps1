@@ -25,7 +25,7 @@ param(
     [string]$ChromaColor = '#00FF00',
     [ValidateRange(0, 255)]
     [int]$ChromaTolerance = 12,
-    [ValidateRange(0, 32)]
+    [ValidateRange(0, 4096)]
     [int]$RemoveSpecksBelow = 0,
 
     [switch]$PreserveAspectFit,

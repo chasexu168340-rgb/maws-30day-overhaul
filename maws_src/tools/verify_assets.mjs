@@ -79,6 +79,12 @@ const day1To9FinalKeys = [
   'item.mouth',
   'item.notebook',
   'item.training_kit',
+  'item.egg',
+  'item.greens',
+  'item.noodles',
+  'item.home_meal',
+  'item.ice_pack',
+  'item.pain_gel',
   'skill.wild_swing',
   'skill.push_away',
   'skill.mystic',
@@ -251,6 +257,31 @@ function assertSpritesheet(group, key, value, full, src) {
   }
   if (opaque < frames * 64) errors.push(`${group}.${key} appears visually empty`);
   if (edgeOpaque > Math.max(24, Math.floor(opaque * 0.004))) errors.push(`${group}.${key} has possible edge background residue`);
+  if (value.status === 'final' && src.startsWith('assets/pixel_v2/')) {
+    const size = fs.statSync(full).size;
+    if (size > 500 * 1024) errors.push(`${group}.${key} final combat spritesheet exceeds 500KB budget: ${size} bytes`);
+    const frameBottom = (frame) => {
+      const frameX = (frame % (png.width / value.frameWidth)) * value.frameWidth;
+      const frameY = Math.floor(frame / (png.width / value.frameWidth)) * value.frameHeight;
+      for (let y = value.frameHeight - 1; y >= 0; y -= 1) {
+        for (let x = 0; x < value.frameWidth; x += 1) {
+          if (alphaAt(png, frameX + x, frameY + y) > 24) return y;
+        }
+      }
+      return -1;
+    };
+    Object.entries(value.animations || {}).forEach(([name, animation]) => {
+      if (['hurt', 'vfx'].includes(name)) return;
+      const bottoms = [];
+      for (let frame = Number(animation.start || 0); frame <= Number(animation.end || 0); frame += 1) {
+        const bottom = frameBottom(frame);
+        if (bottom >= 0) bottoms.push(bottom);
+      }
+      if (bottoms.length > 1 && Math.max(...bottoms) - Math.min(...bottoms) > 8) {
+        errors.push(`${group}.${key} ${name} frames have inconsistent foot baselines: ${bottoms.join(',')}`);
+      }
+    });
+  }
 }
 
 function assertPixelContract(group, key, value, src) {

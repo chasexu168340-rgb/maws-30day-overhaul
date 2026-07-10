@@ -215,6 +215,60 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
   expect(errors).toEqual([]);
 });
 
+test('home cooking and recovery items create one-use combat preparation', async ({ page }) => {
+  const errors = await loadGame(page);
+
+  const prepared = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.inventory.egg = 1;
+    store.state.inventory.greens = 1;
+    store.state.inventory.noodles = 1;
+    store.state.inventory.ice_pack = 1;
+    store.state.player.sp = 40;
+    store.state.player.posture = 50;
+    store.dispatch({ type: 'doAction', actionId: 'cook_egg_noodles' });
+    const crafted = store.state.inventory.home_meal || 0;
+    store.state.ui.modal = null;
+    store.dispatch({ type: 'useItem', itemId: 'home_meal' });
+    store.state.ui.modal = null;
+    store.dispatch({ type: 'useItem', itemId: 'ice_pack' });
+    return {
+      crafted,
+      ingredients: {
+        egg: store.state.inventory.egg || 0,
+        greens: store.state.inventory.greens || 0,
+        noodles: store.state.inventory.noodles || 0
+      },
+      prep: store.state.player.combatPrep
+    };
+  });
+
+  expect(prepared.crafted).toBe(1);
+  expect(prepared.ingredients).toEqual({ egg: 0, greens: 0, noodles: 0 });
+  expect(prepared.prep.meal.label).toBe('热饭打底');
+  expect(prepared.prep.recovery.label).toBe('关节冷敷');
+
+  const battle = await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'startBattle', enemyId: 'E01' });
+    return {
+      sp: store.state.player.sp,
+      posture: store.state.player.posture,
+      prepConsumed: Object.keys(store.state.player.combatPrep || {}).length === 0,
+      combatPrep: store.state.combat?.prep,
+      log: store.state.combat?.log || []
+    };
+  });
+
+  expect(battle.sp).toBeGreaterThanOrEqual(82);
+  expect(battle.posture).toBeGreaterThanOrEqual(58);
+  expect(battle.prepConsumed).toBe(true);
+  expect(battle.combatPrep.meal.label).toBe('热饭打底');
+  expect(battle.combatPrep.recovery.label).toBe('关节冷敷');
+  expect(battle.log.join('\n')).toContain('备战准备');
+  expect(errors).toEqual([]);
+});
+
 test('390x844 skills and map do not overflow horizontally', async ({ page }) => {
   const errors = await loadGame(page, MOBILE);
 
