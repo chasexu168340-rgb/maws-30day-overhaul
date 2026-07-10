@@ -59,7 +59,15 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'portraits:portrait.fatty',
   'portraits:portrait.xiaoman',
   'portraits:portrait.worker',
-  'portraits:portrait.coach'
+  'portraits:portrait.coach',
+  'vfx:combat.normal',
+  'vfx:combat.heavy',
+  'vfx:combat.guard',
+  'vfx:combat.miss',
+  'vfx:combat.break',
+  'vfx:combat.recipe',
+  'vfx:combat.utility',
+  'vfx:vfx.scene.click'
 ];
 
 let server;
@@ -422,6 +430,51 @@ test('Day 1-9 pixel_v2 background variants decode in the browser', async ({ page
     'backgrounds:bg.street.night'
   ], 'Day 1-9 pixel_v2 backgrounds');
   expect(violations, 'background decode should not emit warnings/errors').toEqual([]);
+});
+
+test('Pixel V2 combat and scene feedback textures decode and appear at runtime', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await expectManifestImagesDecode(page, [
+    'vfx:combat.normal',
+    'vfx:combat.heavy',
+    'vfx:combat.guard',
+    'vfx:combat.miss',
+    'vfx:combat.break',
+    'vfx:combat.recipe',
+    'vfx:combat.utility',
+    'vfx:vfx.scene.click'
+  ], 'Pixel V2 feedback textures');
+
+  const character = page.locator('.maws-scene-character.actionable').first();
+  await expect(character).toBeVisible();
+  await character.click({ position: { x: 38, y: 54 } });
+  const clickFx = page.locator('.maws-click-burst.character.pixel-v2 img');
+  await expect(clickFx).toBeVisible();
+  await expect(clickFx).toHaveAttribute('src', /vfx_scene_click\.png/);
+
+  await startDay8(page);
+  await expect(page.locator('.maws-target-control')).toContainText('高位');
+  await expect(page.locator('.maws-target-control')).toContainText('中位');
+  await expect(page.locator('.maws-target-control')).toContainText('低位');
+  await expect(page.locator('.maws-combat-read')).toContainText('防守读法');
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    window.__pixelV2LiveVfx = [];
+    const original = scene.spawnPixelCombatVfx.bind(scene);
+    scene.spawnPixelCombatVfx = (key, ...args) => {
+      window.__pixelV2LiveVfx.push(key);
+      return original(key, ...args);
+    };
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'wild_swing' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+  await page.waitForFunction(() => (window.__pixelV2LiveVfx || []).length > 0, null, { timeout: 3000 });
+  const liveKeys = await page.evaluate(() => window.__pixelV2LiveVfx || []);
+  expect(liveKeys.some((key) => /^combat\.(normal|heavy|guard|miss|break|recipe|utility)$/.test(key)), `live VFX keys: ${liveKeys.join(', ')}`).toBe(true);
+  await expectScreenshotHasPixels(page, 'combat-vfx-readability-desktop.png', 'combat VFX readability');
+  expect(violations, 'Pixel V2 feedback should not emit warnings/errors').toEqual([]);
 });
 
 for (const viewport of VIEWPORTS) {

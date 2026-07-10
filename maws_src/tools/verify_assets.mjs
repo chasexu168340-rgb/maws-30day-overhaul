@@ -46,7 +46,15 @@ const day1To9FinalKeys = [
   'portrait.fatty',
   'portrait.xiaoman',
   'portrait.worker',
-  'portrait.coach'
+  'portrait.coach',
+  'combat.normal',
+  'combat.heavy',
+  'combat.guard',
+  'combat.miss',
+  'combat.break',
+  'combat.recipe',
+  'combat.utility',
+  'vfx.scene.click'
 ];
 const legacyKeys = [
   'bg.home.night',
@@ -210,10 +218,28 @@ function assertPixelContract(group, key, value, src) {
 
 function assertFinalPixelV2Image(group, key, value, full, src, stat) {
   if (value.status !== 'final' || !src.startsWith('assets/pixel_v2/')) return;
-  if (group !== 'backgrounds') return;
+  if (group !== 'backgrounds' && group !== 'vfx') return;
 
-  const png = readPng(full, false);
+  const png = readPng(full, group === 'vfx');
   if (!png) return;
+  if (group === 'vfx') {
+    if (png.width !== 64 || png.height !== 64) {
+      errors.push(`${group}.${key} final VFX must be 64x64, got ${png.width}x${png.height}`);
+    }
+    if (png.colorType !== 6 || !png.pixels) {
+      errors.push(`${group}.${key} final VFX must be an RGBA PNG`);
+      return;
+    }
+    const corners = [
+      alphaAt(png, 0, 0),
+      alphaAt(png, png.width - 1, 0),
+      alphaAt(png, 0, png.height - 1),
+      alphaAt(png, png.width - 1, png.height - 1)
+    ];
+    if (corners.some((alpha) => alpha > 12)) errors.push(`${group}.${key} final VFX must have transparent corners`);
+    if (stat.size > 64 * 1024) errors.push(`${group}.${key} final VFX exceeds 64KB budget: ${stat.size} bytes`);
+    return;
+  }
   if (png.width !== 480 || png.height !== 270) {
     errors.push(`${group}.${key} final background must be 480x270, got ${png.width}x${png.height}`);
   }

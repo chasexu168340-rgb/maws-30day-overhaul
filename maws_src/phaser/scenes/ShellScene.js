@@ -41,12 +41,13 @@ const ANIM_BY_FIGHTER = {
 };
 
 const VFX_BY_IMPACT = Object.freeze({
-  guard: 'vfx.guard.flash',
-  normal: 'vfx.hit.spark',
-  heavy: 'vfx.impact.ring',
-  break: 'vfx.impact.ring',
-  recipe: 'vfx.impact.ring',
-  utility: 'vfx.guard.flash'
+  guard: 'combat.guard',
+  normal: 'combat.normal',
+  heavy: 'combat.heavy',
+  miss: 'combat.miss',
+  break: 'combat.break',
+  recipe: 'combat.recipe',
+  utility: 'combat.utility'
 });
 
 const PALETTE_FLASH_COLORS = Object.freeze({
@@ -646,7 +647,6 @@ export class ShellScene extends PhaserScene {
 
   playImpactPresentation(fx, target, delay, mobile) {
     const impactTier = fx.impactTier || (fx.type === 'break' ? 'break' : fx.type === 'guard' ? 'guard' : fx.type === 'hit' ? 'normal' : 'utility');
-    if (impactTier === 'miss' || fx.paletteFlash === 'none') return;
     const impactDelay = delay + (fx.type === 'hit' || fx.type === 'break' ? 88 : 20);
     this.time.delayedCall(impactDelay, () => {
       if (!target?.sprite?.active || !target.sprite.scene) return;
@@ -654,6 +654,7 @@ export class ShellScene extends PhaserScene {
       const requestedVfx = this.hasTexture(fx.vfxKey) ? fx.vfxKey : null;
       const vfxKey = requestedVfx || VFX_BY_IMPACT[impactTier] || VFX_BY_IMPACT.utility;
       if (this.hasTexture(vfxKey)) this.spawnPixelCombatVfx(vfxKey, target.hitX, target.hitY, paletteColor, impactTier, mobile);
+      if (impactTier === 'miss' || fx.paletteFlash === 'none') return;
       this.flashCombatPalette(paletteColor, impactTier);
       if (target.sprite.setTint) {
         target.sprite.setTint(paletteColor);

@@ -4,7 +4,7 @@
 
 ## Current Task
 
-Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, generate the approved visual reference in the current Codex session, and integrate the first reviewed runtime art batch.
+Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback batch, then replace the remaining generic non-scene UI surfaces and close the desktop/mobile visual gate.
 
 ## Scope
 
@@ -78,6 +78,10 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - Narrator lines no longer inherit the active scene NPC portrait, and Day 1 desktop/mobile screenshots cover the three-character stage plus the father dialogue page.
 - The desktop three-character cast layout reserves the right action rail and keeps all three silhouettes visible without horizontal overflow.
 - Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
+- All seven combat impact classes now resolve to final 64x64 RGBA `pixel_v2` textures: normal hit, heavy hit, guard, miss, posture break, recipe completion, and utility/footwork.
+- Tactical recipe aliases resolve to the reviewed recipe-completion texture, and NPC scene clicks use a dedicated Pixel V2 contact marker instead of generic CSS-only particles.
+- The asset verifier now enforces final VFX dimensions, RGBA transparency, transparent corners, and a 64KB per-texture budget; strict Day 1-9 verification includes the complete feedback set.
+- Combat target controls now read as high/mid/low, distance labels explain their tactical role, and enemy tells distinguish standing guard, back-step defense, and the next counter window without changing formulas.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -180,6 +184,13 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 strict visual gate (26 passed, including boot and dialogue contracts on desktop/mobile)
   - `git diff --check`
+- Passed after the Pixel V2 combat-feedback replacement:
+  - `node maws_src/tools/verify_assets.mjs --require-final-day1-9` (117 manifest entries)
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (27 passed, including live VFX and NPC click feedback)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
@@ -191,4 +202,6 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Produce final pixel hit/guard/miss/break/recipe VFX and apply the Karate-derived attack-height, guard/back-step, counter-window, and distance-recovery readability principles without changing the queue-based combat architecture.
+1. Replace the remaining profile/skills/bag/shop/log web-card styling with one restrained Pixel V2 panel language.
+2. Add desktop/mobile screenshot contracts for those five surfaces and verify that useful information stays visible before details.
+3. Re-run strict assets, full/playtest/Day1-9/visual browser gates, review screenshots, commit, and push the UI batch.

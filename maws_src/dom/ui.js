@@ -993,6 +993,18 @@ function renderCombat(model) {
   const tell = combat.enemyTell || null;
   const tellDangerClass = tell?.danger === '高' ? 'high' : tell?.danger === '中' ? 'mid' : 'low';
   const tellTips = (tell?.tips || []).map((tip) => `<li>${esc(tip)}</li>`).join('');
+  const counterNames = tell?.counterSkillNames || [];
+  const canStandGuard = counterNames.some((name) => /抱架|格挡|防/.test(String(name)));
+  const canBackStep = counterNames.some((name) => /后退|撤|闪|退/.test(String(name)));
+  const defenseRead = canStandGuard && canBackStep
+    ? '站住抱架 / 后撤退守'
+    : canBackStep ? '后撤退守' : canStandGuard ? '站住抱架' : '先观察距离';
+  const distanceRead = {
+    far: '远距 · 回气与观察',
+    mid: '中距 · 拳脚交换',
+    close: '近身 · 推开或脱离',
+    ground: '地面 · 控制与起身'
+  }[combat.distance] || shortDist(combat.distance);
   const counterHints = tell?.counterSkillNames?.length
     ? `<div class="maws-counter-hints"><span>推荐反制</span><strong>${tell.counterSkillNames.map((name) => esc(name)).join(' / ')}</strong></div>`
     : '';
@@ -1000,7 +1012,8 @@ function renderCombat(model) {
     <div class="maws-combat-read danger-${tellDangerClass}">
       <b>敌人意图：${esc(tell.label)} <em>${esc(tell.danger || '低')}</em></b>
       <span>${esc(tell.tell || '')}</span>
-      <small>预判 ${esc(tell.skillName || tell.skill || '行动')} · ${esc(tell.queueFit || '')} · ${esc(tell.recovery || '')}</small>
+      <small>防守读法：${esc(defenseRead)} · 反击窗：${esc(tell.recovery || '先稳住')}</small>
+      <small>预判 ${esc(tell.skillName || tell.skill || '行动')} · ${esc(tell.queueFit || '')}</small>
       ${counterHints}
       <p>${esc(tell.failure || '')}</p>
       <ol>${tellTips}</ol>
@@ -1018,7 +1031,7 @@ function renderCombat(model) {
   const measurementObjectives = combat.objectiveSet === 'first_wind' ? objectiveStrip : '';
   const objectives = combat.objectiveSet === 'first_wind' ? '' : objectiveStrip;
   const targetControls = ['head', 'body', 'leg'].map((target) => btn(
-    targetText(target),
+    `<strong>${esc({ head: '高位', body: '中位', leg: '低位' }[target])}</strong><small>${esc(targetText(target))}</small>`,
     'setTarget',
     { target },
     `maws-target-option ${combat.target === target ? 'active' : ''}`
@@ -1088,7 +1101,7 @@ function renderCombat(model) {
     <section class="maws-combat-ui">
       <div class="maws-combat-top">
         <div>${meter(model.player?.name || '你', model.player?.hp, model.player?.hpMax)}${meter('体力', model.player?.sp, model.player?.spMax)}${meter('架势', model.player?.posture, model.player?.postureMax)}</div>
-        <strong>第 ${esc(combat.round)} 回合 · ${esc(combat.enemy?.name)} · ${esc(shortDist(combat.distance))}</strong>
+        <strong>第 ${esc(combat.round)} 回合 · ${esc(combat.enemy?.name)} · ${esc(distanceRead)}</strong>
         <div>${meter(combat.enemy?.name || '对手', combat.enemy?.hp, combat.enemy?.hpMax)}${meter('体力', combat.enemy?.sp, combat.enemy?.spMax)}${meter('架势', combat.enemy?.posture, combat.enemy?.postureMax)}</div>
       </div>
       ${feedbackPanel}
@@ -1569,13 +1582,22 @@ function dispatchFromDataset(store, dataset) {
 function emitClickFx(root, event, target) {
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const fx = document.createElement('span');
-  fx.className = `maws-click-burst ${target.classList.contains('maws-city-marker') ? 'marker' : ''} ${target.classList.contains('maws-scene-character') ? 'character' : ''}`;
+  const characterClick = target.classList.contains('maws-scene-character');
+  fx.className = `maws-click-burst ${target.classList.contains('maws-city-marker') ? 'marker' : ''} ${characterClick ? 'character pixel-v2' : ''}`;
   fx.style.left = `${event.clientX}px`;
   fx.style.top = `${event.clientY}px`;
-  for (let i = 0; i < 6; i += 1) {
-    const spark = document.createElement('i');
-    spark.style.setProperty('--i', i);
-    fx.appendChild(spark);
+  if (characterClick) {
+    const image = document.createElement('img');
+    image.src = assetPath('vfx.scene.click');
+    image.alt = '';
+    image.setAttribute('aria-hidden', 'true');
+    fx.appendChild(image);
+  } else {
+    for (let i = 0; i < 6; i += 1) {
+      const spark = document.createElement('i');
+      spark.style.setProperty('--i', i);
+      fx.appendChild(spark);
+    }
   }
   document.body.appendChild(fx);
   target.classList.add('maws-click-hit');

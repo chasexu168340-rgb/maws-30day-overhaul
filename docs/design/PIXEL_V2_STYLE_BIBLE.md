@@ -154,3 +154,11 @@ Reject an asset when any item is true:
 - Important silhouette detail disappears at normal runtime scale.
 - File exceeds its performance budget without a measured reason.
 - The asset is presented as `final` before runtime and visual verification.
+## Combat VFX Contract
+
+- Runtime impact textures are transparent 64x64 RGBA PNGs under `assets/pixel_v2/vfx/`; each must stay below 64KB and keep transparent corners.
+- Normal hit, heavy hit, guard, miss, posture break, recipe completion, utility movement, and scene click each require a distinct silhouette at 1x scale.
+- Shape carries the first read: directional spark for hit, fractured mass for heavy, cyan shield wedge for guard, empty curved trail for miss, broken ring for posture, converging diamond for recipe, chevrons for movement, and focus brackets for click.
+- Color remains semantic and restrained: brick red for damage, muted gold for mastery/break, cyan for defense/interaction, bone white for timing. No blur, soft bloom, continuous gradients, or full-screen particle fog.
+- VFX supports existing hit-stop, shake, palette flash, and queue results; it must never obscure both fighters or replace readable combat text.
+- Attack targets read high/mid/low. Defensive language distinguishes standing guard from back-step defense, while distance labels explain whether the window favors recovery, exchange, or escape.

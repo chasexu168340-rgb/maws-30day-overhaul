@@ -126,6 +126,17 @@ const pixelV2Portrait = (file, tags = []) => entry(`assets/pixel_v2/portraits/${
   tags: [...tags, 'portrait', 'pixel-v2', 'pixel']
 });
 
+const pixelV2Vfx = (file, tags = []) => entry(`assets/pixel_v2/vfx/${file}`, {
+  w: 64,
+  h: 64,
+  transparent: true,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  bundle: tags.includes('scene') ? 'core' : 'combat:shared',
+  tags: [...tags, 'vfx', 'pixel-v2', 'pixel']
+});
+
 const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pixel/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
@@ -288,9 +299,22 @@ export const ASSET_MANIFEST = {
     'ui.progress.bar': entry('assets/imagegen_pixel/ui/ui_progress_bar.png', { w: 512, h: 96, pixelArt: true, tags: ['bar', 'pixel'] })
   },
   vfx: {
-    'vfx.hit.spark': entry('assets/imagegen_pixel/vfx/vfx_hit_spark.png', { w: 256, h: 256, pixelArt: true, tags: ['combat', 'hit', 'pixel'] }),
-    'vfx.guard.flash': entry('assets/imagegen_pixel/vfx/vfx_guard_flash.png', { w: 256, h: 256, pixelArt: true, tags: ['combat', 'guard', 'pixel'] }),
-    'vfx.impact.ring': entry('assets/imagegen_pixel/vfx/vfx_impact_ring.png', { w: 256, h: 256, pixelArt: true, tags: ['combat', 'impact', 'pixel'] }),
+    'combat.normal': pixelV2Vfx('vfx_combat_normal.png', ['combat', 'hit', 'normal']),
+    'combat.heavy': pixelV2Vfx('vfx_combat_heavy.png', ['combat', 'hit', 'heavy']),
+    'combat.guard': pixelV2Vfx('vfx_combat_guard.png', ['combat', 'guard']),
+    'combat.miss': pixelV2Vfx('vfx_combat_miss.png', ['combat', 'miss']),
+    'combat.break': pixelV2Vfx('vfx_combat_break.png', ['combat', 'break']),
+    'combat.recipe': pixelV2Vfx('vfx_combat_recipe.png', ['combat', 'recipe']),
+    'combat.utility': pixelV2Vfx('vfx_combat_utility.png', ['combat', 'utility', 'footwork']),
+    'combat.recipe.wild_pressure': pixelV2Vfx('vfx_combat_recipe.png', ['combat', 'recipe', 'wild-pressure']),
+    'combat.recipe.guard_counter': pixelV2Vfx('vfx_combat_recipe.png', ['combat', 'recipe', 'guard-counter']),
+    'combat.recipe.cool_exit': pixelV2Vfx('vfx_combat_recipe.png', ['combat', 'recipe', 'cool-exit']),
+    'combat.recipe.pull_and_tag': pixelV2Vfx('vfx_combat_recipe.png', ['combat', 'recipe', 'pull-and-tag']),
+    'combat.recipe.boxing_one_two': pixelV2Vfx('vfx_combat_recipe.png', ['combat', 'recipe', 'boxing-one-two']),
+    'vfx.scene.click': pixelV2Vfx('vfx_scene_click.png', ['scene', 'interaction', 'click']),
+    'vfx.hit.spark': pixelV2Vfx('vfx_combat_normal.png', ['combat', 'hit', 'compat']),
+    'vfx.guard.flash': pixelV2Vfx('vfx_combat_guard.png', ['combat', 'guard', 'compat']),
+    'vfx.impact.ring': pixelV2Vfx('vfx_combat_break.png', ['combat', 'impact', 'compat']),
     'vfx.sweat.drop': entry('assets/imagegen_pixel/vfx/vfx_sweat_drop.png', { w: 256, h: 256, pixelArt: true, tags: ['training', 'pixel'] })
   },
   fighters: {
