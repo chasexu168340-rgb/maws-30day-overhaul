@@ -40,7 +40,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'portraits:portrait.player',
   'portraits:portrait.fatty',
   'portraits:portrait.xiaoman',
-  'portraits:portrait.worker'
+  'portraits:portrait.worker',
+  'portraits:portrait.coach'
 ];
 
 let server;
@@ -187,6 +188,18 @@ async function showDay4Worksite(page) {
     store.state.time = 600;
     store.state.loc = 'worksite';
     delete store.state.flags.main_4;
+    store.emit();
+  });
+  await expect(page.locator('.maws-scene')).toBeVisible();
+  await page.waitForTimeout(500);
+}
+
+async function showDay9Boxing(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 9;
+    store.state.time = 600;
+    store.state.loc = 'boxing';
     store.emit();
   });
   await expect(page.locator('.maws-scene')).toBeVisible();
@@ -587,6 +600,22 @@ for (const viewport of VIEWPORTS) {
     await expectNoHorizontalOverflow(page, `Day 4 dialogue ${viewport.name}`);
     await expectScreenshotHasPixels(page, `day4-dialogue-${viewport.name}.png`, `Day 4 dialogue ${viewport.name}`);
     expect(violations, `Day 4 worksite ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 9 boxing ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await showDay9Boxing(page);
+    const coach = page.locator('.maws-scene-character:has(img[src*="scene_npc_coach.png"])');
+    await expect(coach).toBeVisible();
+    await expect(coach).not.toHaveClass(/placeholder-npc/);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.boxing.day',
+      'characters:scene.npc.coach',
+      'portraits:portrait.coach'
+    ], `Day 9 boxing ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 9 boxing ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day9-boxing-${viewport.name}.png`, `Day 9 boxing ${viewport.name}`);
+    expect(violations, `Day 9 boxing ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 5 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

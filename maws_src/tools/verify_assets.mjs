@@ -41,7 +41,8 @@ const day1To9FinalKeys = [
   'portrait.player',
   'portrait.fatty',
   'portrait.xiaoman',
-  'portrait.worker'
+  'portrait.worker',
+  'portrait.coach'
 ];
 const legacyKeys = [
   'bg.home.night',

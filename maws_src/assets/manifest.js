@@ -212,7 +212,7 @@ export const ASSET_MANIFEST = {
     'scene.npc.fatty': pixelV2Character('scene_npc_fatty.png', ['scene', 'npc', 'fatty', 'home', 'day1']),
     'scene.npc.xiaoman': pixelV2Character('scene_npc_xiaoman.png', ['scene', 'npc', 'xiaoman', 'store', 'day3']),
     'scene.npc.worker': pixelV2Character('scene_npc_worker.png', ['scene', 'npc', 'worker', 'worksite', 'day4']),
-    'scene.npc.coach': cleanCharacter('scene_npc_coach.png', ['scene', 'npc', 'coach', 'boxing']),
+    'scene.npc.coach': pixelV2Character('scene_npc_coach.png', ['scene', 'npc', 'coach', 'boxing', 'day9']),
     'scene.npc.master': cleanCharacter('scene_npc_master.png', ['scene', 'npc', 'master', 'wuguan']),
     'scene.npc.gymcoach': cleanCharacter('scene_npc_gymcoach.png', ['scene', 'npc', 'gym', 'coach']),
     'scene.npc.physio': cleanCharacter('scene_npc_physio.png', ['scene', 'npc', 'physio']),
@@ -231,7 +231,7 @@ export const ASSET_MANIFEST = {
   portraits: {
     'portrait.player': pixelV2Portrait('portrait_player.png', ['player']),
     'portrait.fatty': pixelV2Portrait('portrait_fatty.png', ['npc', 'fatty', 'home', 'day1']),
-    'portrait.coach': entry('assets/imagegen_pixel/portraits/portrait_coach.png', { w: 512, h: 512, pixelArt: true, tags: ['npc', 'coach', 'pixel'] }),
+    'portrait.coach': pixelV2Portrait('portrait_coach.png', ['npc', 'coach', 'boxing', 'day9']),
     'portrait.master': entry('assets/imagegen_pixel/portraits/portrait_master.png', { w: 512, h: 512, pixelArt: true, tags: ['npc', 'master', 'pixel'] }),
     'portrait.xiaoman': pixelV2Portrait('portrait_xiaoman.png', ['npc', 'xiaoman', 'store', 'day3']),
     'portrait.worker': pixelV2Portrait('portrait_worker.png', ['npc', 'worker', 'worksite', 'day4']),
