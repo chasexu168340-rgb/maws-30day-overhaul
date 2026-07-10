@@ -1092,6 +1092,93 @@ test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape mo
   expect(violations, 'E06 grappler motion should not emit warnings/errors').toEqual([]);
 });
 
+test('successful E06 takedown drives paired player fall and technical recovery', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startE06(page);
+
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemySprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.grappler');
+    const playerSprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = {
+      sprite: enemySprite,
+      animKey: 'anim.fighter.enemy.grappler',
+      isAnimated: true,
+      x: enemySprite?.x || 0,
+      y: enemySprite?.y || 0,
+      maxAdvance: 260,
+      displayWidth: enemySprite?.displayWidth || 96
+    };
+    const target = {
+      sprite: playerSprite,
+      animKey: 'anim.fighter.player',
+      isAnimated: true,
+      x: playerSprite?.x || 0,
+      y: playerSprite?.y || 0,
+      maxAdvance: 260,
+      displayWidth: playerSprite?.displayWidth || 96
+    };
+    window.__pairedTakedown = { frames: [], x: [], actor, target };
+    window.__pairedTakedownTimer = setInterval(() => {
+      if (playerSprite?.frame?.name !== undefined) {
+        window.__pairedTakedown.frames.push(Number(playerSprite.frame.name));
+        window.__pairedTakedown.x.push(Number(playerSprite.x || 0));
+      }
+    }, 24);
+    scene.playCombatStepFx({
+      actor: 'enemy',
+      action: { id: 'takedown', type: 'grapple' },
+      result: { hit: true, takedown: true },
+      fx: [{
+        type: 'break',
+        actor: 'enemy',
+        fromSide: 'enemy',
+        toSide: 'player',
+        skillId: 'takedown',
+        label: 'TAKEDOWN',
+        hitstopMs: 90,
+        shake: 0.3,
+        vfxKey: 'vfx.break'
+      }]
+    }, { enemy: actor, player: target }, 0, false);
+  });
+
+  await page.waitForFunction(() => (window.__pairedTakedown?.frames || []).some((frame) => frame >= 28 && frame <= 31), null, { timeout: 3000 });
+  await page.waitForTimeout(180);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e06-paired-takedown-contact.png'), fullPage: true });
+  await page.waitForTimeout(820);
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    scene.playFighterAnim(window.__pairedTakedown.target, 'recover', true);
+  });
+  await page.waitForFunction(() => (window.__pairedTakedown?.frames || []).some((frame) => frame >= 32 && frame <= 35), null, { timeout: 3000 });
+  await page.waitForTimeout(360);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'e06-player-technical-recovery.png'), fullPage: true });
+
+  const playback = await page.evaluate(() => {
+    clearInterval(window.__pairedTakedownTimer);
+    const record = window.__pairedTakedown || { frames: [], x: [] };
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    return {
+      frames: record.frames,
+      x: record.x,
+      fallExists: scene.anims.exists('anim.fighter.player.fall'),
+      groundedExists: scene.anims.exists('anim.fighter.player.grounded'),
+      recoverExists: scene.anims.exists('anim.fighter.player.recover'),
+      escapeSemantic: scene.fighterActionAnimName({ action: { id: 'escape', type: 'ground' } }, record.target)
+    };
+  });
+
+  expect(playback.fallExists).toBe(true);
+  expect(playback.groundedExists).toBe(true);
+  expect(playback.recoverExists).toBe(true);
+  expect(playback.escapeSemantic).toBe('recover');
+  expect(playback.frames.some((frame) => frame >= 28 && frame <= 31), `player fall frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 32 && frame <= 35), `player recovery frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(Math.max(...playback.x) - Math.min(...playback.x), 'takedown should move the defender across the ground').toBeGreaterThan(40);
+  expect(violations, 'paired takedown presentation should not emit warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);

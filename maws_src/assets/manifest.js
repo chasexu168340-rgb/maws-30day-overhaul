@@ -250,6 +250,13 @@ const GRAPPLER_MOTION_28 = Object.freeze({
   escape: { start: 24, end: 27, frameRate: 6, repeat: 0 }
 });
 
+const PLAYER_MOTION_36 = Object.freeze({
+  ...FULL_MOTION_28,
+  fall: { start: 28, end: 31, frameRate: 6, repeat: 0 },
+  grounded: { start: 31, end: 31, frameRate: 1, repeat: -1 },
+  recover: { start: 32, end: 35, frameRate: 6, repeat: 0 }
+});
+
 export const ASSET_MANIFEST = {
   backgrounds: {
     'bg.city.map.day': pixelV2Background('bg_city_map_day.png', ['day', 'shenzhen', 'city-map']),
@@ -300,7 +307,7 @@ export const ASSET_MANIFEST = {
     'scene.npc.chen': cleanCharacter('scene_npc_chen.png', ['scene', 'npc', 'chen', 'boss'])
   },
   sprites: {
-    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player_v3.png', 'fighter.player', ['player', 'full-motion'], 1.28, FULL_MOTION_28),
+    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player_v3.png', 'fighter.player', ['player', 'full-motion', 'ground-reaction'], 1.28, PLAYER_MOTION_36),
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained_v3.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00', 'full-motion'], 1.1, FULL_MOTION_28),
     'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner_v3.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5', 'full-motion'], 1, FULL_MOTION_28),

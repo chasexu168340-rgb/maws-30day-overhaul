@@ -4,25 +4,24 @@
 
 ## Current Task
 
-Replace E06's static boxing-like fallback with the first production grappling motion contract.
+Add a paired-body takedown presentation so E06 throws visibly affect the defender instead of playing two disconnected animations.
 
 ## Scope
 
-- Generated imagery only in the current Codex session.
-- Replaced the E06 standee and sprite strip while preserving existing runtime asset keys.
-- Added animation semantics and contact timing only; combat formulas, stats, economy, story, and save contracts remain unchanged.
-- Reference games remain clean-room principle references; no protected code or assets were extracted or copied.
+- Generated player reaction imagery only in the current Codex session.
+- Extended the existing player strip without replacing its first 28 frames.
+- Added presentation semantics and spatial tweens only; combat success, damage, economy, story, and save contracts remain unchanged.
+- External games remain clean-room principle references; no protected code or assets were extracted or copied.
 
 ## Current Result
 
-- E06 now uses a final 28-frame 96x144 Pixel V2 strip and matching standee.
-- Authored rows cover wrestling idle, entry/level change, shot, takedown/control, sprawl, hurt, and technical escape.
-- E06 stands on the left and faces screen-right; the player remains on the right and faces screen-left.
-- Grappling actions map to dedicated `entry`, `shot`, `takedown`, `control`, `sprawl`, and `escape` semantics.
-- Fighters without those aliases fall back to their existing generic advance/attack/heavy/guard/retreat ranges.
-- Grappling contact now takes 380ms versus 260ms for ordinary strikes, and impact audio/VFX remain aligned to contact.
-- Browser sampling proves the authored E06 frame ranges play and the sprite travels more than 70px into contact.
-- The atlas slicer supports optional per-frame target heights, keeping standing and grounded grappling poses at believable relative scale.
+- The player sprite strip now contains 36 frames while preserving all existing idle, movement, attack, guard, hurt, and retreat ranges.
+- Frames 28-31 form a takedown fall: broken stance, airborne rotation, side/back landing, and grounded defense.
+- Frames 32-35 form a technical recovery: post, hip lift, knee under, and guarded stand.
+- Successful E06 takedowns now play the grappler's dedicated takedown row, delay impact to the 380ms contact point, move the defender laterally, and hold the player on the grounded frame.
+- Player ground escape maps to `recover`; ordinary retreat and all existing strike semantics remain compatible.
+- Fighters without fall/recover ranges safely fall back to hurt/retreat.
+- Browser sampling proves frames 28-35 play and that the defender moves more than 40px across the ground.
 
 ## Validation
 
@@ -30,18 +29,18 @@ Replace E06's static boxing-like fallback with the first production grappling mo
 - `npm run check:full`: passed (build + 6 Chromium smoke tests).
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
-- Full `pixel_v2_visual.spec.js`: passed (38 tests).
-- E06 desktop/mobile screenshots were reviewed for scale, alpha edges, stage placement, orientation, and overflow.
+- Full `pixel_v2_visual.spec.js`: passed (39 tests).
+- Takedown-contact and technical-recovery screenshots were reviewed after the impact flash cleared.
 - `git diff --check`: passed.
 
 ## Risks
 
-- E06 ground control still represents the acting grappler only; paired-body throw animation is not yet implemented.
+- The paired reaction is coordinated at runtime rather than a baked two-character animation, so limb-to-limb contact remains approximate.
+- Ground control still has one persistent defender pose rather than a full scramble loop.
 - E07 weapon and E18 boss still use legacy motion strips.
-- Grappling uses synthesized prototype contact audio rather than final recorded mat/body foley.
 
 ## Next Step
 
-1. Add a paired-contact takedown presentation so the defender reacts spatially to successful E06 throws.
-2. Generate the E07 weapon-threat motion contract with distance-first retreat and disarm-avoidance reads.
-3. Add final grappling contact, mat impact, and scramble audio after the paired-body timing is stable.
+1. Generate the E07 weapon-threat motion contract with readable weapon line, retreat pressure, miss, hurt, and disengage rows.
+2. Add a short grounded scramble loop only if E06 hand-play shows the held grounded frame lasting too long.
+3. Record final grappling contact and mat-impact audio after paired timing is accepted.

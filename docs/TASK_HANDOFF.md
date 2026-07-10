@@ -61,6 +61,8 @@ The player-facing target remains: the player clicks something, the game responds
 38. E06 now uses a final 28-frame Pixel V2 grappling strip and matching standee with entry, shot, takedown/control, sprawl, hurt, and escape rows.
 39. Grappling contact runs on a readable 380ms approach while ordinary strikes remain 260ms; impact audio/VFX follow the actual contact point.
 40. `slice_combat_motion_atlas.ps1` accepts optional per-frame target heights so standing and ground poses can share one 96x144 contract without shrinking the whole fighter.
+41. The player combat strip now has 36 frames: the original 28 plus takedown fall frames 28-31 and technical recovery frames 32-35.
+42. Successful takedowns coordinate attacker approach, defender fall, lateral ground travel, impact timing, and a later player `escape -> recover` animation.
 
 ## Deferred Larger Work
 

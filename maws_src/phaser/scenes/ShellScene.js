@@ -586,7 +586,7 @@ export class ShellScene extends PhaserScene {
     });
   }
 
-  playFighterAnim(actor, name, restart = true) {
+  playFighterAnim(actor, name, restart = true, returnToIdle = true) {
     const sprite = actor?.sprite;
     if (!actor?.animKey || !sprite?.active || !sprite.scene || typeof sprite.play !== 'function') return;
     const requestedKey = `${actor.animKey}.${name}`;
@@ -600,12 +600,15 @@ export class ShellScene extends PhaserScene {
       takedown: 'heavy',
       control: 'heavy',
       sprawl: 'guard',
-      escape: 'retreat'
+      escape: 'retreat',
+      fall: 'hurt',
+      grounded: 'hurt',
+      recover: 'retreat'
     })[name] || name;
     const key = this.anims?.exists?.(requestedKey) ? requestedKey : `${actor.animKey}.${fallbackName}`;
     if (!this.anims?.exists?.(key)) return;
     sprite.play(key, restart);
-    if (name !== 'idle' && sprite.once) {
+    if (name !== 'idle' && returnToIdle && sprite.once) {
       sprite.once('animationcomplete', () => this.playFighterAnim(actor, 'idle', true));
     }
   }
@@ -667,7 +670,7 @@ export class ShellScene extends PhaserScene {
     const actionActor = fighters[step.actor];
     const stepDelay = index * (mobile ? 540 : 620);
     if (!fxList.length) {
-      if (actionActor && step.action?.type !== 'system') this.delayedFighterAnim(actionActor, this.actionAnimName(step), stepDelay);
+      if (actionActor && step.action?.type !== 'system') this.delayedFighterAnim(actionActor, this.fighterActionAnimName(step, actionActor), stepDelay);
       return;
     }
     fxList.forEach((fx, fxIndex) => {
@@ -681,13 +684,18 @@ export class ShellScene extends PhaserScene {
       const contactMs = this.combatContactMs(step, fx);
       const impactDelay = isImpact ? delay + contactMs : isContactRead ? delay + 160 : delay;
       if (fx.type === 'hit' || fx.type === 'break') {
-        const semanticAnim = this.actionAnimName(step);
+        const semanticAnim = this.fighterActionAnimName(step, actor);
         this.delayedFighterAnim(actor, semanticAnim === 'idle' ? 'attack' : semanticAnim, delay);
-        this.delayedFighterAnim(target, 'hurt', impactDelay);
+        if (step.result?.takedown) {
+          this.delayedFighterAnim(target, 'fall', impactDelay, false);
+          this.animateTakedownTarget(target, actor, impactDelay);
+        } else {
+          this.delayedFighterAnim(target, 'hurt', impactDelay);
+        }
         this.animateAttack(actor, target, delay, { ...fx, contactMs });
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
-        const semanticAnim = this.actionAnimName(step);
+        const semanticAnim = this.fighterActionAnimName(step, actor);
         this.delayedFighterAnim(actor, fx.type === 'guard' && semanticAnim !== 'idle' ? semanticAnim : fx.type === 'guard' ? 'guard' : 'attack', delay);
         const opposingTarget = fighters[actorSide === 'player' ? 'enemy' : 'player'] || target;
         if (fx.type === 'miss') this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0, contactMs });
@@ -717,6 +725,12 @@ export class ShellScene extends PhaserScene {
     return 'idle';
   }
 
+  fighterActionAnimName(step, actor) {
+    const id = step.action?.id || '';
+    if (actor?.animKey === 'anim.fighter.player' && id === 'escape') return 'recover';
+    return this.actionAnimName(step);
+  }
+
   combatContactMs(step, fx = {}) {
     const id = fx.skillId || step?.action?.id || '';
     const type = step?.action?.type || '';
@@ -724,12 +738,28 @@ export class ShellScene extends PhaserScene {
     return 260;
   }
 
-  delayedFighterAnim(actor, name, delay) {
+  delayedFighterAnim(actor, name, delay, returnToIdle = true) {
     if (!actor?.isAnimated) return;
     this.time.delayedCall(delay, () => {
       if (!actor.sprite?.active || !actor.sprite.scene) return;
-      this.playFighterAnim(actor, name, true);
+      this.playFighterAnim(actor, name, true, returnToIdle);
     });
+  }
+
+  animateTakedownTarget(target, actor, delay) {
+    if (!target?.sprite?.active) return;
+    const dir = target.x > actor.x ? 1 : -1;
+    const slide = Math.max(42, Math.min(86, Math.round(Number(target.maxAdvance || 180) * 0.34)));
+    this.tweens.add({
+      targets: target.sprite,
+      x: target.x + dir * slide,
+      duration: 420,
+      ease: 'Quad.easeOut',
+      delay
+    });
+    if (target.shadow?.active) {
+      this.tweens.add({ targets: target.shadow, x: dir * slide, duration: 420, ease: 'Quad.easeOut', delay });
+    }
   }
 
   animateAttack(actor, target, delay, fx) {
