@@ -38,7 +38,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent',
   'portraits:portrait.player',
-  'portraits:portrait.fatty'
+  'portraits:portrait.fatty',
+  'portraits:portrait.xiaoman'
 ];
 
 let server;
@@ -163,6 +164,18 @@ async function startDay3FunTarget(page) {
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
+}
+
+async function showDay3Store(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 3;
+    store.state.time = 600;
+    store.state.loc = 'store';
+    store.emit();
+  });
+  await expect(page.locator('.maws-scene')).toBeVisible();
+  await page.waitForTimeout(500);
 }
 
 async function expectNoHorizontalOverflow(page, label) {
@@ -522,6 +535,22 @@ for (const viewport of VIEWPORTS) {
     await expectCombatGeometry(page, viewport);
     await expectScreenshotHasPixels(page, `day8-${viewport.name}.png`, `Day 8 ${viewport.name}`);
     expect(violations, `Day 8 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 3 store ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await showDay3Store(page);
+    const xiaoman = page.locator('.maws-scene-character:has(img[src*="scene_npc_xiaoman.png"])');
+    await expect(xiaoman).toBeVisible();
+    await expect(xiaoman).not.toHaveClass(/placeholder-npc/);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.store.day',
+      'characters:scene.npc.xiaoman',
+      'portraits:portrait.xiaoman'
+    ], `Day 3 store ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 3 store ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day3-store-${viewport.name}.png`, `Day 3 store ${viewport.name}`);
+    expect(violations, `Day 3 store ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 5 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

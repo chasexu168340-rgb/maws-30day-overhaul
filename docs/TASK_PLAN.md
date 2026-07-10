@@ -45,6 +45,9 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - `portrait.fatty` now uses a reviewed 96x96 portrait with the same face, phone, pendant, and asymmetrical grin; the previous placeholder portrait is no longer live.
 - Day 1 desktop/mobile screenshots confirm Lu and Liu Pangzi now share one pixel density and silhouette language.
 - Scene-character fallback styling now reads manifest status: final `scene.npc.*` art keeps full scale/opacity, while unfinished legacy/fallback NPCs retain placeholder treatment.
+- `scene.npc.xiaoman` now uses a reviewed 96x144 standee with the canonical high bun, red-piped store uniform, hand-on-hip pose, scanner, and grounded shoes.
+- `portrait.xiaoman` now uses a matching reviewed 96x96 portrait; the previous placeholder face is no longer live.
+- Day 3 store desktop/mobile screenshots confirm Xiaoman is visible at final scale without horizontal overflow.
 - Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
@@ -89,12 +92,17 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run check:full` (6 Chromium smoke tests)
   - Pixel V2 candidate visual gate (13 passed; final Liu standee is asserted not to use `placeholder-npc`)
   - `git diff --check`
+- Passed after the Xiaoman scene identity replacement:
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 candidate visual gate (15 passed, including Day 3 store desktop/mobile screenshots and final-scale assertion)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- Xiaoman, the worker, Coach Liang, and father-memory scene/portrait assets remain legacy or missing.
+- The worker, Coach Liang, and father-memory scene/portrait assets remain legacy or missing.
 - The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
@@ -102,4 +110,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Generate and review Xiaoman's scene standee and portrait, then the worker, Coach Liang, and the father-memory set before the broad UI skin replacement.
+Generate and review the worksite worker standee, then Coach Liang and the father-memory set before the broad UI skin replacement.
