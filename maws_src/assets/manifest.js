@@ -193,6 +193,7 @@ export const ASSET_MANIFEST = {
   characters: {
     'fighter.player': cleanCharacter('fighter_player.png', ['player', 'standing']),
     'fighter.enemy.boxer': cleanCharacter('fighter_enemy_boxer.png', ['enemy', 'boxing']),
+    'fighter.enemy.beginner': pixelV2Character('fighter_enemy_beginner.png', ['enemy', 'boxing', 'beginner', 'day5']),
     'fighter.enemy.silent': pixelV2Character('fighter_enemy_silent.png', ['enemy', 'boxing', 'silent', 'day8']),
     'fighter.enemy.grappler': cleanCharacter('fighter_enemy_grappler.png', ['enemy', 'grappling']),
     'fighter.enemy.weapon': cleanCharacter('fighter_enemy_weapon.png', ['enemy', 'weapon']),
@@ -209,6 +210,7 @@ export const ASSET_MANIFEST = {
   sprites: {
     'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player.png', 'fighter.player', ['player'], 1.28),
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
+    'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5'], 1),
     'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8'], 0.98),
     'anim.fighter.enemy.grappler': fighterSprite('anim_fighter_enemy_grappler.png', 'fighter.enemy.grappler', ['enemy', 'grappling']),
     'anim.fighter.enemy.weapon': fighterSprite('anim_fighter_enemy_weapon.png', 'fighter.enemy.weapon', ['enemy', 'weapon']),

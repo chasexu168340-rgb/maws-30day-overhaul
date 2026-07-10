@@ -31,8 +31,9 @@ The player-facing target remains: the player clicks something, the game responds
 8. `anim.fighter.player` is now a final 16-frame `pixel_v2` strip with real idle/attack/hurt/guard playback; browser tests read the live Phaser frame index and capture an attack-frame screenshot.
 9. Day 8 now uses an independent final E10 standee/strip; browser tests prove both player and E10 attack ranges play in real combat and capture both mid-action screenshots.
 10. Guard FX targeting/tinting is corrected and concise Chinese combat cues replace English debug-style labels.
-11. Next production batch: independent E01 Day 5 action master, then E00, followed by Lu/NPC scene standees and portraits.
-12. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+11. Day 5 E01 now uses an independent final beginner-boxer standee/strip; browser tests prove its attack frames and cover desktop/mobile Day 5 screenshots.
+12. Next production batch: independent E00 action master, followed by Lu/NPC scene standees and portraits.
+13. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 

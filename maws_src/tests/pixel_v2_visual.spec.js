@@ -30,10 +30,10 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.home.day',
   'backgrounds:bg.park.day',
   'characters:fighter.player',
-  'characters:fighter.enemy.boxer',
+  'characters:fighter.enemy.beginner',
   'characters:fighter.enemy.silent',
   'sprites:anim.fighter.player',
-  'sprites:anim.fighter.enemy.boxer',
+  'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent'
 ];
 
@@ -130,6 +130,19 @@ async function startDay8(page) {
     delete store.state.flags.main_8;
     store.emit();
     store.dispatch({ type: 'startMainEvent' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startDay5(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 5;
+    store.state.time = 960;
+    store.state.loc = 'park';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E01' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
@@ -347,6 +360,44 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
   expect(violations, 'player animation should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 beginner boxer strip advances through real attack frames in Phaser', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay5(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const game = window.MAWS_GAME;
+    window.__pixelV2BeginnerFrameNames = [];
+    window.__pixelV2BeginnerFrameTimer = setInterval(() => {
+      const scene = game.scene.getScene('ShellScene');
+      const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.beginner');
+      if (sprite?.frame?.name !== undefined) window.__pixelV2BeginnerFrameNames.push(Number(sprite.frame.name));
+    }, 32);
+
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'guard' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+
+  await page.waitForFunction(
+    () => (window.__pixelV2BeginnerFrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    null,
+    { timeout: 3000 }
+  );
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'beginner-boxer-attack-desktop.png'), fullPage: true });
+  await page.waitForTimeout(850);
+
+  const samples = await page.evaluate(() => {
+    clearInterval(window.__pixelV2BeginnerFrameTimer);
+    return window.__pixelV2BeginnerFrameNames || [];
+  });
+
+  expect(samples.length, 'Phaser should expose beginner-boxer animation frame samples').toBeGreaterThan(6);
+  expect(new Set(samples).size, 'beginner-boxer sprite should advance beyond a static frame').toBeGreaterThan(2);
+  expect(samples.some((frame) => frame >= 4 && frame <= 7), `beginner boxer should enter attack frames; sampled ${samples.join(',')}`).toBe(true);
+  expect(violations, 'beginner-boxer animation should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 silent boxer strip advances through real attack frames in Phaser', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startDay8(page);
@@ -412,5 +463,19 @@ for (const viewport of VIEWPORTS) {
     await expectCombatGeometry(page, viewport);
     await expectScreenshotHasPixels(page, `day8-${viewport.name}.png`, `Day 8 ${viewport.name}`);
     expect(violations, `Day 8 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 5 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startDay5(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.park.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.beginner'
+    ], `Day 5 ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 5 ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    await expectScreenshotHasPixels(page, `day5-${viewport.name}.png`, `Day 5 ${viewport.name}`);
+    expect(violations, `Day 5 ${viewport.name} console warnings/errors`).toEqual([]);
   });
 }
