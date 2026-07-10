@@ -424,6 +424,33 @@ test('Day 1-9 pixel_v2 background variants decode in the browser', async ({ page
   expect(violations, 'background decode should not emit warnings/errors').toEqual([]);
 });
 
+for (const viewport of VIEWPORTS) {
+  test(`Pixel V2 boot ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = collectConsoleViolations(page);
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto(baseURL);
+    await page.waitForFunction(
+      () => window.MAWS_GAME && window.MAWS_STORE && document.querySelectorAll('canvas').length > 0,
+      null,
+      { timeout: 15000 }
+    );
+    await expect(page.locator('.maws-title')).toBeVisible();
+    await expect(page.locator('.maws-origin').first()).toBeVisible();
+    await expectManifestImagesDecode(page, ['backgrounds:bg.city.map.night'], `boot ${viewport.name}`);
+    const bootStyle = await page.locator('.maws-title').evaluate((node) => ({
+      backgroundImage: getComputedStyle(node).backgroundImage,
+      originCount: node.querySelectorAll('.maws-origin').length,
+      firstButtonHeight: node.querySelector('.maws-origin button')?.getBoundingClientRect().height || 0
+    }));
+    expect(bootStyle.backgroundImage, 'boot should use the final pixel city art').toContain('bg_city_map_night.png');
+    expect(bootStyle.originCount, 'boot should expose origin choices').toBeGreaterThanOrEqual(1);
+    expect(bootStyle.firstButtonHeight, 'origin choice should keep a 44px hit target').toBeGreaterThanOrEqual(44);
+    await expectNoHorizontalOverflow(page, `boot ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `boot-${viewport.name}.png`, `boot ${viewport.name}`);
+    expect(violations, `boot ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+}
+
 test('pixel_v2 player strip advances through real attack frames in Phaser', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startDay8(page);
@@ -639,6 +666,27 @@ for (const viewport of VIEWPORTS) {
 
     await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'startMainEvent' }));
     await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_player.png"]')).toBeVisible();
+    const dialogueStyle = await page.evaluate(() => {
+      const modal = document.querySelector('.maws-modal.dialogue');
+      const shell = document.querySelector('.maws-modal.dialogue .maws-modal-shell');
+      const line = document.querySelector('.maws-dialogue-box > p');
+      const portrait = document.querySelector('.maws-dialogue-portrait-img');
+      const advance = document.querySelector('button[data-action="advanceDialogue"]');
+      return {
+        modalBackdrop: getComputedStyle(modal).backdropFilter,
+        shellBackgroundImage: getComputedStyle(shell).backgroundImage,
+        shellRadius: getComputedStyle(shell).borderRadius,
+        lineFont: Number.parseFloat(getComputedStyle(line).fontSize),
+        portraitWidth: portrait.getBoundingClientRect().width,
+        actionHeight: advance.getBoundingClientRect().height
+      };
+    });
+    expect(dialogueStyle.modalBackdrop, 'dialogue should not use blurred glass').toBe('none');
+    expect(dialogueStyle.shellBackgroundImage, 'dialogue should use a solid pixel panel').toBe('none');
+    expect(dialogueStyle.shellRadius, 'dialogue should use square pixel corners').toBe('0px');
+    expect(dialogueStyle.lineFont, 'current dialogue line should be immediately readable').toBeGreaterThanOrEqual(18);
+    expect(dialogueStyle.portraitWidth, 'speaker portrait should remain visually present').toBeGreaterThanOrEqual(76);
+    expect(dialogueStyle.actionHeight, 'dialogue advance should keep a 44px hit target').toBeGreaterThanOrEqual(44);
     await page.locator('button[data-action="advanceDialogue"]').click();
     await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_father.png"]')).toBeVisible();
     await expectNoHorizontalOverflow(page, `Day 1 father dialogue ${viewport.name}`);

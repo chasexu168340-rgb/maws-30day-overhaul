@@ -33,6 +33,9 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - All 16 Day 1-9 location background variants now decode in the browser from `assets/pixel_v2/`; only the separate city-map day/night art remains legacy.
 - `bg.city.map.day/night` now use reviewed 480x270/32-color `pixel_v2` route maps at roughly 71KB, with four readable districts, a central metro line, quiet DOM-marker pads, and matching daytime/night geometry.
 - The city-map sheet now preserves the authored 16:9 marker plane, removes the old red/yellow banner and glass treatment, hides locked-node clutter on mobile, keeps reachable markers at 44px, and retains toast/nav compatibility.
+- The boot screen now uses the final night city map as a full-screen pixel stage, presents the product name without a tilted card, and keeps three compact origin choices with 44px actions; mobile uses a horizontal snap strip instead of stacking a wall of cards.
+- Dialogue, result, duration, event, and diary modal shells now share square hard borders, solid charcoal panels, no blurred glass/soft gradients, and 44px actions.
+- Dialogue presentation gives the current 96x96 portrait a 128px desktop stage (76px mobile), keeps the current line at 22px/18px, and folds history/settlement below the active exchange.
 - The strict `--require-final-day1-9` asset verifier now passes: every listed Day 1-9 background, scene identity, portrait, and combat strip resolves to reviewed `assets/pixel_v2/` art.
 - Karate Master 2 is now documented as a principle-only reference for work/training/fight cadence, attack-height reads, guard/back-step distinction, counter windows, distance recovery, injury, and rules; no packaged game content is reused.
 - Final `pixel_v2` backgrounds now fail asset verification unless they are exact 480x270 indexed PNGs with at most 32 palette entries and stay within the 180KB budget.
@@ -171,15 +174,21 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - Pixel V2 city-map desktop/mobile contract (2 passed; 16:9 plane, no empty min-height, HUD suppressed, mobile clutter capped)
   - Pixel V2 strict visual gate (24 passed after the final map/HUD/toast compatibility adjustment)
   - `git diff --check`
+- Passed after the boot/modal/dialogue replacement:
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (26 passed, including boot and dialogue contracts on desktop/mobile)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
-- Boot/title, city-map marker, and non-scene UI surfaces still carry older web-card/gradient styling and need the next UI replacement pass.
+- Non-scene profile/skills/bag/shop/log panels still include older generic card styling and need a later focused pass after combat VFX.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
 - The final release gate still needs final-art desktop/mobile shots for Day 1, 2, and 3; Day 5 coverage is now active.
 
 ## Next Step
 
-Replace the boot/title and modal/dialogue surfaces, then produce final pixel hit/guard/miss/break/recipe VFX and apply the Karate-derived readability principles without changing the queue-based combat architecture.
+Produce final pixel hit/guard/miss/break/recipe VFX and apply the Karate-derived attack-height, guard/back-step, counter-window, and distance-recovery readability principles without changing the queue-based combat architecture.

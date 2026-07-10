@@ -8574,3 +8574,423 @@
     display: none;
   }
 }
+
+/* Pixel V2 boot screen: one city stage, one offer, compact origin choices. */
+#maws-ui-root .maws-title {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: end;
+  gap: 16px;
+  min-height: 100dvh;
+  padding: clamp(24px, 5vw, 64px);
+  background-color: #0a0a0d;
+  background-image: url('/assets/pixel_v2/backgrounds/bg_city_map_night.png');
+  background-position: 50% 50%;
+  background-size: cover;
+  image-rendering: pixelated;
+  overflow: auto;
+}
+
+#maws-ui-root .maws-title::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(5, 5, 6, 0.58);
+}
+
+#maws-ui-root .maws-title-copy,
+#maws-ui-root .maws-title .maws-origin-grid,
+#maws-ui-root .maws-title-actions {
+  width: min(1080px, 100%);
+  margin-inline: auto;
+}
+
+#maws-ui-root .maws-title-copy {
+  display: grid;
+  gap: 8px;
+  padding: 4px 0 4px 20px;
+  border: 0;
+  border-left: 8px solid var(--maws-gold, #f2c94c);
+  background: transparent;
+  color: var(--maws-paper, #f3e2b9);
+  box-shadow: none;
+  transform: none;
+  overflow: visible;
+}
+
+#maws-ui-root .maws-title-copy::after {
+  content: '30日试炼';
+  position: static;
+  width: fit-content;
+  grid-row: 1;
+  padding: 4px 8px;
+  border: 2px solid #050506;
+  background: var(--maws-red, #d92f3a);
+  color: #fff;
+  box-shadow: 2px 2px 0 #050506;
+  font-size: 13px;
+  transform: none;
+}
+
+#maws-ui-root .maws-title-copy h1 {
+  max-width: 900px;
+  margin: 0;
+  color: var(--maws-paper, #f3e2b9);
+  font-size: clamp(48px, 6.5vw, 82px);
+  line-height: 0.98;
+  letter-spacing: 0;
+  text-shadow: 4px 4px 0 #050506;
+}
+
+#maws-ui-root .maws-title-copy p {
+  max-width: 680px;
+  margin: 0;
+  color: rgba(243, 226, 185, 0.9);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-shadow: 2px 2px 0 #050506;
+}
+
+#maws-ui-root .maws-title-kicker {
+  width: fit-content;
+  padding: 4px 8px;
+  border: 2px solid rgba(243, 226, 185, 0.48);
+  background: #0a0a0d;
+  color: var(--maws-gold, #f2c94c);
+  box-shadow: 2px 2px 0 #050506;
+  font-size: 14px;
+}
+
+#maws-ui-root .maws-title .maws-origin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#maws-ui-root .maws-title .maws-origin {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 0;
+  padding: 12px;
+  border: 2px solid rgba(243, 226, 185, 0.54);
+  border-radius: 0;
+  background: rgba(10, 10, 13, 0.92);
+  color: var(--maws-paper, #f3e2b9);
+  box-shadow: 4px 4px 0 #050506;
+}
+
+#maws-ui-root .maws-title .maws-origin strong {
+  color: var(--maws-gold, #f2c94c);
+  font-size: 18px;
+}
+
+#maws-ui-root .maws-title .maws-origin p {
+  margin: 0;
+  color: rgba(243, 226, 185, 0.88);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+#maws-ui-root .maws-title .maws-origin small {
+  color: rgba(243, 226, 185, 0.68);
+  font-size: 13px;
+}
+
+#maws-ui-root .maws-title .maws-origin button,
+#maws-ui-root .maws-title-actions button {
+  min-height: 44px;
+  margin-top: auto;
+  border-width: 2px;
+  box-shadow: 3px 3px 0 #050506;
+  clip-path: none;
+}
+
+#maws-ui-root .maws-title-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Pixel V2 modal grammar: current information first, long detail folded. */
+#maws-ui-root .maws-modal {
+  padding: 24px;
+  background: rgba(5, 5, 6, 0.86);
+  backdrop-filter: none;
+}
+
+#maws-ui-root .maws-modal .maws-modal-shell,
+#maws-ui-root .maws-modal section {
+  width: min(820px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  padding: 16px;
+  border: 3px solid rgba(243, 226, 185, 0.62);
+  border-radius: 0;
+  background: #0a0a0d;
+  color: var(--maws-paper, #f3e2b9);
+  box-shadow: 6px 6px 0 #050506;
+  clip-path: none;
+  overflow: auto;
+}
+
+#maws-ui-root .maws-modal .maws-modal-shell::before,
+#maws-ui-root .maws-modal .maws-modal-shell::after {
+  display: none;
+  content: none;
+}
+
+#maws-ui-root .maws-modal.dialogue .maws-modal-shell {
+  width: min(980px, calc(100vw - 48px));
+  padding: 0;
+  border-color: rgba(243, 226, 185, 0.72);
+}
+
+#maws-ui-root .maws-dialogue-stage {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 0;
+  min-height: 250px;
+  border: 0;
+  background: #0a0a0d;
+}
+
+#maws-ui-root .maws-dialogue-portrait {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 0;
+  border-right: 3px solid var(--maws-gold, #f2c94c);
+  background: #18191f;
+}
+
+#maws-ui-root .maws-dialogue-portrait .maws-dialogue-portrait-img,
+#maws-ui-root .maws-dialogue-portrait .maws-dialogue-portrait-fallback {
+  width: 128px;
+  height: 128px;
+  min-height: 128px;
+  border: 3px solid #050506;
+  border-radius: 0;
+  background: #0a0a0d;
+  box-shadow: 4px 4px 0 #050506;
+  image-rendering: pixelated;
+}
+
+#maws-ui-root .maws-dialogue-portrait strong {
+  color: var(--maws-gold, #f2c94c);
+  font-size: 18px;
+  text-align: center;
+}
+
+#maws-ui-root .maws-dialogue-portrait em {
+  color: rgba(243, 226, 185, 0.7);
+  font-size: 13px;
+  text-align: center;
+}
+
+#maws-ui-root .maws-dialogue-box {
+  display: grid;
+  grid-template-rows: auto minmax(160px, 1fr);
+  border: 0;
+  background: #0a0a0d;
+}
+
+#maws-ui-root .maws-dialogue-nameplate {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid rgba(243, 226, 185, 0.28);
+  background: #18191f;
+}
+
+#maws-ui-root .maws-dialogue-nameplate span {
+  color: var(--maws-gold, #f2c94c);
+  font-size: 16px;
+}
+
+#maws-ui-root .maws-dialogue-nameplate b {
+  color: rgba(243, 226, 185, 0.68);
+  font-size: 13px;
+}
+
+#maws-ui-root .maws-dialogue-box > p {
+  display: grid;
+  align-content: center;
+  min-height: 160px;
+  margin: 0;
+  padding: 24px;
+  color: var(--maws-paper, #f3e2b9);
+  font-size: 22px;
+  line-height: 1.55;
+}
+
+#maws-ui-root .maws-dialogue-choices,
+#maws-ui-root .maws-choice-grid,
+#maws-ui-root .maws-duration-grid {
+  gap: 8px;
+  padding: 12px;
+}
+
+#maws-ui-root .maws-dialogue-choice,
+#maws-ui-root .maws-story-choice,
+#maws-ui-root .maws-event-choice,
+#maws-ui-root .maws-duration-choice {
+  border: 2px solid rgba(243, 226, 185, 0.34);
+  border-radius: 0;
+  background: #18191f;
+  color: var(--maws-paper, #f3e2b9);
+  box-shadow: 3px 3px 0 #050506;
+}
+
+#maws-ui-root .maws-modal .maws-rpg-title,
+#maws-ui-root .maws-modal > section > h2 {
+  border: 0;
+  border-left: 6px solid var(--maws-gold, #f2c94c);
+  background: transparent;
+}
+
+#maws-ui-root .maws-modal .maws-rpg-title h2,
+#maws-ui-root .maws-modal > section > h2 {
+  color: var(--maws-paper, #f3e2b9);
+  text-shadow: 2px 2px 0 #050506;
+}
+
+#maws-ui-root .maws-modal .maws-fold {
+  border-radius: 0;
+  background: #18191f;
+}
+
+#maws-ui-root .maws-modal-actions button,
+#maws-ui-root .maws-dialogue-choice button,
+#maws-ui-root .maws-story-choice button,
+#maws-ui-root .maws-event-choice button,
+#maws-ui-root .maws-duration-choice button {
+  min-height: 44px;
+  border-width: 2px;
+  box-shadow: 3px 3px 0 #050506;
+  clip-path: none;
+}
+
+#maws-ui-root .maws-modal.result-feedback .maws-modal-shell,
+#maws-ui-root .maws-modal.result-compact .maws-modal-shell {
+  width: min(640px, calc(100vw - 48px));
+}
+
+#maws-ui-root .maws-diary-current {
+  border: 2px solid #7c858c;
+  border-left: 6px solid var(--maws-gold, #f2c94c);
+  border-radius: 0;
+  background: #18191f;
+  box-shadow: 4px 4px 0 #050506;
+}
+
+@media (max-width: 760px) {
+  #maws-ui-root .maws-title {
+    align-content: start;
+    gap: 12px;
+    padding: 24px 16px 32px;
+    background-position: 50% 50%;
+  }
+
+  #maws-ui-root .maws-title-copy {
+    padding-left: 12px;
+    border-left-width: 6px;
+  }
+
+  #maws-ui-root .maws-title-copy h1 {
+    font-size: clamp(40px, 12vw, 52px);
+  }
+
+  #maws-ui-root .maws-title-copy p {
+    font-size: 15px;
+  }
+
+  #maws-ui-root .maws-title .maws-origin-grid {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  #maws-ui-root .maws-title .maws-origin-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  #maws-ui-root .maws-title .maws-origin {
+    flex: 0 0 min(292px, calc(100vw - 48px));
+    scroll-snap-align: start;
+  }
+
+  #maws-ui-root .maws-modal {
+    padding: 8px;
+  }
+
+  #maws-ui-root .maws-modal .maws-modal-shell,
+  #maws-ui-root .maws-modal section,
+  #maws-ui-root .maws-modal.dialogue .maws-modal-shell,
+  #maws-ui-root .maws-modal.result-feedback .maws-modal-shell,
+  #maws-ui-root .maws-modal.result-compact .maws-modal-shell {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 12px;
+  }
+
+  #maws-ui-root .maws-modal.dialogue .maws-modal-shell {
+    padding: 0;
+  }
+
+  #maws-ui-root .maws-dialogue-stage {
+    grid-template-columns: 96px minmax(0, 1fr);
+    min-height: 220px;
+  }
+
+  #maws-ui-root .maws-dialogue-portrait {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    justify-items: center;
+    padding: 10px 6px;
+  }
+
+  #maws-ui-root .maws-dialogue-portrait .maws-dialogue-portrait-img,
+  #maws-ui-root .maws-dialogue-portrait .maws-dialogue-portrait-fallback {
+    grid-row: auto;
+    width: 76px;
+    height: 76px;
+    min-height: 76px;
+  }
+
+  #maws-ui-root .maws-dialogue-portrait strong {
+    font-size: 14px;
+  }
+
+  #maws-ui-root .maws-dialogue-portrait em {
+    font-size: 12px;
+  }
+
+  #maws-ui-root .maws-dialogue-box {
+    grid-template-rows: 40px minmax(150px, 1fr);
+  }
+
+  #maws-ui-root .maws-dialogue-nameplate {
+    min-height: 40px;
+    padding: 6px 8px;
+  }
+
+  #maws-ui-root .maws-dialogue-box > p {
+    min-height: 150px;
+    padding: 16px;
+    font-size: 18px;
+  }
+
+  #maws-ui-root .maws-dialogue-choices,
+  #maws-ui-root .maws-choice-grid,
+  #maws-ui-root .maws-duration-grid {
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+}

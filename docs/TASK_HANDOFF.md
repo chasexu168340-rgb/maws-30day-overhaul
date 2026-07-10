@@ -48,8 +48,9 @@ The player-facing target remains: the player clicks something, the game responds
 25. All 16 Day 1-Day 9 location background variants now use reviewed 480x270/32-color `pixel_v2` art, including geometry-matched night/rain/dusk variants and old-street day/night; only city-map day/night remains legacy.
 26. City-map day/night now use final 480x270/32-color `pixel_v2` route maps; the sheet preserves 16:9 marker geometry, uses compact hard UI, hides locked mobile clutter, and passes the strict final-art verifier.
 27. Karate Master 2 is a principle-only reference for work/training/fight cadence, attack-height reads, guard/back-step defense, counter timing, distance recovery, injury, and rules; no packaged content is copied.
-28. Next production batch: replace boot/title and modal/dialogue surfaces, then final hit/guard/miss/break/recipe VFX and combat readability feedback.
-29. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+28. Boot/title now uses the final night city map as a full-screen stage; dialogue/result/duration/event/diary shells use solid square Pixel V2 panels, readable current-line typography, and 44px actions on desktop/mobile.
+29. Next production batch: final hit/guard/miss/break/recipe VFX plus Karate-derived combat readability feedback, without changing the queue-based architecture or global formulas.
+30. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
