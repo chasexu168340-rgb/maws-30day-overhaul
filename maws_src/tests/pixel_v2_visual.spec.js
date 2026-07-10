@@ -28,10 +28,21 @@ const MIME = {
 
 const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.home.day',
+  'backgrounds:bg.home.night',
   'backgrounds:bg.metro_station.day',
+  'backgrounds:bg.metro_station.night',
   'backgrounds:bg.store.day',
+  'backgrounds:bg.store.night',
+  'backgrounds:bg.store.rain',
   'backgrounds:bg.worksite.day',
+  'backgrounds:bg.worksite.night',
+  'backgrounds:bg.worksite.dusk',
   'backgrounds:bg.park.day',
+  'backgrounds:bg.park.night',
+  'backgrounds:bg.boxing.day',
+  'backgrounds:bg.boxing.night',
+  'backgrounds:bg.street.day',
+  'backgrounds:bg.street.night',
   'characters:fighter.player',
   'characters:scene.npc.father_memory',
   'characters:fighter.enemy.untrained',
@@ -386,6 +397,29 @@ test('manifest final assets use assets/pixel_v2 and strict mode requires sampled
     'Strict Pixel V2 visual gate requires sampled Day 1/Day 8 runtime assets to be final pixel_v2 files.',
     'For candidate review only, run with PIXEL_V2_VISUAL_MODE=candidate and PIXEL_V2_ALLOW_LEGACY=1.'
   ].join(' ')).toEqual([]);
+});
+
+test('Day 1-9 pixel_v2 background variants decode in the browser', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await expectManifestImagesDecode(page, [
+    'backgrounds:bg.home.day',
+    'backgrounds:bg.home.night',
+    'backgrounds:bg.metro_station.day',
+    'backgrounds:bg.metro_station.night',
+    'backgrounds:bg.store.day',
+    'backgrounds:bg.store.night',
+    'backgrounds:bg.store.rain',
+    'backgrounds:bg.worksite.day',
+    'backgrounds:bg.worksite.night',
+    'backgrounds:bg.worksite.dusk',
+    'backgrounds:bg.park.day',
+    'backgrounds:bg.park.night',
+    'backgrounds:bg.boxing.day',
+    'backgrounds:bg.boxing.night',
+    'backgrounds:bg.street.day',
+    'backgrounds:bg.street.night'
+  ], 'Day 1-9 pixel_v2 backgrounds');
+  expect(violations, 'background decode should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 player strip advances through real attack frames in Phaser', async ({ page }) => {

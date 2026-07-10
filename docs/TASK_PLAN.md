@@ -28,6 +28,9 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - `bg.home.day` now uses a reviewed 480x270, 32-color indexed `pixel_v2` rental-room background at 41KB, with an open three-character floor lane, father-memory shelf, training notes, and no baked people.
 - `bg.metro_station.day`, `bg.store.day`, and `bg.worksite.day` now use reviewed 480x270/32-color `pixel_v2` backgrounds at roughly 41KB, 40KB, and 49KB.
 - Day 2-4 environment anchors are explicit in the live art: metro screen doors and exit direction, convenience-store CCTV/counter/shelf edge, and worksite scaffold/materials with a clear labor lane.
+- `bg.home.night`, `bg.metro_station.night`, `bg.store.night/rain`, `bg.worksite.night/dusk`, `bg.park.night`, and `bg.boxing.day/night` now use reviewed geometry-matched `pixel_v2` variants.
+- `bg.street.day/night` now provides the Day 6 old-neighborhood route with a readable safe-road exit; daytime and night preserve identical shutters, alley, CCTV, and foot plane.
+- All 16 Day 1-9 location background variants now decode in the browser from `assets/pixel_v2/`; only the separate city-map day/night art remains legacy.
 - Final `pixel_v2` backgrounds now fail asset verification unless they are exact 480x270 indexed PNGs with at most 32 palette entries and stay within the 180KB budget.
 - The map scene shell now uses hard pixel borders and solid panels without blurred glass, removes the red player spotlight/backplate, and replaces soft radial character glows with compact hard contact shadows.
 - The scene info block now shows one current hook instead of repeating location/recommendation rows; immediate recommendations are capped at two while secondary actions remain folded.
@@ -151,16 +154,22 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 strict visual gate (21 passed, including Day 2 metro and Day 3/4 desktop/mobile runtime screenshots)
   - `git diff --check`
+- Passed after the remaining Day 1-Day 9 location-background replacement:
+  - `npm run check:full` (104 manifest entries, 6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (22 passed, including browser decode for all 16 location variants and Day 9 boxing screenshots)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
-- Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
+- The city-map day/night keys remain legacy; the strict Day 1-9 final-art verifier must remain red until both are replaced.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
+- Boot/title, city-map marker, and non-scene UI surfaces still carry older web-card/gradient styling and need the next UI replacement pass.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
 - The final release gate still needs final-art desktop/mobile shots for Day 1, 2, and 3; Day 5 coverage is now active.
 
 ## Next Step
 
-Generate and integrate the remaining Day 1-Day 9 daytime/night scene backgrounds, beginning with boxing day and the reachable night variants, then continue the UI replacement across boot and city-map surfaces.
+Replace the city-map day/night art and its marker sheet, then continue the UI replacement across boot/title and modal surfaces before producing final pixel VFX.

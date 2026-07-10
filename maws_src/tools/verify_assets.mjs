@@ -26,6 +26,8 @@ const day1To9FinalKeys = [
   'bg.park.night',
   'bg.boxing.day',
   'bg.boxing.night',
+  'bg.street.day',
+  'bg.street.night',
   'fighter.player',
   'fighter.enemy.untrained',
   'fighter.enemy.beginner',
