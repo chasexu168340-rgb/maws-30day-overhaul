@@ -552,9 +552,37 @@ for (const viewport of VIEWPORTS) {
       'portraits:portrait.fatty'
     ], `Day 1 ${viewport.name}`);
     await expectNoHorizontalOverflow(page, `Day 1 ${viewport.name}`);
+    const sceneShell = await page.evaluate(() => {
+      const player = document.querySelector('.maws-scene-character.player');
+      const scene = document.querySelector('.maws-scene');
+      const hud = document.querySelector('.maws-hud.maws-hud-compact');
+      const nav = document.querySelector('.maws-nav');
+      const before = getComputedStyle(player, '::before');
+      const after = getComputedStyle(player, '::after');
+      return {
+        playerWidth: player.getBoundingClientRect().width,
+        contactWidth: Number.parseFloat(before.width),
+        contactBackgroundImage: before.backgroundImage,
+        afterDisplay: after.display,
+        sceneHeight: scene.getBoundingClientRect().height,
+        hudBackdrop: getComputedStyle(hud).backdropFilter,
+        navBackdrop: getComputedStyle(nav).backdropFilter,
+        recommendationCount: document.querySelectorAll('.maws-recommend-card').length
+      };
+    });
+    expect(sceneShell.afterDisplay, 'player must not render a spotlight/backplate pseudo-element').toBe('none');
+    expect(sceneShell.contactBackgroundImage, 'player contact shadow should be hard-edged, not a radial gradient').toBe('none');
+    expect(sceneShell.contactWidth, 'contact shadow should stay under the feet').toBeLessThan(sceneShell.playerWidth * 0.7);
+    expect(sceneShell.hudBackdrop, 'HUD should not use blurred glass').toBe('none');
+    expect(sceneShell.navBackdrop, 'navigation should not use blurred glass').toBe('none');
+    expect(sceneShell.recommendationCount, 'scene shell should show at most two immediate recommendations').toBeLessThanOrEqual(2);
+    expect(sceneShell.sceneHeight, 'scene should remain the dominant first-look surface').toBeGreaterThan(viewport.height * 0.45);
     if (viewport.name === 'desktop') {
       const fatherBox = await box(page, '.maws-scene-character:has(img[src*="scene_npc_father_memory.png"])');
       expect(fatherBox.right, 'Day 1 father should stay left of the desktop action rail').toBeLessThanOrEqual(viewport.width - 280);
+    } else {
+      const mainAction = await box(page, '.maws-action-rail-main .maws-actions-primary button[data-action="doAction"]');
+      expect(mainAction.height, 'mobile local action should keep a 44px touch target').toBeGreaterThanOrEqual(44);
     }
     await expectScreenshotHasPixels(page, `day1-${viewport.name}.png`, `Day 1 ${viewport.name}`);
 

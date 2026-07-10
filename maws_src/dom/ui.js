@@ -595,8 +595,8 @@ function renderTodayBoard(model) {
   `;
 }
 
-function renderRecommendations(model) {
-  const cards = (model.opportunities || []).slice(0, 3);
+function renderRecommendations(model, limit = 2) {
+  const cards = (model.opportunities || []).slice(0, limit);
   if (!cards.length) {
     return `
       <section class="maws-recommend-board">
@@ -614,12 +614,10 @@ function renderMap(model) {
     || currentActions[0];
   const primaryAction = featuredAction ? renderActionCard(featuredAction) : '';
   const secondaryActions = currentActions.filter((action) => action !== featuredAction).map(renderActionCard).join('');
-  const recommendations = renderRecommendations(model);
+  const recommendations = renderRecommendations(model, 2);
   const todayBoard = renderTodayBoard(model);
   const scene = model.locationScene || {};
   const mainTitle = model.mainEvent?.title || '暂无主线节点';
-  const mainPlace = model.mainEvent?.locName || model.loc?.name || '当前地点';
-  const recommendTitle = model.opportunities?.[0]?.title || featuredAction?.name || '训练 / 恢复 / 装备';
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
   const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
@@ -658,9 +656,7 @@ function renderMap(model) {
             <span>${esc(scene.timeText || '')} · ${esc(scene.openText || '')}</span>
             <h2>${esc(model.loc?.name)}</h2>
             <div class="maws-scene-meta" aria-label="当前推进信息">
-              <b>主线：${esc(mainTitle)}</b>
-              <b>地点：${esc(mainPlace)}</b>
-              <b>推荐：${esc(recommendTitle)}</b>
+              <b>今日：${esc(mainTitle)}</b>
             </div>
             <details class="maws-scene-desc">
               <summary>地点详情</summary>
@@ -671,9 +667,9 @@ function renderMap(model) {
           ${interactionMenu}
         </div>
         <aside class="maws-action-rail maws-action-rail-main">
-          <div class="maws-rail-title"><b>推荐行动</b><span>${esc((model.opportunities || []).length)}条</span></div>
+          <div class="maws-rail-title"><b>下一步</b><span>${esc(Math.min(2, (model.opportunities || []).length))}条</span></div>
           ${recommendations}
-          <div class="maws-rail-title maws-current-actions-title"><b>当前地点关键行动</b><span>${esc(currentActions.length)}项</span></div>
+          <div class="maws-rail-title maws-current-actions-title"><b>当前地点</b><span>${esc(currentActions.length)}项</span></div>
           <div class="maws-actions maws-actions-primary">${primaryAction || '<p class="maws-empty">当前地点没有可执行行动。</p>'}</div>
           ${secondaryActions ? `
             <details class="maws-fold maws-action-fold">

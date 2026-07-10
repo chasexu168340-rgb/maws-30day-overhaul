@@ -27,6 +27,10 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - `bg.park.day` is the first reviewed runtime replacement under `assets/pixel_v2/`: exact 480x270, 32-color indexed PNG, 45KB, clear two-fighter staging lanes, and no baked characters.
 - `bg.home.day` now uses a reviewed 480x270, 32-color indexed `pixel_v2` rental-room background at 41KB, with an open three-character floor lane, father-memory shelf, training notes, and no baked people.
 - Final `pixel_v2` backgrounds now fail asset verification unless they are exact 480x270 indexed PNGs with at most 32 palette entries and stay within the 180KB budget.
+- The map scene shell now uses hard pixel borders and solid panels without blurred glass, removes the red player spotlight/backplate, and replaces soft radial character glows with compact hard contact shadows.
+- The scene info block now shows one current hook instead of repeating location/recommendation rows; immediate recommendations are capped at two while secondary actions remain folded.
+- Desktop left/right rails are compact lower-corner overlays instead of full-height information walls; mobile keeps the scene first and moves the objective/action rails into document flow.
+- Mobile navigation and primary local actions now retain 44px touch targets; the final visual gate asserts scene dominance, hard contact shadows, no glass blur, and no more than two immediate recommendations.
 - `anim.fighter.player` is now a reviewed `pixel_v2` 16-frame strip: exact 1536x144, 96x144 frames, transparent, 92KB, shared scale, centered silhouettes, and a fixed two-pixel foot baseline.
 - The player strip supplies real idle `0-3`, wild-swing attack `4-7`, hurt `8-11`, and guard/utility `12-15` animations; Phaser uses a manifest display scale without stretching individual frame content.
 - Asset preparation now supports 4x4 generated action masters, small grid remainder trimming, 32-bit ARGB chroma cleanup, global silhouette normalization, and row-major repacking.
@@ -132,6 +136,13 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 strict visual gate (19 passed, including Day 1 desktop/mobile runtime screenshots)
   - `git diff --check`
+- Passed after the Pixel V2 scene-shell replacement:
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Director + Wave 12 + Pixel V2 combined gate (26 passed)
+  - Pixel V2 strict visual gate (19 passed with scene-shell assertions)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
@@ -144,4 +155,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Begin the broad UI scene-shell replacement: remove the red player spotlight and reduce the desktop/mobile information walls while preserving the established dialogue, action, and combat contracts.
+Generate and integrate the Day 2-Day 4 metro, convenience-store, and worksite backgrounds, then continue the UI replacement across boot, city map, and non-scene surfaces.

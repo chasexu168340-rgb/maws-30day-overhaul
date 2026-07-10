@@ -43,8 +43,9 @@ The player-facing target remains: the player clicks something, the game responds
 20. Coach Liang now has final 96x144 scene standee and 96x96 portrait assets; Day 9 boxing desktop/mobile screenshots verify final-scale mitt silhouettes.
 21. Father memory now has final 96x144 scene and 96x96 portrait assets; Day 1 dialogue resolves Lu/father identities correctly and the three-character desktop stage stays clear of the right action rail.
 22. `bg.home.day` is now a final 480x270/32-color/41KB `pixel_v2` background with an open cast lane and Day 1 story anchors; final background verification now enforces dimensions, indexed palette size, and the 180KB budget.
-23. Next production batch: remove the red player spotlight and replace the broad scene-shell information walls without changing current state/data contracts.
-24. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+23. The Pixel V2 scene shell removes the red player backplate and blurred-glass panels, uses hard contact shadows, caps immediate recommendations at two, and keeps compact lower-corner rails on desktop with 44px mobile action targets.
+24. Next production batch: replace Day 2-Day 4 metro/store/worksite backgrounds, then continue the UI replacement across boot, city-map, and non-scene surfaces.
+25. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
