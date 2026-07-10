@@ -294,7 +294,7 @@ export const ASSET_MANIFEST = {
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained_v3.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00', 'full-motion'], 1.1, FULL_MOTION_28),
     'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner_v3.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5', 'full-motion'], 1, FULL_MOTION_28),
-    'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8'], 0.98),
+    'anim.fighter.enemy.silent': pixelV2FighterSprite('anim_fighter_enemy_silent_v3.png', 'fighter.enemy.silent', ['enemy', 'boxing', 'silent', 'day8', 'full-motion'], 0.98, FULL_MOTION_28),
     'anim.fighter.enemy.grappler': fighterSprite('anim_fighter_enemy_grappler.png', 'fighter.enemy.grappler', ['enemy', 'grappling']),
     'anim.fighter.enemy.weapon': fighterSprite('anim_fighter_enemy_weapon.png', 'fighter.enemy.weapon', ['enemy', 'weapon']),
     'anim.fighter.enemy.boss': fighterSprite('anim_fighter_enemy_boss.png', 'fighter.enemy.boss', ['enemy', 'boss'])

@@ -866,6 +866,30 @@ test('pixel_v2 advance uses dedicated footwork frames instead of the attack stri
   expect(violations, 'advance animation should not emit warnings/errors').toEqual([]);
 });
 
+test('combat sound cues are scheduled on contact rather than button press', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay5(page);
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    scene.combatSfxHistory = [];
+    const store = window.MAWS_STORE;
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'guard' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+  await page.waitForFunction(() => {
+    const history = window.MAWS_GAME.scene.getScene('ShellScene')?.combatSfxHistory || [];
+    return history.some((event) => event.triggered);
+  }, null, { timeout: 3500 });
+  const history = await page.evaluate(() => window.MAWS_GAME.scene.getScene('ShellScene')?.combatSfxHistory || []);
+  expect(history.length, 'combat exchange should schedule at least one sound cue').toBeGreaterThan(0);
+  expect(history.some((event) => ['hit', 'heavy', 'break', 'guard', 'miss'].includes(event.cue))).toBe(true);
+  history.forEach((event) => {
+    expect(event.delay, `${event.cue} should wait for its visual contact frame`).toBeGreaterThanOrEqual(160);
+  });
+  expect(violations, 'combat sound scheduling should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 untrained target strip advances through real attack frames in Phaser', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startDay3FunTarget(page);
@@ -962,7 +986,7 @@ test('pixel_v2 silent boxer strip advances through real attack frames in Phaser'
   });
 
   await page.waitForFunction(
-    () => (window.__pixelV2EnemyFrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    () => (window.__pixelV2EnemyFrameNames || []).some((frame) => frame >= 8 && frame <= 15),
     null,
     { timeout: 3000 }
   );
@@ -976,7 +1000,7 @@ test('pixel_v2 silent boxer strip advances through real attack frames in Phaser'
 
   expect(samples.length, 'Phaser should expose silent-boxer animation frame samples').toBeGreaterThan(6);
   expect(new Set(samples).size, 'silent-boxer sprite should advance beyond a static frame').toBeGreaterThan(2);
-  expect(samples.some((frame) => frame >= 4 && frame <= 7), `silent boxer should enter attack frames; sampled ${samples.join(',')}`).toBe(true);
+  expect(samples.some((frame) => frame >= 8 && frame <= 15), `silent boxer should enter an authored straight/heavy range; sampled ${samples.join(',')}`).toBe(true);
   expect(violations, 'silent-boxer animation should not emit warnings/errors').toEqual([]);
 });
 

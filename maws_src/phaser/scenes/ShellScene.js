@@ -85,6 +85,7 @@ export class ShellScene extends PhaserScene {
     this.scroll = {};
     this.lastRenderedStepCount = 0;
     this.lastRenderedStepHash = '';
+    this.combatSfxHistory = [];
     this.runtimeLoadPending = false;
     this.runtimeLoadKeys = [];
     this.runtimeFailedKeys = new Set();
@@ -665,7 +666,8 @@ export class ShellScene extends PhaserScene {
       const target = fighters[targetSide] || fighters.enemy;
       const delay = stepDelay + fxIndex * 90;
       const isImpact = fx.type === 'hit' || fx.type === 'break';
-      const impactDelay = isImpact ? delay + 260 : delay;
+      const isContactRead = fx.type === 'guard' || fx.type === 'miss';
+      const impactDelay = isImpact ? delay + 260 : isContactRead ? delay + 160 : delay;
       if (fx.type === 'hit' || fx.type === 'break') {
         const semanticAnim = this.actionAnimName(step);
         this.delayedFighterAnim(actor, semanticAnim === 'idle' ? 'attack' : semanticAnim, delay);
@@ -679,6 +681,7 @@ export class ShellScene extends PhaserScene {
         if (fx.type === 'miss') this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0 });
         this.animateStep(actor, opposingTarget, delay, fx);
       }
+      this.playCombatSfx(fx, impactDelay);
       this.playImpactPresentation(fx, target, impactDelay, mobile);
       if ((fx.damage || fx.dmg) > 0) this.floatCombatText(target.hitX, target.hitY, `-${fx.damage || fx.dmg}`, '#ff1745', mobile ? 32 : 42, impactDelay + 40);
       const cue = this.fxCueText(fx);
@@ -798,9 +801,58 @@ export class ShellScene extends PhaserScene {
     });
   }
 
+  combatSfxCue(fx = {}) {
+    const impactTier = fx.impactTier || '';
+    if (fx.type === 'miss') return 'miss';
+    if (fx.type === 'guard') return 'guard';
+    if (fx.type === 'break' || impactTier === 'break') return 'break';
+    if (impactTier === 'heavy' || impactTier === 'recipe') return 'heavy';
+    if (fx.type === 'hit') return 'hit';
+    return '';
+  }
+
+  playCombatSfx(fx, delay) {
+    const cue = this.combatSfxCue(fx);
+    if (!cue || !this.time?.delayedCall) return;
+    const event = { cue, delay: Math.max(0, Number(delay || 0)), triggered: false };
+    this.combatSfxHistory.push(event);
+    if (this.combatSfxHistory.length > 16) this.combatSfxHistory.splice(0, this.combatSfxHistory.length - 16);
+    this.time.delayedCall(event.delay, () => {
+      event.triggered = true;
+      this.emitPixelCombatTone(cue);
+    });
+  }
+
+  emitPixelCombatTone(cue) {
+    const context = this.sound?.context || this.game?.sound?.context;
+    if (!context || context.state !== 'running' || !context.createOscillator || !context.createGain) return;
+    const voices = {
+      hit: [[120, 62, 0.09, 0.05, 'triangle'], [310, 130, 0.035, 0.018, 'square']],
+      heavy: [[92, 44, 0.14, 0.065, 'sawtooth'], [230, 76, 0.055, 0.026, 'triangle']],
+      break: [[72, 35, 0.18, 0.075, 'square'], [180, 55, 0.07, 0.03, 'sawtooth']],
+      guard: [[520, 210, 0.065, 0.03, 'square'], [260, 150, 0.085, 0.018, 'triangle']],
+      miss: [[680, 150, 0.11, 0.018, 'sawtooth']]
+    }[cue] || [];
+    const now = context.currentTime;
+    voices.forEach(([startHz, endHz, duration, volume, type], index) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(startHz, now);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, endHz), now + duration);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.004 + index * 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.01);
+    });
+  }
+
   playImpactPresentation(fx, target, delay, mobile) {
     const impactTier = fx.impactTier || (fx.type === 'break' ? 'break' : fx.type === 'guard' ? 'guard' : fx.type === 'hit' ? 'normal' : 'utility');
-    const impactDelay = delay + (fx.type === 'hit' || fx.type === 'break' ? 88 : 20);
+    const impactDelay = ['hit', 'break', 'guard', 'miss'].includes(fx.type) ? delay : delay + 20;
     this.time.delayedCall(impactDelay, () => {
       if (!target?.sprite?.active || !target.sprite.scene) return;
       const paletteColor = PALETTE_FLASH_COLORS[fx.paletteFlash] || PALETTE_FLASH_COLORS.white;
