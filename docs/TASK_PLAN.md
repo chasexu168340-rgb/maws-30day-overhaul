@@ -41,6 +41,9 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - `fighter.player` now uses a reviewed 96x144 `pixel_v2` scene standee that matches the combat sprite's black outfit and olive hand wraps; the legacy green-fringed 512x768 standee is no longer live.
 - `portrait.player` now uses a reviewed 96x96 transparent portrait with the same face, hair, shirt, and wraps; the old hoodie portrait is no longer live.
 - The deterministic asset tool now supports chroma-key cleanup for portraits as well as standees and combat strips.
+- `scene.npc.fatty` now uses a reviewed 96x144 standee with the canonical brick-red overshirt, phone, round silhouette, and grounded sandals.
+- `portrait.fatty` now uses a reviewed 96x96 portrait with the same face, phone, pendant, and asymmetrical grin; the previous placeholder portrait is no longer live.
+- Day 1 desktop/mobile screenshots confirm Lu and Liu Pangzi now share one pixel density and silhouette language.
 - Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
@@ -76,12 +79,17 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 candidate visual gate (13 passed, including Day 1 desktop/mobile standee and portrait decode)
   - `git diff --check`
+- Passed after the Liu Pangzi scene identity replacement:
+  - `npm run check:full` (101 manifest entries, 6 Chromium smoke tests)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 candidate visual gate (13 passed, including Day 1 desktop/mobile Lu/Liu standees and both portrait decodes)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- Day 1-9 NPC standees and portraits still use legacy art; Liu Pangzi is the most visible Day 1 mismatch against the new player asset.
+- Xiaoman, the worker, Coach Liang, and father-memory scene/portrait assets remain legacy or missing.
 - The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
@@ -89,4 +97,4 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 
 ## Next Step
 
-Generate and review Liu Pangzi's scene standee and portrait, then Xiaoman, the worker, Coach Liang, and the father-memory set before the broad UI skin replacement.
+Generate and review Xiaoman's scene standee and portrait, then the worker, Coach Liang, and the father-memory set before the broad UI skin replacement.

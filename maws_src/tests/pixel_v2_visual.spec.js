@@ -37,7 +37,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'sprites:anim.fighter.enemy.untrained',
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent',
-  'portraits:portrait.player'
+  'portraits:portrait.player',
+  'portraits:portrait.fatty'
 ];
 
 let server;
@@ -499,7 +500,9 @@ for (const viewport of VIEWPORTS) {
     await expectManifestImagesDecode(page, [
       'backgrounds:bg.home.day',
       'characters:fighter.player',
-      'portraits:portrait.player'
+      'characters:scene.npc.fatty',
+      'portraits:portrait.player',
+      'portraits:portrait.fatty'
     ], `Day 1 ${viewport.name}`);
     await expectNoHorizontalOverflow(page, `Day 1 ${viewport.name}`);
     await expectScreenshotHasPixels(page, `day1-${viewport.name}.png`, `Day 1 ${viewport.name}`);
