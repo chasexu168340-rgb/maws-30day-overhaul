@@ -9040,3 +9040,575 @@
     padding: 8px;
   }
 }
+
+/* Pixel V2 non-scene ledger: one hard-edged language for profile, skills, inventory, shop, and log. */
+.maws-ledger-page {
+  position: relative;
+  width: min(1180px, calc(100% - 28px));
+  min-width: 0;
+  margin: 14px auto 96px;
+  padding: clamp(14px, 2vw, 24px);
+  border: 4px solid var(--maws-ink, #0a0a0d);
+  border-radius: 0;
+  background: #17181d;
+  box-shadow: 8px 8px 0 var(--maws-ink, #0a0a0d);
+  color: var(--maws-paper, #f3e2b9);
+  clip-path: none;
+  overflow: visible;
+}
+
+.maws-ledger-page::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 8px;
+  width: 4px;
+  background: var(--maws-red, #d92f3a);
+  pointer-events: none;
+}
+
+.maws-ledger-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.maws-page-heading,
+.maws-ledger-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 22px;
+  padding: 0 0 16px 14px;
+  border-bottom: 4px solid var(--maws-paper, #f3e2b9);
+}
+
+.maws-page-heading > div small,
+.maws-ledger-hero > div > small {
+  display: block;
+  color: var(--maws-gold, #f2c94c);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.maws-page-heading h2,
+.maws-ledger-hero h2 {
+  margin: 2px 0 0;
+  color: #fff8e4;
+  font-size: clamp(25px, 3vw, 42px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.maws-page-heading > p,
+.maws-ledger-hero p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: rgba(243, 226, 185, 0.72);
+  font-size: 13px;
+}
+
+.maws-page-heading > strong {
+  align-self: center;
+  padding: 8px 12px;
+  border: 3px solid var(--maws-ink, #0a0a0d);
+  background: var(--maws-gold, #f2c94c);
+  box-shadow: 4px 4px 0 var(--maws-ink, #0a0a0d);
+  color: var(--maws-ink, #0a0a0d);
+  font-size: 15px;
+}
+
+.maws-ledger-hero {
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.maws-ledger-hero > p {
+  grid-column: auto;
+}
+
+.maws-ledger-portrait {
+  grid-row: 1 / span 2;
+  width: 96px;
+  height: 96px;
+  border: 4px solid var(--maws-ink, #0a0a0d);
+  background: #222329;
+  box-shadow: 5px 5px 0 var(--maws-gold, #f2c94c);
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.maws-ledger-hero > strong {
+  display: grid;
+  justify-items: end;
+  color: var(--maws-gold, #f2c94c);
+  font-size: 15px;
+}
+
+.maws-ledger-hero > strong small {
+  color: rgba(243, 226, 185, 0.68);
+  font-size: 11px;
+}
+
+.maws-ledger-page .maws-vitals {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0 14px;
+}
+
+.maws-ledger-page .maws-meter {
+  min-width: 0;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: #222329;
+  box-shadow: 3px 3px 0 #050506;
+}
+
+.maws-ledger-band,
+.maws-loadout-strip {
+  margin: 18px 0 0 14px;
+  padding-top: 12px;
+  border-top: 2px solid rgba(243, 226, 185, 0.34);
+  background: transparent;
+}
+
+.maws-ledger-band > header,
+.maws-loadout-strip > header,
+.maws-log-cols > section > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.maws-ledger-band > header h3,
+.maws-loadout-strip > header b,
+.maws-log-cols > section > header h3 {
+  margin: 0;
+  color: #fff8e4;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.maws-ledger-band > header span,
+.maws-loadout-strip > header span,
+.maws-log-cols > section > header span {
+  color: rgba(243, 226, 185, 0.6);
+  font-size: 11px;
+}
+
+.maws-profile-ledger .maws-style-grid,
+.maws-profile-ledger .maws-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.maws-ledger-row,
+.maws-profile-ledger .maws-style-card,
+.maws-profile-ledger .maws-stat {
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: #202127;
+  box-shadow: 3px 3px 0 #050506;
+}
+
+.maws-ledger-row header,
+.maws-profile-ledger .maws-style-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 5px 8px;
+}
+
+.maws-ledger-row b,
+.maws-profile-ledger .maws-style-card > b {
+  color: var(--maws-gold, #f2c94c);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.maws-ledger-row p,
+.maws-profile-ledger .maws-style-card p {
+  grid-column: 1 / -1;
+  min-height: 0;
+  margin: 4px 0 0;
+  color: rgba(243, 226, 185, 0.68);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.maws-ledger-row .maws-fold {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+}
+
+.maws-ledger-row .maws-fold summary {
+  min-height: 28px;
+  padding: 3px 0;
+  color: rgba(243, 226, 185, 0.54);
+  font-size: 10px;
+}
+
+.maws-skillbook-page .maws-slots {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.maws-skillbook-page .maws-slot {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+  min-height: 58px;
+  padding: 7px;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: #202127;
+  box-shadow: 3px 3px 0 #050506;
+  color: #fff8e4;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.maws-skillbook-page .maws-slot button {
+  min-height: 28px;
+  margin-top: 4px;
+}
+
+.maws-skillbook-page .maws-skill-tree-slice {
+  padding: 12px 0 0;
+}
+
+.maws-skillbook-page .maws-skill-tree-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.maws-skillbook-page .maws-skill-tree {
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: #202127;
+  box-shadow: 3px 3px 0 #050506;
+}
+
+.maws-skillbook-page .maws-tree-node-grid {
+  display: grid;
+  gap: 5px;
+}
+
+.maws-skillbook-page .maws-tree-node {
+  min-width: 0;
+  padding: 7px;
+  border: 2px solid rgba(243, 226, 185, 0.22);
+  border-radius: 0;
+  background: #17181d;
+  box-shadow: none;
+}
+
+.maws-skillbook-page .maws-tree-node.status-available {
+  border-color: var(--maws-gold, #f2c94c);
+}
+
+.maws-skillbook-page .maws-tree-node.status-owned {
+  border-color: var(--maws-cyan, #45c7d9);
+}
+
+.maws-move-library > .maws-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.maws-move-library .maws-skill {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  gap: 6px 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 9px;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: #202127;
+  box-shadow: 3px 3px 0 #050506;
+}
+
+.maws-move-library .maws-skill-art {
+  grid-row: 1 / 4;
+  width: 72px;
+  height: 72px;
+  border: 2px solid #050506;
+  background: #111216;
+  image-rendering: pixelated;
+  object-fit: cover;
+}
+
+.maws-move-library .maws-skill > header,
+.maws-move-library .maws-skill-use,
+.maws-move-library .maws-skill-brief {
+  grid-column: 2;
+}
+
+.maws-move-library .maws-skill-use {
+  min-height: 0;
+  margin: 0;
+  color: rgba(243, 226, 185, 0.7);
+  font-size: 11px;
+}
+
+.maws-move-library .maws-skill-brief {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.maws-move-library .maws-skill > details,
+.maws-move-library .maws-skill > footer {
+  grid-column: 1 / -1;
+}
+
+.maws-move-library .maws-skill > footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(243, 226, 185, 0.2);
+}
+
+.maws-move-library .maws-skill > footer button {
+  min-width: 88px;
+  min-height: 40px;
+}
+
+.maws-bag-ledger .maws-equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.maws-bag-ledger .maws-equip-slot,
+.maws-bag-ledger .maws-item,
+.maws-shop-board .maws-item {
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid #050506;
+  border-radius: 0;
+  background: #202127;
+  box-shadow: 3px 3px 0 #050506;
+}
+
+.maws-bag-ledger .maws-equip-slot.filled {
+  border-color: var(--maws-gold, #f2c94c);
+}
+
+.maws-bag-ledger .maws-card-grid,
+.maws-shop-board > .maws-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 0 14px;
+}
+
+.maws-bag-ledger .maws-inventory-list > .maws-card-grid {
+  margin: 0;
+}
+
+.maws-bag-ledger .maws-item,
+.maws-shop-board .maws-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 6px 10px;
+}
+
+.maws-bag-ledger .maws-item > strong,
+.maws-shop-board .maws-item > strong,
+.maws-bag-ledger .maws-item > p,
+.maws-shop-board .maws-item > p,
+.maws-bag-ledger .maws-item > .maws-summary-chips {
+  grid-column: 1 / -1;
+}
+
+.maws-bag-ledger .maws-asset-icon,
+.maws-shop-board .maws-asset-icon,
+.maws-equip-slot .maws-asset-icon {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.maws-bag-ledger .maws-item > button,
+.maws-shop-board .maws-item > button {
+  min-width: 82px;
+  min-height: 44px;
+}
+
+.maws-logbook .maws-log-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 16px 0 0 14px;
+}
+
+.maws-logbook .maws-log-cols > section {
+  min-width: 0;
+}
+
+.maws-logbook .maws-log-cols ol {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border-top: 3px solid #050506;
+  list-style: none;
+}
+
+.maws-logbook .maws-log-cols li {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.3fr) minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 8px;
+  border-right: 2px solid #050506;
+  border-bottom: 2px solid #050506;
+  border-left: 2px solid #050506;
+  background: #202127;
+  box-shadow: none;
+}
+
+.maws-logbook .maws-log-cols time {
+  color: var(--maws-gold, #f2c94c);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.maws-logbook .maws-log-cols li span {
+  min-width: 0;
+  color: rgba(243, 226, 185, 0.78);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .maws-profile-ledger .maws-style-grid,
+  .maws-profile-ledger .maws-stat-grid,
+  .maws-skillbook-page .maws-skill-tree-grid,
+  .maws-move-library > .maws-card-grid,
+  .maws-bag-ledger .maws-equipment-grid,
+  .maws-bag-ledger .maws-card-grid,
+  .maws-shop-board > .maws-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .maws-skillbook-page .maws-slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .maws-ledger-page {
+    width: calc(100% - 16px);
+    margin: 8px auto 82px;
+    padding: 12px 10px 22px;
+    border-width: 3px;
+    box-shadow: 5px 5px 0 var(--maws-ink, #0a0a0d);
+  }
+
+  .maws-ledger-page::before {
+    left: 5px;
+    width: 3px;
+  }
+
+  .maws-page-heading,
+  .maws-ledger-hero {
+    margin-left: 5px;
+    padding-left: 8px;
+  }
+
+  .maws-page-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .maws-page-heading > strong {
+    justify-self: start;
+  }
+
+  .maws-ledger-hero {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .maws-ledger-portrait {
+    width: 72px;
+    height: 72px;
+  }
+
+  .maws-ledger-hero > strong {
+    grid-column: 1 / -1;
+    justify-items: start;
+  }
+
+  .maws-ledger-page .maws-vitals {
+    grid-template-columns: 1fr;
+  }
+
+  .maws-profile-ledger .maws-style-grid,
+  .maws-profile-ledger .maws-stat-grid,
+  .maws-skillbook-page .maws-skill-tree-grid,
+  .maws-move-library > .maws-card-grid,
+  .maws-bag-ledger .maws-equipment-grid,
+  .maws-bag-ledger .maws-card-grid,
+  .maws-shop-board > .maws-card-grid,
+  .maws-logbook .maws-log-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .maws-skillbook-page .maws-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .maws-ledger-band,
+  .maws-loadout-strip,
+  .maws-ledger-page .maws-vitals,
+  .maws-shop-board > .maws-card-grid,
+  .maws-logbook .maws-log-cols {
+    margin-left: 8px;
+  }
+
+  .maws-move-library .maws-skill {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .maws-move-library .maws-skill-art {
+    width: 64px;
+    height: 64px;
+  }
+
+  .maws-logbook .maws-log-cols li {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .maws-ledger-page button,
+  .maws-ledger-page summary {
+    min-height: 44px;
+  }
+
+  #maws-ui-root .maws-ledger-page button {
+    height: auto !important;
+    min-height: 46px !important;
+    max-height: none !important;
+  }
+}

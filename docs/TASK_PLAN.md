@@ -82,6 +82,10 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
 - Tactical recipe aliases resolve to the reviewed recipe-completion texture, and NPC scene clicks use a dedicated Pixel V2 contact marker instead of generic CSS-only particles.
 - The asset verifier now enforces final VFX dimensions, RGBA transparency, transparent corners, and a 64KB per-texture budget; strict Day 1-9 verification includes the complete feedback set.
 - Combat target controls now read as high/mid/low, distance labels explain their tactical role, and enemy tells distinguish standing guard, back-step defense, and the next counter window without changing formulas.
+- Profile, skills, bag, shop, and log now share one Pixel V2 ledger language: hard borders, solid charcoal bands, restrained red/gold/cyan semantics, compact repeated rows, and no blurred card wall.
+- The profile is an in-world character status book; skills are an equipped-move strip plus growth routes and source-aware move library; bag/shop/log are an equipment rack, purchase board, and paired memory timeline.
+- Raw skill-tree identifiers and English route labels are no longer exposed; routes, node kinds, skill references, and status labels render as natural Chinese.
+- Desktop and 390x844 browser coverage now visits all five non-scene surfaces, captures screenshots, rejects horizontal overflow, and requires at least 44px mobile actions.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -191,6 +195,12 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 strict visual gate (27 passed, including live VFX and NPC click feedback)
   - `git diff --check`
+- Passed after the Pixel V2 non-scene ledger replacement:
+  - `npm run check:full` (6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (29 passed, including five desktop and five mobile ledger screenshots)
+  - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
@@ -202,6 +212,6 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
 
 ## Next Step
 
-1. Replace the remaining profile/skills/bag/shop/log web-card styling with one restrained Pixel V2 panel language.
-2. Add desktop/mobile screenshot contracts for those five surfaces and verify that useful information stays visible before details.
-3. Re-run strict assets, full/playtest/Day1-9/visual browser gates, review screenshots, commit, and push the UI batch.
+1. Replace the legacy core navigation/resource icons, Day 1-9 inventory art, and first-route skill-card art with reviewed Pixel V2 assets generated in the current session.
+2. Enforce exact icon/item/card dimensions, alpha borders, palette discipline, and file budgets in the asset verifier.
+3. Re-run strict assets and visual browser gates, review the real profile/skills/bag/shop screenshots, then commit and push the art batch.

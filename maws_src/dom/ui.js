@@ -730,10 +730,14 @@ function renderMawPanel(model) {
 
 function renderProfile(model) {
   const stats = Object.entries(model.statRules || {}).map(([key, rule]) => `
-    <article class="maws-stat"><strong>${esc(rule.icon)} ${esc(rule.name)}</strong><b>${esc(model.player?.stats?.[key])}</b><p>${esc(rule.desc)}</p><small>${esc(rule.formula || '')}</small></article>
+    <article class="maws-stat maws-ledger-row">
+      <header><strong>${esc(rule.icon)} ${esc(rule.name)}</strong><b>${esc(model.player?.stats?.[key])}</b></header>
+      <p>${esc(rule.desc)}</p>
+      ${rule.formula ? `<details class="maws-fold"><summary>计算方式</summary><small>${esc(rule.formula)}</small></details>` : ''}
+    </article>
   `).join('');
   const styles = (model.styleList || []).map((style) => `
-    <article class="maws-style-card">
+    <article class="maws-style-card maws-ledger-row">
       <strong><i>${esc(style.icon)}</i>${esc(style.name)}</strong>
       <b>${esc(style.value)}</b>
       <p>${esc(style.desc)}</p>
@@ -747,17 +751,20 @@ function renderProfile(model) {
     fitXp: `Lv${model.player?.fit?.level || 0} ${model.player?.fit?.progress || 0}/20`
   };
   const resources = Object.entries(model.resourceRules || {}).map(([key, rule]) => `
-    <article class="maws-stat resource"><strong>${esc(rule.icon)} ${esc(rule.name)}</strong><b>${esc(resourceValue[key] ?? 0)}</b><p>${esc(rule.desc)}</p></article>
+    <article class="maws-stat resource maws-ledger-row"><header><strong>${esc(rule.icon)} ${esc(rule.name)}</strong><b>${esc(resourceValue[key] ?? 0)}</b></header><p>${esc(rule.desc)}</p></article>
   `).join('');
   return `
-    <section class="maws-panel">
-      <div class="maws-panel-title"><h2>${esc(model.player?.name)}</h2><p>${esc(model.player?.origin?.name)} · ${esc(model.player?.trait)}</p></div>
+    <section class="maws-panel maws-ledger-page maws-profile-ledger">
+      <header class="maws-ledger-hero">
+        ${assetIcon('portrait.player', '', 'maws-ledger-portrait')}
+        <div><small>人物状态册 · 第 ${esc(model.day || 1)} 天</small><h2>${esc(model.player?.name)}</h2><p>${esc(model.player?.origin?.name)} · ${esc(model.player?.trait)}</p></div>
+        <strong>${esc(model.loc?.name || '出租屋')}<small>${esc(model.time || '')}</small></strong>
+      </header>
       <div class="maws-vitals">${meter('健康', model.player?.hp, model.player?.hpMax)}${meter('体力', model.player?.sp, model.player?.spMax)}${meter('架势', model.player?.posture, model.player?.postureMax)}</div>
       ${renderMawPanel(model)}
-      <div class="maws-style-grid">${styles}</div>
-      <div class="maws-stat-grid">${stats}</div>
-      <div class="maws-panel-title small"><h2>资源注释</h2><p>这些不是装饰数字，它们会影响机会、风险、恢复和结局稳定性。</p></div>
-      <div class="maws-stat-grid compact">${resources}</div>
+      <section class="maws-ledger-band"><header><h3>当前路数</h3><span>你真正依赖的办法</span></header><div class="maws-style-grid">${styles}</div></section>
+      <section class="maws-ledger-band"><header><h3>身体与判断</h3><span>训练、工作和实战会改写这里</span></header><div class="maws-stat-grid">${stats}</div></section>
+      <section class="maws-ledger-band"><header><h3>城市筹码</h3><span>钱、名声、真实性和风险</span></header><div class="maws-stat-grid compact">${resources}</div></section>
     </section>
   `;
 }
@@ -848,18 +855,34 @@ function renderSkillCard(skill, inCombat = false, unlock = null) {
 function renderSkillTree(treeModel) {
   const trees = treeModel?.trees || [];
   if (!trees.length) return '';
+  const treeNames = {
+    street_wild: '街头野路',
+    boxing_basics: '拳击基础',
+    traditional_reforge: '茂家重铸'
+  };
+  const nodeKinds = {
+    active: '主动招式',
+    passive: '被动理解',
+    combo: '战术配方',
+    mastery: '熟练强化',
+    utility: '距离工具',
+    unlock_boost: '训练强化',
+    rewrite: '旧招改写',
+    upgrade: '招式改造',
+    future: '未来节点'
+  };
   const statusText = {
     owned: '已点亮',
     available: '可点亮',
-    locked: 'Locked',
-    future: 'Future'
+    locked: '锁定',
+    future: '后续'
   };
   const cards = trees.map((tree) => {
     const nodes = (tree.nodes || []).map((node) => {
       const detail = node.lockedReason || node.effectText || node.unlockText || '节点说明待接入。';
       const meta = [
-        node.kind || '',
-        node.skillId ? `skill:${node.skillId}` : '',
+        nodeKinds[node.kind] || node.kind || '',
+        node.skillId ? (SKILLS[node.skillId]?.name || node.skillId) : '',
         node.cost == null ? '' : `${node.cost} ${treeModel.pointName || '洞察点'}`
       ].filter(Boolean);
       const actionLabel = node.status === 'available'
@@ -884,14 +907,14 @@ function renderSkillTree(treeModel) {
     }).join('');
     return `
       <section class="maws-skill-tree">
-        <header><b>${esc(tree.name || tree.id)}</b><span>${esc((tree.nodes || []).length)} nodes</span></header>
+        <header><b>${esc(treeNames[tree.id] || tree.name || tree.id)}</b><span>${esc((tree.nodes || []).length)} 个节点</span></header>
         <div class="maws-tree-node-grid">${nodes}</div>
       </section>
     `;
   }).join('');
   return `
-    <section class="maws-skill-tree-slice" aria-label="技能树切片">
-      <div class="maws-panel-title small"><h2>技能树切片</h2><p>${esc(treeModel.pointName || '洞察点')} ${esc(treeModel.points || 0)} · 复盘、训练和主线后留下的可分配理解。</p></div>
+    <section class="maws-skill-tree-slice maws-ledger-band" aria-label="技能树切片">
+      <header><h3>成长路线</h3><strong>${esc(treeModel.pointName || '洞察')} ${esc(treeModel.points || 0)}</strong><span>复盘、训练和主线留下的理解</span></header>
       <div class="maws-skill-tree-grid">${cards}</div>
     </section>
   `;
@@ -902,11 +925,11 @@ function renderSkills(model) {
     <span class="maws-slot">${slot.skill ? `${esc(slot.skill.icon)} ${esc(slot.skill.name)} ${btn('卸下', 'unequipSkill', { index: slot.index }, 'tiny')}` : '空槽'}</span>
   `).join('');
   return `
-    <section class="maws-panel">
-      <div class="maws-panel-title"><h2>技能卡</h2><p>伤害、架势、命中、体力、风险、距离和描述都来自当前模型。</p></div>
-      <div class="maws-slots">${slots}</div>
+    <section class="maws-panel maws-ledger-page maws-skillbook-page">
+      <header class="maws-page-heading"><div><small>招式簿</small><h2>把野路子练成真东西</h2></div><p>先看用途、距离和来源；完整数值放在详情里。</p></header>
+      <section class="maws-loadout-strip"><header><b>当前装备</b><span>进入战斗的动作库</span></header><div class="maws-slots">${slots}</div></section>
       ${renderSkillTree(model.skillTree)}
-      <div class="maws-card-grid">${(model.skills || []).map((skill) => renderSkillCard(skill, false, model.skillUnlocks?.[skill.id])).join('')}</div>
+      <section class="maws-ledger-band maws-move-library"><header><h3>招式与来源</h3><span>未学会的招式也会告诉你下一步去哪</span></header><div class="maws-card-grid">${(model.skills || []).map((skill) => renderSkillCard(skill, false, model.skillUnlocks?.[skill.id])).join('')}</div></section>
     </section>
   `;
 }
@@ -930,11 +953,10 @@ function renderBag(model) {
     </article>
   `).join('') || '<p class="maws-empty">背包里没什么能派上用场的东西。</p>';
   return `
-    <section class="maws-panel">
-      <div class="maws-panel-title"><h2>装备与背包</h2><p>装备效果会进入属性和战斗结算；空槽先留给后续装备扩展。</p></div>
-      <div class="maws-equipment-grid">${slots}</div>
-      <div class="maws-panel-title small"><h2>背包物品</h2><p>补给会消耗，装备会挂到对应槽位。</p></div>
-      <div class="maws-card-grid">${items}</div>
+    <section class="maws-panel maws-ledger-page maws-bag-ledger">
+      <header class="maws-page-heading"><div><small>随身物资</small><h2>装备架与背包</h2></div><p>先看当前效果，再决定使用或替换。</p></header>
+      <section class="maws-ledger-band maws-equipment-rack"><header><h3>身上装备</h3><span>效果会直接进入属性与结算</span></header><div class="maws-equipment-grid">${slots}</div></section>
+      <section class="maws-ledger-band maws-inventory-list"><header><h3>背包物品</h3><span>补给会消耗，装备会占用对应槽位</span></header><div class="maws-card-grid">${items}</div></section>
     </section>
   `;
 }
@@ -943,7 +965,7 @@ function renderShop(model) {
   const items = (model.shopItems || []).map((item) => `
     <article class="maws-item"><strong>${assetIcon(item.assetKey, item.icon)} ${esc(item.name)}</strong><p>${esc(item.desc)}</p><small>￥${esc(item.price)} · 已有 ${esc(item.owned)}</small>${btn('购买', 'buyItem', { id: item.id }, item.price > model.player.money ? 'disabled' : 'primary')}</article>
   `).join('');
-  return `<section class="maws-panel"><div class="maws-panel-title"><h2>商店</h2><p>先补短板，别乱买玄学。</p></div><div class="maws-card-grid">${items}</div></section>`;
+  return `<section class="maws-panel maws-ledger-page maws-shop-board"><header class="maws-page-heading"><div><small>便利店货架</small><h2>今天买什么</h2></div><strong>现金 ￥${esc(model.player?.money || 0)}</strong><p>先补短板，别把钱花在玄学上。</p></header><div class="maws-card-grid">${items}</div></section>`;
 }
 
 function npcActionId(model, npcId) {
@@ -959,9 +981,9 @@ function renderNpc(model) {
 }
 
 function renderLog(model) {
-  const logs = (model.log || []).map((entry) => `<li><b>第${esc(entry.day)}天 ${esc(entry.time)}</b><span>${esc(entry.text)}</span></li>`).join('');
-  const events = (model.eventLog || []).map((entry) => `<li><b>${esc(entry.type)}</b><span>${esc(entry.enemy || entry.text || entry.result)}</span></li>`).join('');
-  return `<section class="maws-panel"><div class="maws-panel-title"><h2>日志</h2><p>行动、战斗和复盘记录。</p></div><div class="maws-log-cols"><ol>${logs}</ol><ol>${events}</ol></div></section>`;
+  const logs = (model.log || []).map((entry) => `<li><time>第${esc(entry.day)}天 ${esc(entry.time)}</time><span>${esc(entry.text)}</span></li>`).join('');
+  const events = (model.eventLog || []).map((entry) => `<li><time>${esc(entry.type)}</time><span>${esc(entry.enemy || entry.text || entry.result)}</span></li>`).join('');
+  return `<section class="maws-panel maws-ledger-page maws-logbook"><header class="maws-page-heading"><div><small>城市手记</small><h2>行动与记忆</h2></div><p>不是流水账，只保留会影响下一步的事情。</p></header><div class="maws-log-cols"><section><header><h3>行动记录</h3><span>${esc((model.log || []).length)} 条</span></header><ol>${logs || '<li class="maws-empty">今天还没留下行动。</li>'}</ol></section><section><header><h3>事件记忆</h3><span>${esc((model.eventLog || []).length)} 条</span></header><ol>${events || '<li class="maws-empty">还没有值得记住的事件。</li>'}</ol></section></div></section>`;
 }
 
 function renderCheck(model) {

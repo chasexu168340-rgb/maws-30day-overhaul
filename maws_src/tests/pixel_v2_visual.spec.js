@@ -504,6 +504,38 @@ for (const viewport of VIEWPORTS) {
   });
 }
 
+for (const viewport of VIEWPORTS) {
+  test(`Pixel V2 non-scene ledger ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    const tabs = [
+      { id: 'profile', selector: '.maws-profile-ledger', label: '人物状态册' },
+      { id: 'skills', selector: '.maws-skillbook-page', label: '招式簿' },
+      { id: 'bag', selector: '.maws-bag-ledger', label: '装备架与背包' },
+      { id: 'shop', selector: '.maws-shop-board', label: '今天买什么' },
+      { id: 'log', selector: '.maws-logbook', label: '行动与记忆' }
+    ];
+
+    for (const tab of tabs) {
+      await page.locator(`button[data-action="setTab"][data-tab="${tab.id}"]`).click();
+      const surface = page.locator(tab.selector);
+      await expect(surface).toBeVisible();
+      await expect(surface).toContainText(tab.label);
+      const rect = await box(page, tab.selector);
+      expect(rect.left, `${viewport.name} ${tab.id} ledger left edge`).toBeGreaterThanOrEqual(0);
+      expect(rect.right, `${viewport.name} ${tab.id} ledger right edge`).toBeLessThanOrEqual(rect.viewportWidth + 1);
+      if (viewport.name === 'mobile') {
+        const shortTargets = await surface.locator('button:visible').evaluateAll((buttons) => buttons
+          .map((button) => ({ text: button.textContent?.trim() || '', height: button.getBoundingClientRect().height }))
+          .filter((button) => button.height < 43.5));
+        expect(shortTargets, `${tab.id} visible actions should retain 44px mobile targets`).toEqual([]);
+      }
+      await expectNoHorizontalOverflow(page, `${viewport.name} ${tab.id} ledger`);
+      await expectScreenshotHasPixels(page, `ledger-${tab.id}-${viewport.name}.png`, `${tab.id} ${viewport.name} ledger`);
+    }
+    expect(violations, `non-scene ledger ${viewport.name} warnings/errors`).toEqual([]);
+  });
+}
+
 test('pixel_v2 player strip advances through real attack frames in Phaser', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startDay8(page);
