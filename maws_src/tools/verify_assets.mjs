@@ -37,7 +37,8 @@ const day1To9FinalKeys = [
   'anim.fighter.player',
   'anim.fighter.enemy.untrained',
   'anim.fighter.enemy.beginner',
-  'anim.fighter.enemy.silent'
+  'anim.fighter.enemy.silent',
+  'portrait.player'
 ];
 const legacyKeys = [
   'bg.home.night',

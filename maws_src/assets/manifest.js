@@ -116,6 +116,16 @@ const pixelV2Character = (file, tags = []) => entry(`assets/pixel_v2/characters/
   tags: [...tags, 'pixel-v2', 'pixel']
 });
 
+const pixelV2Portrait = (file, tags = []) => entry(`assets/pixel_v2/portraits/${file}`, {
+  w: 96,
+  h: 96,
+  transparent: true,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  tags: [...tags, 'portrait', 'pixel-v2', 'pixel']
+});
+
 const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pixel/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
@@ -191,7 +201,7 @@ export const ASSET_MANIFEST = {
     'bg.street.night': pixelBackground('bg_street_night.png', ['street', 'night'])
   },
   characters: {
-    'fighter.player': cleanCharacter('fighter_player.png', ['player', 'standing']),
+    'fighter.player': pixelV2Character('fighter_player.png', ['player', 'standing', 'scene']),
     'fighter.enemy.boxer': cleanCharacter('fighter_enemy_boxer.png', ['enemy', 'boxing']),
     'fighter.enemy.untrained': pixelV2Character('fighter_enemy_untrained.png', ['enemy', 'untrained', 'day3', 'e00']),
     'fighter.enemy.beginner': pixelV2Character('fighter_enemy_beginner.png', ['enemy', 'boxing', 'beginner', 'day5']),
@@ -219,7 +229,7 @@ export const ASSET_MANIFEST = {
     'anim.fighter.enemy.boss': fighterSprite('anim_fighter_enemy_boss.png', 'fighter.enemy.boss', ['enemy', 'boss'])
   },
   portraits: {
-    'portrait.player': entry('assets/imagegen_pixel/portraits/portrait_player.png', { w: 512, h: 512, pixelArt: true, tags: ['player', 'pixel'] }),
+    'portrait.player': pixelV2Portrait('portrait_player.png', ['player']),
     'portrait.fatty': entry('assets/imagegen_pixel/portraits/portrait_fatty.png', { w: 512, h: 512, pixelArt: true, tags: ['npc', 'pixel'] }),
     'portrait.coach': entry('assets/imagegen_pixel/portraits/portrait_coach.png', { w: 512, h: 512, pixelArt: true, tags: ['npc', 'coach', 'pixel'] }),
     'portrait.master': entry('assets/imagegen_pixel/portraits/portrait_master.png', { w: 512, h: 512, pixelArt: true, tags: ['npc', 'master', 'pixel'] }),

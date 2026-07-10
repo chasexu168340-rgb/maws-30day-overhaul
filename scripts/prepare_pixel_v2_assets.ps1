@@ -429,8 +429,8 @@ function Remove-SmallAlphaComponents {
     return $removed
 }
 
-if ($ChromaKey -and $Type -notin @('standee', 'combat-strip')) {
-    throw '-ChromaKey is only supported for standee and combat-strip assets.'
+if ($ChromaKey -and $Type -notin @('standee', 'combat-strip', 'portrait')) {
+    throw '-ChromaKey is only supported for standee, combat-strip, and portrait assets.'
 }
 
 if ($FrameCount -le 0 -or $FrameWidth -le 0 -or $FrameHeight -le 0 -or $GridColumns -le 0 -or $GridRows -le 0) {

@@ -58,6 +58,17 @@ pwsh -ExecutionPolicy Bypass -File scripts/prepare_pixel_v2_assets.ps1 `
   -OutputName anim_fighter_player.png
 ```
 
+Prepare a transparent 96x96 dialogue portrait from a flat chroma-key source:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File scripts/prepare_pixel_v2_assets.ps1 `
+  -Source outputs/temp/portrait_player_source.png `
+  -Type portrait `
+  -ChromaKey -ChromaColor '#00FF00' -ChromaTolerance 70 `
+  -RemoveSpecksBelow 3 `
+  -OutputName portrait_player.png
+```
+
 Frame order is row-major. The tool uses one global content scale, centers each opaque silhouette, and locks every frame to the same two-pixel bottom safety line. Pass `-PreserveCellFraming` only when a reviewed master already has exact per-frame camera framing.
 
 `-RemoveSpecksBelow` is opt-in. It removes isolated alpha components smaller than the supplied pixel count inside each final frame; use it only after enlarged frame review confirms the pixels are generation residue rather than intentional pixel clusters.

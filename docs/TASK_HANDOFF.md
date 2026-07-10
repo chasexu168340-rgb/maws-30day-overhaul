@@ -33,8 +33,10 @@ The player-facing target remains: the player clicks something, the game responds
 10. Guard FX targeting/tinting is corrected and concise Chinese combat cues replace English debug-style labels.
 11. Day 5 E01 now uses an independent final beginner-boxer standee/strip; browser tests prove its attack frames and cover desktop/mobile Day 5 screenshots.
 12. E00 now uses an independent final untrained-target standee/strip; browser tests prove its attack frames and cover desktop/mobile Day 3 optional combat screenshots.
-13. Next production batch: Lu's scene standee/portrait, then Liu Pangzi, Xiaoman, the worker, Coach Liang, and father memory.
-14. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+13. Lu now has final 96x144 scene standee and 96x96 portrait assets that match the approved combat sprite; the old green-fringed standee and hoodie portrait are no longer live.
+14. The asset preparation tool supports chroma-key portrait cleanup.
+15. Next production batch: Liu Pangzi scene standee/portrait, then Xiaoman, the worker, Coach Liang, and father memory.
+16. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 
