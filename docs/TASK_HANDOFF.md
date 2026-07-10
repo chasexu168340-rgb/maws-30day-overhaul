@@ -24,9 +24,11 @@ The player-facing target remains: the player clicks something, the game responds
 1. Pixel runtime and manifest metadata contracts are active.
 2. Tactical recipes, Day 8 measurement, and Day 9 diary-to-training handoff are implemented and pushed.
 3. `docs/design/PIXEL_V2_STYLE_BIBLE.md` is the canonical art source for palette, proportions, environment staging, dimensions, and final-art review.
-4. Generate images only in the current Codex session; do not use CLI workers for image content.
-5. First production batch: art-direction keyframe, Lu Xiaoxian reference, rental-room scene, then reviewed runtime integration under `assets/pixel_v2/`.
-6. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+4. Combat fighters now use bottom anchors/contact shadows, and Phaser consumes the structured hit-stop, shake, palette-flash, and pixel-VFX metadata without warnings.
+5. Combat HUD presentation is square, hard-edged, and more compact on mobile; Day 8 desktop/mobile screenshots were reviewed.
+6. Generate images only in the current Codex session; do not use CLI workers for image content.
+7. Next production batch: clean park background, Lu/E10 reference, then reviewed runtime integration under `assets/pixel_v2/`.
+8. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 

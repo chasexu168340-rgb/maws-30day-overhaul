@@ -35,6 +35,25 @@ const ANIM_BY_FIGHTER = {
   'fighter.enemy.boss': 'anim.fighter.enemy.boss'
 };
 
+const VFX_BY_IMPACT = Object.freeze({
+  guard: 'vfx.guard.flash',
+  normal: 'vfx.hit.spark',
+  heavy: 'vfx.impact.ring',
+  break: 'vfx.impact.ring',
+  recipe: 'vfx.impact.ring',
+  utility: 'vfx.guard.flash'
+});
+
+const PALETTE_FLASH_COLORS = Object.freeze({
+  white: 0xf3e2b9,
+  red: 0xd92f3a,
+  gold: 0xf2c94c,
+  cool: 0x45c7d9,
+  'red-gold': 0xe87835,
+  'gold-white': 0xffefb4,
+  'ink-gold': 0xb99a3a
+});
+
 function distText(value) {
   return { far: '远距', mid: '中距', close: '近身', ground: '地面' }[value] || value;
 }
@@ -404,25 +423,40 @@ export class ShellScene extends PhaserScene {
   renderCombatFighters(c, w, h, mobile) {
     const fighterW = mobile ? (h < 760 ? 112 : 128) : 220;
     const fighterH = mobile ? (h < 760 ? 172 : 198) : 320;
-    const py = h * (mobile ? 0.43 : 0.56);
+    const groundY = mobile
+      ? Math.min(h * 0.7, h - 240)
+      : Math.min(h * 0.76, h - 170);
+    const playerX = w * (mobile ? 0.31 : 0.34);
+    const enemyX = w * (mobile ? 0.69 : 0.66);
     const enemyKey = FIGHTER_BY_ENEMY[c.enemyId] || 'fighter.enemy.boxer';
-    const player = this.createCombatFighter(w * 0.34, py, 'fighter.player', ANIM_BY_FIGHTER['fighter.player'], fighterW, fighterH, false);
-    const enemy = this.createCombatFighter(w * 0.66, py, enemyKey, ANIM_BY_FIGHTER[enemyKey], fighterW, fighterH, true);
+    this.drawCombatContactShadow(playerX, groundY, fighterW);
+    this.drawCombatContactShadow(enemyX, groundY, fighterW);
+    const player = this.createCombatFighter(playerX, groundY, 'fighter.player', ANIM_BY_FIGHTER['fighter.player'], fighterW, fighterH, false);
+    const enemy = this.createCombatFighter(enemyX, groundY, enemyKey, ANIM_BY_FIGHTER[enemyKey], fighterW, fighterH, true);
     return {
-      player: { ...player, x: w * 0.34, y: py, hitX: w * 0.34, hitY: py - fighterH * 0.28 },
-      enemy: { ...enemy, x: w * 0.66, y: py, hitX: w * 0.66, hitY: py - fighterH * 0.28 }
+      player: { ...player, x: playerX, y: groundY, hitX: playerX, hitY: groundY - fighterH * 0.58 },
+      enemy: { ...enemy, x: enemyX, y: groundY, hitX: enemyX, hitY: groundY - fighterH * 0.58 }
     };
+  }
+
+  drawCombatContactShadow(x, y, fighterW) {
+    const shadow = this.add.graphics().setDepth(16);
+    shadow.fillStyle(0x050506, 0.52);
+    shadow.fillRect(Math.round(x - fighterW * 0.27), Math.round(y - 6), Math.round(fighterW * 0.54), 6);
+    shadow.fillStyle(0x050506, 0.28);
+    shadow.fillRect(Math.round(x - fighterW * 0.19), Math.round(y - 10), Math.round(fighterW * 0.38), 4);
+    this.track(shadow);
   }
 
   createCombatFighter(x, y, imageKey, animKey, w, h, flipX) {
     if (animKey && this.hasTexture(animKey)) {
       this.ensureFighterAnimations(animKey);
-      const sprite = this.add.sprite(x, y, animKey, 0).setDisplaySize(w, h).setDepth(18).setFlipX(flipX);
+      const sprite = this.add.sprite(x, y, animKey, 0).setOrigin(0.5, 1).setDisplaySize(w, h).setDepth(18).setFlipX(flipX);
       this.track(sprite);
       this.playFighterAnim({ sprite, animKey }, 'idle', false);
       return { sprite, animKey, imageKey, isAnimated: true };
     }
-    const sprite = this.add.image(x, y, imageKey).setDisplaySize(w, h).setDepth(18).setFlipX(flipX);
+    const sprite = this.add.image(x, y, imageKey).setOrigin(0.5, 1).setDisplaySize(w, h).setDepth(18).setFlipX(flipX);
     this.track(sprite);
     return { sprite, animKey: null, imageKey, isAnimated: false };
   }
@@ -492,7 +526,19 @@ export class ShellScene extends PhaserScene {
         step.result?.damage,
         step.result?.guarded,
         step.result?.takedown,
-        fx.map((item) => [item.type, item.actor, item.damage || item.dmg || 0, item.label, item.icon, item.damageKind].join(':')).join('|')
+        fx.map((item) => [
+          item.type,
+          item.actor,
+          item.damage || item.dmg || 0,
+          item.label,
+          item.icon,
+          item.damageKind,
+          item.impactTier,
+          item.vfxKey,
+          item.hitstopMs,
+          item.shake,
+          item.paletteFlash
+        ].join(':')).join('|')
       ].join('/');
     }).join('||');
   }
@@ -518,6 +564,7 @@ export class ShellScene extends PhaserScene {
         this.delayedFighterAnim(actor, fx.type === 'guard' ? 'vfx' : 'attack', delay);
         this.animateStep(actor, target, delay, fx);
       }
+      this.playImpactPresentation(fx, target, delay, mobile);
       if ((fx.damage || fx.dmg) > 0) this.floatCombatText(target.hitX, target.hitY, `-${fx.damage || fx.dmg}`, '#ff1745', mobile ? 32 : 42, delay + 120);
       const cue = this.fxCueText(fx);
       if (cue) this.floatCombatText(target.hitX, target.hitY - (mobile ? 42 : 58), cue.text, cue.color, cue.size, delay + 80);
@@ -543,16 +590,19 @@ export class ShellScene extends PhaserScene {
 
   animateAttack(actor, target, delay, fx) {
     const dir = target.x > actor.x ? 1 : -1;
+    const hitstopMs = Math.max(0, Math.min(160, Number(fx.hitstopMs || 0)));
     this.tweens.add({
       targets: actor.sprite,
       x: actor.x + dir * 34,
       y: actor.y - 8,
       duration: 80,
+      hold: hitstopMs,
       yoyo: true,
       ease: 'Quad.easeOut',
       delay
     });
-    if (fx.critical || fx.damageKind === 'heavy' || fx.type === 'break') this.shakeCamera(delay + 70, 0.0045, 90);
+    const shake = Math.max(0, Math.min(1, Number(fx.shake || 0)));
+    if (shake > 0) this.shakeCamera(delay + 70, 0.0015 + shake * 0.006, 60 + hitstopMs);
   }
 
   animateStep(actor, target, delay, fx) {
@@ -561,11 +611,13 @@ export class ShellScene extends PhaserScene {
       this.tweens.add({ targets: target.sprite, x: target.x + dir * 22, duration: 70, yoyo: true, ease: 'Sine.easeOut', delay });
       return;
     }
-    this.tweens.add({ targets: actor.sprite, scaleX: actor.sprite.scaleX * 1.04, scaleY: actor.sprite.scaleY * 1.04, duration: 80, yoyo: true, ease: 'Sine.easeOut', delay });
+    const hitstopMs = Math.max(0, Math.min(100, Number(fx.hitstopMs || 0)));
+    this.tweens.add({ targets: actor.sprite, scaleX: actor.sprite.scaleX * 1.04, scaleY: actor.sprite.scaleY * 1.04, duration: 80, hold: hitstopMs, yoyo: true, ease: 'Sine.easeOut', delay });
   }
 
   shakeTarget(sprite, delay, fx) {
-    const strength = fx.critical || fx.damageKind === 'heavy' || fx.type === 'break' ? 12 : 7;
+    const shake = Math.max(0, Math.min(1, Number(fx.shake || 0)));
+    const strength = Math.round(5 + shake * 10);
     this.tweens.add({
       targets: sprite,
       x: { from: sprite.x - strength, to: sprite.x + strength },
@@ -584,9 +636,68 @@ export class ShellScene extends PhaserScene {
     });
   }
 
+  playImpactPresentation(fx, target, delay, mobile) {
+    const impactTier = fx.impactTier || (fx.type === 'break' ? 'break' : fx.type === 'guard' ? 'guard' : fx.type === 'hit' ? 'normal' : 'utility');
+    if (impactTier === 'miss' || fx.paletteFlash === 'none') return;
+    const impactDelay = delay + (fx.type === 'hit' || fx.type === 'break' ? 88 : 20);
+    this.time.delayedCall(impactDelay, () => {
+      if (!target?.sprite?.active || !target.sprite.scene) return;
+      const paletteColor = PALETTE_FLASH_COLORS[fx.paletteFlash] || PALETTE_FLASH_COLORS.white;
+      const requestedVfx = this.hasTexture(fx.vfxKey) ? fx.vfxKey : null;
+      const vfxKey = requestedVfx || VFX_BY_IMPACT[impactTier] || VFX_BY_IMPACT.utility;
+      if (this.hasTexture(vfxKey)) this.spawnPixelCombatVfx(vfxKey, target.hitX, target.hitY, paletteColor, impactTier, mobile);
+      this.flashCombatPalette(paletteColor, impactTier);
+      if (target.sprite.setTint) {
+        target.sprite.setTint(paletteColor);
+        if (target.sprite.setTintMode && globalThis.Phaser?.TintModes?.FILL !== undefined) {
+          target.sprite.setTintMode(globalThis.Phaser.TintModes.FILL);
+        }
+      }
+      const tintDuration = Math.max(55, Math.min(190, Number(fx.hitstopMs || 0) + 45));
+      this.time.delayedCall(tintDuration, () => {
+        if (target.sprite?.active && target.sprite.scene && target.sprite.clearTint) target.sprite.clearTint();
+      });
+    });
+  }
+
+  spawnPixelCombatVfx(key, x, y, color, impactTier, mobile) {
+    const size = mobile
+      ? (impactTier === 'break' || impactTier === 'recipe' ? 68 : 48)
+      : (impactTier === 'break' || impactTier === 'recipe' ? 96 : 70);
+    const effect = this.add.image(Math.round(x), Math.round(y), key).setOrigin(0.5).setDisplaySize(size, size).setDepth(125).setAlpha(0.96);
+    if (effect.setTint) effect.setTint(color);
+    const baseX = effect.scaleX;
+    const baseY = effect.scaleY;
+    this.track(effect);
+    this.tweens.add({
+      targets: effect,
+      alpha: { from: 0.96, to: 0 },
+      scaleX: { from: baseX * 0.58, to: baseX * 1.24 },
+      scaleY: { from: baseY * 0.58, to: baseY * 1.24 },
+      duration: impactTier === 'break' || impactTier === 'recipe' ? 260 : 190,
+      ease: 'Stepped',
+      onComplete: () => effect.destroy()
+    });
+  }
+
+  flashCombatPalette(color, impactTier) {
+    const { w, h } = this.size();
+    const flash = this.add.graphics().setDepth(120).setAlpha(impactTier === 'break' || impactTier === 'recipe' ? 0.2 : 0.1);
+    flash.fillStyle(color, 1).fillRect(0, 0, w, h);
+    this.track(flash);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration: impactTier === 'break' || impactTier === 'recipe' ? 150 : 90,
+      ease: 'Stepped',
+      onComplete: () => flash.destroy()
+    });
+  }
+
   fxCueText(fx) {
     const icon = String(fx.icon || '').toUpperCase();
     const label = String(fx.label || '');
+    if (fx.impactTier === 'recipe' || fx.recipeId) return { text: '配方成立', color: '#f2c94c', size: 28 };
     if (icon === 'MISS' || fx.type === 'miss') return { text: 'MISS', color: '#d8d2c3', size: 28 };
     if (icon === 'GUARD' || fx.blocked || fx.damageKind === 'blocked') return { text: 'GUARD', color: '#4bd7ff', size: 26 };
     if (icon === 'HEAVY' || fx.damageKind === 'heavy' || fx.critical) return { text: 'HEAVY', color: '#ffd84a', size: 30 };
