@@ -197,10 +197,11 @@ test('skills tab displays the Wave 14 skill tree slice', async ({ page }) => {
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
   const treeSlice = page.locator('.maws-skill-tree-slice');
   await expect(treeSlice).toBeVisible();
-  await expect(treeSlice).toContainText('技能树切片');
+  await expect(treeSlice).toContainText('成长路线');
 
   expect(await treeSlice.locator('.maws-skill-tree').count(), 'skill tree slice should show three route columns').toBeGreaterThanOrEqual(3);
   expect(await treeSlice.locator('.maws-tree-node').count(), 'skill tree slice should expose nodes').toBeGreaterThanOrEqual(3);
+  await treeSlice.locator('.maws-route-index > summary').first().click();
   await expect(treeSlice.locator('.maws-tree-node button').first()).toBeVisible();
 
   await expectNoHorizontalOverflow(page, 'skills tree slice');
@@ -232,9 +233,9 @@ test('combat plan mode controls are visible and clickable', async ({ page }) => 
 test('mobile time investment modal does not overflow horizontally', async ({ page }) => {
   const errors = await loadGame(page, MOBILE);
 
-  const durationAction = page.locator('.maws-action').filter({ has: page.locator('.maws-duration-tag') }).first();
+  const durationAction = page.locator('.maws-scene-command-button[data-action="doAction"]').first();
   await expect(durationAction).toBeVisible();
-  await durationAction.locator('button[data-action="doAction"]').click();
+  await durationAction.click();
 
   const modal = page.locator('.maws-modal.duration section').first();
   await expect(modal).toBeVisible();

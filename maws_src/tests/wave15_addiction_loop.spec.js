@@ -136,6 +136,7 @@ async function openSpendableSkillTree(page) {
     store.emit();
   });
   await expect(page.locator('.maws-skill-tree-slice')).toBeVisible();
+  await page.locator('.maws-route-index > summary').first().click();
 }
 
 async function firstPurchasableNode(page) {
@@ -163,7 +164,7 @@ test('skills page exposes spendable tree status and insight points', async ({ pa
   await openSpendableSkillTree(page);
 
   const treeSlice = page.locator('.maws-skill-tree-slice');
-  await expect(treeSlice).toContainText('技能树切片');
+  await expect(treeSlice).toContainText('成长路线');
   await expect(treeSlice).toContainText(new RegExp(`洞察点\\s+${points}`));
   await expect(treeSlice).toContainText('复盘、训练和主线');
   expect(await treeSlice.locator('.maws-tree-node.status-available').count(), 'skill tree should expose purchasable nodes').toBeGreaterThanOrEqual(1);
@@ -223,6 +224,7 @@ test('purchasing a tree node gives compact reward feedback and survives rerender
 
   await page.locator('button[data-action="closeModal"]').click();
   await page.evaluate(() => window.MAWS_STORE.emit());
+  await page.locator('.maws-route-index > summary').first().click();
   const ownedNode = page.locator('.maws-tree-node.status-owned').filter({ hasText: node.label });
   await expect(ownedNode, 'purchased node should stay owned after rerender').toBeVisible();
   await expect(ownedNode).toContainText('已点亮');
@@ -282,8 +284,8 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
   const primaryActionArea = page.locator('.maws-actions-primary');
   const e00Action = primaryActionArea.locator('button[data-action="doAction"][data-id="mouthy_passer_tryout"]');
   await expect(e00Action, 'park should expose a low-risk target for starter wild skills').toBeVisible();
-  await expect(e00Action.locator('xpath=ancestor::article[1]')).toContainText('嘴硬路人试手');
-  await expect(e00Action.locator('xpath=ancestor::article[1]')).toContainText('低风险试手');
+  await expect(e00Action).toContainText('嘴硬路人试手');
+  await expect(e00Action).toContainText('低风险');
   await e00Action.click();
   await expect(page.locator('.maws-modal')).toContainText('嘴硬路人试手');
   await page.locator('.maws-modal button[data-action="resolveEventNotebook"][data-id="resolve"]').click();
@@ -312,6 +314,7 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
     store.emit();
   });
+  await page.locator('.maws-command-drawer > summary').click();
   const reviewCard = page.locator('.maws-recommend-card').filter({ hasText: '嘴硬路人之后，先把录像看完' });
   await expect(reviewCard, 'E00 review outcome should recommend a concrete video review follow-up').toBeVisible();
   await reviewCard.locator('button[data-action="takeOpportunity"][data-id="e00_review_video"]').click();
@@ -328,6 +331,7 @@ test('park exposes a low-risk E00 fun target before the E01 check', async ({ pag
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
     store.emit();
   });
+  await page.locator('.maws-command-drawer > summary').click();
   const e01Card = page.locator('.maws-recommend-card').filter({ hasText: '嘴硬路人之后，去验真正拳距' });
   await expect(e01Card, 'E00 win should recommend moving from fun target to E01 check').toBeVisible();
   await expect(e01Card.locator('button[data-action="takeOpportunity"][data-id="e00_win_e01_check"]')).toContainText('开打');
@@ -389,6 +393,7 @@ test('Day 5 park check review persists as Fatty memory and growth prompt', async
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
     store.emit();
   });
+  await page.locator('.maws-command-drawer > summary').click();
   const jabSourceCard = page.locator('.maws-recommend-card').filter({ hasText: '公园验货之后，把刺拳来源记住' });
   await expect(jabSourceCard, 'reviewed park check should recommend the concrete jab source').toBeVisible();
   await jabSourceCard.locator('button[data-action="takeOpportunity"][data-id="park_check_jab_source"]').click();
@@ -421,6 +426,7 @@ test('Day 5 park check review persists as Fatty memory and growth prompt', async
     store.state.ui = { ...store.state.ui, tab: 'map', modal: null, cityMapOpen: false, interactionMenu: null };
     store.emit();
   });
+  await page.locator('.maws-command-drawer > summary').click();
   const bagTrainingCard = page.locator('.maws-recommend-card').filter({ hasText: '拳馆开放了，去把沙包连击做掉' });
   await expect(bagTrainingCard, 'remembered jab route should become a Day 9 bag training recommendation').toBeVisible();
   await bagTrainingCard.locator('button[data-action="takeOpportunity"][data-id="park_route_bag_training"]').click();

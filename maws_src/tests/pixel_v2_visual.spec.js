@@ -512,7 +512,7 @@ test('Pixel V2 combat and scene feedback textures decode and appear at runtime',
   await expect(page.locator('.maws-target-control')).toContainText('高位');
   await expect(page.locator('.maws-target-control')).toContainText('中位');
   await expect(page.locator('.maws-target-control')).toContainText('低位');
-  await expect(page.locator('.maws-combat-read')).toContainText('防守读法');
+  await expect(page.locator('.maws-combat-read')).toContainText('读招详情');
   await page.evaluate(() => {
     const scene = window.MAWS_GAME.scene.getScene('ShellScene');
     window.__pixelV2LiveVfx = [];
@@ -650,10 +650,10 @@ for (const viewport of VIEWPORTS) {
     const tabs = [
       { id: 'profile', selector: '.maws-profile-ledger', label: '人物状态册' },
       { id: 'skills', selector: '.maws-skillbook-page', label: '招式簿' },
-      { id: 'bag', selector: '.maws-bag-ledger', label: '装备架与背包' },
-      { id: 'shop', selector: '.maws-shop-board', label: '今天买什么' },
-      { id: 'npc', selector: '.maws-npc-ledger', label: '今天找谁说话' },
-      { id: 'log', selector: '.maws-logbook', label: '行动与记忆' }
+      { id: 'bag', selector: '.maws-bag-ledger', label: '行囊' },
+      { id: 'shop', selector: '.maws-shop-board', label: '补给' },
+      { id: 'npc', selector: '.maws-npc-ledger', label: '人物' },
+      { id: 'log', selector: '.maws-logbook', label: '记忆' }
     ];
 
     for (const tab of tabs) {
@@ -672,16 +672,16 @@ for (const viewport of VIEWPORTS) {
       }
       if (tab.id === 'bag' || tab.id === 'shop') {
         const itemHierarchy = await surface.locator('.maws-item').first().evaluate((card) => {
-          const visual = card.querySelector('.maws-item-visual');
-          const title = card.querySelector('.maws-item-header strong');
+          const visual = card.querySelector('.maws-index-art');
+          const title = card.querySelector('.maws-index-summary strong');
           return {
             visualWidth: visual?.getBoundingClientRect().width || 0,
             visualHeight: visual?.getBoundingClientRect().height || 0,
             titleFont: Number.parseFloat(getComputedStyle(title).fontSize || '0')
           };
         });
-        expect(itemHierarchy.visualWidth, `${tab.id} item art should be a primary visual`).toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 55 : 63);
-        expect(itemHierarchy.visualHeight, `${tab.id} item art should keep a square pixel frame`).toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 55 : 63);
+        expect(itemHierarchy.visualWidth, `${tab.id} item art should be a primary visual`).toBeGreaterThanOrEqual(55);
+        expect(itemHierarchy.visualHeight, `${tab.id} item art should keep a square pixel frame`).toBeGreaterThanOrEqual(55);
         expect(itemHierarchy.titleFont, `${tab.id} item title should not overpower its art`).toBeLessThanOrEqual(12);
       }
       await expectNoHorizontalOverflow(page, `${viewport.name} ${tab.id} ledger`);

@@ -158,16 +158,16 @@ async function expectClickableAboveBottomNav(page, locator, label) {
 }
 
 async function expectSceneCharacterImagesReady(page, label) {
-  await expect.poll(async () => page.locator('.maws-scene-character img').evaluateAll((images) => ({
-    count: images.length,
-    ready: images.filter((image) => image.complete && image.naturalWidth > 16 && image.naturalHeight > 16).length,
-    highPriority: images.filter((image) => image.getAttribute('loading') === 'eager'
+  await expect.poll(async () => page.locator('.maws-scene-character img').evaluateAll((images) => images.length >= 2
+    && images.every((image) => image.complete
+      && image.naturalWidth > 16
+      && image.naturalHeight > 16
+      && image.getAttribute('loading') === 'eager'
       && image.getAttribute('fetchpriority') === 'high'
-      && image.getAttribute('decoding') === 'sync').length
-  })), {
+      && image.getAttribute('decoding') === 'sync')), {
     message: `${label} scene character images should decode before first-look capture`,
     timeout: 2000
-  }).toEqual({ count: 2, ready: 2, highPriority: 2 });
+  }).toBe(true);
   const images = await page.locator('.maws-scene-character img').evaluateAll((nodes) => nodes.map((image) => ({
     width: image.naturalWidth,
     height: image.naturalHeight
@@ -195,6 +195,9 @@ test('rental home first look opens with reachable main CTA and no horizontal ove
   const mainCta = page.locator('.maws-action-rail-main .maws-actions-primary button[data-action="doAction"]').first();
   await expect(mainCta).toBeVisible();
   await expectClickableAboveBottomNav(page, mainCta, 'rental home main CTA');
+  await expect(page.locator('.maws-today-rail')).toHaveCount(0);
+  await expect(page.locator('.maws-command-drawer')).not.toHaveAttribute('open', '');
+  expect(await page.locator('.maws-scene-quick-actions > button').count(), 'default scene should expose no more than two decisions').toBeLessThanOrEqual(2);
 
   const firstLook = await page.evaluate(() => {
     const state = window.MAWS_STORE.state;
@@ -249,9 +252,9 @@ test('clicking a scene character opens interaction menu or clear feedback', asyn
 test('ordinary action reward feedback uses compact non-duplicated chips', async ({ page }) => {
   const errors = await loadGame(page, DESKTOP);
 
-  const durationAction = page.locator('.maws-action').filter({ has: page.locator('.maws-duration-tag') }).first();
+  const durationAction = page.locator('.maws-scene-command-button[data-action="doAction"]').first();
   await expect(durationAction).toBeVisible();
-  await durationAction.locator('button[data-action="doAction"]').click();
+  await durationAction.click();
   await expect(page.locator('.maws-modal.duration')).toBeVisible();
   await page.locator('button[data-action="chooseDuration"][data-duration="standard"]').click();
   await expect(page.locator('.maws-modal.result-compact')).toBeVisible();
@@ -312,9 +315,9 @@ test('ordinary action reward feedback uses compact non-duplicated chips', async 
 test('390x844 time investment modal fits and its duration buttons are clickable', async ({ page }) => {
   const errors = await loadGame(page, MOBILE);
 
-  const durationAction = page.locator('.maws-action').filter({ has: page.locator('.maws-duration-tag') }).first();
+  const durationAction = page.locator('.maws-scene-command-button[data-action="doAction"]').first();
   await expect(durationAction).toBeVisible();
-  await durationAction.locator('button[data-action="doAction"]').click();
+  await durationAction.click();
   await expect(page.locator('.maws-modal.duration')).toBeVisible();
   await expect(page.locator('.maws-duration-choice')).toHaveCount(4);
 

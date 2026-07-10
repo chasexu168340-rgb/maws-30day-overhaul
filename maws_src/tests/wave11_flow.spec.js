@@ -157,9 +157,9 @@ test('combat planner keeps the current action window to one or two slots', async
 test('action reward modal uses visible reward chips without turning small results into a wall', async ({ page }) => {
   const errors = await loadGame(page);
 
-  const durationAction = page.locator('.maws-action').filter({ has: page.locator('.maws-duration-tag') }).first();
+  const durationAction = page.locator('.maws-scene-command-button[data-action="doAction"]').first();
   await expect(durationAction).toBeVisible();
-  await durationAction.locator('button[data-action="doAction"]').click();
+  await durationAction.click();
   await expect(page.locator('.maws-modal.duration')).toBeVisible();
 
   await page.locator('button[data-action="chooseDuration"][data-duration="standard"]').click();
@@ -192,9 +192,9 @@ test('action reward modal uses visible reward chips without turning small result
 test('time investment modal opens and fits at 390x844', async ({ page }) => {
   const errors = await loadGame(page, MOBILE_VIEWPORT);
 
-  const durationAction = page.locator('.maws-action').filter({ has: page.locator('.maws-duration-tag') }).first();
+  const durationAction = page.locator('.maws-scene-command-button[data-action="doAction"]').first();
   await expect(durationAction).toBeVisible();
-  await durationAction.locator('button[data-action="doAction"]').click();
+  await durationAction.click();
   await expect(page.locator('.maws-modal.duration')).toBeVisible();
   await expect(page.locator('.maws-duration-choice')).toHaveCount(4);
 
@@ -208,31 +208,28 @@ test('time investment modal opens and fits at 390x844', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('skills page keeps useful information visible outside details', async ({ page }) => {
+test('skills page keeps scan information visible and details collapsed', async ({ page }) => {
   const errors = await loadGame(page, MOBILE_VIEWPORT);
 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
   await expect(page.locator('.maws-skill').first()).toBeVisible();
 
   const visibleSkillInfo = await page.locator('.maws-skill').first().evaluate((card) => {
-    const outsideDetailsText = Array.from(card.querySelectorAll('header, .maws-skill-brief, footer'))
-      .map((node) => node.textContent.trim())
-      .filter(Boolean)
-      .join(' ');
-    const detail = card.querySelector('details');
-    const summary = detail?.querySelector('summary')?.textContent.trim() || '';
+    const summary = card.querySelector(':scope > summary')?.textContent.trim() || '';
     return {
-      outsideLength: outsideDetailsText.length,
-      hasStatus: /熟练度|已装备|可装备|未学会|待解锁/.test(outsideDetailsText),
+      outsideLength: summary.length,
+      hasStatus: /熟练|装备中|未学|待解锁/.test(summary),
       hasSummary: summary.length > 0,
-      detailOpen: Boolean(detail?.open)
+      detailOpen: Boolean(card.open)
     };
   });
 
   expect(visibleSkillInfo.outsideLength, 'skill cards should expose scan info before details').toBeGreaterThan(12);
   expect(visibleSkillInfo.hasStatus, 'skill cards should show status outside details').toBe(true);
-  expect(visibleSkillInfo.hasSummary, 'skill cards may still provide expandable detail').toBe(true);
-  expect(visibleSkillInfo.detailOpen, 'details should not hide all useful skill data by default').toBe(true);
+  expect(visibleSkillInfo.hasSummary, 'skill entries should provide an expandable summary').toBe(true);
+  expect(visibleSkillInfo.detailOpen, 'deep skill detail should stay closed by default').toBe(false);
+  await page.locator('.maws-skill > summary').first().click();
+  await expect(page.locator('.maws-skill .maws-index-detail').first()).toBeVisible();
   await expectNoHorizontalOverflow(page, '390x844 skills page');
 
   expect(errors).toEqual([]);

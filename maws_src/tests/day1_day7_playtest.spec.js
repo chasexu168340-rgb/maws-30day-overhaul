@@ -129,7 +129,7 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
   expect(dayOne.starterSkills).not.toContain('jab');
   expect(dayOne.starterSkills).not.toContain('advance');
   expect(dayOne.equipped).toEqual(['wild_swing', 'push_away', 'mystic', 'guard', 'retreat', 'talkdown']);
-  await expect(page.locator('.maws-task-card.main').filter({ hasText: /父亲/ })).toBeVisible();
+  await expect(page.locator('.maws-scene-agenda').filter({ hasText: /父亲/ })).toBeVisible();
 
   await page.locator('button[data-action="openCityMap"]').first().click();
   await expect(page.locator('button.maws-city-marker[data-loc="metro_station"]:not(.locked)')).toBeVisible();
