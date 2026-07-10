@@ -724,7 +724,7 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
   });
 
   await page.waitForFunction(
-    () => (window.__pixelV2FrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    () => (window.__pixelV2FrameNames || []).some((frame) => frame >= 8 && frame <= 15),
     null,
     { timeout: 3000 }
   );
@@ -738,6 +738,7 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
       frameNames: window.__pixelV2FrameNames || [],
       xPositions: window.__pixelV2XPositions || [],
       sideLayout: window.__pixelV2SideLayout || {},
+      wildSemantic: window.MAWS_GAME.scene.getScene('ShellScene').actionAnimName({ action: { id: 'wild_swing', type: 'strike' } }),
       steps: (store.state.combat?.steps || []).map((step) => ({
         actor: step.actor,
         id: step.action?.id || null,
@@ -750,7 +751,8 @@ test('pixel_v2 player strip advances through real attack frames in Phaser', asyn
 
   expect(samples.length, 'Phaser should expose player animation frame samples').toBeGreaterThan(6);
   expect(new Set(samples).size, 'player sprite should advance beyond a static frame').toBeGreaterThan(2);
-  expect(samples.some((frame) => frame >= 4 && frame <= 7), `player sprite should enter the pixel_v2 attack range; sampled ${samples.join(',')}; steps ${JSON.stringify(playback.steps)}`).toBe(true);
+  expect(playback.wildSemantic, 'wild swing should map to the dedicated heavy semantic').toBe('heavy');
+  expect(samples.some((frame) => frame >= 8 && frame <= 15), `player should enter an authored attack range; sampled ${samples.join(',')}; steps ${JSON.stringify(playback.steps)}`).toBe(true);
   expect(playback.sideLayout.playerX, 'player should begin on the right side').toBeGreaterThan(playback.sideLayout.enemyX);
   expect(playback.sideLayout.playerFlipX, 'right-side player should face left').toBe(true);
   expect(playback.sideLayout.enemyFlipX, 'left-side enemy should face right').toBe(false);
@@ -819,7 +821,7 @@ test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ p
     store.dispatch({ type: 'selectSkill', skillId: 'retreat' });
     store.dispatch({ type: 'confirmBattle' });
   });
-  await page.waitForFunction(() => (window.__pixelV2DefenseFrames || []).some((frame) => frame >= 20 && frame <= 23), null, { timeout: 3000 });
+  await page.waitForFunction(() => (window.__pixelV2DefenseFrames || []).some((frame) => frame >= 24 && frame <= 27), null, { timeout: 3000 });
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'player-retreat-desktop.png'), fullPage: true });
 
   const playback = await page.evaluate(() => {
@@ -835,10 +837,33 @@ test('pixel_v2 player uses distinct guard and retreat motion ranges', async ({ p
   });
 
   expect(playback.frames.some((frame) => frame >= 16 && frame <= 19), `guard frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
-  expect(playback.frames.some((frame) => frame >= 20 && frame <= 23), `retreat frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(playback.frames.some((frame) => frame >= 24 && frame <= 27), `retreat frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
   expect(Math.max(...playback.retreatX) - Math.min(...playback.retreatX), 'retreat should move the player into the new distance instead of animating in place').toBeGreaterThan(24);
   expect(Math.abs(playback.scaleX - playback.scaleY), 'pixel fighters should use uniform scale without width distortion').toBeLessThan(0.001);
   expect(violations, 'semantic player animations should not emit warnings/errors').toEqual([]);
+});
+
+test('pixel_v2 advance uses dedicated footwork frames instead of the attack strip', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay5(page);
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite, animKey: 'anim.fighter.player', isAnimated: true };
+    const semantic = scene.actionAnimName({ action: { id: 'advance', type: 'utility' } });
+    const frames = [];
+    const timer = setInterval(() => {
+      if (sprite?.frame?.name !== undefined) frames.push(Number(sprite.frame.name));
+    }, 24);
+    scene.playFighterAnim(actor, semantic, true);
+    await new Promise((resolve) => setTimeout(resolve, 720));
+    clearInterval(timer);
+    return { semantic, frames };
+  });
+  expect(playback.semantic).toBe('advance');
+  expect(playback.frames.some((frame) => frame >= 4 && frame <= 7), `advance frames should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  expect(new Set(playback.frames).size).toBeGreaterThan(2);
+  expect(violations, 'advance animation should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 untrained target strip advances through real attack frames in Phaser', async ({ page }) => {
@@ -861,7 +886,7 @@ test('pixel_v2 untrained target strip advances through real attack frames in Pha
   });
 
   await page.waitForFunction(
-    () => (window.__pixelV2UntrainedFrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    () => (window.__pixelV2UntrainedFrameNames || []).some((frame) => frame >= 8 && frame <= 15),
     null,
     { timeout: 3000 }
   );
@@ -875,7 +900,7 @@ test('pixel_v2 untrained target strip advances through real attack frames in Pha
 
   expect(samples.length, 'Phaser should expose untrained-target animation frame samples').toBeGreaterThan(6);
   expect(new Set(samples).size, 'untrained-target sprite should advance beyond a static frame').toBeGreaterThan(2);
-  expect(samples.some((frame) => frame >= 4 && frame <= 7), `untrained target should enter attack frames; sampled ${samples.join(',')}`).toBe(true);
+  expect(samples.some((frame) => frame >= 8 && frame <= 15), `untrained target should enter its dedicated sloppy attack frames; sampled ${samples.join(',')}`).toBe(true);
   expect(violations, 'untrained-target animation should not emit warnings/errors').toEqual([]);
 });
 
@@ -899,7 +924,7 @@ test('pixel_v2 beginner boxer strip advances through real attack frames in Phase
   });
 
   await page.waitForFunction(
-    () => (window.__pixelV2BeginnerFrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    () => (window.__pixelV2BeginnerFrameNames || []).some((frame) => frame >= 8 && frame <= 11),
     null,
     { timeout: 3000 }
   );
@@ -913,7 +938,7 @@ test('pixel_v2 beginner boxer strip advances through real attack frames in Phase
 
   expect(samples.length, 'Phaser should expose beginner-boxer animation frame samples').toBeGreaterThan(6);
   expect(new Set(samples).size, 'beginner-boxer sprite should advance beyond a static frame').toBeGreaterThan(2);
-  expect(samples.some((frame) => frame >= 4 && frame <= 7), `beginner boxer should enter attack frames; sampled ${samples.join(',')}`).toBe(true);
+  expect(samples.some((frame) => frame >= 8 && frame <= 11), `beginner boxer should enter the dedicated straight-attack frames; sampled ${samples.join(',')}`).toBe(true);
   expect(violations, 'beginner-boxer animation should not emit warnings/errors').toEqual([]);
 });
 

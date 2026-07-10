@@ -589,7 +589,7 @@ export class ShellScene extends PhaserScene {
     const sprite = actor?.sprite;
     if (!actor?.animKey || !sprite?.active || !sprite.scene || typeof sprite.play !== 'function') return;
     const requestedKey = `${actor.animKey}.${name}`;
-    const fallbackName = ['guard', 'retreat'].includes(name) ? 'vfx' : name;
+    const fallbackName = ({ guard: 'vfx', retreat: 'vfx', advance: 'attack', heavy: 'attack' })[name] || name;
     const key = this.anims?.exists?.(requestedKey) ? requestedKey : `${actor.animKey}.${fallbackName}`;
     if (!this.anims?.exists?.(key)) return;
     sprite.play(key, restart);
@@ -653,7 +653,7 @@ export class ShellScene extends PhaserScene {
   playCombatStepFx(step, fighters, index, mobile) {
     const fxList = Array.isArray(step.fx) ? step.fx : step.fx ? [step.fx] : [];
     const actionActor = fighters[step.actor];
-    const stepDelay = index * 300;
+    const stepDelay = index * (mobile ? 540 : 620);
     if (!fxList.length) {
       if (actionActor && step.action?.type !== 'system') this.delayedFighterAnim(actionActor, this.actionAnimName(step), stepDelay);
       return;
@@ -665,11 +665,11 @@ export class ShellScene extends PhaserScene {
       const target = fighters[targetSide] || fighters.enemy;
       const delay = stepDelay + fxIndex * 90;
       const isImpact = fx.type === 'hit' || fx.type === 'break';
-      const impactDelay = isImpact ? delay + 200 : delay;
+      const impactDelay = isImpact ? delay + 260 : delay;
       if (fx.type === 'hit' || fx.type === 'break') {
-        this.delayedFighterAnim(actor, 'attack', delay);
+        const semanticAnim = this.actionAnimName(step);
+        this.delayedFighterAnim(actor, semanticAnim === 'idle' ? 'attack' : semanticAnim, delay);
         this.delayedFighterAnim(target, 'hurt', impactDelay);
-        this.delayedFighterAnim(actor, 'vfx', impactDelay + 80);
         this.animateAttack(actor, target, delay, fx);
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
@@ -690,10 +690,11 @@ export class ShellScene extends PhaserScene {
   actionAnimName(step) {
     const type = step.action?.type;
     const id = step.action?.id || '';
-    if (type === 'strike' || type === 'grapple' || ['wild_swing', 'mystic', 'push_away', 'jab', 'straight', 'lowkick', 'takedown', 'palm', 'sidecontrol'].includes(id)) return 'attack';
+    if (['wild_swing', 'mystic', 'push_away', 'palm', 'takedown', 'sidecontrol'].includes(id)) return 'heavy';
+    if (type === 'strike' || type === 'grapple' || ['jab', 'straight', 'lowkick'].includes(id)) return 'attack';
     if (['guard', 'sprawl', 'rest'].includes(id)) return 'guard';
     if (['retreat', 'dodge', 'escape', 'dirtyescape'].includes(id)) return 'retreat';
-    if (id === 'advance') return 'attack';
+    if (id === 'advance') return 'advance';
     return 'idle';
   }
 
@@ -716,7 +717,7 @@ export class ShellScene extends PhaserScene {
       targets: actor.sprite,
       x: actor.x + dir * travel,
       y: actor.y - 6,
-      duration: 220,
+      duration: 260,
       hold: hitstopMs,
       yoyo: true,
       ease: 'Quad.easeOut',
@@ -726,7 +727,7 @@ export class ShellScene extends PhaserScene {
       this.tweens.add({
         targets: actor.shadow,
         x: dir * travel,
-        duration: 220,
+        duration: 260,
         hold: hitstopMs,
         yoyo: true,
         ease: 'Quad.easeOut',
@@ -734,7 +735,7 @@ export class ShellScene extends PhaserScene {
       });
     }
     const shake = Math.max(0, Math.min(1, Number(fx.shake || 0)));
-    if (shake > 0) this.shakeCamera(delay + 200, 0.0015 + shake * 0.006, 90 + hitstopMs);
+    if (shake > 0) this.shakeCamera(delay + 260, 0.0015 + shake * 0.006, 90 + hitstopMs);
   }
 
   animateStep(actor, target, delay, fx) {
@@ -745,12 +746,12 @@ export class ShellScene extends PhaserScene {
       this.tweens.add({
         targets: actor.sprite,
         x: { from: actor.x - awayDir * distanceMove, to: actor.x },
-        duration: 260,
+        duration: 320,
         ease: 'Quad.easeOut',
         delay
       });
       if (actor.shadow?.active) {
-        this.tweens.add({ targets: actor.shadow, x: { from: -awayDir * distanceMove, to: 0 }, duration: 260, ease: 'Quad.easeOut', delay });
+        this.tweens.add({ targets: actor.shadow, x: { from: -awayDir * distanceMove, to: 0 }, duration: 320, ease: 'Quad.easeOut', delay });
       }
       return;
     }
@@ -758,12 +759,12 @@ export class ShellScene extends PhaserScene {
       this.tweens.add({
         targets: actor.sprite,
         x: { from: actor.x + awayDir * distanceMove, to: actor.x },
-        duration: 260,
+        duration: 320,
         ease: 'Quad.easeOut',
         delay
       });
       if (actor.shadow?.active) {
-        this.tweens.add({ targets: actor.shadow, x: { from: awayDir * distanceMove, to: 0 }, duration: 260, ease: 'Quad.easeOut', delay });
+        this.tweens.add({ targets: actor.shadow, x: { from: awayDir * distanceMove, to: 0 }, duration: 320, ease: 'Quad.easeOut', delay });
       }
       return;
     }
