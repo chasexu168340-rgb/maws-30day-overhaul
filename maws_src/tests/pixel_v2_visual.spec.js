@@ -496,6 +496,7 @@ for (const viewport of VIEWPORTS) {
     const violations = await loadGame(page, viewport);
     await expect(page.locator('.maws-scene')).toBeVisible();
     await expect(page.locator('.maws-scene-character img').first()).toBeVisible();
+    await expect(page.locator('.maws-scene-character:has(img[src*="scene_npc_fatty.png"])')).not.toHaveClass(/placeholder-npc/);
     await expectVisibleImagesDecode(page, `Day 1 ${viewport.name}`);
     await expectManifestImagesDecode(page, [
       'backgrounds:bg.home.day',

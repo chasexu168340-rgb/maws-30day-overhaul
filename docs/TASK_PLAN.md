@@ -44,6 +44,7 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - `scene.npc.fatty` now uses a reviewed 96x144 standee with the canonical brick-red overshirt, phone, round silhouette, and grounded sandals.
 - `portrait.fatty` now uses a reviewed 96x96 portrait with the same face, phone, pendant, and asymmetrical grin; the previous placeholder portrait is no longer live.
 - Day 1 desktop/mobile screenshots confirm Lu and Liu Pangzi now share one pixel density and silhouette language.
+- Scene-character fallback styling now reads manifest status: final `scene.npc.*` art keeps full scale/opacity, while unfinished legacy/fallback NPCs retain placeholder treatment.
 - Guard FX now targets the actual guarding actor, normal guard/hit feedback no longer hides the whole sprite behind a white silhouette, and combat cues use concise Chinese labels.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
@@ -83,6 +84,10 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run check:full` (101 manifest entries, 6 Chromium smoke tests)
   - `npm run test:day1-9` (4 passed)
   - Pixel V2 candidate visual gate (13 passed, including Day 1 desktop/mobile Lu/Liu standees and both portrait decodes)
+  - `git diff --check`
+- Passed after the manifest-driven scene fallback fix:
+  - `npm run check:full` (6 Chromium smoke tests)
+  - Pixel V2 candidate visual gate (13 passed; final Liu standee is asserted not to use `placeholder-npc`)
   - `git diff --check`
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 

@@ -1,5 +1,5 @@
 import { ACTIONS, ENEMIES, LOCS, SKILLS } from '../content/data.js';
-import { assetPath } from '../assets/manifest.js';
+import { assetEntry, assetPath } from '../assets/manifest.js';
 import { buildRenderModel } from '../simulation/state.js';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
@@ -357,7 +357,10 @@ function renderSceneInteractionMenu(menu) {
 
 function renderSceneCharacter(character, actions = []) {
   const src = character.assetKey ? assetPath(character.assetKey) : null;
-  const placeholderClass = character.assetKey?.startsWith('scene.npc.') ? 'placeholder-npc' : '';
+  const manifestAsset = character.assetKey ? assetEntry(character.assetKey) : null;
+  const placeholderClass = character.assetKey?.startsWith('scene.npc.') && manifestAsset?.status !== 'final'
+    ? 'placeholder-npc'
+    : '';
   const loadAttrs = 'loading="eager" fetchpriority="high" decoding="sync"';
   const interaction = sceneCharacterInteraction(character, actions);
   const art = src

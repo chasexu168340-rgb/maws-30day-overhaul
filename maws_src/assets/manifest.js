@@ -332,10 +332,13 @@ export function manifestEntriesForBundle(bundle, manifest = ASSET_MANIFEST) {
   return flattenManifest(manifest).filter(({ entry: asset }) => asset.bundle === bundle);
 }
 
-export function assetPath(key) {
+export function assetEntry(key) {
   for (const entries of Object.values(ASSET_MANIFEST)) {
-    const path = entryPath(entries[key]);
-    if (path) return path;
+    if (entries[key]) return entries[key];
   }
   return null;
+}
+
+export function assetPath(key) {
+  return entryPath(assetEntry(key));
 }
