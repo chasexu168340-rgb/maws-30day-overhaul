@@ -15,6 +15,8 @@ param(
     [int]$FrameCount = 16,
     [int]$GridColumns = 16,
     [int]$GridRows = 1,
+    [switch]$TrimGridRemainder,
+    [switch]$PreserveCellFraming,
 
     [string]$OutputRoot = 'assets/pixel_v2',
     [string]$OutputName = '',
@@ -141,9 +143,16 @@ function Test-ChromaMatch {
         [int]$Tolerance
     )
 
-    return ([Math]::Abs($Pixel.R - $Key.R) -le $Tolerance `
+    $distanceMatch = ([Math]::Abs($Pixel.R - $Key.R) -le $Tolerance `
         -and [Math]::Abs($Pixel.G - $Key.G) -le $Tolerance `
         -and [Math]::Abs($Pixel.B - $Key.B) -le $Tolerance)
+    $greenKey = ($Key.G -ge 200 -and $Key.G -ge ($Key.R * 3) -and $Key.G -ge ($Key.B * 3))
+    $greenSpill = ($greenKey `
+        -and $Pixel.G -ge 18 `
+        -and $Pixel.G -ge ($Pixel.R * 1.8) `
+        -and $Pixel.G -ge ($Pixel.B * 1.8))
+
+    return ($distanceMatch -or $greenSpill)
 }
 
 function Get-ImageStats {
@@ -245,18 +254,20 @@ function Convert-CombatGridToStrip {
         [int]$Rows,
         [int]$Count,
         [int]$TargetFrameWidth,
-        [int]$TargetFrameHeight
+        [int]$TargetFrameHeight,
+        [bool]$AllowGridTrim,
+        [bool]$NormalizeContent
     )
 
     if (($Columns * $Rows) -ne $Count) {
         throw "Combat grid must contain exactly FrameCount cells. Grid is ${Columns}x${Rows}; FrameCount is $Count."
     }
-    if (($SourceBitmap.Width % $Columns) -ne 0 -or ($SourceBitmap.Height % $Rows) -ne 0) {
+    if ((($SourceBitmap.Width % $Columns) -ne 0 -or ($SourceBitmap.Height % $Rows) -ne 0) -and -not $AllowGridTrim) {
         throw "Combat grid source $($SourceBitmap.Width)x$($SourceBitmap.Height) is not evenly divisible by ${Columns}x${Rows}."
     }
 
-    $sourceFrameWidth = [int]($SourceBitmap.Width / $Columns)
-    $sourceFrameHeight = [int]($SourceBitmap.Height / $Rows)
+    $sourceFrameWidth = [int][Math]::Floor($SourceBitmap.Width / $Columns)
+    $sourceFrameHeight = [int][Math]::Floor($SourceBitmap.Height / $Rows)
     $targetBitmap = New-Object System.Drawing.Bitmap ($TargetFrameWidth * $Count), $TargetFrameHeight, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $graphics = [System.Drawing.Graphics]::FromImage($targetBitmap)
     try {
@@ -267,16 +278,66 @@ function Convert-CombatGridToStrip {
         $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
         $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::None
 
+        $contentBounds = @()
+        $globalScale = 1.0
+        if ($NormalizeContent) {
+            $maxWidth = 1
+            $maxHeight = 1
+            for ($index = 0; $index -lt $Count; $index++) {
+                $sourceColumn = $index % $Columns
+                $sourceRow = [Math]::Floor($index / $Columns)
+                $cellX = $sourceColumn * $sourceFrameWidth
+                $cellY = $sourceRow * $sourceFrameHeight
+                $minX = $cellX + $sourceFrameWidth
+                $minY = $cellY + $sourceFrameHeight
+                $maxX = $cellX - 1
+                $maxY = $cellY - 1
+
+                for ($y = $cellY; $y -lt ($cellY + $sourceFrameHeight); $y++) {
+                    for ($x = $cellX; $x -lt ($cellX + $sourceFrameWidth); $x++) {
+                        if ($SourceBitmap.GetPixel($x, $y).A -le 8) { continue }
+                        if ($x -lt $minX) { $minX = $x }
+                        if ($x -gt $maxX) { $maxX = $x }
+                        if ($y -lt $minY) { $minY = $y }
+                        if ($y -gt $maxY) { $maxY = $y }
+                    }
+                }
+
+                if ($maxX -lt $minX -or $maxY -lt $minY) {
+                    throw "Combat grid frame $index contains no opaque pixels after chroma-key cleanup."
+                }
+
+                $bounds = [System.Drawing.Rectangle]::new($minX, $minY, ($maxX - $minX + 1), ($maxY - $minY + 1))
+                $contentBounds += $bounds
+                $maxWidth = [Math]::Max($maxWidth, $bounds.Width)
+                $maxHeight = [Math]::Max($maxHeight, $bounds.Height)
+            }
+
+            $globalScale = [Math]::Min(($TargetFrameWidth - 4) / $maxWidth, ($TargetFrameHeight - 3) / $maxHeight)
+        }
+
         for ($index = 0; $index -lt $Count; $index++) {
             $sourceColumn = $index % $Columns
             $sourceRow = [Math]::Floor($index / $Columns)
-            $sourceRect = New-Object System.Drawing.Rectangle `
-                ($sourceColumn * $sourceFrameWidth), `
-                ($sourceRow * $sourceFrameHeight), `
-                $sourceFrameWidth, `
-                $sourceFrameHeight
-            $targetRect = New-Object System.Drawing.Rectangle `
-                ($index * $TargetFrameWidth), 0, $TargetFrameWidth, $TargetFrameHeight
+            if ($NormalizeContent) {
+                $sourceRect = $contentBounds[$index]
+                $drawWidth = [Math]::Max(1, [int][Math]::Round($sourceRect.Width * $globalScale))
+                $drawHeight = [Math]::Max(1, [int][Math]::Round($sourceRect.Height * $globalScale))
+                $targetX = ($index * $TargetFrameWidth) + [int][Math]::Floor(($TargetFrameWidth - $drawWidth) / 2)
+                $targetY = $TargetFrameHeight - $drawHeight - 2
+                $targetRect = [System.Drawing.Rectangle]::new($targetX, $targetY, $drawWidth, $drawHeight)
+            }
+            else {
+                $sourceRect = [System.Drawing.Rectangle]::new(
+                    ($sourceColumn * $sourceFrameWidth),
+                    ($sourceRow * $sourceFrameHeight),
+                    $sourceFrameWidth,
+                    $sourceFrameHeight
+                )
+                $targetRect = [System.Drawing.Rectangle]::new(
+                    ($index * $TargetFrameWidth), 0, $TargetFrameWidth, $TargetFrameHeight
+                )
+            }
             $graphics.DrawImage($SourceBitmap, $targetRect, $sourceRect, [System.Drawing.GraphicsUnit]::Pixel)
         }
     }
@@ -309,8 +370,8 @@ function Invoke-ChromaKeyCleanup {
     return $changed
 }
 
-if ($ChromaKey -and $Type -ne 'standee') {
-    throw '-ChromaKey is only supported for standee assets.'
+if ($ChromaKey -and $Type -notin @('standee', 'combat-strip')) {
+    throw '-ChromaKey is only supported for standee and combat-strip assets.'
 }
 
 if ($FrameCount -le 0 -or $FrameWidth -le 0 -or $FrameHeight -le 0 -or $GridColumns -le 0 -or $GridRows -le 0) {
@@ -357,10 +418,17 @@ if ((Test-Path -LiteralPath $outputPath) -and -not $Force -and -not $ValidateOnl
 
 Add-Type -AssemblyName System.Drawing
 
+$loadedBitmap = $null
 $sourceBitmap = $null
 $preparedBitmap = $null
 try {
-    $sourceBitmap = [System.Drawing.Bitmap]::FromFile($sourcePath)
+    $loadedBitmap = [System.Drawing.Bitmap]::FromFile($sourcePath)
+    $sourceBitmap = $loadedBitmap.Clone(
+        [System.Drawing.Rectangle]::new(0, 0, $loadedBitmap.Width, $loadedBitmap.Height),
+        [System.Drawing.Imaging.PixelFormat]::Format32bppArgb
+    )
+    $loadedBitmap.Dispose()
+    $loadedBitmap = $null
 
     $warnings = New-Object System.Collections.Generic.List[string]
     $strip = $null
@@ -371,8 +439,11 @@ try {
         if (($targetSize.Width % $FrameCount) -ne 0) {
             throw "Combat strip target width $($targetSize.Width) is not divisible by FrameCount $FrameCount."
         }
-        if (($sourceBitmap.Width % $GridColumns) -ne 0 -or ($sourceBitmap.Height % $GridRows) -ne 0) {
+        if ((($sourceBitmap.Width % $GridColumns) -ne 0 -or ($sourceBitmap.Height % $GridRows) -ne 0) -and -not $TrimGridRemainder) {
             throw "Combat grid source $($sourceBitmap.Width)x$($sourceBitmap.Height) is not evenly divisible by ${GridColumns}x${GridRows}."
+        }
+        if ($TrimGridRemainder -and (($sourceBitmap.Width % $GridColumns) -ne 0 -or ($sourceBitmap.Height % $GridRows) -ne 0)) {
+            $warnings.Add("combat grid ignores right/bottom remainder pixels to fit ${GridColumns}x${GridRows}")
         }
 
         $targetFrameWidth = [int]($targetSize.Width / $FrameCount)
@@ -386,12 +457,19 @@ try {
             frameHeight = $FrameHeight
             gridColumns = $GridColumns
             gridRows = $GridRows
-            sourceFrameWidth = [int]($sourceBitmap.Width / $GridColumns)
-            sourceFrameHeight = [int]($sourceBitmap.Height / $GridRows)
+            sourceFrameWidth = [int][Math]::Floor($sourceBitmap.Width / $GridColumns)
+            sourceFrameHeight = [int][Math]::Floor($sourceBitmap.Height / $GridRows)
+            normalizedContent = (-not [bool]$PreserveCellFraming)
             targetWidth = $targetSize.Width
             targetHeight = $targetSize.Height
             valid = $true
         }
+    }
+
+    $chromaPixelsCleared = 0
+    if ($ChromaKey) {
+        $keyColor = ConvertFrom-HexColor -Hex $ChromaColor
+        $chromaPixelsCleared = Invoke-ChromaKeyCleanup -Bitmap $sourceBitmap -KeyColor $keyColor -Tolerance $ChromaTolerance
     }
 
     $sourceStats = Get-ImageStats -Bitmap $sourceBitmap -FilePath $sourcePath
@@ -421,16 +499,12 @@ try {
             -Rows $GridRows `
             -Count $FrameCount `
             -TargetFrameWidth $FrameWidth `
-            -TargetFrameHeight $FrameHeight
+            -TargetFrameHeight $FrameHeight `
+            -AllowGridTrim ([bool]$TrimGridRemainder) `
+            -NormalizeContent (-not [bool]$PreserveCellFraming)
     }
     else {
         Resize-NearestNeighbor -SourceBitmap $sourceBitmap -TargetWidth $targetSize.Width -TargetHeight $targetSize.Height
-    }
-
-    $chromaPixelsCleared = 0
-    if ($ChromaKey) {
-        $keyColor = ConvertFrom-HexColor -Hex $ChromaColor
-        $chromaPixelsCleared = Invoke-ChromaKeyCleanup -Bitmap $preparedBitmap -KeyColor $keyColor -Tolerance $ChromaTolerance
     }
 
     if ($Type -eq 'standee' -and -not (Test-TransparentBorder -Bitmap $preparedBitmap)) {
@@ -474,5 +548,8 @@ finally {
     }
     if ($sourceBitmap -ne $null) {
         $sourceBitmap.Dispose()
+    }
+    if ($loadedBitmap -ne $null) {
+        $loadedBitmap.Dispose()
     }
 }

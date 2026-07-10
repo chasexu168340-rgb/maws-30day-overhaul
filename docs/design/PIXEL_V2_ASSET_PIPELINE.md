@@ -52,10 +52,14 @@ pwsh -ExecutionPolicy Bypass -File scripts/prepare_pixel_v2_assets.ps1 `
   -Source outputs/temp/lu_action_master_4x4.png `
   -Type combat-strip `
   -GridColumns 4 -GridRows 4 `
+  -TrimGridRemainder `
+  -ChromaKey -ChromaColor '#20F015' -ChromaTolerance 70 `
   -OutputName anim_fighter_player.png
 ```
 
-Frame order is row-major. The MAWS 16-frame contract is idle `0-3`, attack `4-8`, hurt `9-12`, and guard/utility `13-15`.
+Frame order is row-major. The tool uses one global content scale, centers each opaque silhouette, and locks every frame to the same two-pixel bottom safety line. Pass `-PreserveCellFraming` only when a reviewed master already has exact per-frame camera framing.
+
+The MAWS 16-frame contract is idle `0-3`, attack `4-7`, hurt `8-11`, and guard/utility `12-15`.
 
 ## Report
 

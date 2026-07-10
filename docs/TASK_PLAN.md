@@ -25,6 +25,10 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
 - The combat HUD now uses square pixel borders, hard shadows, restrained semantic colors, a smaller mobile command dock, and compact command cards.
 - Phaser 4 tint handling uses the current `setTint + TintModes.FILL` API, so the new feedback produces no deprecation warning.
 - `bg.park.day` is the first reviewed runtime replacement under `assets/pixel_v2/`: exact 480x270, 32-color indexed PNG, 45KB, clear two-fighter staging lanes, and no baked characters.
+- `anim.fighter.player` is now a reviewed `pixel_v2` 16-frame strip: exact 1536x144, 96x144 frames, transparent, 92KB, shared scale, centered silhouettes, and a fixed two-pixel foot baseline.
+- The player strip supplies real idle `0-3`, wild-swing attack `4-7`, hurt `8-11`, and guard/utility `12-15` animations; Phaser uses a manifest display scale without stretching individual frame content.
+- Asset preparation now supports 4x4 generated action masters, small grid remainder trimming, 32-bit ARGB chroma cleanup, global silhouette normalization, and row-major repacking.
+- `pixel_v2_visual.spec.js` reads the live Phaser frame index and proves a real `wild_swing` enters attack frames; it also saves `outputs/pixel_v2_visual/player-attack-desktop.png` at the observed attack frame.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -35,16 +39,20 @@ Day 1-9 retro-pixel vertical slice: establish the `pixel_v2` production bible, g
   - `npm run test:day1-9` (4 passed)
   - `git diff --check`
 - Re-ran `node maws_src/tools/verify_assets.mjs` and `npm run test:day1-9` after switching `bg.park.day`; both passed.
+- Passed after the player animation integration:
+  - `npm run check:full` (build, verifier, 6 Chromium smoke tests)
+  - Pixel V2 candidate visual gate (6 passed, including live frame playback)
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Most Day 1-9 art is still legacy/fallback; the strict final-art gate must remain red until every reachable key has a reviewed file under `assets/pixel_v2/`.
-- Legacy fighter strips contain inconsistent transparent bottom margins; E10 still appears slightly above his contact shadow even on the corrected park ground plane.
+- E01/E10 still share the legacy boxer strip, whose transparent bottom margin makes the opponent float beside the grounded player animation.
+- The separate scene standee key `fighter.player` remains legacy; the combat strip does not falsely satisfy that strict requirement.
 - Current VFX textures remain legacy and will be replaced after the first background/standee batch.
 - Image generation may require cleanup/downsampling before an output is suitable for a runtime key.
 - The final release gate still needs desktop/mobile shots for Day 1, 2, 3, and 5.
 
 ## Next Step
 
-Generate and review Lu Xiaoxian's 16-frame action master in the current session, then use the same reference contract for E00/E01/E10 and switch the existing fighter sprite keys to exact 96x144 frames.
+Generate and review the E01/E10 action masters using the same 16-frame contract, add independent runtime keys instead of sharing one legacy boxer, then generate the full-size Lu scene standee/portrait.

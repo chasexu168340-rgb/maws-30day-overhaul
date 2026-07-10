@@ -298,6 +298,53 @@ test('manifest final assets use assets/pixel_v2 and strict mode requires sampled
   ].join(' ')).toEqual([]);
 });
 
+test('pixel_v2 player strip advances through real attack frames in Phaser', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDay8(page);
+
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    const game = window.MAWS_GAME;
+    window.__pixelV2FrameNames = [];
+    window.__pixelV2FrameTimer = setInterval(() => {
+      const scene = game.scene.getScene('ShellScene');
+      const sprite = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      if (sprite?.frame?.name !== undefined) window.__pixelV2FrameNames.push(Number(sprite.frame.name));
+    }, 32);
+
+    store.dispatch({ type: 'clearSkills' });
+    store.dispatch({ type: 'selectSkill', skillId: 'wild_swing' });
+    store.dispatch({ type: 'confirmBattle' });
+  });
+
+  await page.waitForFunction(
+    () => (window.__pixelV2FrameNames || []).some((frame) => frame >= 4 && frame <= 7),
+    null,
+    { timeout: 3000 }
+  );
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'player-attack-desktop.png'), fullPage: true });
+  await page.waitForTimeout(850);
+
+  const playback = await page.evaluate(() => {
+    clearInterval(window.__pixelV2FrameTimer);
+    const store = window.MAWS_STORE;
+    return {
+      frameNames: window.__pixelV2FrameNames || [],
+      steps: (store.state.combat?.steps || []).map((step) => ({
+        actor: step.actor,
+        id: step.action?.id || null,
+        type: step.action?.type || null
+      }))
+    };
+  });
+  const samples = playback.frameNames;
+
+  expect(samples.length, 'Phaser should expose player animation frame samples').toBeGreaterThan(6);
+  expect(new Set(samples).size, 'player sprite should advance beyond a static frame').toBeGreaterThan(2);
+  expect(samples.some((frame) => frame >= 4 && frame <= 7), `player sprite should enter the pixel_v2 attack range; sampled ${samples.join(',')}; steps ${JSON.stringify(playback.steps)}`).toBe(true);
+  expect(violations, 'player animation should not emit warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);

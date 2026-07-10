@@ -434,8 +434,8 @@ export class ShellScene extends PhaserScene {
     const player = this.createCombatFighter(playerX, groundY, 'fighter.player', ANIM_BY_FIGHTER['fighter.player'], fighterW, fighterH, false);
     const enemy = this.createCombatFighter(enemyX, groundY, enemyKey, ANIM_BY_FIGHTER[enemyKey], fighterW, fighterH, true);
     return {
-      player: { ...player, x: playerX, y: groundY, hitX: playerX, hitY: groundY - fighterH * 0.58 },
-      enemy: { ...enemy, x: enemyX, y: groundY, hitX: enemyX, hitY: groundY - fighterH * 0.58 }
+      player: { ...player, x: playerX, y: groundY, hitX: playerX, hitY: groundY - player.displayHeight * 0.58 },
+      enemy: { ...enemy, x: enemyX, y: groundY, hitX: enemyX, hitY: groundY - enemy.displayHeight * 0.58 }
     };
   }
 
@@ -451,14 +451,17 @@ export class ShellScene extends PhaserScene {
   createCombatFighter(x, y, imageKey, animKey, w, h, flipX) {
     if (animKey && this.hasTexture(animKey)) {
       this.ensureFighterAnimations(animKey);
-      const sprite = this.add.sprite(x, y, animKey, 0).setOrigin(0.5, 1).setDisplaySize(w, h).setDepth(18).setFlipX(flipX);
+      const displayScale = Math.max(0.8, Math.min(1.5, Number(ASSET_MANIFEST.sprites?.[animKey]?.displayScale || 1)));
+      const displayWidth = Math.round(w * displayScale);
+      const displayHeight = Math.round(h * displayScale);
+      const sprite = this.add.sprite(x, y, animKey, 0).setOrigin(0.5, 1).setDisplaySize(displayWidth, displayHeight).setDepth(18).setFlipX(flipX);
       this.track(sprite);
       this.playFighterAnim({ sprite, animKey }, 'idle', false);
-      return { sprite, animKey, imageKey, isAnimated: true };
+      return { sprite, animKey, imageKey, isAnimated: true, displayWidth, displayHeight };
     }
     const sprite = this.add.image(x, y, imageKey).setOrigin(0.5, 1).setDisplaySize(w, h).setDepth(18).setFlipX(flipX);
     this.track(sprite);
-    return { sprite, animKey: null, imageKey, isAnimated: false };
+    return { sprite, animKey: null, imageKey, isAnimated: false, displayWidth: w, displayHeight: h };
   }
 
   hasTexture(key) {
@@ -575,7 +578,7 @@ export class ShellScene extends PhaserScene {
   actionAnimName(step) {
     const type = step.action?.type;
     const id = step.action?.id || '';
-    if (type === 'strike' || type === 'grapple' || ['jab', 'straight', 'lowkick', 'takedown', 'palm', 'sidecontrol'].includes(id)) return 'attack';
+    if (type === 'strike' || type === 'grapple' || ['wild_swing', 'mystic', 'push_away', 'jab', 'straight', 'lowkick', 'takedown', 'palm', 'sidecontrol'].includes(id)) return 'attack';
     if (['guard', 'dodge', 'sprawl', 'advance', 'retreat', 'escape', 'dirtyescape', 'rest'].includes(id)) return 'vfx';
     return 'idle';
   }

@@ -126,6 +126,29 @@ const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pix
   tags: [...tags, 'combat', 'sprite-strip', 'replaceable-base', 'pixel']
 });
 
+const pixelV2FighterSprite = (file, sourceKey, tags = []) => entry(`assets/pixel_v2/sprites/${file}`, {
+  type: 'spritesheet',
+  kind: 'spritesheet',
+  w: 1536,
+  h: 144,
+  frameWidth: 96,
+  frameHeight: 144,
+  displayScale: 1.28,
+  transparent: true,
+  anchor: { x: 0.5, y: 1 },
+  pixelArt: true,
+  sourceKey,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  animations: {
+    idle: { start: 0, end: 3, frameRate: 5, repeat: -1 },
+    attack: { start: 4, end: 7, frameRate: 12, repeat: 0 },
+    hurt: { start: 8, end: 11, frameRate: 11, repeat: 0 },
+    vfx: { start: 12, end: 15, frameRate: 9, repeat: 0 }
+  },
+  tags: [...tags, 'combat', 'sprite-strip', 'pixel-v2', 'pixel']
+});
+
 export const ASSET_MANIFEST = {
   backgrounds: {
     'bg.city.map.day': cityMap('bg_city_map_day.png', ['day', 'shenzhen']),
@@ -172,7 +195,7 @@ export const ASSET_MANIFEST = {
     'scene.npc.chen': cleanCharacter('scene_npc_chen.png', ['scene', 'npc', 'chen', 'boss'])
   },
   sprites: {
-    'anim.fighter.player': fighterSprite('anim_fighter_player.png', 'fighter.player', ['player']),
+    'anim.fighter.player': pixelV2FighterSprite('anim_fighter_player.png', 'fighter.player', ['player']),
     'anim.fighter.enemy.boxer': fighterSprite('anim_fighter_enemy_boxer.png', 'fighter.enemy.boxer', ['enemy', 'boxing']),
     'anim.fighter.enemy.grappler': fighterSprite('anim_fighter_enemy_grappler.png', 'fighter.enemy.grappler', ['enemy', 'grappling']),
     'anim.fighter.enemy.weapon': fighterSprite('anim_fighter_enemy_weapon.png', 'fighter.enemy.weapon', ['enemy', 'weapon']),
