@@ -94,7 +94,19 @@ const day1To9FinalKeys = [
   'skill.sprawl',
   'skill.palm',
   'skill.dirtyescape',
-  'skill.recipe.guard_counter'
+  'skill.recipe.guard_counter',
+  'ui.frame.panel',
+  'ui.frame.dialogue',
+  'ui.frame.tooltip',
+  'ui.button.dark',
+  'ui.button.active',
+  'ui.button.disabled',
+  'ui.focus.bracket',
+  'ui.bar.frame',
+  'ui.choice.cursor',
+  'ui.tab.dark',
+  'ui.tab.active',
+  'ui.note.paper'
 ];
 const legacyKeys = [
   'bg.home.night',
@@ -264,7 +276,9 @@ function assertFinalPixelV2Image(group, key, value, full, src, stat) {
     items: { width: 64, height: 64, budget: 80 * 1024, label: 'item' },
     skillCards: { width: 192, height: 128, budget: 120 * 1024, label: 'skill card' }
   };
-  const transparentSpec = transparentSpecs[group];
+  const transparentSpec = group === 'ui'
+    ? { width: value.width, height: value.height, budget: 64 * 1024, label: 'UI texture', allowOpaqueCorners: true }
+    : transparentSpecs[group];
   if (group !== 'backgrounds' && !transparentSpec) return;
 
   const png = readPng(full, Boolean(transparentSpec));
@@ -283,7 +297,9 @@ function assertFinalPixelV2Image(group, key, value, full, src, stat) {
       alphaAt(png, 0, png.height - 1),
       alphaAt(png, png.width - 1, png.height - 1)
     ];
-    if (corners.some((alpha) => alpha > 12)) errors.push(`${group}.${key} final ${transparentSpec.label} must have transparent corners`);
+    if (!transparentSpec.allowOpaqueCorners && corners.some((alpha) => alpha > 12)) {
+      errors.push(`${group}.${key} final ${transparentSpec.label} must have transparent corners`);
+    }
     if (stat.size > transparentSpec.budget) errors.push(`${group}.${key} final ${transparentSpec.label} exceeds ${Math.round(transparentSpec.budget / 1024)}KB budget: ${stat.size} bytes`);
     return;
   }

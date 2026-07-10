@@ -4,7 +4,7 @@ param(
     [string]$Source,
 
     [Parameter(Mandatory = $true)]
-    [ValidateSet('background', 'standee', 'combat-strip', 'portrait', 'skill-card', 'item', 'icon', 'vfx', 'custom')]
+    [ValidateSet('background', 'standee', 'combat-strip', 'portrait', 'skill-card', 'item', 'icon', 'vfx', 'ui', 'custom')]
     [string]$Type,
 
     [int]$Width = 0,
@@ -71,9 +71,10 @@ function Get-TargetSize {
         'skill-card'   = @(192, 128)
         'item'         = @(64, 64)
         'icon'         = @(32, 32)
+        'ui'           = @(64, 64)
     }
 
-    if ($AssetType -eq 'vfx' -or $AssetType -eq 'custom') {
+    if ($AssetType -eq 'vfx' -or $AssetType -eq 'ui' -or $AssetType -eq 'custom') {
         if ($RequestedWidth -le 0 -or $RequestedHeight -le 0) {
             throw "Type '$AssetType' requires -Width and -Height."
         }
@@ -115,6 +116,7 @@ function Get-OutputSubdirectory {
         'item'         = 'items'
         'icon'         = 'icons'
         'vfx'          = 'vfx'
+        'ui'           = 'ui'
         'custom'       = 'custom'
     }
 
@@ -474,7 +476,7 @@ function Remove-SmallAlphaComponents {
     return $removed
 }
 
-if ($ChromaKey -and $Type -notin @('standee', 'combat-strip', 'portrait', 'skill-card', 'item', 'icon', 'vfx')) {
+if ($ChromaKey -and $Type -notin @('standee', 'combat-strip', 'portrait', 'skill-card', 'item', 'icon', 'vfx', 'ui')) {
     throw '-ChromaKey is only supported for transparent character, card, item, icon, and vfx assets.'
 }
 

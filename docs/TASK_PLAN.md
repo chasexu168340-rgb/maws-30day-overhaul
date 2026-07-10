@@ -94,6 +94,12 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
 - Phaser Boot no longer preloads the full ~15MB manifest. Its explicit title/home set is 89.5KB, while scene backgrounds and the current combat background/fighters/VFX load only before they are needed.
 - The runtime loader shows a hard-edged pixel loading plate until every required texture exists, reports failed keys instead of rendering blank actors, and preserves the existing queue/state flow.
 - Browser budget coverage opens Day 1, the city map, Day 5/E01, and Day 8/E10; Day 5 and Day 8 combat increments are about 290KB each and remain below the 1.2MB gate.
+- Added a final 12-texture Pixel V2 UI atlas covering panel/dialogue/tooltip frames, neutral/active/disabled buttons, focus brackets, meter frames, choice cursors, neutral/active tabs, and paper notes.
+- Core panels, selectors, dialogue, navigation, combat controls, reward chips, meters, and ledger rows now use bitmap nine-slice chrome; the final override removes rounded corners, soft gradients, clipped polygons, blurred glass, and CSS shine layers from those surfaces.
+- Navigation/resource imagery is now visually dominant over its labels: nav icons render at 30px desktop and 28px mobile, HUD icons render at 28px/24px, while tab labels are capped at 10px/9px.
+- Oversized UI copy was reduced without sacrificing readability: normal controls use 11-12px type, ledger headings use 28px desktop/23px mobile, and current dialogue lines use 17px desktop/16px mobile with 96px/72px portraits.
+- Combat meters now use bitmap bar frames and solid red/gold/cyan fills; the desktop command strip is capped at 140px so the stage remains dominant while keeping the 1-2 action queue visible.
+- The final-art verifier now validates each UI texture against its declared dimensions, RGBA format, versioned path, bundle metadata, and 64KB budget; the strict Day 1-9 key set includes all 12 canonical UI textures.
 - No legacy/fallback asset has been relabeled as final; every other unfinished key remains explicitly legacy/fallback.
 
 ## Validation
@@ -225,12 +231,19 @@ Day 1-9 retro-pixel vertical slice: finish the reviewed Pixel V2 combat-feedback
   - Pixel V2 strict visual/network gate (31 passed)
   - `node maws_src/tools/verify_assets.mjs --require-final-day1-9` (125 manifest entries)
   - `git diff --check`
+- Passed after the Pixel V2 bitmap-UI reconstruction:
+  - `node maws_src/tools/verify_assets.mjs --require-final-day1-9` (136 manifest entries)
+  - `npm run check:full` (build, verifier, 6 Chromium smoke tests)
+  - `npm run test:playtest` (2 passed)
+  - `npm run test:day1-9` (4 passed)
+  - Pixel V2 strict visual gate (31 passed, including bitmap chrome, icon/type ratios, dialogue bounds, combat geometry, and desktop/mobile screenshots)
 - Reviewed updated screenshots: `outputs/day8-combat-desktop.png` and `outputs/day8-combat-mobile.png`.
 
 ## Risks
 
 - Day 10-Day 30 locations, characters, later enemies, and later-route skills still include explicit legacy/fallback art. They are not part of the completed Day 1-Day 9 release slice and must not be described as final.
 - The current audio layer has not yet received a matching Pixel V2 combat/UI sound pass.
+- Chinese long-form text still uses the system fallback stack; a licensed bitmap Chinese font remains a separate asset/licensing task and was not fabricated or downloaded in this pass.
 - `outputs/` contains local generation sources and visual-review screenshots and remains intentionally untracked.
 
 ## Next Step

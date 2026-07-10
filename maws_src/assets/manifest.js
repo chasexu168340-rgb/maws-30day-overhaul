@@ -170,6 +170,17 @@ const pixelV2SkillCard = (file, tags = []) => entry(`assets/pixel_v2/skillCards/
   tags: [...tags, 'skill-card', 'pixel-v2', 'pixel']
 });
 
+const pixelV2Ui = (file, width, height, tags = []) => entry(`assets/pixel_v2/ui/${file}`, {
+  w: width,
+  h: height,
+  transparent: true,
+  pixelArt: true,
+  artVersion: 'pixel-v2',
+  status: 'final',
+  bundle: 'core',
+  tags: [...tags, 'ui-texture', 'pixel-v2', 'pixel']
+});
+
 const fighterSprite = (file, sourceKey, tags = []) => entry(`assets/imagegen_pixel/sprites/${file}`, {
   type: 'spritesheet',
   kind: 'spritesheet',
@@ -333,11 +344,22 @@ export const ASSET_MANIFEST = {
     'skill.recipe.guard_counter': pixelV2SkillCard('skill_guard_counter.png', ['recipe', 'guard-counter'])
   },
   ui: {
-    'ui.panel.black': entry('assets/imagegen_pixel/ui/ui_panel_black.png', { w: 512, h: 256, pixelArt: true, tags: ['panel', 'pixel'] }),
-    'ui.button.red': entry('assets/imagegen_pixel/ui/ui_button_red.png', { w: 384, h: 128, pixelArt: true, tags: ['button', 'pixel'] }),
-    'ui.button.dark': entry('assets/imagegen_pixel/ui/ui_button_dark.png', { w: 384, h: 128, pixelArt: true, tags: ['button', 'pixel'] }),
-    'ui.badge.warning': entry('assets/imagegen_pixel/ui/ui_badge_warning.png', { w: 192, h: 192, pixelArt: true, tags: ['badge', 'pixel'] }),
-    'ui.progress.bar': entry('assets/imagegen_pixel/ui/ui_progress_bar.png', { w: 512, h: 96, pixelArt: true, tags: ['bar', 'pixel'] })
+    'ui.frame.panel': pixelV2Ui('ui_frame_panel.png', 64, 64, ['frame', 'panel']),
+    'ui.frame.dialogue': pixelV2Ui('ui_frame_dialogue.png', 64, 64, ['frame', 'dialogue']),
+    'ui.frame.tooltip': pixelV2Ui('ui_frame_tooltip.png', 64, 64, ['frame', 'tooltip']),
+    'ui.button.dark': pixelV2Ui('ui_button_dark.png', 96, 32, ['button', 'neutral']),
+    'ui.button.active': pixelV2Ui('ui_button_active.png', 96, 32, ['button', 'active']),
+    'ui.button.disabled': pixelV2Ui('ui_button_disabled.png', 96, 32, ['button', 'disabled']),
+    'ui.focus.bracket': pixelV2Ui('ui_focus_bracket.png', 64, 64, ['focus', 'selection']),
+    'ui.bar.frame': pixelV2Ui('ui_bar_frame.png', 96, 24, ['bar', 'meter']),
+    'ui.choice.cursor': pixelV2Ui('ui_choice_cursor.png', 32, 32, ['choice', 'cursor']),
+    'ui.tab.dark': pixelV2Ui('ui_tab_dark.png', 64, 32, ['tab', 'neutral']),
+    'ui.tab.active': pixelV2Ui('ui_tab_active.png', 64, 32, ['tab', 'active']),
+    'ui.note.paper': pixelV2Ui('ui_note_paper.png', 64, 64, ['note', 'paper']),
+    'ui.panel.black': pixelV2Ui('ui_frame_panel.png', 64, 64, ['panel', 'compat']),
+    'ui.button.red': pixelV2Ui('ui_button_active.png', 96, 32, ['button', 'active', 'compat']),
+    'ui.badge.warning': pixelV2Ui('ui_choice_cursor.png', 32, 32, ['badge', 'warning', 'compat']),
+    'ui.progress.bar': pixelV2Ui('ui_bar_frame.png', 96, 24, ['bar', 'progress', 'compat'])
   },
   vfx: {
     'combat.normal': pixelV2Vfx('vfx_combat_normal.png', ['combat', 'hit', 'normal']),

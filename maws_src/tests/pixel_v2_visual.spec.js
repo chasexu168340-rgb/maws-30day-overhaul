@@ -95,7 +95,19 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'skillCards:skill.talkdown',
   'skillCards:skill.jab',
   'skillCards:skill.straight',
-  'skillCards:skill.dodge'
+  'skillCards:skill.dodge',
+  'ui:ui.frame.panel',
+  'ui:ui.frame.dialogue',
+  'ui:ui.frame.tooltip',
+  'ui:ui.button.dark',
+  'ui:ui.button.active',
+  'ui:ui.button.disabled',
+  'ui:ui.focus.bracket',
+  'ui:ui.bar.frame',
+  'ui:ui.choice.cursor',
+  'ui:ui.tab.dark',
+  'ui:ui.tab.active',
+  'ui:ui.note.paper'
 ];
 
 let server;
@@ -842,6 +854,10 @@ for (const viewport of VIEWPORTS) {
       const scene = document.querySelector('.maws-scene');
       const hud = document.querySelector('.maws-hud.maws-hud-compact');
       const nav = document.querySelector('.maws-nav');
+      const panel = document.querySelector('.maws-action-rail');
+      const activeTab = document.querySelector('.maws-nav .maws-tab.active');
+      const navIcon = activeTab?.querySelector('.maws-asset-icon');
+      const mainAction = document.querySelector('.maws-action-rail-main button.primary');
       const before = getComputedStyle(player, '::before');
       const after = getComputedStyle(player, '::after');
       return {
@@ -852,6 +868,12 @@ for (const viewport of VIEWPORTS) {
         sceneHeight: scene.getBoundingClientRect().height,
         hudBackdrop: getComputedStyle(hud).backdropFilter,
         navBackdrop: getComputedStyle(nav).backdropFilter,
+        panelBorderImage: getComputedStyle(panel).borderImageSource,
+        tabBorderImage: getComputedStyle(activeTab).borderImageSource,
+        tabFont: Number.parseFloat(getComputedStyle(activeTab).fontSize),
+        navIconWidth: navIcon?.getBoundingClientRect().width || 0,
+        mainActionBorderImage: getComputedStyle(mainAction).borderImageSource,
+        mainActionClipPath: getComputedStyle(mainAction).clipPath,
         recommendationCount: document.querySelectorAll('.maws-recommend-card').length
       };
     });
@@ -860,6 +882,12 @@ for (const viewport of VIEWPORTS) {
     expect(sceneShell.contactWidth, 'contact shadow should stay under the feet').toBeLessThan(sceneShell.playerWidth * 0.7);
     expect(sceneShell.hudBackdrop, 'HUD should not use blurred glass').toBe('none');
     expect(sceneShell.navBackdrop, 'navigation should not use blurred glass').toBe('none');
+    expect(sceneShell.panelBorderImage, 'action rail should use the bitmap panel frame').toContain('ui_frame_panel.png');
+    expect(sceneShell.tabBorderImage, 'active navigation should use the bitmap tab plate').toContain('ui_tab_active.png');
+    expect(sceneShell.mainActionBorderImage, 'primary actions should use the bitmap active button').toContain('ui_button_active.png');
+    expect(sceneShell.mainActionClipPath, 'buttons should not use vector-like clipped polygons').toBe('none');
+    expect(sceneShell.navIconWidth, 'navigation icons should remain larger than their labels').toBeGreaterThanOrEqual(28);
+    expect(sceneShell.tabFont, 'navigation labels should stay subordinate to their icons').toBeLessThanOrEqual(10);
     expect(sceneShell.recommendationCount, 'scene shell should show at most two immediate recommendations').toBeLessThanOrEqual(2);
     expect(sceneShell.sceneHeight, 'scene should remain the dominant first-look surface').toBeGreaterThan(viewport.height * 0.45);
     if (viewport.name === 'desktop') {
@@ -882,6 +910,8 @@ for (const viewport of VIEWPORTS) {
       return {
         modalBackdrop: getComputedStyle(modal).backdropFilter,
         shellBackgroundImage: getComputedStyle(shell).backgroundImage,
+        shellBorderImage: getComputedStyle(shell).borderImageSource,
+        dialogueBorderImage: getComputedStyle(line.closest('.maws-dialogue-box')).borderImageSource,
         shellRadius: getComputedStyle(shell).borderRadius,
         lineFont: Number.parseFloat(getComputedStyle(line).fontSize),
         portraitWidth: portrait.getBoundingClientRect().width,
@@ -890,9 +920,12 @@ for (const viewport of VIEWPORTS) {
     });
     expect(dialogueStyle.modalBackdrop, 'dialogue should not use blurred glass').toBe('none');
     expect(dialogueStyle.shellBackgroundImage, 'dialogue should use a solid pixel panel').toBe('none');
+    expect(dialogueStyle.shellBorderImage, 'dialogue shell should use the bitmap dialogue frame').toContain('ui_frame_dialogue.png');
+    expect(dialogueStyle.dialogueBorderImage, 'current line should use the bitmap dialogue frame').toContain('ui_frame_dialogue.png');
     expect(dialogueStyle.shellRadius, 'dialogue should use square pixel corners').toBe('0px');
-    expect(dialogueStyle.lineFont, 'current dialogue line should be immediately readable').toBeGreaterThanOrEqual(18);
-    expect(dialogueStyle.portraitWidth, 'speaker portrait should remain visually present').toBeGreaterThanOrEqual(76);
+    expect(dialogueStyle.lineFont, 'dialogue should remain readable after reducing oversized type').toBeGreaterThanOrEqual(15);
+    expect(dialogueStyle.lineFont, 'dialogue should not dominate the scene with oversized type').toBeLessThanOrEqual(18);
+    expect(dialogueStyle.portraitWidth, 'speaker portrait should remain visually present').toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 70 : 90);
     expect(dialogueStyle.actionHeight, 'dialogue advance should keep a 44px hit target').toBeGreaterThanOrEqual(44);
     await page.locator('button[data-action="advanceDialogue"]').click();
     await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_father.png"]')).toBeVisible();
@@ -944,10 +977,13 @@ for (const viewport of VIEWPORTS) {
       const mapRect = map.getBoundingClientRect();
       const sheetRect = sheet.getBoundingClientRect();
       const headRect = head.getBoundingClientRect();
+      const sheetStyle = getComputedStyle(sheet);
+      const sheetBorderY = Number.parseFloat(sheetStyle.borderTopWidth) + Number.parseFloat(sheetStyle.borderBottomWidth);
       return {
         aspect: mapRect.width / mapRect.height,
         sheetHeight: sheetRect.height,
         expectedSheetHeight: mapRect.height + headRect.height,
+        sheetBorderY,
         overlayZ: Number.parseInt(getComputedStyle(overlay).zIndex, 10),
         hudZ: Number.parseInt(getComputedStyle(hud).zIndex, 10),
         hudVisibility: getComputedStyle(hud).visibility,
@@ -959,7 +995,7 @@ for (const viewport of VIEWPORTS) {
     });
     expect(geometry.aspect, 'city-map image and marker plane should keep the authored 16:9 geometry').toBeGreaterThan(1.76);
     expect(geometry.aspect, 'city-map image and marker plane should keep the authored 16:9 geometry').toBeLessThan(1.79);
-    expect(geometry.sheetHeight, 'city-map sheet should not retain an empty legacy min-height').toBeLessThanOrEqual(geometry.expectedSheetHeight + 8);
+    expect(geometry.sheetHeight, 'city-map sheet should not retain an empty legacy min-height').toBeLessThanOrEqual(geometry.expectedSheetHeight + geometry.sheetBorderY + 8);
     expect(geometry.overlayZ, 'city-map modal should cover the persistent HUD').toBeGreaterThan(geometry.hudZ);
     expect(geometry.hudVisibility, 'city-map modal should suppress the persistent HUD').toBe('hidden');
     expect(geometry.visibleMarkers, 'city map should expose reachable nodes').toBeGreaterThanOrEqual(3);
