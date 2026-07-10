@@ -13,6 +13,8 @@ param(
     [int]$FrameWidth = 96,
     [int]$FrameHeight = 144,
     [int]$FrameCount = 16,
+    [int]$GridColumns = 16,
+    [int]$GridRows = 1,
 
     [string]$OutputRoot = 'assets/pixel_v2',
     [string]$OutputName = '',
@@ -235,6 +237,56 @@ function Resize-NearestNeighbor {
     return $targetBitmap
 }
 
+function Convert-CombatGridToStrip {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Drawing.Bitmap]$SourceBitmap,
+        [int]$Columns,
+        [int]$Rows,
+        [int]$Count,
+        [int]$TargetFrameWidth,
+        [int]$TargetFrameHeight
+    )
+
+    if (($Columns * $Rows) -ne $Count) {
+        throw "Combat grid must contain exactly FrameCount cells. Grid is ${Columns}x${Rows}; FrameCount is $Count."
+    }
+    if (($SourceBitmap.Width % $Columns) -ne 0 -or ($SourceBitmap.Height % $Rows) -ne 0) {
+        throw "Combat grid source $($SourceBitmap.Width)x$($SourceBitmap.Height) is not evenly divisible by ${Columns}x${Rows}."
+    }
+
+    $sourceFrameWidth = [int]($SourceBitmap.Width / $Columns)
+    $sourceFrameHeight = [int]($SourceBitmap.Height / $Rows)
+    $targetBitmap = New-Object System.Drawing.Bitmap ($TargetFrameWidth * $Count), $TargetFrameHeight, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $graphics = [System.Drawing.Graphics]::FromImage($targetBitmap)
+    try {
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        $graphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
+        $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighSpeed
+        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
+        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
+        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::None
+
+        for ($index = 0; $index -lt $Count; $index++) {
+            $sourceColumn = $index % $Columns
+            $sourceRow = [Math]::Floor($index / $Columns)
+            $sourceRect = New-Object System.Drawing.Rectangle `
+                ($sourceColumn * $sourceFrameWidth), `
+                ($sourceRow * $sourceFrameHeight), `
+                $sourceFrameWidth, `
+                $sourceFrameHeight
+            $targetRect = New-Object System.Drawing.Rectangle `
+                ($index * $TargetFrameWidth), 0, $TargetFrameWidth, $TargetFrameHeight
+            $graphics.DrawImage($SourceBitmap, $targetRect, $sourceRect, [System.Drawing.GraphicsUnit]::Pixel)
+        }
+    }
+    finally {
+        $graphics.Dispose()
+    }
+
+    return $targetBitmap
+}
+
 function Invoke-ChromaKeyCleanup {
     param(
         [Parameter(Mandatory = $true)]
@@ -261,8 +313,8 @@ if ($ChromaKey -and $Type -ne 'standee') {
     throw '-ChromaKey is only supported for standee assets.'
 }
 
-if ($FrameCount -le 0 -or $FrameWidth -le 0 -or $FrameHeight -le 0) {
-    throw 'FrameWidth, FrameHeight, and FrameCount must be positive integers.'
+if ($FrameCount -le 0 -or $FrameWidth -le 0 -or $FrameHeight -le 0 -or $GridColumns -le 0 -or $GridRows -le 0) {
+    throw 'FrameWidth, FrameHeight, FrameCount, GridColumns, and GridRows must be positive integers.'
 }
 
 $sourcePath = Resolve-AbsolutePath -PathValue $Source
@@ -313,11 +365,14 @@ try {
     $warnings = New-Object System.Collections.Generic.List[string]
     $strip = $null
     if ($Type -eq 'combat-strip') {
+        if (($GridColumns * $GridRows) -ne $FrameCount) {
+            throw "Combat grid must contain exactly FrameCount cells. Grid is ${GridColumns}x${GridRows}; FrameCount is $FrameCount."
+        }
         if (($targetSize.Width % $FrameCount) -ne 0) {
             throw "Combat strip target width $($targetSize.Width) is not divisible by FrameCount $FrameCount."
         }
-        if (($sourceBitmap.Width % $FrameCount) -ne 0) {
-            throw "Combat strip source width $($sourceBitmap.Width) is not divisible by FrameCount $FrameCount."
+        if (($sourceBitmap.Width % $GridColumns) -ne 0 -or ($sourceBitmap.Height % $GridRows) -ne 0) {
+            throw "Combat grid source $($sourceBitmap.Width)x$($sourceBitmap.Height) is not evenly divisible by ${GridColumns}x${GridRows}."
         }
 
         $targetFrameWidth = [int]($targetSize.Width / $FrameCount)
@@ -329,8 +384,10 @@ try {
             frameCount = $FrameCount
             frameWidth = $FrameWidth
             frameHeight = $FrameHeight
-            sourceFrameWidth = [int]($sourceBitmap.Width / $FrameCount)
-            sourceFrameHeight = $sourceBitmap.Height
+            gridColumns = $GridColumns
+            gridRows = $GridRows
+            sourceFrameWidth = [int]($sourceBitmap.Width / $GridColumns)
+            sourceFrameHeight = [int]($sourceBitmap.Height / $GridRows)
             targetWidth = $targetSize.Width
             targetHeight = $targetSize.Height
             valid = $true
@@ -357,7 +414,18 @@ try {
     }
 
     New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-    $preparedBitmap = Resize-NearestNeighbor -SourceBitmap $sourceBitmap -TargetWidth $targetSize.Width -TargetHeight $targetSize.Height
+    $preparedBitmap = if ($Type -eq 'combat-strip') {
+        Convert-CombatGridToStrip `
+            -SourceBitmap $sourceBitmap `
+            -Columns $GridColumns `
+            -Rows $GridRows `
+            -Count $FrameCount `
+            -TargetFrameWidth $FrameWidth `
+            -TargetFrameHeight $FrameHeight
+    }
+    else {
+        Resize-NearestNeighbor -SourceBitmap $sourceBitmap -TargetWidth $targetSize.Width -TargetHeight $targetSize.Height
+    }
 
     $chromaPixelsCleared = 0
     if ($ChromaKey) {

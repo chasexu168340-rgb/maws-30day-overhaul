@@ -45,6 +45,18 @@ powershell -ExecutionPolicy Bypass -File scripts/prepare_pixel_v2_assets.ps1 `
   -ValidateOnly
 ```
 
+Repack a reviewed 4x4 action master into the runtime 16-frame horizontal strip:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File scripts/prepare_pixel_v2_assets.ps1 `
+  -Source outputs/temp/lu_action_master_4x4.png `
+  -Type combat-strip `
+  -GridColumns 4 -GridRows 4 `
+  -OutputName anim_fighter_player.png
+```
+
+Frame order is row-major. The MAWS 16-frame contract is idle `0-3`, attack `4-8`, hurt `9-12`, and guard/utility `13-15`.
+
 ## Report
 
 The script emits JSON with source and output dimensions, alpha pixel counts, file sizes, chroma-key cleanup counts, exact target-size status, and combat-strip frame metadata. For standees, it also reports whether the output has a fully transparent 1px safety border.
