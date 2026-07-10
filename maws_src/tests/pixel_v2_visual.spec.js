@@ -1,0 +1,329 @@
+import { test, expect } from '@playwright/test';
+import { createReadStream } from 'node:fs';
+import { mkdir, stat } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import path from 'node:path';
+import { ASSET_MANIFEST } from '../assets/manifest.js';
+
+const ROOT = process.cwd();
+const ENTRY = '/maws_30day_overhaul_v3.html';
+const SCREENSHOT_DIR = path.join(ROOT, 'outputs', 'pixel_v2_visual');
+const DESKTOP = { name: 'desktop', width: 1365, height: 768 };
+const MOBILE = { name: 'mobile', width: 390, height: 844 };
+const VIEWPORTS = [DESKTOP, MOBILE];
+const IS_CANDIDATE = process.env.PIXEL_V2_VISUAL_MODE === 'candidate';
+const ALLOW_LEGACY = process.env.PIXEL_V2_ALLOW_LEGACY === '1';
+
+const MIME = {
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml'
+};
+
+const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
+  'backgrounds:bg.home.day',
+  'backgrounds:bg.park.day',
+  'characters:fighter.player',
+  'characters:fighter.enemy.boxer',
+  'sprites:anim.fighter.player',
+  'sprites:anim.fighter.enemy.boxer'
+];
+
+let server;
+let baseURL;
+
+function safePath(urlPath) {
+  const decoded = decodeURIComponent(urlPath === '/' ? ENTRY : urlPath);
+  const target = path.resolve(ROOT, `.${decoded}`);
+  const relative = path.relative(ROOT, target);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) return null;
+  return target;
+}
+
+test.beforeAll(async () => {
+  await mkdir(SCREENSHOT_DIR, { recursive: true });
+
+  if (process.env.MAWS_URL) {
+    baseURL = process.env.MAWS_URL;
+    return;
+  }
+
+  server = createServer(async (req, res) => {
+    const target = safePath(new URL(req.url || '/', 'http://127.0.0.1').pathname);
+    if (!target) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+
+    try {
+      const info = await stat(target);
+      if (!info.isFile()) {
+        res.writeHead(404);
+        res.end('Not Found');
+        return;
+      }
+      res.writeHead(200, { 'content-type': MIME[path.extname(target).toLowerCase()] || 'application/octet-stream' });
+      createReadStream(target).pipe(res);
+    } catch {
+      res.writeHead(404);
+      res.end('Not Found');
+    }
+  });
+
+  await new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      baseURL = `http://127.0.0.1:${server.address().port}${ENTRY}`;
+      resolve();
+    });
+  });
+});
+
+test.afterAll(async () => {
+  if (server) await new Promise((resolve) => server.close(resolve));
+});
+
+function collectConsoleViolations(page) {
+  const violations = [];
+  page.on('console', (msg) => {
+    const text = msg.text();
+    if (msg.type() === 'warning' && /\]GL Driver Message .*ReadPixels/.test(text)) return;
+    if (['warning', 'error'].includes(msg.type())) violations.push(`${msg.type()}: ${text}`);
+  });
+  page.on('pageerror', (error) => violations.push(`pageerror: ${error.message}`));
+  return violations;
+}
+
+async function loadGame(page, viewport) {
+  const violations = collectConsoleViolations(page);
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+  await page.goto(baseURL);
+  await page.waitForFunction(
+    () => window.MAWS_GAME && window.MAWS_STORE && document.querySelectorAll('canvas').length > 0,
+    null,
+    { timeout: 15000 }
+  );
+  await page.evaluate(() => {
+    localStorage.clear();
+    window.MAWS_STORE.dispatch({ type: 'newGame', origin: 'pixel-v2-visual' });
+  });
+  await page.locator('#maws-ui-root').waitFor({ state: 'attached' });
+  return violations;
+}
+
+async function startDay8(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 8;
+    store.state.time = 600;
+    store.state.loc = 'boxing';
+    store.state.daily = { talked: {}, actions: 0, mainDone: false, sideSeed: 8, npcActionGates: {} };
+    store.state.player.combatRecipeLoadout = ['guard_counter', 'cool_exit'];
+    delete store.state.flags.main_8;
+    store.emit();
+    store.dispatch({ type: 'startMainEvent' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function expectNoHorizontalOverflow(page, label) {
+  const metrics = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    body: document.body.scrollWidth,
+    doc: document.documentElement.scrollWidth
+  }));
+  expect(Math.max(metrics.body, metrics.doc), `${label} horizontal overflow`).toBeLessThanOrEqual(metrics.viewport + 1);
+}
+
+async function box(page, selector) {
+  return page.locator(selector).first().evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return {
+      top: rect.top,
+      left: rect.left,
+      right: rect.right,
+      bottom: rect.bottom,
+      width: rect.width,
+      height: rect.height,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight
+    };
+  });
+}
+
+async function expectVisibleImagesDecode(page, label) {
+  const result = await page.evaluate(async () => {
+    const images = Array.from(document.images).filter((image) => {
+      const rect = image.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && getComputedStyle(image).visibility !== 'hidden';
+    });
+    const decoded = [];
+    const failed = [];
+    for (const image of images) {
+      try {
+        if (!image.complete || image.naturalWidth === 0 || image.naturalHeight === 0) await image.decode();
+        if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+          decoded.push(image.currentSrc || image.src);
+        } else {
+          failed.push(image.currentSrc || image.src || image.alt || 'unknown image');
+        }
+      } catch {
+        failed.push(image.currentSrc || image.src || image.alt || 'unknown image');
+      }
+    }
+    return { count: images.length, decoded: decoded.length, failed };
+  });
+  expect(result.count, `${label} should expose image elements for the visual pass`).toBeGreaterThan(0);
+  expect(result.failed, `${label} visible images should decode`).toEqual([]);
+  expect(result.decoded, `${label} visible image decode count`).toBe(result.count);
+}
+
+function pathsForManifestKeys(keys) {
+  const byId = new Map(manifestRows().map((row) => [row.id, row.path]));
+  return keys.map((key) => ({ key, path: byId.get(key) || '' }));
+}
+
+async function expectManifestImagesDecode(page, keys, label) {
+  const assets = pathsForManifestKeys(keys);
+  expect(assets.filter((asset) => asset.path), `${label} manifest sample paths`).toHaveLength(keys.length);
+  const result = await page.evaluate(async (items) => {
+    const decoded = [];
+    const failed = [];
+    for (const item of items) {
+      try {
+        const image = new Image();
+        image.src = `/${item.path}`;
+        await image.decode();
+        if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+          decoded.push({ key: item.key, width: image.naturalWidth, height: image.naturalHeight });
+        } else {
+          failed.push(`${item.key}: zero natural size`);
+        }
+      } catch {
+        failed.push(`${item.key}: ${item.path}`);
+      }
+    }
+    return { decoded, failed };
+  }, assets);
+  expect(result.failed, `${label} manifest images should decode`).toEqual([]);
+  expect(result.decoded, `${label} manifest image decode count`).toHaveLength(keys.length);
+}
+
+async function expectScreenshotHasPixels(page, outputName, label) {
+  const outputPath = path.join(SCREENSHOT_DIR, outputName);
+  const screenshot = await page.screenshot({ path: outputPath, fullPage: true });
+  const read = await page.evaluate(async (dataUrl) => {
+    const image = new Image();
+    image.src = dataUrl;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    const sample = context.getImageData(0, 0, image.width, image.height).data;
+    let colored = 0;
+    for (let index = 0; index < sample.length; index += 200) {
+      if (sample[index + 3] > 0 && sample[index] + sample[index + 1] + sample[index + 2] > 35) colored += 1;
+    }
+    return { width: image.width, height: image.height, colored };
+  }, `data:image/png;base64,${screenshot.toString('base64')}`);
+  expect(read.width, `${label} screenshot width`).toBeGreaterThan(100);
+  expect(read.height, `${label} screenshot height`).toBeGreaterThan(100);
+  expect(read.colored, `${label} screenshot should not be blank`).toBeGreaterThan(100);
+}
+
+async function expectCombatGeometry(page, viewport) {
+  const canvas = await box(page, 'canvas');
+  const dock = await box(page, '.maws-combat-dock');
+  const cards = await box(page, '.maws-combat-window-cards');
+  const actions = await box(page, '.maws-combat-actions');
+  const confirm = await box(page, '.maws-combat-actions button[data-action="confirmBattle"]');
+
+  expect(canvas.width, `${viewport.name} combat stage canvas width`).toBeGreaterThan(100);
+  expect(canvas.height, `${viewport.name} combat stage canvas height`).toBeGreaterThan(100);
+  expect(canvas.left, `${viewport.name} canvas should stay in viewport`).toBeGreaterThanOrEqual(0);
+  expect(canvas.right, `${viewport.name} canvas should stay in viewport`).toBeLessThanOrEqual(canvas.viewportWidth + 1);
+  expect(canvas.top, `${viewport.name} canvas should stay in viewport`).toBeGreaterThanOrEqual(0);
+  expect(canvas.bottom, `${viewport.name} canvas should stay in viewport`).toBeLessThanOrEqual(canvas.viewportHeight + 1);
+
+  expect(dock.left, `${viewport.name} command dock should stay in viewport`).toBeGreaterThanOrEqual(0);
+  expect(dock.right, `${viewport.name} command dock should stay in viewport`).toBeLessThanOrEqual(dock.viewportWidth + 1);
+  expect(dock.bottom, `${viewport.name} command dock should stay in viewport`).toBeLessThanOrEqual(dock.viewportHeight + 1);
+  expect(dock.height, `${viewport.name} command dock should leave the stage readable`).toBeLessThanOrEqual(viewport.height * (viewport.name === 'mobile' ? 0.36 : 0.34));
+  expect(cards.width, `${viewport.name} command cards should have readable width`).toBeGreaterThan(120);
+  expect(cards.height, `${viewport.name} command cards should stay compact`).toBeLessThanOrEqual(dock.height + 1);
+  expect(actions.width, `${viewport.name} combat actions should retain hit area`).toBeGreaterThan(72);
+  expect(confirm.height, `${viewport.name} confirm action should be thumb/cursor reachable`).toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 32 : 38);
+}
+
+function manifestRows() {
+  return Object.entries(ASSET_MANIFEST).flatMap(([group, entries]) => Object.entries(entries).map(([key, entry]) => ({
+    id: `${group}:${key}`,
+    group,
+    key,
+    path: typeof entry === 'string' ? entry : entry?.src || entry?.path || '',
+    status: typeof entry === 'object' ? entry.status : null,
+    artVersion: typeof entry === 'object' ? entry.artVersion : null
+  })));
+}
+
+test('manifest final assets use assets/pixel_v2 and strict mode requires sampled pixel_v2 coverage', () => {
+  const rows = manifestRows();
+  const finalOutsidePixelV2 = rows.filter((row) => row.status === 'final' && !row.path.includes('assets/pixel_v2/'));
+  expect(finalOutsidePixelV2, 'assets marked final must live under assets/pixel_v2').toEqual([]);
+
+  const sampledLegacy = rows
+    .filter((row) => REQUIRED_PIXEL_V2_SAMPLE_KEYS.includes(row.id))
+    .filter((row) => row.artVersion !== 'pixel-v2' || row.status !== 'final' || !row.path.includes('assets/pixel_v2/'));
+
+  if (IS_CANDIDATE && ALLOW_LEGACY) {
+    test.info().annotations.push({
+      type: 'pixel-v2-candidate',
+      description: `legacy tolerated for ${sampledLegacy.map((row) => row.id).join(', ')}`
+    });
+    return;
+  }
+
+  expect(sampledLegacy, [
+    'Strict Pixel V2 visual gate requires sampled Day 1/Day 8 runtime assets to be final pixel_v2 files.',
+    'For candidate review only, run with PIXEL_V2_VISUAL_MODE=candidate and PIXEL_V2_ALLOW_LEGACY=1.'
+  ].join(' ')).toEqual([]);
+});
+
+for (const viewport of VIEWPORTS) {
+  test(`Day 1 ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await expect(page.locator('.maws-scene')).toBeVisible();
+    await expect(page.locator('.maws-scene-character img').first()).toBeVisible();
+    await expectVisibleImagesDecode(page, `Day 1 ${viewport.name}`);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.home.day',
+      'characters:fighter.player'
+    ], `Day 1 ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 1 ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day1-${viewport.name}.png`, `Day 1 ${viewport.name}`);
+    expect(violations, `Day 1 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 8 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startDay8(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.park.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.boxer'
+    ], `Day 8 ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 8 ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    await expectScreenshotHasPixels(page, `day8-${viewport.name}.png`, `Day 8 ${viewport.name}`);
+    expect(violations, `Day 8 ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+}
