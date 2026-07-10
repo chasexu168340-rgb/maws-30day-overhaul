@@ -40,7 +40,8 @@ const day1To9FinalKeys = [
   'anim.fighter.enemy.silent',
   'portrait.player',
   'portrait.fatty',
-  'portrait.xiaoman'
+  'portrait.xiaoman',
+  'portrait.worker'
 ];
 const legacyKeys = [
   'bg.home.night',

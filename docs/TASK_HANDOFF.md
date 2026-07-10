@@ -38,8 +38,10 @@ The player-facing target remains: the player clicks something, the game responds
 15. Liu Pangzi now has final 96x144 scene standee and 96x96 portrait assets; Day 1 desktop/mobile confirms a coherent Lu/Liu pixel scale.
 16. Scene fallback styling now checks manifest status, so final NPC art is not incorrectly rendered as a placeholder.
 17. Xiaoman now has final 96x144 scene standee and 96x96 portrait assets; Day 3 store desktop/mobile screenshots verify final-scale rendering.
-18. Next production batch: worksite worker standee, then Coach Liang and father memory.
-19. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
+18. The worksite worker now has final 96x144 standee and 96x96 portrait assets; Day 4 scene/dialogue desktop/mobile screenshots verify both.
+19. Dialogue lookup prefers dedicated portraits, and the Day 4 worker line now carries an explicit `npc: worker` identity.
+20. Next production batch: Coach Liang standee/portrait, then father memory.
+21. Keep generation review images and screenshots in local `outputs/`; commit only approved runtime assets.
 
 ## Deferred Larger Work
 

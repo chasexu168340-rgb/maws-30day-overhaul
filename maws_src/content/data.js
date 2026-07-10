@@ -1039,7 +1039,7 @@ export const MAIN_EVENTS = {
     desc: '工棚门口的铁皮被风吹得发响。有人拿一句玩笑试你的脾气，你的手腕先替你疼了一下。',
     kind: 'dialog',
     dialogue: [
-      { speaker: '工友', text: '听说你会祖传拳？那砖头能不能少搬两趟？' },
+      { npc: 'worker', speaker: '工友', text: '听说你会祖传拳？那砖头能不能少搬两趟？' },
       { speaker: '陆小闲', text: '我就是来干活的。' },
       { speaker: '刘胖子', text: '手腕疼就别装没事。饭碗比面子贵。' },
       { speaker: '旁白', text: '你被看见了，也被疼痛按住了。' }

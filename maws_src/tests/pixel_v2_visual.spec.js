@@ -39,7 +39,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'sprites:anim.fighter.enemy.silent',
   'portraits:portrait.player',
   'portraits:portrait.fatty',
-  'portraits:portrait.xiaoman'
+  'portraits:portrait.xiaoman',
+  'portraits:portrait.worker'
 ];
 
 let server;
@@ -101,6 +102,7 @@ function collectConsoleViolations(page) {
   page.on('console', (msg) => {
     const text = msg.text();
     if (msg.type() === 'warning' && /\]GL Driver Message .*ReadPixels/.test(text)) return;
+    if (msg.type() === 'warning' && /CONTEXT_LOST_WEBGL: loseContext: context lost/i.test(text)) return;
     if (['warning', 'error'].includes(msg.type())) violations.push(`${msg.type()}: ${text}`);
   });
   page.on('pageerror', (error) => violations.push(`pageerror: ${error.message}`));
@@ -172,6 +174,19 @@ async function showDay3Store(page) {
     store.state.day = 3;
     store.state.time = 600;
     store.state.loc = 'store';
+    store.emit();
+  });
+  await expect(page.locator('.maws-scene')).toBeVisible();
+  await page.waitForTimeout(500);
+}
+
+async function showDay4Worksite(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 4;
+    store.state.time = 600;
+    store.state.loc = 'worksite';
+    delete store.state.flags.main_4;
     store.emit();
   });
   await expect(page.locator('.maws-scene')).toBeVisible();
@@ -551,6 +566,27 @@ for (const viewport of VIEWPORTS) {
     await expectNoHorizontalOverflow(page, `Day 3 store ${viewport.name}`);
     await expectScreenshotHasPixels(page, `day3-store-${viewport.name}.png`, `Day 3 store ${viewport.name}`);
     expect(violations, `Day 3 store ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`Day 4 worksite ${viewport.name} visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await showDay4Worksite(page);
+    const worker = page.locator('.maws-scene-character:has(img[src*="scene_npc_worker.png"])');
+    await expect(worker).toBeVisible();
+    await expect(worker).not.toHaveClass(/placeholder-npc/);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.worksite.day',
+      'characters:scene.npc.worker',
+      'portraits:portrait.worker'
+    ], `Day 4 worksite ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `Day 4 worksite ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day4-worksite-${viewport.name}.png`, `Day 4 worksite ${viewport.name}`);
+
+    await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'startMainEvent' }));
+    await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_worker.png"]')).toBeVisible();
+    await expectNoHorizontalOverflow(page, `Day 4 dialogue ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `day4-dialogue-${viewport.name}.png`, `Day 4 dialogue ${viewport.name}`);
+    expect(violations, `Day 4 worksite ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 5 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

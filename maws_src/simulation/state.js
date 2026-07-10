@@ -954,13 +954,14 @@ function npcIdBySpeaker(speaker) {
 }
 
 function dialogueAssetFor(npcId) {
-  return NPC_SCENE_ASSETS[npcId]?.assetKey || ({
+  return ({
     fatty: 'portrait.fatty',
     coach: 'portrait.coach',
     master: 'portrait.master',
     xiaoman: 'portrait.xiaoman',
+    worker: 'portrait.worker',
     chen: 'portrait.chen'
-  }[npcId] || '');
+  }[npcId] || NPC_SCENE_ASSETS[npcId]?.assetKey || '');
 }
 
 function normalizeDialogueLine(entry, fallback = {}) {
