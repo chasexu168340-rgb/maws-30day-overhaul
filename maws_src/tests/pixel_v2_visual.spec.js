@@ -290,6 +290,19 @@ async function startTaekwondo(page) {
   await page.waitForTimeout(900);
 }
 
+async function startDirtyMix(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 18;
+    store.state.time = 1140;
+    store.state.loc = 'street';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E09' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
 async function startE06(page) {
   await page.evaluate(() => {
     const store = window.MAWS_STORE;
@@ -1368,6 +1381,76 @@ test('pixel_v2 E21 taekwondo fighter uses roundhouse, back kick, front kick, lan
   expect(violations, 'taekwondo motion should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E09 dirty-mix fighter uses pressure, overhand, low kick, grip, takedown, escape, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startDirtyMix(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.dirtymix');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.dirtymix', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 620));
+    };
+    for (const name of ['advance', 'overhand', 'lowkick', 'grip', 'takedown', 'disengage', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticActions = [
+      { id: 'straight', type: 'strike' },
+      { id: 'lowkick', type: 'kick' },
+      { id: 'grip', type: 'grapple' },
+      { id: 'takedown', type: 'grapple' },
+      { id: 'dirtyescape', type: 'dirty' }
+    ];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticActions.map((action) => scene.fighterActionAnimName({ action }, actor)),
+      timings: semanticActions.slice(0, 4).map((action) => scene.combatContactMs({ action }))
+    };
+  });
+
+  expect(playback.enemyX, 'dirty-mix fighter should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'dirty-mix source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['overhand', 'lowkick', 'grip', 'takedown', 'disengage']);
+  expect(playback.timings).toEqual([300, 320, 380, 380]);
+  for (const [start, end, label] of [[4, 7, 'pressure advance'], [8, 11, 'overhand'], [12, 15, 'low kick'], [16, 19, 'grip'], [20, 23, 'takedown'], [24, 27, 'dirty escape'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.dirtymix');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const startX = Number(enemy?.x || 0);
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.dirtymix', isAnimated: true, x: startX, y: Number(enemy?.y || 0), maxAdvance: 260, displayWidth: Number(enemy?.displayWidth || 96) };
+    const target = { sprite: player, x: Number(player?.x || 0), y: Number(player?.y || 0), displayWidth: Number(player?.displayWidth || 96) };
+    window.__dirtyMixApproach = { startX, enemy };
+    scene.playFighterAnim(actor, 'overhand', true, false);
+    scene.animateAttack(actor, target, 0, { contactMs: 300, hitstopMs: 80, shake: 0.2 });
+  });
+  await page.waitForFunction(() => {
+    const state = window.__dirtyMixApproach;
+    return Number(state?.enemy?.frame?.name || 0) === 10 && Number(state?.enemy?.x || 0) - Number(state?.startX || 0) > 30;
+  }, null, { timeout: 2500 });
+  await page.evaluate(() => window.__dirtyMixApproach?.enemy?.anims?.pause());
+  const approach = await page.evaluate(() => ({ startX: Number(window.__dirtyMixApproach?.startX || 0), approachX: Number(window.__dirtyMixApproach?.enemy?.x || 0) }));
+  expect(approach.approachX - approach.startX, 'dirty overhand should travel toward real contact distance').toBeGreaterThan(30);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dirtymix-overhand-contact-desktop.png'), fullPage: true });
+  expect(violations, 'dirty-mix motion should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape motion', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startE06(page);
@@ -2164,6 +2247,28 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e21-taekwondo-${viewport.name}.png`, `E21 taekwondo ${viewport.name}`);
     expect(violations, `E21 taekwondo ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E09 dirty-mix ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startDirtyMix(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.street.night',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.dirtymix'
+    ], `E09 dirty-mix ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E09 dirty-mix ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.dirtymix');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e09-dirtymix-${viewport.name}.png`, `E09 dirty-mix ${viewport.name}`);
+    expect(violations, `E09 dirty-mix ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 E00 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

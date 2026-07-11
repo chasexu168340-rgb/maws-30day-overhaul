@@ -19,7 +19,7 @@ const BG_BY_LOC = {
   gym: 'bg.gym.day',
   physio: 'bg.physio.day',
   metro_station: { day: 'bg.metro_station.day', night: 'bg.metro_station.night' },
-  street: 'bg.street.day'
+  street: { day: 'bg.street.day', night: 'bg.street.night' }
 };
 
 const FIGHTER_BY_ENEMY = {
@@ -33,6 +33,7 @@ const FIGHTER_BY_ENEMY = {
   E19: 'fighter.enemy.sanda',
   E20: 'fighter.enemy.karate',
   E21: 'fighter.enemy.taekwondo',
+  E09: 'fighter.enemy.dirtymix',
   E18: 'fighter.enemy.boss'
 };
 
@@ -42,6 +43,7 @@ const ANIM_BY_FIGHTER = {
   'fighter.enemy.sanda': 'anim.fighter.enemy.sanda',
   'fighter.enemy.karate': 'anim.fighter.enemy.karate',
   'fighter.enemy.taekwondo': 'anim.fighter.enemy.taekwondo',
+  'fighter.enemy.dirtymix': 'anim.fighter.enemy.dirtymix',
   'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
   'fighter.enemy.silent': 'anim.fighter.enemy.silent',
@@ -792,6 +794,15 @@ export class ShellScene extends PhaserScene {
       if (id === 'guard') return 'recover';
       if (['dodge', 'retreat'].includes(id)) return 'dodge';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.dirtymix') {
+      if (id === 'advance') return 'advance';
+      if (id === 'straight') return 'overhand';
+      if (id === 'lowkick') return 'lowkick';
+      if (id === 'grip') return 'grip';
+      if (id === 'takedown') return 'takedown';
+      if (id === 'dirtyescape') return 'disengage';
+      if (id === 'guard') return 'guard';
+    }
     if (actor?.animKey === 'anim.fighter.enemy.weapon') {
       if (id === 'advance') return 'threat';
       if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
@@ -834,6 +845,10 @@ export class ShellScene extends PhaserScene {
       if (id === 'tkd_roundhouse') return 330;
       if (id === 'tkd_back_kick') return 360;
       if (id === 'frontkick') return 310;
+    }
+    if (this.model?.combat?.enemyId === 'E09') {
+      if (id === 'straight') return 300;
+      if (id === 'lowkick') return 320;
     }
     if (id === 'frontkick') return 300;
     return 260;

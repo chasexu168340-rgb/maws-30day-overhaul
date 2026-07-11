@@ -88,6 +88,9 @@ The player-facing target remains: the player clicks something, the game responds
 65. E21 roundhouse/back-kick/front-kick presentation reads at 330/360/310ms, schedules landing recovery after hit or miss, and browser evidence proves the corrected rightward back kick advances over 30px toward contact.
 66. `bg.taekwondo_club.day/night` are final 480x270, 32-color Pixel V2 stages with matched mat geometry; desktop/mobile scale, orientation, background decode, and screenshots pass.
 67. `prepare_pixel_v2_assets.ps1` supports border-connected neutral-backdrop cleanup for generated checkerboard previews, preserving enclosed white costume pixels; the full Pixel V2 suite contains 61 passing tests.
+68. E09 now uses a final 32-frame Pixel V2 dirty-mix fighter with pressure advance, overhand straight, low kick, grip, rough low trip, dirty disengage, guard, and hurt rows.
+69. E09 overhand/low-kick presentation reads at 300/320ms, grip/takedown retain 380ms, and browser evidence proves the overhand advances over 30px toward contact.
+70. `street` now routes day/night backgrounds from runtime time, so the 19:00 old-city E09 encounter uses the final night street; the full Pixel V2 suite contains 64 passing tests.
 
 ## Deferred Larger Work
 
