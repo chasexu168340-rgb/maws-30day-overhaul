@@ -52,6 +52,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.sanda_gym.night',
   'backgrounds:bg.karate_dojo.day',
   'backgrounds:bg.karate_dojo.night',
+  'backgrounds:bg.taekwondo_club.day',
+  'backgrounds:bg.taekwondo_club.night',
   'backgrounds:bg.street.day',
   'backgrounds:bg.street.night',
   'characters:fighter.player',
@@ -270,6 +272,19 @@ async function startKarate(page) {
     store.state.loc = 'karate_dojo';
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: 'E20' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startTaekwondo(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 24;
+    store.state.time = 960;
+    store.state.loc = 'taekwondo_club';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E21' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
@@ -572,6 +587,8 @@ test('Day 1-9 pixel_v2 background variants decode in the browser', async ({ page
     'backgrounds:bg.sanda_gym.night',
     'backgrounds:bg.karate_dojo.day',
     'backgrounds:bg.karate_dojo.night',
+    'backgrounds:bg.taekwondo_club.day',
+    'backgrounds:bg.taekwondo_club.night',
     'backgrounds:bg.street.day',
     'backgrounds:bg.street.night'
   ], 'Day 1-9 pixel_v2 backgrounds');
@@ -1257,6 +1274,98 @@ test('pixel_v2 E20 karate fighter uses reverse punch, front kick, guard, recover
   }
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'karate-motion-desktop.png'), fullPage: true });
   expect(violations, 'karate motion should not emit warnings/errors').toEqual([]);
+});
+
+test('pixel_v2 E21 taekwondo fighter uses roundhouse, back kick, front kick, landing, dodge, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startTaekwondo(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.taekwondo');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.taekwondo', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 620));
+    };
+    for (const name of ['advance', 'roundhouse', 'backkick', 'frontkick', 'recover', 'dodge', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticIds = ['tkd_roundhouse', 'tkd_back_kick', 'frontkick', 'guard', 'dodge'];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticIds.map((id) => scene.fighterActionAnimName({ action: { id, type: ['guard', 'dodge'].includes(id) ? 'defense' : 'kick' } }, actor)),
+      timings: semanticIds.slice(0, 3).map((id) => scene.combatContactMs({ action: { id, type: 'kick' } }))
+    };
+  });
+
+  expect(playback.enemyX, 'taekwondo fighter should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'taekwondo source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['roundhouse', 'backkick', 'frontkick', 'recover', 'dodge']);
+  expect(playback.timings).toEqual([330, 360, 310]);
+  for (const [start, end, label] of [[4, 7, 'advance'], [8, 11, 'roundhouse'], [12, 15, 'back kick'], [16, 19, 'front kick'], [20, 23, 'landing recovery'], [24, 27, 'dodge'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'taekwondo-motion-desktop.png'), fullPage: true });
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.taekwondo');
+    scene.playFighterAnim({ sprite: enemy, animKey: 'anim.fighter.enemy.taekwondo', isAnimated: true }, 'backkick', true, false);
+  });
+  await page.waitForFunction(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.taekwondo');
+    const frame = Number(enemy?.frame?.name || 0);
+    return frame === 14;
+  }, null, { timeout: 2500 });
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'taekwondo-backkick-motion-desktop.png'), fullPage: true });
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.taekwondo');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const startX = Number(enemy?.x || 0);
+    const actor = {
+      sprite: enemy,
+      animKey: 'anim.fighter.enemy.taekwondo',
+      isAnimated: true,
+      x: startX,
+      y: Number(enemy?.y || 0),
+      maxAdvance: 280,
+      displayWidth: Number(enemy?.displayWidth || 96)
+    };
+    const target = {
+      sprite: player,
+      x: Number(player?.x || 0),
+      y: Number(player?.y || 0),
+      displayWidth: Number(player?.displayWidth || 96)
+    };
+    window.__taekwondoApproach = { startX, enemy };
+    scene.playFighterAnim(actor, 'backkick', true, false);
+    scene.animateAttack(actor, target, 0, { contactMs: 360, hitstopMs: 80, shake: 0.2 });
+  });
+  await page.waitForFunction(() => {
+    const state = window.__taekwondoApproach;
+    return Number(state?.enemy?.frame?.name || 0) === 14 && Number(state?.enemy?.x || 0) - Number(state?.startX || 0) > 30;
+  }, null, { timeout: 2500 });
+  await page.evaluate(() => window.__taekwondoApproach?.enemy?.anims?.pause());
+  const approach = await page.evaluate(() => ({
+    startX: Number(window.__taekwondoApproach?.startX || 0),
+    approachX: Number(window.__taekwondoApproach?.enemy?.x || 0)
+  }));
+  expect(approach.approachX - approach.startX, 'taekwondo back kick should travel toward real contact distance').toBeGreaterThan(30);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'taekwondo-backkick-contact-desktop.png'), fullPage: true });
+  expect(violations, 'taekwondo motion should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape motion', async ({ page }) => {
@@ -2033,6 +2142,28 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e20-karate-${viewport.name}.png`, `E20 karate ${viewport.name}`);
     expect(violations, `E20 karate ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E21 taekwondo ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startTaekwondo(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.taekwondo_club.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.taekwondo'
+    ], `E21 taekwondo ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E21 taekwondo ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.taekwondo');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e21-taekwondo-${viewport.name}.png`, `E21 taekwondo ${viewport.name}`);
+    expect(violations, `E21 taekwondo ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 E00 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

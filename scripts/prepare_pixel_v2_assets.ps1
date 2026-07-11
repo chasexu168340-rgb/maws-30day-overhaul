@@ -28,6 +28,12 @@ param(
     [ValidateRange(0, 4096)]
     [int]$RemoveSpecksBelow = 0,
 
+    [switch]$RemoveNeutralBackdrop,
+    [ValidateRange(0, 255)]
+    [int]$NeutralBackdropMinimum = 220,
+    [ValidateRange(0, 64)]
+    [int]$NeutralBackdropSpread = 12,
+
     [switch]$PreserveAspectFit,
     [ValidateRange(0, 32)]
     [int]$InsetPixels = 0,
@@ -419,6 +425,63 @@ function Invoke-ChromaKeyCleanup {
     return $changed
 }
 
+function Invoke-NeutralBackdropCleanup {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Drawing.Bitmap]$Bitmap,
+        [int]$Minimum,
+        [int]$Spread
+    )
+
+    $width = $Bitmap.Width
+    $height = $Bitmap.Height
+    $visited = New-Object 'bool[]' ($width * $height)
+    $queue = [System.Collections.Generic.Queue[int]]::new()
+
+    function Test-NeutralBackdropPixel([System.Drawing.Color]$Pixel) {
+        if ($Pixel.A -eq 0) { return $false }
+        $minChannel = [Math]::Min($Pixel.R, [Math]::Min($Pixel.G, $Pixel.B))
+        $maxChannel = [Math]::Max($Pixel.R, [Math]::Max($Pixel.G, $Pixel.B))
+        return $minChannel -ge $Minimum -and ($maxChannel - $minChannel) -le $Spread
+    }
+
+    function Add-Seed([int]$X, [int]$Y) {
+        $index = $Y * $width + $X
+        if ($visited[$index]) { return }
+        $visited[$index] = $true
+        if (Test-NeutralBackdropPixel $Bitmap.GetPixel($X, $Y)) { $queue.Enqueue($index) }
+    }
+
+    for ($x = 0; $x -lt $width; $x++) {
+        Add-Seed $x 0
+        Add-Seed $x ($height - 1)
+    }
+    for ($y = 1; $y -lt ($height - 1); $y++) {
+        Add-Seed 0 $y
+        Add-Seed ($width - 1) $y
+    }
+
+    $changed = 0
+    while ($queue.Count -gt 0) {
+        $index = $queue.Dequeue()
+        $x = $index % $width
+        $y = [Math]::Floor($index / $width)
+        $Bitmap.SetPixel($x, $y, [System.Drawing.Color]::FromArgb(0, 0, 0, 0))
+        $changed++
+
+        foreach ($delta in @(@(-1, 0), @(1, 0), @(0, -1), @(0, 1))) {
+            $nextX = $x + $delta[0]
+            $nextY = $y + $delta[1]
+            if ($nextX -lt 0 -or $nextX -ge $width -or $nextY -lt 0 -or $nextY -ge $height) { continue }
+            $nextIndex = $nextY * $width + $nextX
+            if ($visited[$nextIndex]) { continue }
+            $visited[$nextIndex] = $true
+            if (Test-NeutralBackdropPixel $Bitmap.GetPixel($nextX, $nextY)) { $queue.Enqueue($nextIndex) }
+        }
+    }
+    return $changed
+}
+
 function Remove-SmallAlphaComponents {
     param(
         [Parameter(Mandatory = $true)]
@@ -572,6 +635,14 @@ try {
         }
     }
 
+    $neutralBackdropPixelsCleared = 0
+    if ($RemoveNeutralBackdrop) {
+        $neutralBackdropPixelsCleared = Invoke-NeutralBackdropCleanup `
+            -Bitmap $sourceBitmap `
+            -Minimum $NeutralBackdropMinimum `
+            -Spread $NeutralBackdropSpread
+    }
+
     $chromaPixelsCleared = 0
     if ($ChromaKey) {
         $keyColor = ConvertFrom-HexColor -Hex $ChromaColor
@@ -654,6 +725,12 @@ try {
             color = $ChromaColor
             tolerance = $ChromaTolerance
             pixelsCleared = $chromaPixelsCleared
+        }
+        neutralBackdrop = [ordered]@{
+            enabled = [bool]$RemoveNeutralBackdrop
+            minimum = $NeutralBackdropMinimum
+            spread = $NeutralBackdropSpread
+            pixelsCleared = $neutralBackdropPixelsCleared
         }
         speckPixelsCleared = $speckPixelsCleared
         sourceStats = $sourceStats

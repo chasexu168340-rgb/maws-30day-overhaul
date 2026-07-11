@@ -4,48 +4,44 @@
 
 ## Current Task
 
-Publish the quiet-ledger UI rebuild together with the reviewed E20 karate route presentation as one validated visual release.
+Replace E21's generic fallback presentation with a final taekwondo fighter, authored long-range motion, and a matching day/night club stage.
 
 ## Scope
 
-- Preserved game rules, enemy stats, economy, story, and save contracts.
-- Changed DOM UI structure/styles, E20 visual routing, focused browser contracts, and checkpoints.
-- Kept all actions and destinations reachable while removing secondary prose from the default scene.
+- Generated all source imagery in the current Codex session.
+- Preserved E21 stats, AI, skills, rewards, combat formulas, economy, story, and save contracts.
+- Used external games only as clean-room cadence/readability references; no protected code or assets were extracted or copied.
 
 ## Current Result
 
-- The first-look scene now keeps only date/time, four core resources, location, today's intent, up to two desktop decisions, and one mobile decision visible.
-- Desktop navigation is a compact right-side icon ledger; mobile navigation remains a 44px bottom bar.
-- The bottom decision dock has one clear primary path plus an opt-in task ledger instead of multiple competing panels.
-- The task ledger shows four local actions first; remaining actions, city opportunities, location index, and location prose stay progressively disclosed.
-- Navigation icons are larger than their labels, active tabs and primary actions retain Pixel V2 bitmap skins, and no new vector/web-card language was introduced.
-- Mobile character staging was repaired so Lu, Liu Pangzi, and father memory remain visible above the decision dock; NPC menus no longer sit behind the dock.
-- Short toast feedback no longer covers an open task ledger.
-- Mobile non-scene ledgers use border-box sizing and remain within the viewport.
-- E20 now uses a final 32-frame, 96x144 Pixel V2 karate strip and matching standee rather than the generic boxer fallback.
-- E20 motion semantics distinguish straight-line entry, reverse punch, front kick, guard, disciplined recovery, dodge/back-step, and hurt recovery.
-- Karate reverse-punch/front-kick contact reads at 300/310ms and schedules an explicit recovery pose after hit or miss without changing combat formulas.
-- `karate_dojo` now uses final 480x270, 32-color day/night stages with the same floor geometry and clean urban-community-dojo identity.
+- E21 now uses a final 32-frame, 96x144 Pixel V2 taekwondo strip and matching 96x144 standee instead of the generic boxer fallback.
+- Motion rows cover bouncing guard, slide-step advance, roundhouse kick, counter back kick, front kick, landing reset, long back-step/dodge, and hurt recovery.
+- The generated atlas had one missing idle cell; frame 0 is reused as the fourth idle loop closure, leaving three distinct weight-shift poses without changing attack rows.
+- Back-kick turn/chamber/contact frames were corrected so the heel extends screen-right toward the player; the recovery frame returns to the standard right-facing guard.
+- Actor-specific semantics map `tkd_roundhouse`, `tkd_back_kick`, `frontkick`, guard/reset, dodge, and retreat to authored rows.
+- Presentation timing reads roundhouse at 330ms, back kick at 360ms, and front kick at 310ms, then schedules an explicit landing/reset after hit or miss.
+- Runtime movement evidence proves the back kick advances more than 30px toward real contact distance while the contact frame is active.
+- `taekwondo_club` now uses final 480x270, 32-color day/night stages with identical mat geometry and clear long-range lanes.
+- The asset preparation tool can now remove a border-connected neutral checkerboard without deleting white clothing enclosed by dark outlines.
 
 ## Validation
 
-- `node maws_src/tools/verify_assets.mjs`: passed (150 manifest entries).
+- `node maws_src/tools/verify_assets.mjs`: passed (154 manifest entries).
 - `npm run check:full`: passed (build + 6 Chromium smoke tests).
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
-- Full `pixel_v2_visual.spec.js`: passed (58 tests).
-- Reviewed screenshots at 390x844, 900x700, 1365x768, and 1536x864, including the closed scene, NPC menu, and task ledger.
+- Full `pixel_v2_visual.spec.js`: passed (61 tests).
+- Desktop/mobile E21 screenshots and exact back-kick pose/contact screenshots were reviewed.
 - `git diff --check`: passed.
 
 ## Risks
 
-- `ui.css` still contains historical override layers. This pass uses a final, narrowly scoped quiet-shell layer; deleting old layers safely should be a separate refactor with screenshot parity gates.
-- Detailed skill, inventory, and profile ledgers remain intentionally dense after the player opens them, but no longer compete with the default scene.
-- The karate front kick uses a compact four-frame authored row; a future animation pass can add stronger anticipation and landing frames without changing the action contract.
-- Dedicated gi movement, foot slide, glove contact, and kiai audio remain missing.
+- The idle loop contains three unique poses plus a repeated closing pose because the generated source omitted one cell.
+- Dedicated foot-slide, mat impact, dobok snap, and kiai audio are still missing.
+- The post-Day9 roster still contains generic presentation fallbacks outside the specially mapped enemies.
 
 ## Next Step
 
-1. Continue with E21's long-range taekwondo movement, chambered kicks, and matching day/night club stage.
-2. Follow with E09's dirty mixed-fight presentation and then audit remaining post-Day9 fallbacks.
-3. Keep CSS debt cleanup separate and screenshot-gated so visual parity is not lost during deletion.
+1. Give E09's dirty mixed-fight archetype its own unstable boxing, shove, foul-threat, and escape presentation.
+2. Audit all remaining E02-E17/E22+ enemies and rank fallback replacement by how often players meet them.
+3. Add shared route-specific audio only after the remaining high-priority visual archetypes are mapped.

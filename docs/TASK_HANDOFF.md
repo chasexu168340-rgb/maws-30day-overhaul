@@ -84,6 +84,10 @@ The player-facing target remains: the player clicks something, the game responds
 61. The full Pixel V2 suite now contains 58 passing tests, including two dedicated quiet-ledger responsive contracts and task-ledger screenshots.
 62. E20 now uses a final 32-frame Pixel V2 karate fighter with straight-line entry, reverse punch, front kick, guard, recovery, dodge/back-step, and hurt rows; reverse punch/front kick read at 300/310ms and recover explicitly after contact or miss.
 63. `bg.karate_dojo.day/night` are final 480x270, 32-color Pixel V2 stages, and browser coverage includes E20 authored-row playback plus desktop/mobile geometry and screenshots.
+64. E21 now uses a final 32-frame Pixel V2 taekwondo fighter with bouncing guard, slide entry, roundhouse, back kick, front kick, landing reset, dodge/back-step, and hurt rows.
+65. E21 roundhouse/back-kick/front-kick presentation reads at 330/360/310ms, schedules landing recovery after hit or miss, and browser evidence proves the corrected rightward back kick advances over 30px toward contact.
+66. `bg.taekwondo_club.day/night` are final 480x270, 32-color Pixel V2 stages with matched mat geometry; desktop/mobile scale, orientation, background decode, and screenshots pass.
+67. `prepare_pixel_v2_assets.ps1` supports border-connected neutral-backdrop cleanup for generated checkerboard previews, preserving enclosed white costume pixels; the full Pixel V2 suite contains 61 passing tests.
 
 ## Deferred Larger Work
 
