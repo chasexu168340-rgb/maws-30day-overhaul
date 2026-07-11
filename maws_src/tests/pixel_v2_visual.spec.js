@@ -793,6 +793,76 @@ test('quiet ledger V2 keeps skill depth behind a readable index', async ({ page 
 });
 
 for (const viewport of VIEWPORTS) {
+  test(`modal V2 duration and result hierarchy ${viewport.name}`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'doAction', actionId: 'review' }));
+    const duration = page.locator('.maws-modal.duration');
+    await expect(duration).toBeVisible();
+    await expect(duration.locator('.maws-duration-choice')).toHaveCount(4);
+    const durationGeometry = await duration.locator('.maws-modal-shell').evaluate((shell) => {
+      const rect = shell.getBoundingClientRect();
+      const buttons = [...shell.querySelectorAll('.maws-duration-choice > button')];
+      return {
+        width: rect.width,
+        height: rect.height,
+        viewportHeight: window.innerHeight,
+        minimumActionHeight: Math.min(...buttons.map((button) => button.getBoundingClientRect().height))
+      };
+    });
+    expect(durationGeometry.height, 'duration choice should not become a full-screen article wall').toBeLessThanOrEqual(durationGeometry.viewportHeight * 0.64);
+    expect(durationGeometry.minimumActionHeight, 'duration actions should retain a 44px target').toBeGreaterThanOrEqual(44);
+    await expectNoHorizontalOverflow(page, `modal V2 duration ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `modal-v2-duration-${viewport.name}.png`, `modal V2 duration ${viewport.name}`);
+
+    await duration.locator('button[data-action="chooseDuration"][data-duration="standard"]').click();
+    const result = page.locator('.maws-modal.result-compact');
+    await expect(result).toBeVisible();
+    await expect(result.locator('.maws-reward-chip').first()).toBeVisible();
+    await page.waitForTimeout(800);
+    const resultGeometry = await result.locator('.maws-modal-shell').evaluate((shell) => {
+      const rect = shell.getBoundingClientRect();
+      const details = shell.querySelector('.maws-modal-fold');
+      return {
+        width: rect.width,
+        height: rect.height,
+        viewportHeight: window.innerHeight,
+        detailsOpen: Boolean(details?.open)
+      };
+    });
+    expect(resultGeometry.height, 'small action result should remain compact').toBeLessThanOrEqual(resultGeometry.viewportHeight * 0.64);
+    expect(resultGeometry.detailsOpen, 'full settlement should remain opt-in').toBe(false);
+    await expectNoHorizontalOverflow(page, `modal V2 result ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `modal-v2-result-${viewport.name}.png`, `modal V2 result ${viewport.name}`);
+    expect(violations, `modal V2 ${viewport.name} warnings/errors`).toEqual([]);
+  });
+}
+
+for (const viewport of VIEWPORTS) {
+  test(`modal V2 father diary keeps one page in focus ${viewport.name}`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'openFatherDiary' }));
+    const diary = page.locator('.maws-modal.diary');
+    await expect(diary).toBeVisible();
+    await expect(diary.locator('.maws-diary-current')).toBeVisible();
+    await expect(diary.locator('.maws-diary-pages')).not.toBeVisible();
+    const geometry = await diary.locator('.maws-modal-shell').evaluate((shell) => {
+      const rect = shell.getBoundingClientRect();
+      const currentPages = [...shell.querySelectorAll('.maws-diary-current')]
+        .filter((node) => node.getBoundingClientRect().height > 0).length;
+      return { height: rect.height, viewportHeight: window.innerHeight, currentPages };
+    });
+    expect(geometry.currentPages, 'diary should expose exactly one current page').toBe(1);
+    expect(geometry.height, 'diary should preserve scene context around the page').toBeLessThanOrEqual(geometry.viewportHeight * 0.72);
+    await diary.locator('button[data-action="turnFatherDiaryPage"][data-delta="1"]').click();
+    await expect(diary.locator('.maws-rpg-title small')).toContainText('2/3');
+    await page.waitForTimeout(800);
+    await expectNoHorizontalOverflow(page, `modal V2 diary ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `modal-v2-diary-${viewport.name}.png`, `modal V2 diary ${viewport.name}`);
+    expect(violations, `modal V2 diary ${viewport.name} warnings/errors`).toEqual([]);
+  });
+}
+
+for (const viewport of VIEWPORTS) {
   test(`Pixel V2 boot ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = collectConsoleViolations(page);
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -2013,7 +2083,9 @@ for (const viewport of VIEWPORTS) {
         shellRadius: getComputedStyle(shell).borderRadius,
         lineFont: Number.parseFloat(getComputedStyle(line).fontSize),
         portraitWidth: portrait.getBoundingClientRect().width,
-        actionHeight: advance.getBoundingClientRect().height
+        actionHeight: advance.getBoundingClientRect().height,
+        shellHeight: shell.getBoundingClientRect().height,
+        viewportHeight: window.innerHeight
       };
     });
     expect(dialogueStyle.modalBackdrop, 'dialogue should not use blurred glass').toBe('none');
@@ -2025,8 +2097,10 @@ for (const viewport of VIEWPORTS) {
     expect(dialogueStyle.lineFont, 'dialogue should not dominate the scene with oversized type').toBeLessThanOrEqual(18);
     expect(dialogueStyle.portraitWidth, 'speaker portrait should remain visually present').toBeGreaterThanOrEqual(viewport.name === 'mobile' ? 70 : 90);
     expect(dialogueStyle.actionHeight, 'dialogue advance should keep a 44px hit target').toBeGreaterThanOrEqual(44);
+    expect(dialogueStyle.shellHeight, 'dialogue should preserve most of the scene').toBeLessThanOrEqual(dialogueStyle.viewportHeight * 0.5);
     await page.locator('button[data-action="advanceDialogue"]').click();
     await expect(page.locator('.maws-dialogue-portrait-img[src*="portrait_father.png"]')).toBeVisible();
+    await page.waitForTimeout(800);
     await expectNoHorizontalOverflow(page, `Day 1 father dialogue ${viewport.name}`);
     await expectScreenshotHasPixels(page, `day1-father-dialogue-${viewport.name}.png`, `Day 1 father dialogue ${viewport.name}`);
     expect(violations, `Day 1 ${viewport.name} console warnings/errors`).toEqual([]);

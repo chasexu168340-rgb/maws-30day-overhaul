@@ -95,6 +95,10 @@ The player-facing target remains: the player clicks something, the game responds
 72. Ledger indexes now use 58px pixel art with subordinate 12px titles; the skillbook shows learned and next-learnable moves while the future catalogue stays closed by default.
 73. Mobile combat uses a single 230px dock for target/queue, two-column commands, and execution controls; desktop retains six compact commands and a stable action column.
 74. Browser coverage now includes a dedicated V2 skill-depth regression; the full Pixel V2 suite contains 65 passing tests.
+75. Modal V2 turns dialogue into a bottom subtitle stage with one portrait/name/current line and keeps history, settlement, and lore opt-in.
+76. NPC menus now clear the scene decision dock; duration choices compare four investments without pre-reward leakage; result surfaces show structured reward blocks and at most three immediate follow-ups.
+77. Father diary focuses one readable page below 68% desktop / 62% mobile height, with complete history closed by default.
+78. Browser coverage includes duration/result and diary desktop/mobile contracts plus dialogue scene-preservation geometry; the full Pixel V2 suite contains 69 passing tests.
 
 ## Deferred Larger Work
 

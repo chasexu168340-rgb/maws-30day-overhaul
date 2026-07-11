@@ -1309,9 +1309,7 @@ function modalBodyLines(body) {
 
 function renderModalShell(modal, inner, className = '') {
   const classes = ['maws-modal', className].filter(Boolean).join(' ');
-  const hasInlineRewards = ['dialogue', 'settlement', 'battleResult'].includes(modal.type)
-    || /\b(dialogue|result-feedback|battle-result)\b/.test(className);
-  return `<div class="${classes}">${hasInlineRewards ? '' : renderRewardStack(modal)}<section class="maws-modal-shell">${inner}</section></div>`;
+  return `<div class="${classes}"><section class="maws-modal-shell">${inner}</section></div>`;
 }
 
 function renderModalAction(action) {
@@ -1331,8 +1329,7 @@ function renderStoryChoiceModal(modal) {
     ].filter(Boolean);
     return `
       <article class="maws-story-choice">
-        <strong>${esc(choice.label)}</strong>
-        <p>${esc(choice.text)}</p>
+        ${btn(`<strong>${esc(choice.label)}</strong><small>${esc(choice.text)}</small><i aria-hidden="true">›</i>`, 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
         ${choice.hint || meta.length ? `
           <details class="maws-fold maws-choice-fold">
             <summary>收益 / 风险</summary>
@@ -1340,7 +1337,6 @@ function renderStoryChoiceModal(modal) {
             ${summaryChips(meta, choice.enemyName ? 'cost' : 'gain')}
           </details>
         ` : ''}
-        ${btn('选择', 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
       </article>
     `;
   }).join('');
@@ -1371,8 +1367,7 @@ function renderDialogueModal(modal) {
     ].filter(Boolean);
     return `
       <article class="maws-dialogue-choice">
-        <strong>${esc(choice.label)}</strong>
-        <p>${esc(choice.text)}</p>
+        ${btn(`<strong>${esc(choice.label)}</strong><small>${esc(choice.text)}</small><i aria-hidden="true">›</i>`, 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
         ${choice.hint || meta.length ? `
           <details class="maws-fold maws-choice-fold">
             <summary>收益 / 风险</summary>
@@ -1380,7 +1375,6 @@ function renderDialogueModal(modal) {
             ${summaryChips(meta, choice.enemyName ? 'cost' : 'gain')}
           </details>
         ` : ''}
-        ${btn('选这条路', 'resolveStoryChoice', { id: choice.id }, choice.enemyName ? 'primary' : 'ghost')}
       </article>
     `;
   }).join('');
@@ -1403,12 +1397,11 @@ function renderDialogueModal(modal) {
     <div class="maws-dialogue-stage">
       <div class="maws-dialogue-portrait">
         ${portrait}
-        <strong>${esc(line.speaker || modal.title || '对话')}</strong>
-        ${line.role ? `<em>${esc(line.role)}</em>` : ''}
       </div>
       <div class="maws-dialogue-box">
         <header class="maws-dialogue-nameplate">
           <span>${esc(line.speaker || modal.title || '对话')}</span>
+          ${line.role ? `<em>${esc(line.role)}</em>` : ''}
           <b>${esc(`${index + 1}/${lines.length}`)}</b>
         </header>
         <p>${esc(line.text || modal.body || '')}</p>
@@ -1470,9 +1463,7 @@ function renderEventNotebookModal(modal) {
   `).join('');
   const choices = (modal.choices || []).map((choice) => `
     <article class="maws-event-choice">
-      <strong>${esc(choice.label || '处理这件事')}</strong>
-      <p>${esc(choice.text || '')}</p>
-      ${btn('确认', 'resolveEventNotebook', { id: choice.id || 'resolve' }, choice.kind === 'battle' ? 'primary' : 'ghost')}
+      ${btn(`<strong>${esc(choice.label || '处理这件事')}</strong><small>${esc(choice.text || '')}</small><i aria-hidden="true">›</i>`, 'resolveEventNotebook', { id: choice.id || 'resolve' }, choice.kind === 'battle' ? 'primary' : 'ghost')}
     </article>
   `).join('');
   const meta = [
@@ -1522,7 +1513,7 @@ function renderDurationChoiceModal(modal) {
         ${summaryChips(meta, option.id === 'hard' ? 'cost' : 'gain')}
         <p>${esc(riskLine)}</p>
         ${foldedMeta.length ? `<details class="maws-fold maws-duration-fold"><summary>长说明</summary><div>${foldedMeta.map((line) => `<small>${esc(line)}</small>`).join('')}</div></details>` : ''}
-        ${btn('选择', 'chooseDuration', { id: modal.actionId, duration: option.id }, option.id === 'standard' ? 'primary' : 'ghost')}
+        ${btn(`投入 ${esc(option.minutes || 0)} 分钟`, 'chooseDuration', { id: modal.actionId, duration: option.id }, option.id === 'standard' ? 'primary' : 'ghost')}
       </article>
     `;
   }).join('');
@@ -1617,7 +1608,15 @@ function renderModal(model) {
     `);
   }
   if (modal.type === 'settlement') {
-    const resultActions = (modal.actions?.length ? modal.actions : [{ label: '继续行动', action: 'closeModal', className: 'primary' }])
+    const availableResultActions = modal.actions?.length
+      ? modal.actions
+      : [{ label: '继续行动', action: 'closeModal', className: 'primary' }];
+    const resultActions = availableResultActions
+      .slice(0, 3)
+      .map(renderModalAction)
+      .join('');
+    const secondaryResultActions = availableResultActions
+      .slice(3)
       .map(renderModalAction)
       .join('');
     const cost = summaryChips(modal.cost || [], 'cost');
@@ -1646,6 +1645,7 @@ function renderModal(model) {
         ${objectiveLines}
         ${lines ? `<ol class="maws-settle-list">${lines}</ol>` : ''}
         ${modal.logText ? `<p class="maws-result-log">${esc(modal.logText)}</p>` : ''}
+        ${secondaryResultActions ? `<div class="maws-result-secondary-actions">${secondaryResultActions}</div>` : ''}
       </details>
     `, 'result-feedback result-compact');
   }
