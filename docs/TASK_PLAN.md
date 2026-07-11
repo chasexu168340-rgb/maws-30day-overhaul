@@ -4,43 +4,44 @@
 
 ## Current Task
 
-Replace the text-heavy first-look interface with a quiet pixel ledger that keeps the scene visible and exposes one immediate decision at a time.
+Replace the generic E02 fighter fallback with a final Pixel V2 push-hands opponent whose stance, contact actions, timing, orientation, and real approach movement are readable in the live Phaser battle.
 
 ## Scope
 
-- Changed DOM presentation, responsive CSS, and browser paths only.
-- Preserved action dispatch, rewards, combat formulas, economy, story data, and save contracts.
-- Kept full local actions, opportunities, locations, logs, and skill details reachable through explicit disclosure.
+- Added one final standee and one 32-frame 96x144 motion strip.
+- Changed only asset metadata, E02 presentation mapping, action animation semantics, contact timing, and visual tests.
+- Preserved E02 stats, AI, skills, combat formulas, economy, story, and save contracts.
 
 ## Current Result
 
-- Quiet Ledger V3 shows one scene, one compact daily seal, and one complete immediate action; secondary tasks stay in the closed `册` drawer.
-- When a main event owns the immediate action, all local actions remain reachable inside the drawer instead of being dropped from both surfaces.
-- HUD resources are now icon-first readings; desktop navigation is a 60px icon rail and mobile navigation is a bottom icon ledger with hidden text labels.
-- Desktop/mobile action controls use a stable seal/title/arrow hierarchy and keep the scene characters unobstructed.
-- Action rows expose at most two short facts; descriptions, costs, gains, opportunities, and location prose are opt-in.
-- Skill routes and both log groups are closed by default. Only three next-learnable skills appear before the future catalogue.
-- Equipped skills now use large pixel thumbnails with small labels and 44px remove targets instead of six text-heavy pills.
-- Event notebook choices remain a three-choice real fixture with time/resource consequences and structured result rewards.
+- E02 now loads `fighter.enemy.pushhands` and `anim.fighter.enemy.pushhands` instead of the generic boxer fallback.
+- The 32-frame strip provides rooted idle, measured advance, hand contact, redirect/off-balance, short palm, yielding guard, disengage, and hurt rows.
+- Runtime semantics map `advance`, `grip`, `offbalance`, `palm`, `guard`, and `retreat` to authored rows.
+- E02 contact timing is deliberately readable: grip 350ms, off-balance 370ms, palm 310ms.
+- The enemy stands on the left, faces screen-right, keeps its feet grounded, and advances more than 30px at the palm contact frame.
+- Display scale was raised from the initial 0.94 review value to 1.12 after screenshot inspection so the opponent reads as an adult older practitioner rather than a child-sized sprite.
+- Existing E21 contact sampling now accepts its authored 13-15 back-kick contact interval while retaining the greater-than-30px movement requirement.
 
 ## Validation
 
-- `node maws_src/tools/verify_assets.mjs`: passed (156 manifest entries).
+- `node maws_src/tools/verify_assets.mjs`: passed (158 manifest entries).
 - `npm run check:full`: passed (build + 6 Chromium smoke tests).
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
-- Full `pixel_v2_visual.spec.js`: passed (72 tests).
-- Quiet Ledger desktop/tablet/mobile, skill ledger, bag, shop, dialogue, event, and combat screenshots passed visual/runtime contracts.
+- E21 timing stability: passed 3 consecutive runs.
+- Full `pixel_v2_visual.spec.js`: passed (75 tests).
+- Desktop/mobile E02 idle screenshots and desktop palm-contact screenshot were manually reviewed.
 - `git diff --check`: passed.
 
 ## Risks
 
-- Historical CSS overrides still exist before the isolated V3 layer; deleting superseded rules remains a later cleanup task, not part of this visual pass.
-- The generated E02 push-hands standee and motion strip are still local/unwired work; they are not claimed as runtime-final in this checkpoint.
+- The push-hands sheet is a solo fighter performance; it does not yet deform both fighters into a paired hand-contact pose.
+- E02 still uses shared combat audio and VFX; dedicated cloth movement, foot shuffle, palm contact, and hand-slap cues remain future polish.
+- E04 and several later enemies still use generic presentation fallbacks.
 - `outputs/` remains local screenshot evidence and must not be committed.
 
 ## Next Step
 
-1. Run an in-browser human pass on the V3 `册` drawer and secondary pages, then tighten only labels that still wrap badly.
-2. Wire and validate the existing E02 push-hands assets as a separate combat-presentation commit.
-3. Continue replacing high-frequency enemy fallbacks without changing combat formulas.
+1. Replace E04 with a distinct brawler/worker motion identity without changing combat formulas.
+2. Add a small shared push/grip/palm audio cue set after the next authored enemy batch.
+3. Continue clean-room combat presentation work; do not copy protected reference assets or code.

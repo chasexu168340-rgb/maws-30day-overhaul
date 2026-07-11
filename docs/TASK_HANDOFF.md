@@ -105,6 +105,10 @@ The player-facing target remains: the player clicks something, the game responds
 82. Skill routes and logs are closed by default; equipped skills use large pixel thumbnails, small labels, and 44px remove targets.
 83. Smoke and playtest paths now explicitly open the task ledger before exercising secondary location actions.
 84. Browser coverage includes 390x844, 900x700, and 1536x864 Quiet Ledger contracts plus non-scene ledger geometry; the full Pixel V2 suite contains 72 passing tests.
+85. E02 now uses a final 32-frame Pixel V2 push-hands fighter with rooted idle, measured advance, contact, redirect, short palm, yielding guard, disengage, and hurt rows.
+86. E02 grip/off-balance/palm presentation lands at 350/370/310ms, and browser evidence proves the short palm advances more than 30px toward contact.
+87. E02 stands on the left facing screen-right at a reviewed 1.12 display scale; desktop/mobile idle and desktop palm-contact screenshots pass.
+88. E21 back-kick sampling now checks the authored 13-15 contact interval while retaining real-movement requirements; the full Pixel V2 suite contains 75 passing tests.
 
 ## Deferred Larger Work
 

@@ -60,10 +60,12 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'characters:fighter.player',
   'characters:scene.npc.father_memory',
   'characters:fighter.enemy.untrained',
+  'characters:fighter.enemy.pushhands',
   'characters:fighter.enemy.beginner',
   'characters:fighter.enemy.silent',
   'sprites:anim.fighter.player',
   'sprites:anim.fighter.enemy.untrained',
+  'sprites:anim.fighter.enemy.pushhands',
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent',
   'portraits:portrait.player',
@@ -234,6 +236,19 @@ async function startDay5(page) {
     store.state.loc = 'park';
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: 'E01' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startPushhands(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 6;
+    store.state.time = 960;
+    store.state.loc = 'park';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E02' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
@@ -1520,7 +1535,8 @@ test('pixel_v2 E21 taekwondo fighter uses roundhouse, back kick, front kick, lan
   });
   await page.waitForFunction(() => {
     const state = window.__taekwondoApproach;
-    return Number(state?.enemy?.frame?.name || 0) === 14 && Number(state?.enemy?.x || 0) - Number(state?.startX || 0) > 30;
+    const frame = Number(state?.enemy?.frame?.name || 0);
+    return frame >= 13 && frame <= 15 && Number(state?.enemy?.x || 0) - Number(state?.startX || 0) > 30;
   }, null, { timeout: 2500 });
   await page.evaluate(() => window.__taekwondoApproach?.enemy?.anims?.pause());
   const approach = await page.evaluate(() => ({
@@ -1530,6 +1546,78 @@ test('pixel_v2 E21 taekwondo fighter uses roundhouse, back kick, front kick, lan
   expect(approach.approachX - approach.startX, 'taekwondo back kick should travel toward real contact distance').toBeGreaterThan(30);
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'taekwondo-backkick-contact-desktop.png'), fullPage: true });
   expect(violations, 'taekwondo motion should not emit warnings/errors').toEqual([]);
+});
+
+test('pixel_v2 E02 push-hands fighter uses rooted, contact, redirect, palm, yield, and disengage rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startPushhands(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.pushhands');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.pushhands', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 560));
+    };
+    for (const name of ['advance', 'grip', 'offbalance', 'palm', 'yield', 'disengage', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticActions = [
+      { id: 'advance', type: 'move' },
+      { id: 'grip', type: 'grapple' },
+      { id: 'offbalance', type: 'grapple' },
+      { id: 'palm', type: 'strike' },
+      { id: 'guard', type: 'defense' },
+      { id: 'retreat', type: 'move' }
+    ];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticActions.map((action) => scene.fighterActionAnimName({ action }, actor)),
+      timings: semanticActions.slice(1, 4).map((action) => scene.combatContactMs({ action }))
+    };
+  });
+
+  expect(playback.enemyX, 'push-hands fighter should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'push-hands source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['advance', 'grip', 'offbalance', 'palm', 'yield', 'disengage']);
+  expect(playback.timings).toEqual([350, 370, 310]);
+  for (const [start, end, label] of [[4, 7, 'measured advance'], [8, 11, 'contact'], [12, 15, 'redirect'], [16, 19, 'short palm'], [20, 23, 'yielding guard'], [24, 27, 'disengage'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+
+  await page.evaluate(() => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.pushhands');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const startX = Number(enemy?.x || 0);
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.pushhands', isAnimated: true, x: startX, y: Number(enemy?.y || 0), maxAdvance: 260, displayWidth: Number(enemy?.displayWidth || 96) };
+    const target = { sprite: player, x: Number(player?.x || 0), y: Number(player?.y || 0), displayWidth: Number(player?.displayWidth || 96) };
+    window.__pushhandsApproach = { startX, enemy };
+    scene.playFighterAnim(actor, 'palm', true, false);
+    scene.animateAttack(actor, target, 0, { contactMs: 310, hitstopMs: 72, shake: 0.14 });
+  });
+  await page.waitForFunction(() => {
+    const state = window.__pushhandsApproach;
+    const frame = Number(state?.enemy?.frame?.name || 0);
+    return frame >= 17 && frame <= 19 && Number(state?.enemy?.x || 0) - Number(state?.startX || 0) > 30;
+  }, null, { timeout: 2500 });
+  await page.evaluate(() => window.__pushhandsApproach?.enemy?.anims?.pause());
+  const approach = await page.evaluate(() => ({ startX: Number(window.__pushhandsApproach?.startX || 0), approachX: Number(window.__pushhandsApproach?.enemy?.x || 0) }));
+  expect(approach.approachX - approach.startX, 'push-hands palm should travel toward real contact distance').toBeGreaterThan(30);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'pushhands-palm-contact-desktop.png'), fullPage: true });
+  expect(violations, 'push-hands motion should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 E09 dirty-mix fighter uses pressure, overhand, low kick, grip, takedown, escape, and hurt rows', async ({ page }) => {
@@ -2402,6 +2490,29 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e21-taekwondo-${viewport.name}.png`, `E21 taekwondo ${viewport.name}`);
     expect(violations, `E21 taekwondo ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E02 push-hands ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startPushhands(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.park.day',
+      'characters:fighter.enemy.pushhands',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.pushhands'
+    ], `E02 push-hands ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E02 push-hands ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.pushhands');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e02-pushhands-${viewport.name}.png`, `E02 push-hands ${viewport.name}`);
+    expect(violations, `E02 push-hands ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`E09 dirty-mix ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

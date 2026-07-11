@@ -25,6 +25,7 @@ const BG_BY_LOC = {
 const FIGHTER_BY_ENEMY = {
   E00: 'fighter.enemy.untrained',
   E01: 'fighter.enemy.beginner',
+  E02: 'fighter.enemy.pushhands',
   E05: 'fighter.enemy.boxer',
   E10: 'fighter.enemy.silent',
   E06: 'fighter.enemy.grappler',
@@ -44,6 +45,7 @@ const ANIM_BY_FIGHTER = {
   'fighter.enemy.karate': 'anim.fighter.enemy.karate',
   'fighter.enemy.taekwondo': 'anim.fighter.enemy.taekwondo',
   'fighter.enemy.dirtymix': 'anim.fighter.enemy.dirtymix',
+  'fighter.enemy.pushhands': 'anim.fighter.enemy.pushhands',
   'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
   'fighter.enemy.silent': 'anim.fighter.enemy.silent',
@@ -803,6 +805,14 @@ export class ShellScene extends PhaserScene {
       if (id === 'dirtyescape') return 'disengage';
       if (id === 'guard') return 'guard';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.pushhands') {
+      if (id === 'advance') return 'advance';
+      if (id === 'grip') return 'grip';
+      if (id === 'offbalance') return 'offbalance';
+      if (id === 'palm') return 'palm';
+      if (id === 'guard') return 'yield';
+      if (['dodge', 'retreat', 'escape'].includes(id)) return 'disengage';
+    }
     if (actor?.animKey === 'anim.fighter.enemy.weapon') {
       if (id === 'advance') return 'threat';
       if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
@@ -824,6 +834,11 @@ export class ShellScene extends PhaserScene {
   combatContactMs(step, fx = {}) {
     const id = fx.skillId || step?.action?.id || '';
     const type = step?.action?.type || '';
+    if (this.model?.combat?.enemyId === 'E02') {
+      if (id === 'grip') return 350;
+      if (id === 'offbalance') return 370;
+      if (id === 'palm') return 310;
+    }
     if (['grip', 'takedown', 'sidecontrol'].includes(id) || ['grapple', 'ground'].includes(type)) return 380;
     if (step?.result?.response?.intent === 'weapon') return 340;
     if (this.model?.combat?.enemyId === 'E05') {
