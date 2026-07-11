@@ -1145,6 +1145,7 @@ function eventNotebookModal(state, item = {}, options = {}) {
     ].filter(Boolean),
     risk: riskText(item)
   };
+  const configuredChoices = Array.isArray(note.choices) ? note.choices : [];
   return {
     type: 'eventNotebook',
     source: options.source || 'event',
@@ -1162,12 +1163,14 @@ function eventNotebookModal(state, item = {}, options = {}) {
     result: note.result || note.outcome || '',
     rewardDeltas: [riskRewardDelta(item.enemy || item.risk || item.riskLabel ? item : action || {}, options.source || 'event')].filter(Boolean),
     card: options.source === 'opportunity' ? item : null,
-    choices: [{
-      id: 'resolve',
-      label: note.actionLabel || eventActionLabel(kind),
-      text: note.actionText || eventActionText(kind, title),
-      kind
-    }]
+    choices: configuredChoices.length
+      ? configuredChoices.slice(0, 3).map((choice) => ({ ...choice, kind: choice.kind || kind }))
+      : [{
+          id: 'resolve',
+          label: note.actionLabel || eventActionLabel(kind),
+          text: note.actionText || eventActionText(kind, title),
+          kind
+        }]
   };
 }
 
@@ -2069,7 +2072,7 @@ function applyOpportunityFlags(state, flags = {}) {
   });
 }
 
-function resolveEventNotebook(state) {
+function resolveEventNotebook(state, choiceId = 'resolve') {
   const modal = state.ui.modal;
   if (!modal || modal.type !== 'eventNotebook') {
     state.ui.modal = null;
@@ -2112,22 +2115,40 @@ function resolveEventNotebook(state) {
   } else {
     markOpportunityCooldown(state, card);
     const before = snapshotState(state);
-    if (card.npc) state.relations[card.npc] = (state.relations[card.npc] || 0) + 1;
-    applyOpportunityFlags(state, card.flags);
-    const settlementLinesForCard = settlementLines(before, snapshotState(state));
-    const resultText = card.resultDialogue || card.result || card.eventNotebook?.outcome || card.desc;
-    state.ui.modal = dialogueModal({
-      title: card.title,
-      npc: card.npc,
-      body: resultText,
-      lines: card.dialogue || [{ speaker: card.title, text: resultText }],
-      settlementLines: settlementLinesForCard,
-      rewardDeltas: rewardDeltasFromSettlement(settlementLinesForCard, state, {
-        source: 'eventNotebook',
-        extra: card.rewardDeltas || []
-      }),
-      actionLabel: '记下'
+    const choice = (modal.choices || []).find((item) => item.id === choiceId) || modal.choices?.[0] || {};
+    const hasConfiguredChoice = choice.id && choice.id !== 'resolve';
+    if (!hasConfiguredChoice && card.npc) state.relations[card.npc] = (state.relations[card.npc] || 0) + 1;
+    Object.entries(choice.relations || {}).forEach(([npcId, delta]) => {
+      state.relations[npcId] = Number(state.relations[npcId] || 0) + Number(delta || 0);
     });
+    if (choice.gain) applyGain(state, choice.gain);
+    if (choice.minutes) advanceTime(state, Number(choice.minutes || 0));
+    applyOpportunityFlags(state, card.flags);
+    applyOpportunityFlags(state, choice.flags);
+    const settlementLinesForCard = settlementLines(before, snapshotState(state));
+    const resultText = choice.outcome || card.resultDialogue || card.result || card.eventNotebook?.outcome || card.desc;
+    const rewardDeltas = rewardDeltasFromSettlement(settlementLinesForCard, state, {
+      source: 'eventNotebook',
+      minutes: Number(choice.minutes || 0),
+      extra: card.rewardDeltas || []
+    });
+    state.ui.modal = hasConfiguredChoice
+      ? resultFeedbackModal(state, {
+          title: card.title,
+          body: resultText,
+          lines: settlementLinesForCard,
+          rewardDeltas,
+          logText: resultText
+        })
+      : dialogueModal({
+          title: card.title,
+          npc: card.npc,
+          body: resultText,
+          lines: card.dialogue || [{ speaker: card.title, text: resultText }],
+          settlementLines: settlementLinesForCard,
+          rewardDeltas,
+          actionLabel: '记下'
+        });
     addLog(state, `处理待办：${card.title}`);
   }
 }
@@ -3252,7 +3273,7 @@ export class GameStore {
         s.ui.cityMapOpen = false;
       } else s.ui.modal = eventNotebookModal(s, card, { source: 'opportunity' });
     } else if (action.type === 'resolveEventNotebook') {
-      resolveEventNotebook(s);
+      resolveEventNotebook(s, action.choiceId);
     } else if (action.type === 'answerTraining') {
       answerTrainingMini(s, action.optionId);
     } else if (action.type === 'finishTraining') {

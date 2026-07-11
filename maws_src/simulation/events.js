@@ -150,7 +150,36 @@ export const EVENT_RULES = deepFreeze([
       ],
       actionLabel: '做低压复盘',
       actionText: '先看录像，不急着把今天安排成战斗。',
-      outcome: '复盘没有立刻让你变强，但让你少了一点把热闹当训练的冲动。'
+      outcome: '复盘没有立刻让你变强，但让你少了一点把热闹当训练的冲动。',
+      choices: [
+        {
+          id: 'study',
+          label: '逐帧记下来',
+          text: '把站距、回收和停顿写成三条能执行的提醒。',
+          minutes: 20,
+          gain: { jud: 1, calm: 1 },
+          flags: { early_review_studied: true },
+          outcome: '你没急着给动作下结论，只把下一次该看哪里写清楚了。'
+        },
+        {
+          id: 'send_fatty',
+          label: '发给刘胖子',
+          text: '让一个熟悉你嘴硬方式的人先挑毛病。',
+          minutes: 10,
+          relations: { fatty: 1 },
+          flags: { early_review_shared: true },
+          outcome: '刘胖子回了三个暂停截图，最后补一句：先别给自己配胜利音乐。'
+        },
+        {
+          id: 'honest_clip',
+          label: '剪成诚实复盘',
+          text: '把打空和回收慢都留下，换一点关注，也承担一点议论。',
+          minutes: 20,
+          gain: { fame: 2, heat: 2, auth: -1 },
+          flags: { early_review_clipped: true },
+          outcome: '视频不算威风，但有人第一次觉得你真在学东西，也有人只记住了那次打空。'
+        }
+      ]
     },
     npc: 'fatty',
     kind: 'dialog',

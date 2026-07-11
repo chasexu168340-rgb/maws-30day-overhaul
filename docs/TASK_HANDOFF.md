@@ -99,6 +99,12 @@ The player-facing target remains: the player clicks something, the game responds
 76. NPC menus now clear the scene decision dock; duration choices compare four investments without pre-reward leakage; result surfaces show structured reward blocks and at most three immediate follow-ups.
 77. Father diary focuses one readable page below 68% desktop / 62% mobile height, with complete history closed by default.
 78. Browser coverage includes duration/result and diary desktop/mobile contracts plus dialogue scene-preservation geometry; the full Pixel V2 suite contains 69 passing tests.
+79. Event notebook presentation now has three real 10-20 minute choices with judgement/calm, relation, or media tradeoffs and structured result rewards.
+80. Quiet Ledger V3 keeps one complete immediate decision on the scene; all local actions remain reachable in the closed `册` drawer when the daily main event owns that decision.
+81. HUD and navigation are icon-first: desktop uses a 60px pixel rail, mobile uses a bottom icon ledger, and resource labels no longer compete with their values.
+82. Skill routes and logs are closed by default; equipped skills use large pixel thumbnails, small labels, and 44px remove targets.
+83. Smoke and playtest paths now explicitly open the task ledger before exercising secondary location actions.
+84. Browser coverage includes 390x844, 900x700, and 1536x864 Quiet Ledger contracts plus non-scene ledger geometry; the full Pixel V2 suite contains 72 passing tests.
 
 ## Deferred Larger Work
 

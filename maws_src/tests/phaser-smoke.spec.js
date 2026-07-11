@@ -165,6 +165,8 @@ test('location locks and metro station work in the real browser', async ({ page 
   await page.locator('button[data-action="closeModal"]').click();
   expect(await page.evaluate(() => window.MAWS_STORE.state.loc)).toBe('metro_station');
 
+  await page.locator('.maws-command-drawer > summary').click();
+  await page.locator('.maws-drawer-section').first().locator('summary').first().click();
   await expect(page.locator('button[data-action="doAction"][data-id="metro_observe"]')).toBeVisible();
   await page.locator('button[data-action="doAction"][data-id="metro_observe"]').click();
   await expect(page.locator('button[data-action="closeModal"]')).toBeVisible();

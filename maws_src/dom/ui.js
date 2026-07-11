@@ -546,7 +546,7 @@ function opportunityButtonLabel(card = {}, currentLoc = '') {
 
 function renderActionCard(action) {
   const hasDuration = Array.isArray(action.durationOptions) && action.durationOptions.length > 0;
-  const visibleSummary = actionVisibleSummary(action);
+  const visibleSummary = actionVisibleSummary(action).slice(0, 2);
   const details = `
     <p>${esc(action.desc)}</p>
     ${summaryChips(action.summary?.cost || [], 'cost')}
@@ -561,11 +561,11 @@ function renderActionCard(action) {
         <strong>${esc(action.name)}</strong>
         ${visibleSummary.length ? `<div class="maws-action-visible-summary">${visibleSummary.map((part) => `<span>${esc(part)}</span>`).join('')}</div>` : ''}
         <details class="maws-fold maws-action-detail">
-          <summary>${hasDuration ? '投入与详情' : '查看详情'}</summary>
+          <summary aria-label="${hasDuration ? '查看投入与详情' : '查看详情'}"><span aria-hidden="true">···</span></summary>
           ${details}
         </details>
       </div>
-      ${btn(action.type === 'battle' ? '开打' : '行动', 'doAction', { id: action.id }, action.disabled ? 'disabled' : 'primary')}
+      ${btn(`<span aria-hidden="true">${action.type === 'battle' ? '斗' : '→'}</span><span class="maws-visually-hidden">${action.type === 'battle' ? '开打' : '执行行动'}</span>`, 'doAction', { id: action.id }, action.disabled ? 'disabled' : 'primary')}
     </article>
   `;
 }
@@ -579,7 +579,7 @@ function renderOpportunityCard(card, currentLoc) {
       <header><b>${esc(card.title)}</b><span>${esc(locName)}</span></header>
       <p>${esc(locName)} · ${esc(opportunityRiskText(card))}</p>
       <details class="maws-fold maws-choice-fold maws-recommend-detail">
-        <summary>为什么推荐</summary>
+        <summary aria-label="查看推荐原因">为何</summary>
         <small>${reason ? `触发：${esc(reason)}` : '当前节奏适合这件事。'}</small>
       </details>
       ${btn(opportunityButtonLabel(card, currentLoc), 'takeOpportunity', { id: card.id }, buttonClass)}
@@ -675,7 +675,7 @@ function sceneQuickCommands(model, featuredAction) {
       });
     }
   }
-  return commands.slice(0, 2);
+  return commands.slice(0, 1);
 }
 
 function renderMap(model) {
@@ -683,7 +683,9 @@ function renderMap(model) {
   const featuredAction = currentActions.find((action) => action.featured && !action.disabled)
     || currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length)
     || currentActions[0];
-  const drawerActions = currentActions.filter((action) => action !== featuredAction);
+  const drawerActions = model.mainEvent
+    ? currentActions
+    : currentActions.filter((action) => action !== featuredAction);
   const visibleDrawerActions = drawerActions.slice(0, 4);
   const overflowDrawerActions = drawerActions.slice(4);
   const allActions = visibleDrawerActions.map(renderActionCard).join('');
@@ -691,7 +693,7 @@ function renderMap(model) {
   const recommendations = renderRecommendations(model, 3);
   const quickCommands = sceneQuickCommands(model, featuredAction);
   const scene = model.locationScene || {};
-  const mainTitle = model.mainEvent?.title || '自由安排今天';
+  const mainTitle = model.mainEvent?.title || '自由安排';
   const bg = assetPath(scene.backgroundKey);
   const bgUrl = bg ? `/${bg}` : '';
   const characters = (scene.characters || []).map((character) => renderSceneCharacter(character, currentActions)).join('');
@@ -715,7 +717,7 @@ function renderMap(model) {
     </div>
   ` : '';
   return `
-    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell maws-quiet-shell-v2">
+    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell maws-quiet-shell-v2 maws-quiet-shell-v3">
       <section class="maws-location maws-location-focused">
         <div class="maws-scene" ${bgUrl ? `style="--scene-bg:url('${esc(bgUrl)}')"` : ''}>
           <div class="maws-scene-shade"></div>
@@ -724,21 +726,20 @@ function renderMap(model) {
             <h2>${esc(model.loc?.name)}</h2>
           </div>
           <div class="maws-scene-agenda" aria-label="今日主线">
-            <span>${model.mainEvent ? '主线' : '今日'}</span><strong>${esc(mainTitle)}</strong>
+            <span aria-hidden="true">${model.mainEvent ? '令' : '日'}</span><strong>${esc(mainTitle)}</strong>
           </div>
           <div class="maws-scene-cast ${(scene.characters || []).length >= 3 ? 'three-up' : ''}">${characters}</div>
           ${interactionMenu}
         </div>
         <footer class="maws-scene-command maws-action-rail maws-action-rail-main">
-          <div class="maws-decision-kicker" aria-hidden="true"><span>此刻</span><b>择一而行</b></div>
           <div class="maws-actions-primary maws-scene-quick-actions">
             ${quickCommands.map(renderSceneCommand).join('') || '<p class="maws-empty">现在没有必须处理的事。</p>'}
           </div>
           <details class="maws-command-drawer">
-            <summary aria-label="打开事务卷"><b aria-hidden="true">≡</b><span>事务</span><em>${esc(drawerCount)}</em></summary>
+            <summary aria-label="打开事务卷"><b aria-hidden="true">册</b><span class="maws-visually-hidden">事务</span><em>${esc(drawerCount)}</em></summary>
             <div class="maws-command-drawer-body">
               <header class="maws-drawer-head"><div><span>当前</span><strong>${esc(model.loc?.name)}</strong></div>${btn('城市地图', 'openCityMap', {}, 'tiny maws-map-open')}</header>
-              <details class="maws-fold maws-drawer-section" open>
+              <details class="maws-fold maws-drawer-section">
                 <summary>本地行动 <span>${esc(drawerActions.length)}项</span></summary>
                 <div class="maws-actions">${allActions || '<p class="maws-empty">其他行动暂时没有。</p>'}</div>
                 ${overflowActions ? `<details class="maws-fold maws-action-overflow"><summary>其余行动 <span>${esc(overflowDrawerActions.length)}项</span></summary><div class="maws-actions">${overflowActions}</div></details>` : ''}
@@ -987,21 +988,25 @@ function renderSkillTree(treeModel) {
     `;
   }).join('');
   return `
-    <section class="maws-skill-tree-slice maws-ledger-band" aria-label="技能树切片">
-      <header><h3>成长路线</h3><strong>${esc(treeModel.pointName || '洞察')} ${esc(treeModel.points || 0)}</strong><span>复盘、训练和主线留下的理解</span></header>
+    <details class="maws-skill-tree-slice maws-ledger-band" aria-label="技能树切片">
+      <summary><span><b>成长路线</b><small>三条路数</small></span><strong>${esc(treeModel.pointName || '洞察')} ${esc(treeModel.points || 0)}</strong></summary>
       <div class="maws-skill-tree-grid">${cards}</div>
-    </section>
+    </details>
   `;
 }
 
 function renderSkills(model) {
-  const slots = (model.equipSkills || []).map((slot) => `
-    <span class="maws-slot">${slot.skill ? `${esc(slot.skill.icon)} ${esc(slot.skill.name)} ${btn('卸下', 'unequipSkill', { index: slot.index }, 'tiny')}` : '空槽'}</span>
-  `).join('');
+  const slots = (model.equipSkills || []).map((slot) => slot.skill ? `
+    <span class="maws-slot filled">
+      ${assetIcon(slot.skill.assetKey, slot.skill.icon, 'maws-slot-art')}
+      <strong>${esc(slot.skill.name)}</strong>
+      ${btn('<span aria-hidden="true">×</span><span class="maws-visually-hidden">卸下</span>', 'unequipSkill', { index: slot.index }, 'tiny')}
+    </span>
+  ` : '<span class="maws-slot empty"><i aria-hidden="true">＋</i><strong>空槽</strong></span>').join('');
   const skills = model.skills || [];
   const learnedSkills = skills.filter((skill) => Boolean(skill.state));
   const lockedSkills = skills.filter((skill) => !skill.state);
-  const nextSkills = lockedSkills.filter((skill) => model.skillUnlocks?.[skill.id]?.status !== 'planned').slice(0, 6);
+  const nextSkills = lockedSkills.filter((skill) => model.skillUnlocks?.[skill.id]?.status !== 'planned').slice(0, 3);
   const nextIds = new Set(nextSkills.map((skill) => skill.id));
   const futureSkills = lockedSkills.filter((skill) => !nextIds.has(skill.id));
   const renderSkillGroup = (list) => list
@@ -1091,7 +1096,7 @@ function renderLog(model) {
   const eventItems = model.eventLog || [];
   const logs = logItems.slice(0, 5).map((entry) => `<li><time>第${esc(entry.day)}天 ${esc(entry.time)}</time><span>${esc(entry.text)}</span></li>`).join('');
   const events = eventItems.slice(0, 5).map((entry) => `<li><time>${esc(entry.type)}</time><span>${esc(entry.enemy || entry.text || entry.result)}</span></li>`).join('');
-  return `<section class="maws-panel maws-ledger-page maws-logbook"><header class="maws-page-heading"><div><small>城市手记</small><h2>记忆</h2></div><strong>${esc(logItems.length + eventItems.length)} 条</strong></header><div class="maws-log-cols"><details open><summary><b>最近行动</b><span>${esc(logItems.length)}</span></summary><ol>${logs || '<li class="maws-empty">今天还没留下行动。</li>'}</ol></details><details><summary><b>事件记忆</b><span>${esc(eventItems.length)}</span></summary><ol>${events || '<li class="maws-empty">还没有值得记住的事件。</li>'}</ol></details></div></section>`;
+  return `<section class="maws-panel maws-ledger-page maws-logbook"><header class="maws-page-heading"><div><small>城市手记</small><h2>记忆</h2></div><strong>${esc(logItems.length + eventItems.length)} 条</strong></header><div class="maws-log-cols"><details><summary><b>最近行动</b><span>${esc(logItems.length)}</span></summary><ol>${logs || '<li class="maws-empty">今天还没留下行动。</li>'}</ol></details><details><summary><b>事件记忆</b><span>${esc(eventItems.length)}</span></summary><ol>${events || '<li class="maws-empty">还没有值得记住的事件。</li>'}</ol></details></div></section>`;
 }
 
 function renderCheck(model) {

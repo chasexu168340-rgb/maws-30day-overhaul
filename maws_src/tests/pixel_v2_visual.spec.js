@@ -13,6 +13,7 @@ const DESKTOP = { name: 'desktop', width: 1365, height: 768 };
 const MOBILE = { name: 'mobile', width: 390, height: 844 };
 const VIEWPORTS = [DESKTOP, MOBILE];
 const UI_SHELL_VIEWPORTS = [
+  MOBILE,
   { name: 'tablet', width: 900, height: 700 },
   { name: 'wide', width: 1536, height: 864 }
 ];
@@ -740,7 +741,7 @@ test('Boot and Day 1-9 combat loads stay inside image budgets without blank figh
 for (const viewport of UI_SHELL_VIEWPORTS) {
   test(`quiet ledger ${viewport.name} responsive contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
-    await expect(page.locator('.maws-quiet-shell')).toBeVisible();
+    await expect(page.locator('.maws-quiet-shell-v3')).toBeVisible();
     await expectNoHorizontalOverflow(page, `quiet ledger ${viewport.name}`);
     const geometry = await page.evaluate(() => {
       const nav = document.querySelector('.maws-nav').getBoundingClientRect();
@@ -755,9 +756,13 @@ for (const viewport of UI_SHELL_VIEWPORTS) {
         drawerOpen: document.querySelector('.maws-command-drawer').open
       };
     });
-    expect(geometry.navHeight, 'tablet/wide navigation should remain a side ledger').toBeGreaterThan(geometry.navWidth * 3);
+    if (viewport.name === 'mobile') {
+      expect(geometry.navWidth, 'mobile navigation should remain a bottom icon ledger').toBeGreaterThan(geometry.navHeight * 3);
+    } else {
+      expect(geometry.navHeight, 'tablet/wide navigation should remain a side ledger').toBeGreaterThan(geometry.navWidth * 3);
+    }
     expect(geometry.railBottom, 'decision dock must stay inside the viewport').toBeLessThanOrEqual(viewport.height);
-    expect(geometry.visibleCommands, 'only the immediate decisions should remain visible').toBeLessThanOrEqual(2);
+    expect(geometry.visibleCommands, 'only one immediate decision should remain visible').toBeLessThanOrEqual(1);
     expect(geometry.drawerOpen, 'task depth should remain opt-in').toBe(false);
     await expectScreenshotHasPixels(page, `day1-quiet-ledger-${viewport.name}.png`, `Day 1 quiet ledger ${viewport.name}`);
     expect(violations, `quiet ledger ${viewport.name} console warnings/errors`).toEqual([]);
@@ -770,6 +775,7 @@ test('quiet ledger V2 keeps skill depth behind a readable index', async ({ page 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
   const skillbook = page.locator('.maws-skillbook-page');
   await expect(skillbook).toBeVisible();
+  await expect(skillbook.locator('.maws-skill-tree-slice')).not.toHaveAttribute('open', '');
   await expect(skillbook.locator('.maws-move-future')).not.toHaveAttribute('open', '');
   const hierarchy = await skillbook.evaluate((surface) => {
     const visibleEntries = [...surface.querySelectorAll('.maws-move-library .maws-index-entry')]
@@ -859,6 +865,53 @@ for (const viewport of VIEWPORTS) {
     await expectNoHorizontalOverflow(page, `modal V2 diary ${viewport.name}`);
     await expectScreenshotHasPixels(page, `modal-v2-diary-${viewport.name}.png`, `modal V2 diary ${viewport.name}`);
     expect(violations, `modal V2 diary ${viewport.name} warnings/errors`).toEqual([]);
+  });
+}
+
+for (const viewport of VIEWPORTS) {
+  test(`modal V2 event notebook keeps choices ahead of exposition ${viewport.name}`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await page.evaluate(() => window.MAWS_STORE.dispatch({ type: 'takeOpportunity', id: 'early_video_review' }));
+    const eventModal = page.locator('.maws-modal.event-notebook');
+    await expect(eventModal).toBeVisible();
+    const choices = eventModal.locator('.maws-event-choice > button');
+    const choiceCount = await choices.count();
+    expect(choiceCount, 'event should present at least two consequential choices').toBeGreaterThanOrEqual(2);
+    expect(choiceCount, 'event should not flood the player with choices').toBeLessThanOrEqual(3);
+    await expect(eventModal.locator('.maws-event-beats')).not.toBeVisible();
+    const hierarchy = await eventModal.locator('.maws-modal-shell').evaluate((shell) => {
+      const rect = shell.getBoundingClientRect();
+      const labels = [...shell.querySelectorAll('.maws-event-choice > button strong')].map((node) => node.textContent?.trim() || '');
+      const actionHeights = [...shell.querySelectorAll('.maws-event-choice > button')].map((node) => node.getBoundingClientRect().height);
+      return {
+        height: rect.height,
+        viewportHeight: window.innerHeight,
+        labels,
+        minimumActionHeight: Math.min(...actionHeights)
+      };
+    });
+    expect(hierarchy.height, 'event choices should preserve the scene around them').toBeLessThanOrEqual(hierarchy.viewportHeight * 0.64);
+    expect(hierarchy.labels.every((label) => label && label !== '确认'), 'buttons should use the actual choice labels').toBe(true);
+    expect(hierarchy.minimumActionHeight, 'event choices should retain a 44px target').toBeGreaterThanOrEqual(44);
+    await expectNoHorizontalOverflow(page, `modal V2 event ${viewport.name}`);
+    await expectScreenshotHasPixels(page, `modal-v2-event-${viewport.name}.png`, `modal V2 event ${viewport.name}`);
+    const before = await page.evaluate(() => ({
+      time: window.MAWS_STORE.state.time,
+      jud: window.MAWS_STORE.state.player.stats.jud,
+      calm: window.MAWS_STORE.state.player.calm
+    }));
+    await eventModal.locator('button[data-action="resolveEventNotebook"][data-id="study"]').click();
+    await expect(page.locator('.maws-modal.result-compact')).toBeVisible();
+    const after = await page.evaluate(() => ({
+      time: window.MAWS_STORE.state.time,
+      jud: window.MAWS_STORE.state.player.stats.jud,
+      calm: window.MAWS_STORE.state.player.calm
+    }));
+    expect(after.time - before.time, 'study choice should spend a real schedule block').toBe(20);
+    expect(after.jud - before.jud, 'study choice should improve judgement').toBe(1);
+    expect(after.calm - before.calm, 'study choice should improve calm').toBe(1);
+    await expect(page.locator('.maws-modal.result-compact .maws-reward-chip')).toHaveCount(3);
+    expect(violations, `modal V2 event ${viewport.name} warnings/errors`).toEqual([]);
   });
 }
 
