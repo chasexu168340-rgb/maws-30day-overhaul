@@ -91,6 +91,10 @@ The player-facing target remains: the player clicks something, the game responds
 68. E09 now uses a final 32-frame Pixel V2 dirty-mix fighter with pressure advance, overhand straight, low kick, grip, rough low trip, dirty disengage, guard, and hurt rows.
 69. E09 overhand/low-kick presentation reads at 300/320ms, grip/takedown retain 380ms, and browser evidence proves the overhand advances over 30px toward contact.
 70. `street` now routes day/night backgrounds from runtime time, so the 19:00 old-city E09 encounter uses the final night street; the full Pixel V2 suite contains 64 passing tests.
+71. Quiet Ledger V2 keeps the scene, current intent, and up to two immediate decisions visible; task depth remains opt-in and all action contracts are unchanged.
+72. Ledger indexes now use 58px pixel art with subordinate 12px titles; the skillbook shows learned and next-learnable moves while the future catalogue stays closed by default.
+73. Mobile combat uses a single 230px dock for target/queue, two-column commands, and execution controls; desktop retains six compact commands and a stable action column.
+74. Browser coverage now includes a dedicated V2 skill-depth regression; the full Pixel V2 suite contains 65 passing tests.
 
 ## Deferred Larger Work
 

@@ -764,6 +764,34 @@ for (const viewport of UI_SHELL_VIEWPORTS) {
   });
 }
 
+test('quiet ledger V2 keeps skill depth behind a readable index', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await expect(page.locator('#maws-ui-root')).toHaveClass(/maws-ui-v2/);
+  await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
+  const skillbook = page.locator('.maws-skillbook-page');
+  await expect(skillbook).toBeVisible();
+  await expect(skillbook.locator('.maws-move-future')).not.toHaveAttribute('open', '');
+  const hierarchy = await skillbook.evaluate((surface) => {
+    const visibleEntries = [...surface.querySelectorAll('.maws-move-library .maws-index-entry')]
+      .filter((node) => node.getBoundingClientRect().height > 0);
+    const firstArt = surface.querySelector('.maws-move-current .maws-index-art');
+    const firstTitle = surface.querySelector('.maws-move-current .maws-index-summary strong');
+    return {
+      visibleEntries: visibleEntries.length,
+      currentEntries: surface.querySelectorAll('.maws-move-current .maws-index-entry').length,
+      artSize: firstArt?.getBoundingClientRect().width || 0,
+      titleFont: Number.parseFloat(getComputedStyle(firstTitle).fontSize || '0')
+    };
+  });
+  expect(hierarchy.currentEntries, 'learned moves should remain directly reachable').toBeGreaterThanOrEqual(4);
+  expect(hierarchy.visibleEntries, 'the skill ledger should not expose the full move catalogue at once').toBeLessThanOrEqual(12);
+  expect(hierarchy.artSize, 'move art should lead the row hierarchy').toBeGreaterThanOrEqual(55);
+  expect(hierarchy.titleFont, 'move titles should stay subordinate to icons').toBeLessThanOrEqual(12);
+  await expectNoHorizontalOverflow(page, 'quiet ledger V2 skills');
+  await expectScreenshotHasPixels(page, 'quiet-ledger-v2-skills-desktop.png', 'quiet ledger V2 skills desktop');
+  expect(violations, 'quiet ledger V2 skills console warnings/errors').toEqual([]);
+});
+
 for (const viewport of VIEWPORTS) {
   test(`Pixel V2 boot ${viewport.name} visual/runtime contract`, async ({ page }) => {
     const violations = collectConsoleViolations(page);

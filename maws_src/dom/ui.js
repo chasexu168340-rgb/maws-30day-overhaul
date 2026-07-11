@@ -715,7 +715,7 @@ function renderMap(model) {
     </div>
   ` : '';
   return `
-    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell">
+    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell maws-quiet-shell-v2">
       <section class="maws-location maws-location-focused">
         <div class="maws-scene" ${bgUrl ? `style="--scene-bg:url('${esc(bgUrl)}')"` : ''}>
           <div class="maws-scene-shade"></div>
@@ -724,7 +724,7 @@ function renderMap(model) {
             <h2>${esc(model.loc?.name)}</h2>
           </div>
           <div class="maws-scene-agenda" aria-label="今日主线">
-            <span>今日</span><strong>${esc(mainTitle)}</strong><small>${model.mainEvent ? '推进主线' : '自由安排'}</small>
+            <span>${model.mainEvent ? '主线' : '今日'}</span><strong>${esc(mainTitle)}</strong>
           </div>
           <div class="maws-scene-cast ${(scene.characters || []).length >= 3 ? 'three-up' : ''}">${characters}</div>
           ${interactionMenu}
@@ -998,12 +998,26 @@ function renderSkills(model) {
   const slots = (model.equipSkills || []).map((slot) => `
     <span class="maws-slot">${slot.skill ? `${esc(slot.skill.icon)} ${esc(slot.skill.name)} ${btn('卸下', 'unequipSkill', { index: slot.index }, 'tiny')}` : '空槽'}</span>
   `).join('');
+  const skills = model.skills || [];
+  const learnedSkills = skills.filter((skill) => Boolean(skill.state));
+  const lockedSkills = skills.filter((skill) => !skill.state);
+  const nextSkills = lockedSkills.filter((skill) => model.skillUnlocks?.[skill.id]?.status !== 'planned').slice(0, 6);
+  const nextIds = new Set(nextSkills.map((skill) => skill.id));
+  const futureSkills = lockedSkills.filter((skill) => !nextIds.has(skill.id));
+  const renderSkillGroup = (list) => list
+    .map((skill) => renderSkillCard(skill, false, model.skillUnlocks?.[skill.id]))
+    .join('');
   return `
     <section class="maws-panel maws-ledger-page maws-skillbook-page">
-      <header class="maws-page-heading"><div><small>招式簿</small><h2>路数</h2></div></header>
+      <header class="maws-page-heading"><div><small>招式簿</small><h2>路数</h2></div><strong>${esc(learnedSkills.length)} 已会</strong></header>
       <section class="maws-loadout-strip"><header><b>上阵招式</b><span>${esc((model.equipSkills || []).filter((slot) => slot.skill).length)} / ${esc((model.equipSkills || []).length)}</span></header><div class="maws-slots">${slots}</div></section>
       ${renderSkillTree(model.skillTree)}
-      <section class="maws-ledger-band maws-move-library"><header><h3>招式索引</h3><span>${esc((model.skills || []).length)} 招</span></header><div class="maws-card-grid maws-index-grid">${(model.skills || []).map((skill) => renderSkillCard(skill, false, model.skillUnlocks?.[skill.id])).join('')}</div></section>
+      <section class="maws-ledger-band maws-move-library">
+        <header><h3>当前招式</h3><span>${esc(learnedSkills.length)} 招</span></header>
+        <div class="maws-card-grid maws-index-grid maws-move-current">${renderSkillGroup(learnedSkills)}</div>
+        ${nextSkills.length ? `<div class="maws-move-subhead"><b>下一步能学</b><span>${esc(nextSkills.length)} 招</span></div><div class="maws-card-grid maws-index-grid maws-move-next">${renderSkillGroup(nextSkills)}</div>` : ''}
+        ${futureSkills.length ? `<details class="maws-fold maws-move-future"><summary><b>后续招式</b><span>${esc(futureSkills.length)} 招 · 按需查看</span></summary><div class="maws-card-grid maws-index-grid">${renderSkillGroup(futureSkills)}</div></details>` : ''}
+      </section>
     </section>
   `;
 }
@@ -1738,7 +1752,7 @@ export function initMawsDomUI(store, root) {
   let toastTimer = null;
   const paint = () => {
     const model = buildRenderModel(store.state);
-    root.className = model.combat ? 'maws-ui combat' : 'maws-ui';
+    root.className = model.combat ? 'maws-ui maws-ui-v2 combat' : 'maws-ui maws-ui-v2';
     root.innerHTML = render(model);
     if (toastTimer) clearTimeout(toastTimer);
     if (model.toast) {
