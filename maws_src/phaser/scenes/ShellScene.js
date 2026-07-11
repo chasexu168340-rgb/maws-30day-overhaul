@@ -26,6 +26,7 @@ const FIGHTER_BY_ENEMY = {
   E00: 'fighter.enemy.untrained',
   E01: 'fighter.enemy.beginner',
   E02: 'fighter.enemy.pushhands',
+  E04: 'fighter.enemy.strongman',
   E05: 'fighter.enemy.boxer',
   E10: 'fighter.enemy.silent',
   E06: 'fighter.enemy.grappler',
@@ -46,6 +47,7 @@ const ANIM_BY_FIGHTER = {
   'fighter.enemy.taekwondo': 'anim.fighter.enemy.taekwondo',
   'fighter.enemy.dirtymix': 'anim.fighter.enemy.dirtymix',
   'fighter.enemy.pushhands': 'anim.fighter.enemy.pushhands',
+  'fighter.enemy.strongman': 'anim.fighter.enemy.strongman',
   'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
   'fighter.enemy.silent': 'anim.fighter.enemy.silent',
@@ -545,7 +547,7 @@ export class ShellScene extends PhaserScene {
     const enemyShadow = this.drawCombatContactShadow(enemyX, groundY, fighterW);
     const player = this.createCombatFighter(playerX, groundY, 'fighter.player', ANIM_BY_FIGHTER['fighter.player'], fighterW, fighterH, true);
     const enemy = this.createCombatFighter(enemyX, groundY, enemyKey, ANIM_BY_FIGHTER[enemyKey], fighterW, fighterH, false);
-    const maxAdvance = mobile ? Math.round(w * 0.25) : Math.round(w * 0.24);
+    const maxAdvance = mobile ? Math.round(w * 0.25) : Math.round(w * 0.30);
     return {
       player: { ...player, shadow: playerShadow, x: playerX, y: groundY, hitX: playerX, hitY: groundY - player.displayHeight * 0.58, maxAdvance },
       enemy: { ...enemy, shadow: enemyShadow, x: enemyX, y: groundY, hitX: enemyX, hitY: groundY - enemy.displayHeight * 0.58, maxAdvance }
@@ -717,6 +719,9 @@ export class ShellScene extends PhaserScene {
         if (actor?.animKey === 'anim.fighter.enemy.taekwondo' && ['roundhouse', 'backkick', 'frontkick'].includes(semanticAnim)) {
           this.delayedFighterAnim(actor, 'recover', delay + contactMs + 170);
         }
+        if (actor?.animKey === 'anim.fighter.enemy.strongman' && ['straight', 'lowkick'].includes(semanticAnim)) {
+          this.delayedFighterAnim(actor, 'fatigue', delay + contactMs + 180);
+        }
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
         const semanticAnim = this.fighterActionAnimName(step, actor);
@@ -733,6 +738,9 @@ export class ShellScene extends PhaserScene {
           }
           if (actor?.animKey === 'anim.fighter.enemy.taekwondo' && ['roundhouse', 'backkick', 'frontkick'].includes(semanticAnim)) {
             this.delayedFighterAnim(actor, 'recover', delay + contactMs + 170);
+          }
+          if (actor?.animKey === 'anim.fighter.enemy.strongman' && ['straight', 'lowkick'].includes(semanticAnim)) {
+            this.delayedFighterAnim(actor, 'fatigue', delay + contactMs + 180);
           }
         }
         this.animateStep(actor, opposingTarget, delay, fx);
@@ -813,6 +821,13 @@ export class ShellScene extends PhaserScene {
       if (id === 'guard') return 'yield';
       if (['dodge', 'retreat', 'escape'].includes(id)) return 'disengage';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.strongman') {
+      if (id === 'advance') return 'advance';
+      if (id === 'straight') return 'straight';
+      if (id === 'lowkick') return 'lowkick';
+      if (id === 'guard') return 'guard';
+      if (['dodge', 'retreat', 'escape'].includes(id)) return 'retreat';
+    }
     if (actor?.animKey === 'anim.fighter.enemy.weapon') {
       if (id === 'advance') return 'threat';
       if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
@@ -838,6 +853,10 @@ export class ShellScene extends PhaserScene {
       if (id === 'grip') return 350;
       if (id === 'offbalance') return 370;
       if (id === 'palm') return 310;
+    }
+    if (this.model?.combat?.enemyId === 'E04') {
+      if (id === 'straight') return 340;
+      if (id === 'lowkick') return 360;
     }
     if (['grip', 'takedown', 'sidecontrol'].includes(id) || ['grapple', 'ground'].includes(type)) return 380;
     if (step?.result?.response?.intent === 'weapon') return 340;
@@ -896,7 +915,8 @@ export class ShellScene extends PhaserScene {
   animateAttack(actor, target, delay, fx) {
     const dir = target.x > actor.x ? 1 : -1;
     const gap = Math.abs(target.x - actor.x);
-    const contactGap = Math.max(52, (Number(actor.displayWidth || 80) + Number(target.displayWidth || 80)) * 0.34);
+    const contactScale = Math.max(0.08, Math.min(0.34, Number(ASSET_MANIFEST.sprites?.[actor.animKey]?.contactScale || 0.34)));
+    const contactGap = Math.max(40, (Number(actor.displayWidth || 80) + Number(target.displayWidth || 80)) * contactScale);
     const travel = Math.max(36, Math.min(Number(actor.maxAdvance || 220), gap - contactGap));
     const minHitstop = fx.type === 'miss' ? 0 : 70;
     const hitstopMs = Math.max(minHitstop, Math.min(220, Number(fx.hitstopMs || 0)));

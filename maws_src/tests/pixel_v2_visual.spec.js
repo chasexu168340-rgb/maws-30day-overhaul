@@ -61,11 +61,13 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'characters:scene.npc.father_memory',
   'characters:fighter.enemy.untrained',
   'characters:fighter.enemy.pushhands',
+  'characters:fighter.enemy.strongman',
   'characters:fighter.enemy.beginner',
   'characters:fighter.enemy.silent',
   'sprites:anim.fighter.player',
   'sprites:anim.fighter.enemy.untrained',
   'sprites:anim.fighter.enemy.pushhands',
+  'sprites:anim.fighter.enemy.strongman',
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent',
   'portraits:portrait.player',
@@ -249,6 +251,19 @@ async function startPushhands(page) {
     store.state.loc = 'park';
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: 'E02' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startStrongman(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 8;
+    store.state.time = 960;
+    store.state.loc = 'park';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E04' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
@@ -1548,6 +1563,81 @@ test('pixel_v2 E21 taekwondo fighter uses roundhouse, back kick, front kick, lan
   expect(violations, 'taekwondo motion should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E04 strongman uses rush, power punch, low kick, guard, fatigue, retreat, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startStrongman(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.strongman');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.strongman', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 580));
+    };
+    for (const name of ['advance', 'straight', 'lowkick', 'guard', 'fatigue', 'retreat', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticActions = [
+      { id: 'advance', type: 'move' },
+      { id: 'straight', type: 'strike' },
+      { id: 'lowkick', type: 'kick' },
+      { id: 'guard', type: 'defense' },
+      { id: 'retreat', type: 'move' }
+    ];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticActions.map((action) => scene.fighterActionAnimName({ action }, actor)),
+      timings: semanticActions.slice(1, 3).map((action) => scene.combatContactMs({ action }))
+    };
+  });
+
+  expect(playback.enemyX, 'strongman should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'strongman source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['advance', 'straight', 'lowkick', 'guard', 'retreat']);
+  expect(playback.timings).toEqual([340, 360]);
+  for (const [start, end, label] of [[4, 7, 'bull rush'], [8, 11, 'power straight'], [12, 15, 'low kick'], [16, 19, 'shell guard'], [20, 23, 'fatigue opening'], [24, 27, 'awkward retreat'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+
+  const approach = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.strongman');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const startX = Number(enemy?.x || 0);
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.strongman', isAnimated: true, x: startX, y: Number(enemy?.y || 0), maxAdvance: Math.round(scene.scale.width * 0.30), displayWidth: Number(enemy?.displayWidth || 96) };
+    const target = { sprite: player, x: Number(player?.x || 0), y: Number(player?.y || 0), displayWidth: Number(player?.displayWidth || 96) };
+    const contactGap = Math.max(40, (actor.displayWidth + target.displayWidth) * 0.10);
+    scene.playFighterAnim(actor, 'straight', true, false);
+    scene.animateAttack(actor, target, 0, { contactMs: 340, hitstopMs: 90, shake: 0.22 });
+    const samples = [];
+    for (let index = 0; index < 32; index += 1) {
+      samples.push(Number(enemy?.x || 0));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    const maxX = Math.max(...samples);
+    enemy?.anims?.pause();
+    enemy?.setFrame?.(10);
+    if (enemy) enemy.x = maxX;
+    return { startX, approachX: maxX, targetX: target.x, contactGap };
+  });
+  expect(approach.approachX - approach.startX, 'strongman power straight should travel toward real contact distance').toBeGreaterThan(30);
+  expect(approach.targetX - approach.approachX, 'strongman contact should close to the runtime contact gap').toBeLessThanOrEqual(approach.contactGap + 3);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'strongman-straight-contact-desktop.png'), fullPage: true });
+  expect(violations, 'strongman motion should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 E02 push-hands fighter uses rooted, contact, redirect, palm, yield, and disengage rows', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startPushhands(page);
@@ -2490,6 +2580,29 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e21-taekwondo-${viewport.name}.png`, `E21 taekwondo ${viewport.name}`);
     expect(violations, `E21 taekwondo ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E04 strongman ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startStrongman(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.park.day',
+      'characters:fighter.enemy.strongman',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.strongman'
+    ], `E04 strongman ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E04 strongman ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.strongman');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e04-strongman-${viewport.name}.png`, `E04 strongman ${viewport.name}`);
+    expect(violations, `E04 strongman ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`E02 push-hands ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

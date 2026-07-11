@@ -109,6 +109,11 @@ The player-facing target remains: the player clicks something, the game responds
 86. E02 grip/off-balance/palm presentation lands at 350/370/310ms, and browser evidence proves the short palm advances more than 30px toward contact.
 87. E02 stands on the left facing screen-right at a reviewed 1.12 display scale; desktop/mobile idle and desktop palm-contact screenshots pass.
 88. E21 back-kick sampling now checks the authored 13-15 contact interval while retaining real-movement requirements; the full Pixel V2 suite contains 75 passing tests.
+89. E04 now uses a final 32-frame Pixel V2 strongman with bull-rush advance, power straight, crude low kick, shell guard, fatigue opening, awkward retreat, and hurt rows.
+90. The first E04 generation was rejected for having only seven real rows; the accepted production asset passed a 32-frame alpha and foot-baseline audit.
+91. E04 straight/low-kick presentation lands at 340/360ms and automatically enters a fatigue recovery row 180ms later without changing combat formulas.
+92. E04 uses reviewed scale 1.22 and `contactScale: 0.10`; desktop attack presentation can advance 30% of stage width so authored contact frames reach the target guard.
+93. Desktop/mobile idle and desktop power-straight contact screenshots pass; the full Pixel V2 suite contains 78 passing tests and the manifest contains 160 entries.
 
 ## Deferred Larger Work
 

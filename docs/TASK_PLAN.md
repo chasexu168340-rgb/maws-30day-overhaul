@@ -4,44 +4,45 @@
 
 ## Current Task
 
-Replace the generic E02 fighter fallback with a final Pixel V2 push-hands opponent whose stance, contact actions, timing, orientation, and real approach movement are readable in the live Phaser battle.
+Replace the generic E04 fallback with a final Pixel V2 strongman whose explosive pressure, crude technique, fatigue opening, real contact movement, and scale are readable in Phaser combat.
 
 ## Scope
 
-- Added one final standee and one 32-frame 96x144 motion strip.
-- Changed only asset metadata, E02 presentation mapping, action animation semantics, contact timing, and visual tests.
-- Preserved E02 stats, AI, skills, combat formulas, economy, story, and save contracts.
+- Added one final standee and one 32-frame 96x144 motion strip generated in the current Codex session.
+- Changed asset metadata, E04 presentation mapping, action semantics, recovery presentation, desktop approach range, and visual tests.
+- Preserved E04 stats, skills, AI, combat formulas, economy, story, and save contracts.
 
 ## Current Result
 
-- E02 now loads `fighter.enemy.pushhands` and `anim.fighter.enemy.pushhands` instead of the generic boxer fallback.
-- The 32-frame strip provides rooted idle, measured advance, hand contact, redirect/off-balance, short palm, yielding guard, disengage, and hurt rows.
-- Runtime semantics map `advance`, `grip`, `offbalance`, `palm`, `guard`, and `retreat` to authored rows.
-- E02 contact timing is deliberately readable: grip 350ms, off-balance 370ms, palm 310ms.
-- The enemy stands on the left, faces screen-right, keeps its feet grounded, and advances more than 30px at the palm contact frame.
-- Display scale was raised from the initial 0.94 review value to 1.12 after screenshot inspection so the opponent reads as an adult older practitioner rather than a child-sized sprite.
-- Existing E21 contact sampling now accepts its authored 13-15 back-kick contact interval while retaining the greater-than-30px movement requirement.
+- The first generated source was rejected because it only contained seven real rows; no invalid production file was retained.
+- The accepted source has a strict 4x8 grid with idle, bull-rush advance, power straight, crude low kick, shell guard, exhausted recovery, awkward retreat, and hurt rows.
+- E04 now loads `fighter.enemy.strongman` and `anim.fighter.enemy.strongman` instead of the generic boxer fallback.
+- Straight and low kick contact at 340/360ms, then automatically play the fatigue row 180ms after contact so the character exposes a readable recovery opening.
+- The reviewed display scale is 1.22. The enemy stands on the left, faces screen-right, and remains visibly broader than the player on desktop and mobile.
+- `contactScale: 0.10` compensates for the wide transparent sprite cell so the power punch reaches the player's guard instead of stopping at the generic full-cell gap.
+- Desktop attack presentation can temporarily advance up to 30% of stage width; it still yoyo-returns and does not change combat distance state or hit formulas.
+- The contact test samples actual X motion, verifies the runtime contact-gap formula, and freezes authored frame 10 for screenshot review.
 
 ## Validation
 
-- `node maws_src/tools/verify_assets.mjs`: passed (158 manifest entries).
+- Alpha audit: all 32 frames contain full content, share foot baseline 141, and contain 1,737-2,426 opaque pixels.
+- `node maws_src/tools/verify_assets.mjs`: passed (160 manifest entries).
 - `npm run check:full`: passed (build + 6 Chromium smoke tests).
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
-- E21 timing stability: passed 3 consecutive runs.
-- Full `pixel_v2_visual.spec.js`: passed (75 tests).
-- Desktop/mobile E02 idle screenshots and desktop palm-contact screenshot were manually reviewed.
+- Full `pixel_v2_visual.spec.js`: passed (78 tests).
+- Desktop/mobile idle and desktop power-straight contact screenshots were manually reviewed.
 - `git diff --check`: passed.
 
 ## Risks
 
-- The push-hands sheet is a solo fighter performance; it does not yet deform both fighters into a paired hand-contact pose.
-- E02 still uses shared combat audio and VFX; dedicated cloth movement, foot shuffle, palm contact, and hand-slap cues remain future polish.
-- E04 and several later enemies still use generic presentation fallbacks.
+- The authored punch and kick contact frames contain small baked impact sparks; runtime VFX may need a later art-only cleanup if the combined effect reads too busy in motion.
+- E04 fatigue is a presentation recovery, not a new mechanical debuff; combat balance remains unchanged.
+- E03, E11, and several later enemies still use generic presentation fallbacks.
 - `outputs/` remains local screenshot evidence and must not be committed.
 
 ## Next Step
 
-1. Replace E04 with a distinct brawler/worker motion identity without changing combat formulas.
-2. Add a small shared push/grip/palm audio cue set after the next authored enemy batch.
-3. Continue clean-room combat presentation work; do not copy protected reference assets or code.
+1. Replace E03 with a distinct showman/mystic motion identity so palm, talkdown, and retreat do not reuse boxer presentation.
+2. Audit E04 in a real exchange to decide whether baked impact sparks should be removed in favor of runtime-only VFX.
+3. Add shared push/grip/palm and heavy-breath audio cues after the next authored enemy batch.
