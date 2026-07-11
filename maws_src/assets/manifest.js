@@ -399,6 +399,19 @@ const STRONGMAN_MOTION_32 = Object.freeze({
   hurt: { start: 28, end: 31, frameRate: 8, repeat: 0 }
 });
 
+const SHOWMAN_MOTION_32 = Object.freeze({
+  idle: { start: 0, end: 3, frameRate: 5, repeat: -1 },
+  advance: { start: 4, end: 7, frameRate: 8, repeat: 0 },
+  mystic: { start: 8, end: 11, frameRate: 8, repeat: 0 },
+  attack: { start: 8, end: 11, frameRate: 8, repeat: 0 },
+  palm: { start: 12, end: 15, frameRate: 9, repeat: 0 },
+  talkdown: { start: 16, end: 19, frameRate: 7, repeat: 0 },
+  guard: { start: 20, end: 23, frameRate: 7, repeat: 0 },
+  retreat: { start: 24, end: 27, frameRate: 8, repeat: 0 },
+  disengage: { start: 24, end: 27, frameRate: 8, repeat: 0 },
+  hurt: { start: 28, end: 31, frameRate: 8, repeat: 0 }
+});
+
 export const ASSET_MANIFEST = {
   backgrounds: {
     'bg.city.map.day': pixelV2Background('bg_city_map_day.png', ['day', 'shenzhen', 'city-map']),
@@ -444,6 +457,7 @@ export const ASSET_MANIFEST = {
     'fighter.enemy.dirtymix': pixelV2Character('fighter_enemy_dirtymix.png', ['enemy', 'dirtymix', 'underground', 'e09']),
     'fighter.enemy.pushhands': pixelV2Character('fighter_enemy_pushhands.png', ['enemy', 'pushhands', 'park', 'e02']),
     'fighter.enemy.strongman': pixelV2Character('fighter_enemy_strongman.png', ['enemy', 'strongman', 'brawler', 'e04']),
+    'fighter.enemy.showman': pixelV2Character('fighter_enemy_showman.png', ['enemy', 'showman', 'mystic', 'e03']),
     'fighter.enemy.untrained': pixelV2Character('fighter_enemy_untrained.png', ['enemy', 'untrained', 'day3', 'e00']),
     'fighter.enemy.beginner': pixelV2Character('fighter_enemy_beginner.png', ['enemy', 'boxing', 'beginner', 'day5']),
     'fighter.enemy.silent': pixelV2Character('fighter_enemy_silent.png', ['enemy', 'boxing', 'silent', 'day8']),
@@ -471,6 +485,10 @@ export const ASSET_MANIFEST = {
     'anim.fighter.enemy.strongman': {
       ...pixelV2FighterSprite('anim_fighter_enemy_strongman_v3.png', 'fighter.enemy.strongman', ['enemy', 'strongman', 'brawler', 'e04', 'full-motion', 'fatigue-read'], 1.22, STRONGMAN_MOTION_32),
       contactScale: 0.10
+    },
+    'anim.fighter.enemy.showman': {
+      ...pixelV2FighterSprite('anim_fighter_enemy_showman_v3.png', 'fighter.enemy.showman', ['enemy', 'showman', 'mystic', 'e03', 'full-motion', 'morale-read'], 1.24, SHOWMAN_MOTION_32),
+      contactScale: 0.16
     },
     'anim.fighter.enemy.untrained': pixelV2FighterSprite('anim_fighter_enemy_untrained_v3.png', 'fighter.enemy.untrained', ['enemy', 'untrained', 'day3', 'e00', 'full-motion'], 1.1, FULL_MOTION_28),
     'anim.fighter.enemy.beginner': pixelV2FighterSprite('anim_fighter_enemy_beginner_v3.png', 'fighter.enemy.beginner', ['enemy', 'boxing', 'beginner', 'day5', 'full-motion'], 1, FULL_MOTION_28),

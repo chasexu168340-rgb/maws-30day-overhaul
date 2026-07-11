@@ -26,6 +26,7 @@ const FIGHTER_BY_ENEMY = {
   E00: 'fighter.enemy.untrained',
   E01: 'fighter.enemy.beginner',
   E02: 'fighter.enemy.pushhands',
+  E03: 'fighter.enemy.showman',
   E04: 'fighter.enemy.strongman',
   E05: 'fighter.enemy.boxer',
   E10: 'fighter.enemy.silent',
@@ -47,6 +48,7 @@ const ANIM_BY_FIGHTER = {
   'fighter.enemy.taekwondo': 'anim.fighter.enemy.taekwondo',
   'fighter.enemy.dirtymix': 'anim.fighter.enemy.dirtymix',
   'fighter.enemy.pushhands': 'anim.fighter.enemy.pushhands',
+  'fighter.enemy.showman': 'anim.fighter.enemy.showman',
   'fighter.enemy.strongman': 'anim.fighter.enemy.strongman',
   'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
@@ -821,6 +823,14 @@ export class ShellScene extends PhaserScene {
       if (id === 'guard') return 'yield';
       if (['dodge', 'retreat', 'escape'].includes(id)) return 'disengage';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.showman') {
+      if (id === 'advance') return 'advance';
+      if (id === 'mystic') return 'mystic';
+      if (id === 'palm') return 'palm';
+      if (id === 'talkdown') return 'talkdown';
+      if (id === 'guard') return 'guard';
+      if (['dodge', 'retreat', 'escape'].includes(id)) return 'retreat';
+    }
     if (actor?.animKey === 'anim.fighter.enemy.strongman') {
       if (id === 'advance') return 'advance';
       if (id === 'straight') return 'straight';
@@ -853,6 +863,10 @@ export class ShellScene extends PhaserScene {
       if (id === 'grip') return 350;
       if (id === 'offbalance') return 370;
       if (id === 'palm') return 310;
+    }
+    if (this.model?.combat?.enemyId === 'E03') {
+      if (id === 'mystic') return 360;
+      if (id === 'palm') return 300;
     }
     if (this.model?.combat?.enemyId === 'E04') {
       if (id === 'straight') return 340;

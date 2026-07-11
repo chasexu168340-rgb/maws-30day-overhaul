@@ -114,6 +114,11 @@ The player-facing target remains: the player clicks something, the game responds
 91. E04 straight/low-kick presentation lands at 340/360ms and automatically enters a fatigue recovery row 180ms later without changing combat formulas.
 92. E04 uses reviewed scale 1.22 and `contactScale: 0.10`; desktop attack presentation can advance 30% of stage width so authored contact frames reach the target guard.
 93. Desktop/mobile idle and desktop power-straight contact screenshots pass; the full Pixel V2 suite contains 78 passing tests and the manifest contains 160 entries.
+94. E03 now uses a final 32-frame Pixel V2 showman with flamboyant idle, gliding approach, theatrical mystic pose, practical palm, talkdown, panic guard, hurried retreat, and hurt rows.
+95. Generated white atlas lines were removed with border-connected neutral cleanup plus a per-frame detached-component pass; shoes, wrists, bodies, and contact sparks remain intact.
+96. E03 mystic/palm presentation lands at 360/300ms and maps talkdown/guard/retreat to dedicated rows without changing morale or combat formulas.
+97. E03 uses reviewed scale 1.24 and `contactScale: 0.16`; desktop/mobile idle and desktop palm-contact screenshots pass.
+98. The full Pixel V2 suite contains 81 passing tests and the manifest contains 162 entries.
 
 ## Deferred Larger Work
 
