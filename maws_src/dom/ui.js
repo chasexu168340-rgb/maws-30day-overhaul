@@ -475,10 +475,10 @@ function renderBoot(model) {
 
 function renderHud(model) {
   const resources = primaryHudResources(model.resources || []).map(renderHudChip).join('');
-  const place = [model.time, model.loc?.name].filter(Boolean).join(' · ');
+  const moment = model.time || model.phase;
   return `
-    <header class="maws-hud maws-hud-compact">
-      <div><strong>${esc(model.dayText)}</strong><span>${esc(place || model.phase)}</span></div>
+    <header class="maws-hud maws-hud-compact" aria-label="日期与核心资源">
+      <div class="maws-day-ledger"><strong>${esc(model.dayText)}</strong><span>${esc(moment)}</span></div>
       <div class="maws-resource-row">${resources}</div>
     </header>
   `;
@@ -492,7 +492,7 @@ function renderNav(model) {
     const action = tab.id === 'map' ? 'openCityMap' : 'setTab';
     const params = tab.id === 'map' ? {} : { tab: tab.id };
     return btn(
-      `<span>${assetIcon(tab.assetKey, tab.icon)}</span>${esc(tab.label)}`,
+      `<span class="maws-nav-glyph">${assetIcon(tab.assetKey, tab.icon)}</span><small class="maws-nav-label">${esc(tab.label)}</small>`,
       action,
       params,
       `maws-tab ${extraClass} ${model.tab === tab.id ? 'active' : ''}`
@@ -506,7 +506,7 @@ function renderNav(model) {
     <nav class="maws-nav" aria-label="主导航">
       <div class="maws-nav-primary">${primaryTabs}</div>
       <details class="maws-system-menu">
-        <summary aria-label="打开系统菜单"><span>菜单</span><b>+</b></summary>
+        <summary aria-label="打开系统菜单"><b aria-hidden="true">•••</b><span class="maws-visually-hidden">系统菜单</span></summary>
         <div class="maws-system-menu-panel">
           ${utilityTabs}
           ${btn('睡觉', 'doAction', { id: 'sleep' }, 'dark utility-action')}
@@ -684,7 +684,10 @@ function renderMap(model) {
     || currentActions.find((action) => Array.isArray(action.durationOptions) && action.durationOptions.length)
     || currentActions[0];
   const drawerActions = currentActions.filter((action) => action !== featuredAction);
-  const allActions = drawerActions.map(renderActionCard).join('');
+  const visibleDrawerActions = drawerActions.slice(0, 4);
+  const overflowDrawerActions = drawerActions.slice(4);
+  const allActions = visibleDrawerActions.map(renderActionCard).join('');
+  const overflowActions = overflowDrawerActions.map(renderActionCard).join('');
   const recommendations = renderRecommendations(model, 3);
   const quickCommands = sceneQuickCommands(model, featuredAction);
   const scene = model.locationScene || {};
@@ -698,6 +701,7 @@ function renderMap(model) {
   const cityBgUrl = cityBg ? `/${cityBg}` : '';
   const cityMarkers = (cityMap.markers || []).map(renderCityMarker).join('');
   const locCards = (model.locs || []).map(renderLocationCard).join('');
+  const drawerCount = drawerActions.length + (model.opportunities || []).length;
   const cityOverlay = model.cityMapOpen ? `
     <div class="maws-city-overlay">
       <section class="maws-city-sheet">
@@ -711,7 +715,7 @@ function renderMap(model) {
     </div>
   ` : '';
   return `
-    <section class="maws-map-shell maws-map-shell-focused">
+    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell">
       <section class="maws-location maws-location-focused">
         <div class="maws-scene" ${bgUrl ? `style="--scene-bg:url('${esc(bgUrl)}')"` : ''}>
           <div class="maws-scene-shade"></div>
@@ -720,27 +724,35 @@ function renderMap(model) {
             <h2>${esc(model.loc?.name)}</h2>
           </div>
           <div class="maws-scene-agenda" aria-label="今日主线">
-            <span>今日要事</span><strong>${esc(mainTitle)}</strong>
+            <span>今日</span><strong>${esc(mainTitle)}</strong><small>${model.mainEvent ? '推进主线' : '自由安排'}</small>
           </div>
           <div class="maws-scene-cast ${(scene.characters || []).length >= 3 ? 'three-up' : ''}">${characters}</div>
           ${interactionMenu}
         </div>
         <footer class="maws-scene-command maws-action-rail maws-action-rail-main">
-          <div class="maws-scene-command-head">${btn('地图', 'openCityMap', {}, 'tiny maws-map-open')}</div>
+          <div class="maws-decision-kicker" aria-hidden="true"><span>此刻</span><b>择一而行</b></div>
           <div class="maws-actions-primary maws-scene-quick-actions">
             ${quickCommands.map(renderSceneCommand).join('') || '<p class="maws-empty">现在没有必须处理的事。</p>'}
           </div>
           <details class="maws-command-drawer">
-            <summary>更多 <span>${esc(drawerActions.length + (model.opportunities || []).length)}</span></summary>
+            <summary aria-label="打开事务卷"><b aria-hidden="true">≡</b><span>事务</span><em>${esc(drawerCount)}</em></summary>
             <div class="maws-command-drawer-body">
-              <section><header><b>当前地点</b><span>${esc(drawerActions.length)}项</span></header><div class="maws-actions">${allActions || '<p class="maws-empty">其他行动暂时没有。</p>'}</div></section>
-              <section><header><b>城中机会</b><span>${esc((model.opportunities || []).length)}条</span></header>${recommendations}</section>
-              <details class="maws-fold maws-loc-fold">
-                <summary>地点索引 <span>${esc((model.locs || []).filter((loc) => !loc.locked).length)}处可去</span></summary>
+              <header class="maws-drawer-head"><div><span>当前</span><strong>${esc(model.loc?.name)}</strong></div>${btn('城市地图', 'openCityMap', {}, 'tiny maws-map-open')}</header>
+              <details class="maws-fold maws-drawer-section" open>
+                <summary>本地行动 <span>${esc(drawerActions.length)}项</span></summary>
+                <div class="maws-actions">${allActions || '<p class="maws-empty">其他行动暂时没有。</p>'}</div>
+                ${overflowActions ? `<details class="maws-fold maws-action-overflow"><summary>其余行动 <span>${esc(overflowDrawerActions.length)}项</span></summary><div class="maws-actions">${overflowActions}</div></details>` : ''}
+              </details>
+              <details class="maws-fold maws-drawer-section">
+                <summary>城中机会 <span>${esc((model.opportunities || []).length)}条</span></summary>
+                ${recommendations}
+              </details>
+              <details class="maws-fold maws-loc-fold maws-drawer-section">
+                <summary>地点名录 <span>${esc((model.locs || []).filter((loc) => !loc.locked).length)}处可去</span></summary>
                 <div class="maws-locs">${locCards}</div>
               </details>
-              <details class="maws-fold maws-scene-desc">
-                <summary>当前地点说明</summary><p>${esc(model.loc?.desc)}</p>
+              <details class="maws-fold maws-scene-desc maws-drawer-section">
+                <summary>此地详情</summary><p>${esc(model.loc?.desc)}</p>
               </details>
             </div>
           </details>

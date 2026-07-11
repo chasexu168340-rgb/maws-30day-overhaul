@@ -78,6 +78,12 @@ The player-facing target remains: the player clicks something, the game responds
 55. E08 and E19 now share a final 32-frame Pixel V2 sanda fighter with independent boxing, round-kick, front-kick, sprawl, dodge, hurt, and recovery rows.
 56. `bg.sanda_gym.day/night` are final 480x270, 32-color Pixel V2 stages; combat background routing now follows the current location unless an authored E06/E07/E18 override applies.
 57. Browser coverage includes sanda authored-row playback, day/night decode, desktop/mobile geometry and screenshots; the full Pixel V2 suite contains 53 passing tests.
+58. The main scene now uses a quiet ledger hierarchy: compact date/resources, location, one daily intent, up to two desktop decisions, one mobile decision, and one opt-in task ledger.
+59. The task ledger exposes four local actions first and folds remaining actions, city opportunities, destination index, and location prose; desktop navigation is a right-side icon ledger while mobile keeps a 44px bottom bar.
+60. Mobile scene staging keeps all Day 1 characters above the decision dock, NPC menus remain usable above it, and 390x844/900x700/1365x768/1536x864 screenshots pass without horizontal overflow.
+61. The full Pixel V2 suite now contains 58 passing tests, including two dedicated quiet-ledger responsive contracts and task-ledger screenshots.
+62. E20 now uses a final 32-frame Pixel V2 karate fighter with straight-line entry, reverse punch, front kick, guard, recovery, dodge/back-step, and hurt rows; reverse punch/front kick read at 300/310ms and recover explicitly after contact or miss.
+63. `bg.karate_dojo.day/night` are final 480x270, 32-color Pixel V2 stages, and browser coverage includes E20 authored-row playback plus desktop/mobile geometry and screenshots.
 
 ## Deferred Larger Work
 

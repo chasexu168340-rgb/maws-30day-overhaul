@@ -12,6 +12,10 @@ const SCREENSHOT_DIR = path.join(ROOT, 'outputs', 'pixel_v2_visual');
 const DESKTOP = { name: 'desktop', width: 1365, height: 768 };
 const MOBILE = { name: 'mobile', width: 390, height: 844 };
 const VIEWPORTS = [DESKTOP, MOBILE];
+const UI_SHELL_VIEWPORTS = [
+  { name: 'tablet', width: 900, height: 700 },
+  { name: 'wide', width: 1536, height: 864 }
+];
 const IS_CANDIDATE = process.env.PIXEL_V2_VISUAL_MODE === 'candidate';
 const ALLOW_LEGACY = process.env.PIXEL_V2_ALLOW_LEGACY === '1';
 
@@ -46,6 +50,8 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'backgrounds:bg.boxing.night',
   'backgrounds:bg.sanda_gym.day',
   'backgrounds:bg.sanda_gym.night',
+  'backgrounds:bg.karate_dojo.day',
+  'backgrounds:bg.karate_dojo.night',
   'backgrounds:bg.street.day',
   'backgrounds:bg.street.night',
   'characters:fighter.player',
@@ -252,6 +258,19 @@ async function startSanda(page, enemyId = 'E19') {
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: id });
   }, enemyId);
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startKarate(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 22;
+    store.state.time = 960;
+    store.state.loc = 'karate_dojo';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E20' });
+  });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
 }
@@ -551,6 +570,8 @@ test('Day 1-9 pixel_v2 background variants decode in the browser', async ({ page
     'backgrounds:bg.boxing.night',
     'backgrounds:bg.sanda_gym.day',
     'backgrounds:bg.sanda_gym.night',
+    'backgrounds:bg.karate_dojo.day',
+    'backgrounds:bg.karate_dojo.night',
     'backgrounds:bg.street.day',
     'backgrounds:bg.street.night'
   ], 'Day 1-9 pixel_v2 backgrounds');
@@ -685,6 +706,33 @@ test('Boot and Day 1-9 combat loads stay inside image budgets without blank figh
   expect(day8Bytes, `Day 8 combat incremental image bytes: ${day8Bytes}`).toBeLessThanOrEqual(1.2 * 1024 * 1024);
   expect(violations, 'lazy image loading should not emit warnings/errors').toEqual([]);
 });
+
+for (const viewport of UI_SHELL_VIEWPORTS) {
+  test(`quiet ledger ${viewport.name} responsive contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await expect(page.locator('.maws-quiet-shell')).toBeVisible();
+    await expectNoHorizontalOverflow(page, `quiet ledger ${viewport.name}`);
+    const geometry = await page.evaluate(() => {
+      const nav = document.querySelector('.maws-nav').getBoundingClientRect();
+      const rail = document.querySelector('.maws-action-rail-main').getBoundingClientRect();
+      const visibleCommands = [...document.querySelectorAll('.maws-scene-command-button')]
+        .filter((node) => node.getBoundingClientRect().height > 0);
+      return {
+        navWidth: nav.width,
+        navHeight: nav.height,
+        railBottom: rail.bottom,
+        visibleCommands: visibleCommands.length,
+        drawerOpen: document.querySelector('.maws-command-drawer').open
+      };
+    });
+    expect(geometry.navHeight, 'tablet/wide navigation should remain a side ledger').toBeGreaterThan(geometry.navWidth * 3);
+    expect(geometry.railBottom, 'decision dock must stay inside the viewport').toBeLessThanOrEqual(viewport.height);
+    expect(geometry.visibleCommands, 'only the immediate decisions should remain visible').toBeLessThanOrEqual(2);
+    expect(geometry.drawerOpen, 'task depth should remain opt-in').toBe(false);
+    await expectScreenshotHasPixels(page, `day1-quiet-ledger-${viewport.name}.png`, `Day 1 quiet ledger ${viewport.name}`);
+    expect(violations, `quiet ledger ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+}
 
 for (const viewport of VIEWPORTS) {
   test(`Pixel V2 boot ${viewport.name} visual/runtime contract`, async ({ page }) => {
@@ -1166,6 +1214,51 @@ test('pixel_v2 E08 and E19 sanda fighter uses distinct boxing, kick, sprawl, dod
   expect(violations, 'sanda motion should not emit warnings/errors').toEqual([]);
 });
 
+test('pixel_v2 E20 karate fighter uses reverse punch, front kick, guard, recovery, dodge, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startKarate(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.karate');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.karate', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 540));
+    };
+    for (const name of ['advance', 'reversepunch', 'frontkick', 'guard', 'recover', 'dodge', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticIds = ['karate_reverse_punch', 'karate_front_kick', 'guard', 'dodge'];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticIds.map((id) => scene.fighterActionAnimName({ action: { id, type: id === 'guard' || id === 'dodge' ? 'defense' : 'strike' } }, actor)),
+      timings: semanticIds.slice(0, 2).map((id) => scene.combatContactMs({ action: { id, type: 'strike' } }))
+    };
+  });
+
+  expect(playback.enemyX, 'karate fighter should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'karate source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['reversepunch', 'frontkick', 'guard', 'dodge']);
+  expect(playback.timings).toEqual([300, 310]);
+  for (const [start, end, label] of [[4, 7, 'advance'], [8, 11, 'reverse punch'], [12, 15, 'front kick'], [16, 19, 'guard'], [20, 23, 'recovery'], [24, 27, 'dodge'], [28, 31, 'hurt']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'karate-motion-desktop.png'), fullPage: true });
+  expect(violations, 'karate motion should not emit warnings/errors').toEqual([]);
+});
+
 test('pixel_v2 E06 grappler uses authored entry, takedown, sprawl, and escape motion', async ({ page }) => {
   const violations = await loadGame(page, DESKTOP);
   await startE06(page);
@@ -1607,6 +1700,10 @@ for (const viewport of VIEWPORTS) {
       const activeTab = document.querySelector('.maws-nav .maws-tab.active');
       const navIcon = activeTab?.querySelector('.maws-asset-icon');
       const mainAction = document.querySelector('.maws-action-rail-main button.primary');
+      const quietShell = document.querySelector('.maws-quiet-shell');
+      const drawer = document.querySelector('.maws-command-drawer');
+      const visibleCommands = [...document.querySelectorAll('.maws-scene-command-button')]
+        .filter((node) => node.getBoundingClientRect().height > 0);
       const before = getComputedStyle(player, '::before');
       const after = getComputedStyle(player, '::after');
       return {
@@ -1623,7 +1720,12 @@ for (const viewport of VIEWPORTS) {
         navIconWidth: navIcon?.getBoundingClientRect().width || 0,
         mainActionBorderImage: getComputedStyle(mainAction).borderImageSource,
         mainActionClipPath: getComputedStyle(mainAction).clipPath,
-        recommendationCount: document.querySelectorAll('.maws-recommend-card').length
+        recommendationCount: document.querySelectorAll('.maws-recommend-card').length,
+        quietShell: Boolean(quietShell),
+        drawerOpen: Boolean(drawer?.open),
+        visibleCommandCount: visibleCommands.length,
+        navWidth: nav.getBoundingClientRect().width,
+        navHeight: nav.getBoundingClientRect().height
       };
     });
     expect(sceneShell.afterDisplay, 'player must not render a spotlight/backplate pseudo-element').toBe('none');
@@ -1638,15 +1740,29 @@ for (const viewport of VIEWPORTS) {
     expect(sceneShell.navIconWidth, 'navigation icons should remain larger than their labels').toBeGreaterThanOrEqual(28);
     expect(sceneShell.tabFont, 'navigation labels should stay subordinate to their icons').toBeLessThanOrEqual(10);
     expect(sceneShell.recommendationCount, 'scene shell should show at most two immediate recommendations').toBeLessThanOrEqual(2);
+    expect(sceneShell.quietShell, 'map page should use the quiet ledger shell').toBe(true);
+    expect(sceneShell.drawerOpen, 'secondary tasks should be closed by default').toBe(false);
+    expect(sceneShell.visibleCommandCount, 'only immediate decisions should remain visible').toBeLessThanOrEqual(viewport.name === 'mobile' ? 1 : 2);
     expect(sceneShell.sceneHeight, 'scene should remain the dominant first-look surface').toBeGreaterThan(viewport.height * 0.45);
     if (viewport.name === 'desktop') {
+      expect(sceneShell.navHeight, 'desktop navigation should become a compact side ledger').toBeGreaterThan(sceneShell.navWidth * 3);
       const fatherBox = await box(page, '.maws-scene-character:has(img[src*="scene_npc_father_memory.png"])');
       expect(fatherBox.right, 'Day 1 father should stay left of the desktop action rail').toBeLessThanOrEqual(viewport.width - 280);
     } else {
-      const mainAction = await box(page, '.maws-action-rail-main .maws-actions-primary button[data-action="doAction"]');
+      const mainAction = await box(page, '.maws-action-rail-main .maws-scene-command-button:visible');
       expect(mainAction.height, 'mobile local action should keep a 44px touch target').toBeGreaterThanOrEqual(44);
+      const playerBox = await box(page, '.maws-scene-character.player');
+      const actionRailBox = await box(page, '.maws-action-rail-main');
+      expect(playerBox.height, 'mobile stage should keep the player visible').toBeGreaterThan(120);
+      expect(playerBox.bottom, 'mobile player should stay above the decision dock').toBeLessThan(actionRailBox.top + 8);
     }
     await expectScreenshotHasPixels(page, `day1-${viewport.name}.png`, `Day 1 ${viewport.name}`);
+
+    await page.locator('.maws-command-drawer > summary').click();
+    await expect(page.locator('.maws-command-drawer-body')).toBeVisible();
+    await expect(page.locator('.maws-drawer-section').nth(1)).not.toHaveAttribute('open', '');
+    await expectScreenshotHasPixels(page, `day1-task-ledger-${viewport.name}.png`, `Day 1 task ledger ${viewport.name}`);
+    await page.locator('.maws-command-drawer > summary').click();
 
     await page.locator('.maws-scene-character:has(img[src*="scene_npc_fatty.png"])').click();
     await expect(page.locator('.maws-npc-menu')).toBeVisible();
@@ -1895,6 +2011,28 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e19-sanda-${viewport.name}.png`, `E19 sanda ${viewport.name}`);
     expect(violations, `E19 sanda ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E20 karate ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startKarate(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.karate_dojo.day',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.karate'
+    ], `E20 karate ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E20 karate ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.karate');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e20-karate-${viewport.name}.png`, `E20 karate ${viewport.name}`);
+    expect(violations, `E20 karate ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`Day 3 E00 ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

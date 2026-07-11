@@ -4,43 +4,48 @@
 
 ## Current Task
 
-Give the E08/E19 sanda archetype its own final fighter motion and correct day/night combat stage.
+Publish the quiet-ledger UI rebuild together with the reviewed E20 karate route presentation as one validated visual release.
 
 ## Scope
 
-- Generated all new imagery in the current Codex session.
-- Preserved enemy stats, AI, rewards, combat formulas, economy, story, and save contracts.
-- Shared one sanda visual contract between E08 and E19 while retaining their separate gameplay data.
-- External games remain clean-room principle references; no protected code or assets were extracted or copied.
+- Preserved game rules, enemy stats, economy, story, and save contracts.
+- Changed DOM UI structure/styles, E20 visual routing, focused browser contracts, and checkpoints.
+- Kept all actions and destinations reachable while removing secondary prose from the default scene.
 
 ## Current Result
 
-- E08 and E19 now use a final 32-frame, 96x144 Pixel V2 sanda strip and matching standee.
-- Motion rows cover weight-shifting idle, measured advance, boxing sequence, whip/round kick, front kick, sprawl, lateral dodge, hurt, and recovery.
-- Actor-specific semantics distinguish boxing, round kick, front kick, sprawl/catch response, and dodge.
-- Presentation timing reads jab at 240ms, straight at 280ms, round/whip kick at 320ms, front kick at 310ms, and catch-throw level change at grappling timing.
-- The sanda gym now has final 480x270, 32-color day and rainy night backgrounds at 41KB and 46KB.
-- Generic combat backgrounds now follow the current location instead of forcing every non-special fight into the daytime park; E06/E07/E18 keep their authored story overrides.
-- Desktop/mobile screenshots confirm readable fighter scale, left-side/right-facing enemy orientation, clear mat geometry, and safe HUD framing.
+- The first-look scene now keeps only date/time, four core resources, location, today's intent, up to two desktop decisions, and one mobile decision visible.
+- Desktop navigation is a compact right-side icon ledger; mobile navigation remains a 44px bottom bar.
+- The bottom decision dock has one clear primary path plus an opt-in task ledger instead of multiple competing panels.
+- The task ledger shows four local actions first; remaining actions, city opportunities, location index, and location prose stay progressively disclosed.
+- Navigation icons are larger than their labels, active tabs and primary actions retain Pixel V2 bitmap skins, and no new vector/web-card language was introduced.
+- Mobile character staging was repaired so Lu, Liu Pangzi, and father memory remain visible above the decision dock; NPC menus no longer sit behind the dock.
+- Short toast feedback no longer covers an open task ledger.
+- Mobile non-scene ledgers use border-box sizing and remain within the viewport.
+- E20 now uses a final 32-frame, 96x144 Pixel V2 karate strip and matching standee rather than the generic boxer fallback.
+- E20 motion semantics distinguish straight-line entry, reverse punch, front kick, guard, disciplined recovery, dodge/back-step, and hurt recovery.
+- Karate reverse-punch/front-kick contact reads at 300/310ms and schedules an explicit recovery pose after hit or miss without changing combat formulas.
+- `karate_dojo` now uses final 480x270, 32-color day/night stages with the same floor geometry and clean urban-community-dojo identity.
 
 ## Validation
 
-- `node maws_src/tools/verify_assets.mjs`: passed (146 manifest entries).
+- `node maws_src/tools/verify_assets.mjs`: passed (150 manifest entries).
 - `npm run check:full`: passed (build + 6 Chromium smoke tests).
 - `npm run test:playtest`: passed (4 tests).
 - `npm run test:day1-9`: passed (4 tests).
-- Full `pixel_v2_visual.spec.js`: passed (53 tests).
+- Full `pixel_v2_visual.spec.js`: passed (58 tests).
+- Reviewed screenshots at 390x844, 900x700, 1365x768, and 1536x864, including the closed scene, NPC menu, and task ledger.
 - `git diff --check`: passed.
 
 ## Risks
 
-- E08's `lowkick` and E19's `sanda_whip_kick` share the same authored kick row; a future balance/content pass may split low and body-height variants.
-- E19's catch-throw currently uses the sprawl/level-change row rather than a paired two-character throw sheet.
-- Dedicated mat, shin, glove, and sprawl foley is still missing.
-- E20/E21 and other post-Day9 archetypes still fall back to generic boxer presentation.
+- `ui.css` still contains historical override layers. This pass uses a final, narrowly scoped quiet-shell layer; deleting old layers safely should be a separate refactor with screenshot parity gates.
+- Detailed skill, inventory, and profile ledgers remain intentionally dense after the player opens them, but no longer compete with the default scene.
+- The karate front kick uses a compact four-frame authored row; a future animation pass can add stronger anticipation and landing frames without changing the action contract.
+- Dedicated gi movement, foot slide, glove contact, and kiai audio remain missing.
 
 ## Next Step
 
-1. Build E20's karate-specific straight-line entry, reverse punch, front kick, guard, and disciplined recovery contract.
-2. Give `karate_dojo` a final day/night stage before claiming that route visually complete.
-3. Follow with E21's long-range taekwondo movement and kick contract.
+1. Continue with E21's long-range taekwondo movement, chambered kicks, and matching day/night club stage.
+2. Follow with E09's dirty mixed-fight presentation and then audit remaining post-Day9 fallbacks.
+3. Keep CSS debt cleanup separate and screenshot-gated so visual parity is not lost during deletion.

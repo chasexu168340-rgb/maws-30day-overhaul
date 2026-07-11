@@ -14,6 +14,7 @@ const BG_BY_LOC = {
   wuguan: 'bg.wuguan.day',
   mma: 'bg.mma.day',
   sanda_gym: { day: 'bg.sanda_gym.day', night: 'bg.sanda_gym.night' },
+  karate_dojo: { day: 'bg.karate_dojo.day', night: 'bg.karate_dojo.night' },
   gym: 'bg.gym.day',
   physio: 'bg.physio.day',
   metro_station: { day: 'bg.metro_station.day', night: 'bg.metro_station.night' },
@@ -29,6 +30,7 @@ const FIGHTER_BY_ENEMY = {
   E07: 'fighter.enemy.weapon',
   E08: 'fighter.enemy.sanda',
   E19: 'fighter.enemy.sanda',
+  E20: 'fighter.enemy.karate',
   E18: 'fighter.enemy.boss'
 };
 
@@ -36,6 +38,7 @@ const ANIM_BY_FIGHTER = {
   'fighter.player': 'anim.fighter.player',
   'fighter.enemy.boxer': 'anim.fighter.enemy.boxer',
   'fighter.enemy.sanda': 'anim.fighter.enemy.sanda',
+  'fighter.enemy.karate': 'anim.fighter.enemy.karate',
   'fighter.enemy.untrained': 'anim.fighter.enemy.untrained',
   'fighter.enemy.beginner': 'anim.fighter.enemy.beginner',
   'fighter.enemy.silent': 'anim.fighter.enemy.silent',
@@ -701,6 +704,9 @@ export class ShellScene extends PhaserScene {
           this.delayedFighterAnim(target, 'hurt', impactDelay);
         }
         this.animateAttack(actor, target, delay, { ...fx, contactMs });
+        if (actor?.animKey === 'anim.fighter.enemy.karate' && ['reversepunch', 'frontkick'].includes(semanticAnim)) {
+          this.delayedFighterAnim(actor, 'recover', delay + contactMs + 140);
+        }
       }
       if (fx.type === 'miss' || fx.type === 'guard') {
         const semanticAnim = this.fighterActionAnimName(step, actor);
@@ -712,6 +718,9 @@ export class ShellScene extends PhaserScene {
         if (fx.type === 'miss') {
           this.animateAttack(actor, opposingTarget, delay, { ...fx, hitstopMs: 0, shake: 0, contactMs });
           if (actor?.animKey === 'anim.fighter.enemy.weapon') this.delayedFighterAnim(actor, 'recover', delay + contactMs);
+          if (actor?.animKey === 'anim.fighter.enemy.karate' && ['reversepunch', 'frontkick'].includes(semanticAnim)) {
+            this.delayedFighterAnim(actor, 'recover', delay + contactMs + 140);
+          }
         }
         this.animateStep(actor, opposingTarget, delay, fx);
       }
@@ -759,6 +768,13 @@ export class ShellScene extends PhaserScene {
       if (id === 'guard') return 'guard';
       if (['dodge', 'retreat'].includes(id)) return 'dodge';
     }
+    if (actor?.animKey === 'anim.fighter.enemy.karate') {
+      if (id === 'advance') return 'advance';
+      if (id === 'karate_reverse_punch') return 'reversepunch';
+      if (id === 'karate_front_kick') return 'frontkick';
+      if (id === 'guard') return 'guard';
+      if (['dodge', 'retreat'].includes(id)) return 'dodge';
+    }
     if (actor?.animKey === 'anim.fighter.enemy.weapon') {
       if (id === 'advance') return 'threat';
       if (id === 'straight') return step.result?.response?.intent === 'weapon' ? 'smash' : 'swing';
@@ -792,6 +808,10 @@ export class ShellScene extends PhaserScene {
       if (['lowkick', 'sanda_whip_kick'].includes(id)) return 320;
       if (id === 'frontkick') return 310;
       if (id === 'sanda_catch_throw') return 360;
+    }
+    if (this.model?.combat?.enemyId === 'E20') {
+      if (id === 'karate_reverse_punch') return 300;
+      if (id === 'karate_front_kick') return 310;
     }
     if (id === 'frontkick') return 300;
     return 260;
