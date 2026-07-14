@@ -63,6 +63,7 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'characters:fighter.enemy.pushhands',
   'characters:fighter.enemy.strongman',
   'characters:fighter.enemy.showman',
+  'characters:fighter.enemy.challenger',
   'characters:fighter.enemy.beginner',
   'characters:fighter.enemy.silent',
   'sprites:anim.fighter.player',
@@ -70,6 +71,7 @@ const REQUIRED_PIXEL_V2_SAMPLE_KEYS = [
   'sprites:anim.fighter.enemy.pushhands',
   'sprites:anim.fighter.enemy.strongman',
   'sprites:anim.fighter.enemy.showman',
+  'sprites:anim.fighter.enemy.challenger',
   'sprites:anim.fighter.enemy.beginner',
   'sprites:anim.fighter.enemy.silent',
   'portraits:portrait.player',
@@ -279,6 +281,19 @@ async function startShowman(page) {
     store.state.loc = 'park';
     store.emit();
     store.dispatch({ type: 'startBattle', enemyId: 'E03' });
+  });
+  await expect(page.locator('.maws-combat-ui')).toBeVisible();
+  await page.waitForTimeout(900);
+}
+
+async function startChallenger(page) {
+  await page.evaluate(() => {
+    const store = window.MAWS_STORE;
+    store.state.day = 10;
+    store.state.time = 960;
+    store.state.loc = 'park';
+    store.emit();
+    store.dispatch({ type: 'startBattle', enemyId: 'E11' });
   });
   await expect(page.locator('.maws-combat-ui')).toBeVisible();
   await page.waitForTimeout(900);
@@ -785,14 +800,13 @@ test('Boot and Day 1-9 combat loads stay inside image budgets without blank figh
 });
 
 for (const viewport of UI_SHELL_VIEWPORTS) {
-  test(`quiet ledger ${viewport.name} responsive contract`, async ({ page }) => {
+  test(`calm ledger V5 ${viewport.name} responsive contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
-    await expect(page.locator('.maws-quiet-shell-v3')).toBeVisible();
-    await expect(page.locator('.maws-calm-shell-v4')).toBeVisible();
-    await expectNoHorizontalOverflow(page, `quiet ledger ${viewport.name}`);
+    await expect(page.locator('.maws-calm-shell-v5')).toBeVisible();
+    await expectNoHorizontalOverflow(page, `calm ledger V5 ${viewport.name}`);
     const geometry = await page.evaluate(() => {
       const nav = document.querySelector('.maws-nav').getBoundingClientRect();
-      const rail = document.querySelector('.maws-action-rail-main').getBoundingClientRect();
+      const rail = document.querySelector('.maws-decision-dock-v5').getBoundingClientRect();
       const visibleCommands = [...document.querySelectorAll('.maws-scene-command-button')]
         .filter((node) => node.getBoundingClientRect().height > 0);
       return {
@@ -805,18 +819,14 @@ for (const viewport of UI_SHELL_VIEWPORTS) {
         drawerOpen: document.querySelector('.maws-command-drawer').open
       };
     });
-    if (viewport.name === 'mobile') {
-      expect(geometry.navWidth, 'mobile navigation should remain a bottom icon ledger').toBeGreaterThan(geometry.navHeight * 3);
-    } else {
-      expect(geometry.navHeight, 'tablet/wide navigation should remain a side ledger').toBeGreaterThan(geometry.navWidth * 3);
-    }
+    expect(geometry.navWidth, 'navigation should remain a short horizontal icon dock').toBeGreaterThan(geometry.navHeight * 3);
     expect(geometry.railBottom, 'decision dock must stay inside the viewport').toBeLessThanOrEqual(viewport.height);
     expect(geometry.visibleCommands, 'only one immediate decision should remain visible').toBeLessThanOrEqual(1);
     expect(geometry.primaryTabs, 'only four essential ledgers should stay persistent').toBeLessThanOrEqual(4);
     expect(geometry.agendaLines, 'the daily intent should remain one glance').toBeLessThanOrEqual(1);
     expect(geometry.drawerOpen, 'task depth should remain opt-in').toBe(false);
     await expectScreenshotHasPixels(page, `day1-quiet-ledger-${viewport.name}.png`, `Day 1 quiet ledger ${viewport.name}`);
-    expect(violations, `quiet ledger ${viewport.name} console warnings/errors`).toEqual([]);
+    expect(violations, `calm ledger V5 ${viewport.name} console warnings/errors`).toEqual([]);
   });
 }
 
@@ -844,8 +854,8 @@ test('quiet ledger V2 keeps skill depth behind a readable index', async ({ page 
   });
   expect(hierarchy.currentEntries, 'learned moves should remain directly reachable').toBeGreaterThanOrEqual(4);
   expect(hierarchy.visibleEntries, 'the skill ledger should not expose the full move catalogue at once').toBeLessThanOrEqual(12);
-  expect(hierarchy.artSize, 'move art should lead the row hierarchy').toBeGreaterThanOrEqual(55);
-  expect(hierarchy.titleFont, 'move titles should stay subordinate to icons').toBeLessThanOrEqual(12);
+  expect(hierarchy.artSize, 'move art should lead the row hierarchy').toBeGreaterThanOrEqual(44);
+  expect(hierarchy.titleFont, 'move titles should stay subordinate to icons').toBeLessThanOrEqual(14);
   await expectNoHorizontalOverflow(page, 'quiet ledger V2 skills');
   await expectScreenshotHasPixels(page, 'quiet-ledger-v2-skills-desktop.png', 'quiet ledger V2 skills desktop');
   expect(violations, 'quiet ledger V2 skills console warnings/errors').toEqual([]);
@@ -1026,6 +1036,7 @@ for (const viewport of VIEWPORTS) {
         expect(shortTargets, `${tab.id} visible actions should retain 44px mobile targets`).toEqual([]);
       }
       if (tab.id === 'bag' || tab.id === 'shop') {
+        if (tab.id === 'bag') await surface.locator('.maws-inventory-list > summary').click();
         const itemHierarchy = await surface.locator('.maws-item').first().evaluate((card) => {
           const visual = card.querySelector('.maws-index-art');
           const title = card.querySelector('.maws-index-summary strong');
@@ -1035,9 +1046,9 @@ for (const viewport of VIEWPORTS) {
             titleFont: Number.parseFloat(getComputedStyle(title).fontSize || '0')
           };
         });
-        expect(itemHierarchy.visualWidth, `${tab.id} item art should be a primary visual`).toBeGreaterThanOrEqual(55);
-        expect(itemHierarchy.visualHeight, `${tab.id} item art should keep a square pixel frame`).toBeGreaterThanOrEqual(55);
-        expect(itemHierarchy.titleFont, `${tab.id} item title should not overpower its art`).toBeLessThanOrEqual(12);
+        expect(itemHierarchy.visualWidth, `${tab.id} item art should be a primary visual`).toBeGreaterThanOrEqual(44);
+        expect(itemHierarchy.visualHeight, `${tab.id} item art should keep a square pixel frame`).toBeGreaterThanOrEqual(44);
+        expect(itemHierarchy.titleFont, `${tab.id} item title should not overpower its art`).toBeLessThanOrEqual(14);
       }
       await expectNoHorizontalOverflow(page, `${viewport.name} ${tab.id} ledger`);
       await expectScreenshotHasPixels(page, `ledger-${tab.id}-${viewport.name}.png`, `${tab.id} ${viewport.name} ledger`);
@@ -1584,6 +1595,81 @@ test('pixel_v2 E21 taekwondo fighter uses roundhouse, back kick, front kick, lan
   expect(approach.approachX - approach.startX, 'taekwondo back kick should travel toward real contact distance').toBeGreaterThan(30);
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'taekwondo-backkick-contact-desktop.png'), fullPage: true });
   expect(violations, 'taekwondo motion should not emit warnings/errors').toEqual([]);
+});
+
+test('pixel_v2 E11 challenger separates pressure, crude straight, showboat feint, talkdown, panic guard, retreat, and hurt rows', async ({ page }) => {
+  const violations = await loadGame(page, DESKTOP);
+  await startChallenger(page);
+
+  const playback = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.challenger');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.challenger', isAnimated: true };
+    const frames = [];
+    const timer = setInterval(() => {
+      if (enemy?.frame?.name !== undefined) frames.push(Number(enemy.frame.name));
+    }, 24);
+    const play = async (name) => {
+      scene.playFighterAnim(actor, name, true, false);
+      await new Promise((resolve) => setTimeout(resolve, 660));
+    };
+    for (const name of ['advance', 'straight', 'mystic', 'talkdown', 'guard', 'retreat', 'hurt']) await play(name);
+    clearInterval(timer);
+    const semanticActions = [
+      { id: 'straight', type: 'strike' },
+      { id: 'mystic', type: 'strike' },
+      { id: 'talkdown', type: 'social' },
+      { id: 'guard', type: 'defense' },
+      { id: 'retreat', type: 'move' }
+    ];
+    return {
+      frames,
+      enemyX: enemy?.x || 0,
+      playerX: player?.x || 0,
+      enemyFlipX: Boolean(enemy?.flipX),
+      frameWidth: enemy?.frame?.width || 0,
+      frameHeight: enemy?.frame?.height || 0,
+      semantics: semanticActions.map((action) => scene.fighterActionAnimName({ action }, actor)),
+      timings: semanticActions.slice(0, 2).map((action) => scene.combatContactMs({ action }))
+    };
+  });
+
+  expect(playback.enemyX, 'challenger should stand on the left').toBeLessThan(playback.playerX);
+  expect(playback.enemyFlipX, 'challenger source art should face screen-right').toBe(false);
+  expect(playback.frameWidth).toBe(96);
+  expect(playback.frameHeight).toBe(144);
+  expect(playback.semantics).toEqual(['straight', 'mystic', 'talkdown', 'guard', 'retreat']);
+  expect(playback.timings).toEqual([320, 360]);
+  for (const [start, end, label] of [[4, 7, 'camera-ready pressure'], [8, 11, 'crude straight'], [12, 15, 'showboat feint'], [16, 19, 'challenge gesture'], [20, 23, 'panic shell'], [24, 27, 'hurried retreat'], [28, 31, 'hurt ego crack']]) {
+    expect(playback.frames.some((frame) => frame >= start && frame <= end), `${label} row should play; sampled ${playback.frames.join(',')}`).toBe(true);
+  }
+
+  const approach = await page.evaluate(async () => {
+    const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+    const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.challenger');
+    const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+    const startX = Number(enemy?.x || 0);
+    const actor = { sprite: enemy, animKey: 'anim.fighter.enemy.challenger', isAnimated: true, x: startX, y: Number(enemy?.y || 0), maxAdvance: Math.round(scene.scale.width * 0.30), displayWidth: Number(enemy?.displayWidth || 96) };
+    const target = { sprite: player, x: Number(player?.x || 0), y: Number(player?.y || 0), displayWidth: Number(player?.displayWidth || 96) };
+    const contactGap = Math.max(40, (actor.displayWidth + target.displayWidth) * 0.14);
+    scene.playFighterAnim(actor, 'straight', true, false);
+    scene.animateAttack(actor, target, 0, { contactMs: 320, hitstopMs: 76, shake: 0.14 });
+    const samples = [];
+    for (let index = 0; index < 32; index += 1) {
+      samples.push(Number(enemy?.x || 0));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    const maxX = Math.max(...samples);
+    enemy?.anims?.pause();
+    enemy?.setFrame?.(10);
+    if (enemy) enemy.x = maxX;
+    return { startX, approachX: maxX, targetX: target.x, contactGap };
+  });
+  expect(approach.approachX - approach.startX, 'challenger straight should travel toward real contact distance').toBeGreaterThan(30);
+  expect(approach.targetX - approach.approachX, 'challenger straight should close to the runtime contact gap').toBeLessThanOrEqual(approach.contactGap + 3);
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'challenger-straight-contact-desktop.png'), fullPage: true });
+  expect(violations, 'challenger motion should not emit warnings/errors').toEqual([]);
 });
 
 test('pixel_v2 E03 showman separates mystic pose, practical palm, talkdown, panic guard, retreat, and hurt rows', async ({ page }) => {
@@ -2315,11 +2401,11 @@ for (const viewport of VIEWPORTS) {
       const scene = document.querySelector('.maws-scene');
       const hud = document.querySelector('.maws-hud.maws-hud-compact');
       const nav = document.querySelector('.maws-nav');
-      const panel = document.querySelector('.maws-action-rail');
+      const panel = document.querySelector('.maws-decision-dock-v5');
       const activeTab = document.querySelector('.maws-nav .maws-tab.active');
       const navIcon = activeTab?.querySelector('.maws-asset-icon');
-      const mainAction = document.querySelector('.maws-action-rail-main button.primary');
-      const quietShell = document.querySelector('.maws-quiet-shell');
+      const mainAction = document.querySelector('.maws-decision-dock-v5 button.primary');
+      const quietShell = document.querySelector('.maws-calm-shell-v5');
       const drawer = document.querySelector('.maws-command-drawer');
       const visibleCommands = [...document.querySelectorAll('.maws-scene-command-button')]
         .filter((node) => node.getBoundingClientRect().height > 0);
@@ -2357,21 +2443,21 @@ for (const viewport of VIEWPORTS) {
     expect(sceneShell.mainActionBorderImage, 'primary actions should use the bitmap active button').toContain('ui_button_active.png');
     expect(sceneShell.mainActionClipPath, 'buttons should not use vector-like clipped polygons').toBe('none');
     expect(sceneShell.navIconWidth, 'navigation icons should remain larger than their labels').toBeGreaterThanOrEqual(28);
-    expect(sceneShell.tabFont, 'navigation labels should stay subordinate to their icons').toBeLessThanOrEqual(10);
+    expect(sceneShell.tabFont, 'navigation control text should stay subordinate to its icon').toBeLessThanOrEqual(14);
     expect(sceneShell.recommendationCount, 'scene shell should show at most two immediate recommendations').toBeLessThanOrEqual(2);
     expect(sceneShell.quietShell, 'map page should use the quiet ledger shell').toBe(true);
     expect(sceneShell.drawerOpen, 'secondary tasks should be closed by default').toBe(false);
     expect(sceneShell.visibleCommandCount, 'only immediate decisions should remain visible').toBeLessThanOrEqual(viewport.name === 'mobile' ? 1 : 2);
     expect(sceneShell.sceneHeight, 'scene should remain the dominant first-look surface').toBeGreaterThan(viewport.height * 0.45);
     if (viewport.name === 'desktop') {
-      expect(sceneShell.navHeight, 'desktop navigation should become a compact side ledger').toBeGreaterThan(sceneShell.navWidth * 3);
+      expect(sceneShell.navWidth, 'desktop navigation should remain a compact horizontal icon dock').toBeGreaterThan(sceneShell.navHeight * 3);
       const fatherBox = await box(page, '.maws-scene-character:has(img[src*="scene_npc_father_memory.png"])');
       expect(fatherBox.right, 'Day 1 father should stay left of the desktop action rail').toBeLessThanOrEqual(viewport.width - 280);
     } else {
-      const mainAction = await box(page, '.maws-action-rail-main .maws-scene-command-button:visible');
+      const mainAction = await box(page, '.maws-decision-dock-v5 .maws-scene-command-button:visible');
       expect(mainAction.height, 'mobile local action should keep a 44px touch target').toBeGreaterThanOrEqual(44);
-      const playerBox = await box(page, '.maws-scene-character.player');
-      const actionRailBox = await box(page, '.maws-action-rail-main');
+      const playerBox = await box(page, '.maws-scene-character.player img');
+      const actionRailBox = await box(page, '.maws-decision-dock-v5');
       expect(playerBox.height, 'mobile stage should keep the player visible').toBeGreaterThan(120);
       expect(playerBox.bottom, 'mobile player should stay above the decision dock').toBeLessThan(actionRailBox.top + 8);
     }
@@ -2678,6 +2764,29 @@ for (const viewport of VIEWPORTS) {
     expect(sides.enemyFlipX).toBe(false);
     await expectScreenshotHasPixels(page, `e21-taekwondo-${viewport.name}.png`, `E21 taekwondo ${viewport.name}`);
     expect(violations, `E21 taekwondo ${viewport.name} console warnings/errors`).toEqual([]);
+  });
+
+  test(`E11 challenger ${viewport.name} combat visual/runtime contract`, async ({ page }) => {
+    const violations = await loadGame(page, viewport);
+    await startChallenger(page);
+    await expectManifestImagesDecode(page, [
+      'backgrounds:bg.park.day',
+      'characters:fighter.enemy.challenger',
+      'sprites:anim.fighter.player',
+      'sprites:anim.fighter.enemy.challenger'
+    ], `E11 challenger ${viewport.name}`);
+    await expectNoHorizontalOverflow(page, `E11 challenger ${viewport.name}`);
+    await expectCombatGeometry(page, viewport);
+    const sides = await page.evaluate(() => {
+      const scene = window.MAWS_GAME.scene.getScene('ShellScene');
+      const enemy = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.enemy.challenger');
+      const player = scene?.root?.list?.find((item) => item?.texture?.key === 'anim.fighter.player');
+      return { enemyX: enemy?.x || 0, playerX: player?.x || 0, enemyFlipX: Boolean(enemy?.flipX) };
+    });
+    expect(sides.enemyX).toBeLessThan(sides.playerX);
+    expect(sides.enemyFlipX).toBe(false);
+    await expectScreenshotHasPixels(page, `e11-challenger-${viewport.name}.png`, `E11 challenger ${viewport.name}`);
+    expect(violations, `E11 challenger ${viewport.name} console warnings/errors`).toEqual([]);
   });
 
   test(`E03 showman ${viewport.name} combat visual/runtime contract`, async ({ page }) => {

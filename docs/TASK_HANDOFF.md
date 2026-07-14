@@ -124,6 +124,11 @@ The player-facing target remains: the player clicks something, the game responds
 101. The skill catalogue is closed by default, and browser tests explicitly open it before validating move art, unlock sources, or overflow.
 102. Non-scene desktop and mobile pages use a focused Pixel V2 ledger over the world; mobile removes the oversized portrait header and retains 56px item art.
 103. Build, 162-entry asset verification, 6 smoke tests, 4 Day1-7 tests, 4 Day1-9 tests, and all 81 Pixel V2 visual tests pass.
+104. E11 now has an independent final 32-frame Pixel V2 short-video challenger strip and standee; pressure, crude straight, showboat feint, talkdown, panic guard, retreat, and hurt rows remain distinct without changing enemy data or combat formulas.
+105. Calm Ledger V5 replaces the side ledger and layered scene rails with one horizontal four-icon dock, one daily intent, one immediate decision, and one closed `策` drawer.
+106. The `策` drawer exposes three local actions first and keeps overflow, rumours, travel, and location lore opt-in; profile, skill-tree/catalogue, and inventory depth also remain closed by default.
+107. Closed system/task drawers no longer expose invisible lazy-loaded images, and scene character art lands above desktop/mobile decision docks instead of being clipped behind them.
+108. Build and 164-entry asset verification pass; smoke is 6/6, Day1-7 is 4/4, Day1-9 is 4/4, V5 targeted visual contracts are 8/8, and the full Pixel V2 suite is 84/84.
 
 ## Deferred Larger Work
 

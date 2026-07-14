@@ -166,9 +166,10 @@ test('location locks and metro station work in the real browser', async ({ page 
   expect(await page.evaluate(() => window.MAWS_STORE.state.loc)).toBe('metro_station');
 
   await page.locator('.maws-command-drawer > summary').click();
-  await page.locator('.maws-drawer-section').first().locator('summary').first().click();
-  await expect(page.locator('button[data-action="doAction"][data-id="metro_observe"]')).toBeVisible();
-  await page.locator('button[data-action="doAction"][data-id="metro_observe"]').click();
+  const metroObserve = page.locator('button[data-action="doAction"][data-id="metro_observe"]');
+  if (!await metroObserve.isVisible()) await page.locator('.maws-action-overflow > summary').click();
+  await expect(metroObserve).toBeVisible();
+  await metroObserve.click();
   await expect(page.locator('button[data-action="closeModal"]')).toBeVisible();
 
   await expectNoHorizontalOverflow(page, 'metro flow');

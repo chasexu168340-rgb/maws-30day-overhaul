@@ -4,42 +4,44 @@
 
 ## Current Task
 
-Replace the text-heavy management shell with a calm Pixel V2 ledger: one scene, one daily intent, one immediate decision, and records that open only when requested.
+Calm Ledger V5: replace the text-heavy management shell with a scene-first Pixel V2 interface inspired by the restraint of a martial-arts chronicle, without copying another game's layout.
 
 ## Scope
 
-- Changed DOM information hierarchy and Pixel V2 CSS only.
-- Updated browser contracts that intentionally depended on five persistent tabs or an always-open skill catalogue.
-- Preserved actions, rewards, combat formulas, economy, story data, save contracts, assets, and runtime asset keys.
+- Changed `maws_src/dom/ui.js`, `maws_src/dom/ui.css`, and the browser contracts that exercised the old drawer hierarchy.
+- Preserved gameplay actions, rewards, combat formulas, economy, story data, save contracts, manifest keys, and assets.
+- Kept the existing E11 combat-art work intact and verified it with the same full visual suite.
 
 ## Current Result
 
-- The persistent navigation now contains four icon ledgers: map, profile, skills, and bag. NPCs, shop, log, sleep, and save remain reachable from the system roll.
-- The scene shows only a location seal, one-line daily intent, one primary action, and a closed task roll.
-- The task roll groups local actions, rumours, travel, and location lore behind four short disclosure rows.
-- Non-scene pages behave as focused ledgers over the world instead of full-screen text walls.
-- The skill page defaults to the equipped moves, one growth-route summary, and one closed move catalogue.
-- Contextual Day 1 guidance no longer follows the player into profile, skill, bag, shop, NPC, or log ledgers.
-- Mobile ledgers remove the oversized portrait header, keep 56px item art, use two-column loadout slots, and stay above the 44px navigation bar.
+- The default scene now contains only a compact day/resource HUD, location seal, one-line daily intent, one immediate action, and a closed `策` drawer.
+- Four 40px Pixel V2 navigation icons and one system-roll button share a single horizontal dock; labels remain accessible but are not persistent screen text.
+- The `策` drawer shows at most three local actions. Remaining actions, rumours, travel, and location lore are opt-in.
+- Closed system/task drawers no longer expose invisible lazy-loaded images or click layers.
+- Character art is lifted above the mobile and desktop decision docks, so feet are not hidden by UI.
+- Profile, skills, and bag are focused ledgers over the world. Profile depth, skill tree/catalogue, and inventory depth are closed by default.
+- The HUD shows icon plus current value; full resource ratios remain available through native titles.
+- All controls retain hard Pixel V2 bitmap frames, square geometry, and 44px-or-larger mobile targets.
 
 ## Validation
 
-- `npm run build`: passed; 162 manifest entries verified.
-- Phaser smoke: 6 passed.
-- Day 1-Day 7 playtest: 4 passed.
-- Day 1-Day 9 vertical slice: 4 passed.
-- Full `pixel_v2_visual.spec.js`: 81 passed.
-- Calm-ledger mobile/tablet/wide and non-scene desktop/mobile screenshots were manually reviewed.
+- `npm run check:full`: passed; build, 164-entry asset verification, and 6 Chromium smoke tests passed.
+- `npm run test:playtest`: 4 passed.
+- `npm run test:day1-9`: 4 passed.
+- V5 targeted browser contracts: 8 passed.
+- Full `pixel_v2_visual.spec.js`: 84 passed.
+- Desktop, tablet, mobile, action drawer, profile, skills, and bag screenshots were manually reviewed.
 - `git diff --check`: passed.
 
 ## Risks
 
-- This pass deliberately changes presentation contracts, not the amount of underlying content. Deep ledgers can still become dense after the player expands them.
-- The current CSS retains archived V1-V3 compatibility rules; V4 is isolated and final in the cascade, but a later cleanup should remove superseded blocks only with screenshot parity.
-- `outputs/` remains local screenshot evidence and must not be committed.
+- `ui.css` still contains archived V1-V4 compatibility layers. V5 owns the final cascade, but a later cleanup should remove superseded blocks only with screenshot parity.
+- Deep ledgers remain information-dense after the player explicitly opens them; this is intentional progressive disclosure, not permanent scene clutter.
+- `outputs/` is local screenshot evidence and must not be committed.
+- E11 assets/runtime changes are still part of the current uncommitted worktree and should be committed separately from V5 if history separation is required.
 
 ## Next Step
 
-1. Run a five-minute player test without explanation and count how often the player opens the task roll or system roll by mistake.
-2. If the four-icon navigation is still unclear, add short hover labels and a first-use pulse, not permanent text.
-3. Continue enemy art replacement only after the simplified shell is accepted visually.
+1. Run a five-minute no-explanation playtest and record whether players find `策` and `录` without prompting.
+2. If discoverability is weak, add a one-time pulse or tooltip; do not restore permanent labels.
+3. Commit V5 UI and E11 combat presentation as separate commits after reviewing the final diff.

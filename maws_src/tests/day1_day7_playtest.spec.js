@@ -139,8 +139,11 @@ test('Day 1 new game, metro entry, skill sources, and Day 5 E01 entry stay playa
   await page.locator('button[data-action="closeModal"]').click();
   expect(await page.evaluate(() => window.MAWS_STORE.state.loc)).toBe('metro_station');
   await page.locator('.maws-command-drawer > summary').click();
-  await page.locator('.maws-drawer-section').first().locator('summary').first().click();
-  await expect(page.locator('button[data-action="doAction"][data-id^="metro_"]').first()).toBeVisible();
+  const metroAction = page.locator('button[data-action="doAction"][data-id^="metro_"]').first();
+  if (!await metroAction.isVisible() && await page.locator('.maws-action-overflow > summary').count()) {
+    await page.locator('.maws-action-overflow > summary').click();
+  }
+  await expect(metroAction).toBeVisible();
   await expectNoHorizontalOverflow(page, 'metro entry');
 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
