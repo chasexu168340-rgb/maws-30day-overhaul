@@ -722,6 +722,7 @@ test('Pixel V2 core icons, inventory, and early skill art decode and render', as
   expect(navSources.every((src) => src.includes('assets/pixel_v2/icons/')), `navigation sources: ${navSources.join(', ')}`).toBe(true);
 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
+  await page.locator('.maws-compact-catalogue > summary').click();
   const starterArt = page.locator('.maws-move-library .maws-skill-art[src*="assets/pixel_v2/skillCards/"]');
   await expect(starterArt.first()).toBeVisible();
   expect(await starterArt.count(), 'skill library should consume reviewed Pixel V2 card art').toBeGreaterThanOrEqual(9);
@@ -787,6 +788,7 @@ for (const viewport of UI_SHELL_VIEWPORTS) {
   test(`quiet ledger ${viewport.name} responsive contract`, async ({ page }) => {
     const violations = await loadGame(page, viewport);
     await expect(page.locator('.maws-quiet-shell-v3')).toBeVisible();
+    await expect(page.locator('.maws-calm-shell-v4')).toBeVisible();
     await expectNoHorizontalOverflow(page, `quiet ledger ${viewport.name}`);
     const geometry = await page.evaluate(() => {
       const nav = document.querySelector('.maws-nav').getBoundingClientRect();
@@ -798,6 +800,8 @@ for (const viewport of UI_SHELL_VIEWPORTS) {
         navHeight: nav.height,
         railBottom: rail.bottom,
         visibleCommands: visibleCommands.length,
+        primaryTabs: document.querySelectorAll('.maws-nav-primary .maws-tab').length,
+        agendaLines: Math.round(document.querySelector('.maws-scene-agenda strong').getBoundingClientRect().height / parseFloat(getComputedStyle(document.querySelector('.maws-scene-agenda strong')).lineHeight)),
         drawerOpen: document.querySelector('.maws-command-drawer').open
       };
     });
@@ -808,6 +812,8 @@ for (const viewport of UI_SHELL_VIEWPORTS) {
     }
     expect(geometry.railBottom, 'decision dock must stay inside the viewport').toBeLessThanOrEqual(viewport.height);
     expect(geometry.visibleCommands, 'only one immediate decision should remain visible').toBeLessThanOrEqual(1);
+    expect(geometry.primaryTabs, 'only four essential ledgers should stay persistent').toBeLessThanOrEqual(4);
+    expect(geometry.agendaLines, 'the daily intent should remain one glance').toBeLessThanOrEqual(1);
     expect(geometry.drawerOpen, 'task depth should remain opt-in').toBe(false);
     await expectScreenshotHasPixels(page, `day1-quiet-ledger-${viewport.name}.png`, `Day 1 quiet ledger ${viewport.name}`);
     expect(violations, `quiet ledger ${viewport.name} console warnings/errors`).toEqual([]);
@@ -821,7 +827,9 @@ test('quiet ledger V2 keeps skill depth behind a readable index', async ({ page 
   const skillbook = page.locator('.maws-skillbook-page');
   await expect(skillbook).toBeVisible();
   await expect(skillbook.locator('.maws-skill-tree-slice')).not.toHaveAttribute('open', '');
+  await expect(skillbook.locator('.maws-compact-catalogue')).not.toHaveAttribute('open', '');
   await expect(skillbook.locator('.maws-move-future')).not.toHaveAttribute('open', '');
+  await skillbook.locator('.maws-compact-catalogue > summary').click();
   const hierarchy = await skillbook.evaluate((surface) => {
     const visibleEntries = [...surface.querySelectorAll('.maws-move-library .maws-index-entry')]
       .filter((node) => node.getBoundingClientRect().height > 0);

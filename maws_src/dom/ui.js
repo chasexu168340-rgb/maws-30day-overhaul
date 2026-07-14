@@ -498,7 +498,7 @@ function renderNav(model) {
       `maws-tab ${extraClass} ${model.tab === tab.id ? 'active' : ''}`
     );
   };
-  const primaryIds = new Set(['map', 'profile', 'skills', 'bag', 'npc']);
+  const primaryIds = new Set(['map', 'profile', 'skills', 'bag']);
   if (debugEnabled) primaryIds.add('check');
   const primaryTabs = availableTabs.filter((tab) => primaryIds.has(tab.id)).map((tab) => renderTab(tab)).join('');
   const utilityTabs = availableTabs.filter((tab) => !primaryIds.has(tab.id)).map((tab) => renderTab(tab, 'utility')).join('');
@@ -717,16 +717,13 @@ function renderMap(model) {
     </div>
   ` : '';
   return `
-    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell maws-quiet-shell-v2 maws-quiet-shell-v3">
+    <section class="maws-map-shell maws-map-shell-focused maws-quiet-shell maws-quiet-shell-v2 maws-quiet-shell-v3 maws-calm-shell-v4">
       <section class="maws-location maws-location-focused">
         <div class="maws-scene" ${bgUrl ? `style="--scene-bg:url('${esc(bgUrl)}')"` : ''}>
           <div class="maws-scene-shade"></div>
-          <div class="maws-scene-info">
-            <span>${esc(scene.timeText || '')}</span>
-            <h2>${esc(model.loc?.name)}</h2>
-          </div>
+          <div class="maws-scene-info"><h2>${esc(model.loc?.name)}</h2></div>
           <div class="maws-scene-agenda" aria-label="今日主线">
-            <span aria-hidden="true">${model.mainEvent ? '令' : '日'}</span><strong>${esc(mainTitle)}</strong>
+            <span aria-hidden="true">${model.mainEvent ? '令' : '日'}</span><small>今日</small><strong title="${esc(mainTitle)}">${esc(mainTitle)}</strong>
           </div>
           <div class="maws-scene-cast ${(scene.characters || []).length >= 3 ? 'three-up' : ''}">${characters}</div>
           ${interactionMenu}
@@ -740,20 +737,20 @@ function renderMap(model) {
             <div class="maws-command-drawer-body">
               <header class="maws-drawer-head"><div><span>当前</span><strong>${esc(model.loc?.name)}</strong></div>${btn('城市地图', 'openCityMap', {}, 'tiny maws-map-open')}</header>
               <details class="maws-fold maws-drawer-section">
-                <summary>本地行动 <span>${esc(drawerActions.length)}项</span></summary>
+                <summary>此地可做 <span>${esc(drawerActions.length)}</span></summary>
                 <div class="maws-actions">${allActions || '<p class="maws-empty">其他行动暂时没有。</p>'}</div>
                 ${overflowActions ? `<details class="maws-fold maws-action-overflow"><summary>其余行动 <span>${esc(overflowDrawerActions.length)}项</span></summary><div class="maws-actions">${overflowActions}</div></details>` : ''}
               </details>
               <details class="maws-fold maws-drawer-section">
-                <summary>城中机会 <span>${esc((model.opportunities || []).length)}条</span></summary>
+                <summary>传闻 <span>${esc((model.opportunities || []).length)}</span></summary>
                 ${recommendations}
               </details>
               <details class="maws-fold maws-loc-fold maws-drawer-section">
-                <summary>地点名录 <span>${esc((model.locs || []).filter((loc) => !loc.locked).length)}处可去</span></summary>
+                <summary>去别处 <span>${esc((model.locs || []).filter((loc) => !loc.locked).length)}</span></summary>
                 <div class="maws-locs">${locCards}</div>
               </details>
               <details class="maws-fold maws-scene-desc maws-drawer-section">
-                <summary>此地详情</summary><p>${esc(model.loc?.desc)}</p>
+                <summary>见闻</summary><p>${esc(model.loc?.desc)}</p>
               </details>
             </div>
           </details>
@@ -1017,12 +1014,12 @@ function renderSkills(model) {
       <header class="maws-page-heading"><div><small>招式簿</small><h2>路数</h2></div><strong>${esc(learnedSkills.length)} 已会</strong></header>
       <section class="maws-loadout-strip"><header><b>上阵招式</b><span>${esc((model.equipSkills || []).filter((slot) => slot.skill).length)} / ${esc((model.equipSkills || []).length)}</span></header><div class="maws-slots">${slots}</div></section>
       ${renderSkillTree(model.skillTree)}
-      <section class="maws-ledger-band maws-move-library">
-        <header><h3>当前招式</h3><span>${esc(learnedSkills.length)} 招</span></header>
+      <details class="maws-ledger-band maws-move-library maws-compact-catalogue">
+        <summary><span><b>招式总览</b><small>${esc(learnedSkills.length)} 已会 · ${esc(nextSkills.length)} 可追</small></span><em>展开</em></summary>
         <div class="maws-card-grid maws-index-grid maws-move-current">${renderSkillGroup(learnedSkills)}</div>
         ${nextSkills.length ? `<div class="maws-move-subhead"><b>下一步能学</b><span>${esc(nextSkills.length)} 招</span></div><div class="maws-card-grid maws-index-grid maws-move-next">${renderSkillGroup(nextSkills)}</div>` : ''}
         ${futureSkills.length ? `<details class="maws-fold maws-move-future"><summary><b>后续招式</b><span>${esc(futureSkills.length)} 招 · 按需查看</span></summary><div class="maws-card-grid maws-index-grid">${renderSkillGroup(futureSkills)}</div></details>` : ''}
-      </section>
+      </details>
     </section>
   `;
 }
@@ -1677,7 +1674,10 @@ function render(model) {
   const body = model.combat
     ? renderCombat(model)
     : joined([renderHud(model), renderNav(model), `<main class="maws-main">${renderMain(model)}</main>`]);
-  return joined([body, renderModal(model), model.toast ? `<div class="maws-toast">${esc(model.toast)}</div>` : '']);
+  const contextualToast = model.toast && (model.tab === 'map' || !model.tab)
+    ? `<div class="maws-toast">${esc(model.toast)}</div>`
+    : '';
+  return joined([body, renderModal(model), contextualToast]);
 }
 
 function dispatchFromDataset(store, dataset) {

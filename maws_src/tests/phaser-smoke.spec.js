@@ -202,7 +202,7 @@ for (const viewport of VIEWPORTS) {
     const errors = await loadGame(page, viewport);
 
     await expectNoHorizontalOverflow(page, `${viewport.name} map`);
-    await expect(page.locator('.maws-nav-primary .maws-tab')).toHaveCount(5);
+    await expect(page.locator('.maws-nav-primary .maws-tab')).toHaveCount(4);
     expect(await page.locator('.maws-scene-command-button:visible').count()).toBeLessThanOrEqual(2);
     await expect(page.locator('.maws-system-menu-panel')).toBeHidden();
     await page.locator('.maws-system-menu > summary').click();
@@ -210,6 +210,9 @@ for (const viewport of VIEWPORTS) {
     await page.locator('.maws-system-menu > summary').click();
 
     await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
+    await expect(page.locator('.maws-compact-catalogue')).toBeVisible();
+    await expect(page.locator('.maws-compact-catalogue')).not.toHaveAttribute('open', '');
+    await page.locator('.maws-compact-catalogue > summary').click();
     await expect(page.locator('.maws-skill').first()).toBeVisible();
     await expectNoHorizontalOverflow(page, `${viewport.name} skills`);
 

@@ -4,7 +4,7 @@
 
 ## Current Task
 
-Day 1-Day 9 retro-pixel vertical slice: produce and integrate the first reviewed `pixel_v2` art batch without changing existing runtime asset keys.
+Calm Ledger V4: keep the Pixel V2 world dominant while reducing the default interface to one daily intent, one immediate decision, four persistent icon ledgers, and opt-in records.
 
 ## Current Staging Baseline
 
@@ -119,6 +119,11 @@ The player-facing target remains: the player clicks something, the game responds
 96. E03 mystic/palm presentation lands at 360/300ms and maps talkdown/guard/retreat to dedicated rows without changing morale or combat formulas.
 97. E03 uses reviewed scale 1.24 and `contactScale: 0.16`; desktop/mobile idle and desktop palm-contact screenshots pass.
 98. The full Pixel V2 suite contains 81 passing tests and the manifest contains 162 entries.
+99. Calm Ledger V4 reduces persistent navigation from five tabs to four icon ledgers; NPC, shop, log, sleep, and save remain in the system roll.
+100. The scene now exposes one location seal, one-line daily intent, one immediate action, and one closed task roll; contextual guidance no longer follows the player into management ledgers.
+101. The skill catalogue is closed by default, and browser tests explicitly open it before validating move art, unlock sources, or overflow.
+102. Non-scene desktop and mobile pages use a focused Pixel V2 ledger over the world; mobile removes the oversized portrait header and retains 56px item art.
+103. Build, 162-entry asset verification, 6 smoke tests, 4 Day1-7 tests, 4 Day1-9 tests, and all 81 Pixel V2 visual tests pass.
 
 ## Deferred Larger Work
 

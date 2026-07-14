@@ -342,6 +342,8 @@ test('390x844 skills and map do not overflow horizontally', async ({ page }) => 
   await expectNoHorizontalOverflow(page, 'mobile city map');
 
   await page.locator('button[data-action="setTab"][data-tab="skills"]').click();
+  await expect(page.locator('.maws-compact-catalogue')).toBeVisible();
+  await page.locator('.maws-compact-catalogue > summary').click();
   await expect(page.locator('.maws-skill').first()).toBeVisible();
   expect(await page.locator('.maws-skill-unlock').count()).toBeGreaterThan(0);
   await expectNoHorizontalOverflow(page, 'mobile skills');
